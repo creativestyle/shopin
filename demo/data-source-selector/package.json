@@ -1,0 +1,30 @@
+{
+  "name": "@demo/data-source-selector",
+  "version": "1.0.0",
+  "description": "Demo UI components to switch data source (mock vs Commercetools): DataSourceSelector dropdown and DataSourceIndicator",
+  "private": true,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "lint": "eslint --fix ./src --max-warnings=0",
+    "format": "prettier --write ./src",
+    "check-types": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@core/contracts": "*",
+    "@config/constants": "*",
+    "react": "19.2.4",
+    "react-dom": "19.2.4"
+  },
+  "devDependencies": {
+    "@core/typescript-config": "*",
+    "@core/eslint-config": "*",
+    "@core/prettier-config": "*",
+    "@types/react": "19.2.7",
+    "@types/react-dom": "19.2.3",
+    "eslint": "^9.20.1",
+    "typescript": "^5.7.3"
+  }
+}

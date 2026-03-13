@@ -1,0 +1,30 @@
+{
+  "name": "@integrations/mock-api",
+  "description": "NestJS module providing mock implementations of catalog, cart, content, auth, and navigation for development and demos",
+  "private": true,
+  "exports": {
+    ".": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc --build",
+    "dev": "tsc --build --watch",
+    "lint": "eslint --fix ./src --max-warnings=0",
+    "format": "prettier --write ./src",
+    "check-types": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@core/contracts": "*",
+    "@core/i18n": "*",
+    "@faker-js/faker": "^9.8.0"
+  },
+  "devDependencies": {
+    "@core/eslint-config": "*",
+    "@core/prettier-config": "*",
+    "@core/typescript-config": "*"
+  },
+  "peerDependencies": {
+    "@nestjs/common": "^11.1.14",
+    "@nestjs/core": "^11.1.14",
+    "nestjs-pino": "^4.5.0"
+  }
+}

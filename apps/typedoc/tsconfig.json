@@ -1,0 +1,5 @@
+{
+  "extends": "@core/typescript-config/base.json",
+  "include": ["../../core/contracts/"],
+  "exclude": ["node_modules", "dist", "docs"]
+}

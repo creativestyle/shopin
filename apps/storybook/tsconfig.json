@@ -1,0 +1,12 @@
+{
+  "extends": "@core/typescript-config/base.json",
+  "include": ["src/**/*", ".storybook", "src/types/**/*"],
+  "exclude": ["node_modules", "dist", "storybook-static"],
+  "compilerOptions": {
+    "moduleResolution": "bundler",
+    "module": "preserve",
+    "paths": {
+      "@/*": ["../presentation/*"]
+    }
+  }
+}

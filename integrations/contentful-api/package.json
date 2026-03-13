@@ -1,0 +1,33 @@
+{
+  "name": "@integrations/contentful-api",
+  "description": "NestJS module for Contentful CMS: pages, layout (header/footer), and GraphQL delivery/preview API",
+  "private": true,
+  "exports": {
+    ".": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc --build",
+    "dev": "tsc --build --watch",
+    "lint": "eslint --fix ./src --max-warnings=0",
+    "format": "prettier --write ./src",
+    "check-types": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@config/constants": "*",
+    "@contentful/rich-text-types": "^16.6.1",
+    "@core/contracts": "*",
+    "graphql": "^16.12.0",
+    "graphql-request": "^6.1.0",
+    "zod": "^4.1.12"
+  },
+  "devDependencies": {
+    "@core/eslint-config": "*",
+    "@core/prettier-config": "*",
+    "@core/typescript-config": "*"
+  },
+  "peerDependencies": {
+    "@nestjs/common": "^11.1.3",
+    "@nestjs/config": "^4.0.2",
+    "nestjs-pino": "^4.5.0"
+  }
+}

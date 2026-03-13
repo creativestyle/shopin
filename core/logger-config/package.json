@@ -1,0 +1,28 @@
+{
+  "name": "@core/logger-config",
+  "description": "Shared Pino logger configuration (log level, pretty print) for BFF and presentation.",
+  "private": true,
+  "exports": {
+    ".": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc --build",
+    "check-format": "prettier --check --ignore-unknown .",
+    "check-lint": "eslint --max-warnings=0 .",
+    "check-types": "tsc --noEmit",
+    "clean": "rm -rf .turbo dist",
+    "dev": "tsc --build --watch",
+    "format": "prettier --write --ignore-unknown .",
+    "lint": "eslint --max-warnings=0 --fix .",
+    "setup": "npm run build"
+  },
+  "devDependencies": {
+    "@core/eslint-config": "*",
+    "@core/prettier-config": "*",
+    "@core/typescript-config": "*",
+    "@types/node": "^25.1.0"
+  },
+  "peerDependencies": {
+    "pino": "^10.1.0"
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "name": "@core/i18n",
+  "version": "1.0.0",
+  "description": "Internationalization module with translation files and configuration",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "private": true,
+  "scripts": {
+    "check-types": "tsc --noEmit",
+    "setup": "npm run build",
+    "build": "tsc",
+    "lint": "eslint --fix . --max-warnings=0",
+    "format": "prettier --write --ignore-unknown .",
+    "dev": "nodemon --watch . --ext ts,json --exec 'npm run build'"
+  },
+  "exports": {
+    ".": "./dist/index.js",
+    "./*.json": "./dist/*.json",
+    "./*": "./dist/*.js"
+  },
+  "files": [
+    "dist",
+    "*.ts",
+    "*.d.ts",
+    "*.json"
+  ],
+  "devDependencies": {
+    "@config/constants": "*",
+    "@core/eslint-config": "*",
+    "@core/prettier-config": "*",
+    "@core/typescript-config": "*",
+    "eslint": "^9.20.1",
+    "nodemon": "^3.0.0",
+    "prettier": "^3.4.2",
+    "typescript": "^5.7.3"
+  }
+}

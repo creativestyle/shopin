@@ -1,0 +1,32 @@
+{
+  "name": "@integrations/commercetools-api",
+  "description": "NestJS module for Commercetools e-commerce API: catalog, cart, orders, customers, and service provider interface",
+  "private": true,
+  "exports": {
+    ".": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc --build",
+    "dev": "tsc --build --watch",
+    "lint": "eslint --fix ./src --max-warnings=0",
+    "format": "prettier --write ./src",
+    "check-types": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@commercetools/platform-sdk": "^8.13.0",
+    "@commercetools/ts-client": "^4.1.0",
+    "@core/contracts": "*",
+    "@core/i18n": "*",
+    "@config/constants": "*",
+    "zod": "^4.1.12"
+  },
+  "devDependencies": {
+    "@core/eslint-config": "*",
+    "@core/prettier-config": "*",
+    "@core/typescript-config": "*"
+  },
+  "peerDependencies": {
+    "@nestjs/common": "^11.1.3",
+    "@nestjs/config": "^4.0.2"
+  }
+}

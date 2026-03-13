@@ -1,0 +1,699 @@
+{
+  "common": {
+    "welcomeMessage": "Welcome to our application!",
+    "yes": "Yes",
+    "no": "No",
+    "description": "Your e-commerce platform with a modern design system.",
+    "homepage": "Home",
+    "close": "Close",
+    "scrollableDialogContent": "Scrollable dialog content",
+    "scrollLeft": "Scroll left",
+    "scrollRight": "Scroll right",
+    "hidePassword": "Hide password",
+    "showPassword": "Show password",
+
+    "viewAll": "View all",
+    "navigation": "Navigation",
+    "mobileNavigationMenu": "Mobile navigation menu",
+    "wishlist": "Wishlist",
+    "stores": "Stores",
+    "shopinclub": "SHOPINCLUB",
+    "contact": "Contact",
+    "faqHelp": "FAQ / Help",
+    "countries": {
+      "PL": "Poland",
+      "DE": "Germany",
+      "FR": "France",
+      "GB": "United Kingdom",
+      "US": "United States"
+    },
+    "loading": "Loading...",
+    "loadingAriaLabel": "Loading...",
+    "noDataFound": "No data found",
+    "errors": {
+      "tooManyRequests": "Too many requests. Please wait a moment and try again.",
+      "internalServerError": "Something went wrong. Please try again.",
+      "validationFailed": "Please check your input."
+    }
+  },
+  "topBar": {
+    "freeReturns": "Free Returns",
+    "largestSelection": "Largest Shopin Selection Worldwide",
+    "securePayment": "Secure Payment",
+    "hugeSizeSelection": "Huge Size Selection",
+    "directFromManufacturer": "Direct from Manufacturer"
+  },
+  "userMenu": {
+    "storeLocator": "Store Locator",
+    "account": "Account",
+    "wishlist": "Wishlist",
+    "cart": "Cart",
+    "search": "Search"
+  },
+  "footer": {
+    "newsletter": {
+      "title": "Newsletter",
+      "description": "Sign up for our newsletter and receive a",
+      "voucher": "€5 voucher",
+      "descriptionEnd": "on your first order!",
+      "signUp": "Sign up now"
+    },
+    "company": {
+      "title": "Company",
+      "website": "Website",
+      "career": "Career",
+      "sustainability": "Sustainability",
+      "forRetailers": "For Retailers",
+      "press": "Press"
+    },
+    "service": {
+      "title": "Service & Help",
+      "shopinClub": "SHOPINCLUB",
+      "storeFinder": "Store Finder",
+      "sizeFinder": "Size Finder",
+      "returns": "Returns",
+      "helpFaq": "Help & FAQ"
+    },
+    "customerService": {
+      "title": "Customer Service",
+      "phone": "0800 / 12 345 67",
+      "hours": "Mon - Fri: 09:00 - 17:00",
+      "contactUs": "Contact Us"
+    },
+    "social": {
+      "title": "Follow Us"
+    },
+    "giftVoucher": {
+      "title": "Gift Voucher",
+      "link": "To Gift Vouchers"
+    },
+    "paymentMethods": {
+      "title": "Payment Methods",
+      "invoice": "Invoice",
+      "prepayment": "Prepayment",
+      "applePay": "Apple Pay",
+      "paypal": "PayPal",
+      "amazon": "Amazon",
+      "visa": "Visa",
+      "mastercard": "MC",
+      "amex": "Amex"
+    },
+    "shipping": {
+      "title": "Shipping Partners",
+      "dhl": "DHL",
+      "dhlExpress": "DHL Express",
+      "goGreen": "GoGreen"
+    },
+    "language": {
+      "title": "Language Selection"
+    },
+    "legal": {
+      "imprint": "Imprint",
+      "terms": "Terms & Conditions",
+      "privacy": "Privacy Policy",
+      "privacySettings": "Privacy Settings",
+      "copyright": "© 2023 SHOPIN Store GmbH & Co. KG"
+    }
+  },
+  "product": {
+    "noDataFound": "No product data found for this ID.",
+    "errorFetching": "Failed to fetch data",
+    "gallery": {
+      "loadMore": "Load more photos",
+      "dialogTitle": "Image Gallery",
+      "dialogDescription": "Browse through product images"
+    },
+    "buyBox": {
+      "size": "Size",
+      "findYourSize": "Find your size",
+      "reserveInStore": "Reserve in store",
+      "wishlistSaveAria": "Save to wishlist",
+      "wishlistRemoveAria": "Remove from wishlist",
+      "addToBasket": "Add to Basket",
+      "adding": "Adding...",
+      "addToBasketSuccess": "Added to cart",
+      "selectVariant": "Please choose variant you want to add to basket",
+      "taxNote": "incl. VAT",
+      "showMoreSizesButton": "+{count} more",
+      "showMoreSizesAria": "Show {count} more sizes",
+      "benefits": {
+        "returnsPolicy": "14-day return policy",
+        "freeReturn": "Free return",
+        "loyaltyBonus": "Collect 3% loyalty bonus"
+      },
+      "recommendedRetailPrice": "RRP",
+      "omnibusPrice": "30-day best price"
+    },
+    "seo": {
+      "about": "About this product"
+    },
+    "details": "Details"
+  },
+  "productCollection": {
+    "sorting": {
+      "top-sellers": "Top Sellers",
+      "price-asc": "Price: Low to High",
+      "price-desc": "Price: High to Low",
+      "newest": "Newest",
+      "review-score": "Best Rated",
+      "name-asc": "Name: A to Z",
+      "name-desc": "Name: Z to A"
+    },
+    "topbar": {
+      "showCategories": "Show categories",
+      "hideCategories": "Hide categories",
+      "sortBy": "Sort by",
+      "allFilters": "All filters"
+    },
+    "filters": {
+      "drawerTitle": "Filters",
+      "saleOnly": "Sale only %",
+      "searchByName": "Search by name",
+      "priceRange": "Price",
+      "color": "Color",
+      "size": "Size",
+      "brand": "Brand",
+      "material": "Material",
+      "style": "Style",
+      "finish": "Finish",
+      "type": "Type",
+      "new-arrival": "New Arrival",
+      "productspec": "Product Spec",
+      "specification-color": "Color",
+      "specification-frame-material": "Frame Material",
+      "specification-wheel-size": "Wheel Size",
+      "specification-frame-size-in-cm": "Frame Size (cm)",
+      "specification-gears": "Gears",
+      "specification-brakes": "Brakes",
+      "appliedFilters": "Applied filters",
+      "clearAll": "Clear all filters",
+      "noResultsTitle": "No products found",
+      "noResultsMessage": "Try adjusting or clearing your filters to find what you're looking for.",
+      "sizeShowMore": "+{count} more",
+      "sizeShowLess": "Show less",
+      "resetAll": "Reset all",
+      "applyFilters": "Apply filters"
+    }
+  },
+  "cart": {
+    "title": "Cart",
+    "titleWithCount": "Cart ({count})",
+    "checkout": "Checkout",
+    "continueShopping": "Continue shopping",
+    "item": {
+      "quantity": "Quantity",
+      "remove": "Remove",
+      "removeAction": "Remove item",
+      "addToWishlist": "Add to wishlist",
+      "artNumber": "Art. No.",
+      "color": "Color",
+      "size": "Size",
+      "deliveryEstimate": "Delivery estimate",
+      "removeConfirmation": {
+        "message": "Are you sure you want to remove {name} from your cart?",
+        "description": "This action cannot be undone.",
+        "cancel": "Cancel",
+        "confirm": "Remove",
+        "removing": "Removing..."
+      }
+    },
+    "summary": {
+      "title": "Order Summary",
+      "subtotal": "Subtotal",
+      "shipping": "Shipping",
+      "tax": "Tax",
+      "discount": "Discount",
+      "total": "Total",
+      "totalInclTax": "Total incl. tax",
+      "taxNote": "incl. VAT",
+      "promoCode": "Promo code"
+    },
+    "errors": {
+      "addToCart": "Failed to add to cart",
+      "updateItem": "Failed to update item",
+      "removeItem": "Failed to remove item",
+      "fetchCart": "Failed to fetch cart"
+    },
+    "addToCartModal": {
+      "toastMessage": "Good choice. Item has been added to cart.",
+      "moreProducts": "More products",
+      "goToCart": "Go to cart"
+    },
+    "empty": {
+      "title": "Your cart is currently empty.",
+      "message": "Your cart is currently empty. If you have created an account, you can sign in here and check if you have products saved in your cart.",
+      "continueShopping": "Continue shopping",
+      "signIn": "Sign in"
+    },
+    "cart": "Cart"
+  },
+  "account": {
+    "signIn": {
+      "title": "Sign In",
+      "description": "Use your account and collect points for this purchase",
+      "emailLabel": "E-Mail-Address",
+      "passwordLabel": "Password",
+      "signInButton": "Sign in",
+      "signingIn": "Signing in...",
+      "submitButton": "Submit",
+      "submitting": "Submitting...",
+      "stayLoggedIn": "Stay logged in",
+      "forgotPassword": "Forgot password?",
+      "noAccount": "Don't have an account?",
+      "signUp": "Sign up",
+      "success": "You have been logged in successfully.",
+      "errors": {
+        "emailRequired": "Email is required",
+        "emailInvalid": "Please enter a valid email address",
+        "passwordRequired": "Password is required",
+        "loginFailed": "Login failed.",
+        "tooManyRequests": "Too many requests. Please wait a moment and try again.",
+        "validationFailed": "Validation failed",
+        "unauthorized": "Login failed. Please check your credentials and try again.",
+        "emailNotVerified": "Please verify your email address before logging in. Check your inbox for a confirmation email.",
+        "forbidden": "Access denied. Please refresh the page and try again.",
+        "internalServerError": "Internal server error"
+      }
+    },
+    "signUp": {
+      "title": "Register",
+      "backToSignIn": "Back to Sign In",
+      "backToCheckout": "Back to checkout",
+      "salutationOptions": {
+        "Ms": "Ms.",
+        "Mr": "Mr.",
+        "Diverse": "Diverse"
+      },
+      "firstNameLabel": "First Name",
+      "lastNameLabel": "Last Name",
+      "emailLabel": "E-Mail Address",
+      "dateOfBirthLabel": "Date of Birth",
+      "passwordLabel": "Password",
+      "confirmPasswordLabel": "Confirm Password",
+      "termsTextPrefix": "I have read the ",
+      "termsLink": "terms and conditions",
+      "termsTextMiddle": " of SHOPINCLUB and agree to have been informed about the ",
+      "privacyLink": "privacy policy",
+      "termsTextSuffix": ".",
+      "submitButton": "register for free",
+      "submitting": "Registering...",
+      "success": "Registration successful",
+      "successAndLoggedIn": "Registration successful. You have been automatically logged in.",
+      "errors": {
+        "firstNameRequired": "First name is required",
+        "lastNameRequired": "Last name is required",
+        "emailInvalid": "Please enter a valid email address",
+        "dateOfBirthInvalid": "Please enter a valid date in YYYY-MM-DD format",
+        "passwordMinLength": "Password must be at least 8 characters",
+        "acceptTermsRequired": "You must accept the terms and conditions",
+        "confirmPasswordRequired": "Please confirm your password",
+        "passwordsDoNotMatch": "Passwords do not match",
+        "validationFailed": "Please check your input",
+        "unauthorized": "Invalid credentials",
+        "forbidden": "Access denied. Please refresh the page and try again.",
+        "conflict": "A user with this email address already exists",
+        "internalServerError": "An error occurred. Please try again later",
+        "tooManyRequests": "Too many requests. Please wait a moment and try again.",
+        "registerFailed": "Registration failed",
+        "autoLoginFailed": "Registration successful, but automatic login failed. Please sign in manually."
+      }
+    },
+    "registrationSuccess": {
+      "title": "Registration Successful",
+      "description": "Thank you for registering! Please confirm your email address to complete your account setup.",
+      "confirmButton": "Confirm Email",
+      "confirming": "Confirming your email...",
+      "success": "Email confirmed successfully! You can now sign in.",
+      "confirmedMessage": "Your email has been confirmed successfully!",
+      "continueButton": "Continue to Sign In",
+      "backToSignIn": "Back to Sign In",
+      "errors": {
+        "tokenRequired": "Email verification token is required. Please use the link from your email.",
+        "confirmFailed": "Failed to confirm email. Please try again or use the link from your email.",
+        "validationFailed": "Please check your input",
+        "unauthorized": "Invalid verification token",
+        "forbidden": "Access denied. Please refresh the page and try again.",
+        "internalServerError": "An error occurred. Please try again later",
+        "tooManyRequests": "Too many requests. Please wait a moment and try again."
+      }
+    },
+    "forgotPassword": {
+      "title": "Forgot Password",
+      "description": "Enter your email address and we will send you a link to reset your password.",
+      "emailLabel": "E-Mail Address",
+      "submitButton": "Send reset link",
+      "submitting": "Sending...",
+      "backToSignIn": "Back to Sign In",
+      "successTitle": "Check Your Email",
+      "successDescription": "If an account with this email exists, you will receive a password reset link shortly.",
+      "resetPasswordButton": "Reset Password",
+      "errors": {
+        "emailInvalid": "Please enter a valid email address",
+        "forgotPasswordFailed": "Failed to send password reset email. Please try again.",
+        "tooManyRequests": "Too many requests. Please wait a moment and try again.",
+        "internalServerError": "An error occurred. Please try again later"
+      }
+    },
+    "resetPassword": {
+      "title": "Reset Password",
+      "description": "Enter your new password below.",
+      "newPasswordLabel": "New Password",
+      "confirmPasswordLabel": "Confirm New Password",
+      "submitButton": "Reset Password",
+      "submitting": "Resetting...",
+      "backToSignIn": "Back to Sign In",
+      "requestNewLink": "Request a new reset link",
+      "success": "Password reset successfully. You can now sign in with your new password.",
+      "errors": {
+        "tokenRequired": "Password reset token is required. Please use the link from your email.",
+        "resetPasswordFailed": "Failed to reset password. Please try again or request a new reset link.",
+        "expiredToken": "Your password reset link has expired. Please request a new one.",
+        "invalidToken": "Invalid reset link. Please request a new password reset.",
+        "confirmPasswordRequired": "Please confirm your password",
+        "passwordsDoNotMatch": "Passwords do not match",
+        "newPasswordMinLength": "Password must be at least 8 characters",
+        "tooManyRequests": "Too many requests. Please wait a moment and try again.",
+        "internalServerError": "An error occurred. Please try again later"
+      }
+    },
+    "myAccount": {
+      "title": "My Account",
+      "personalInformation": "Personal Information",
+      "logout": "Logout",
+      "logoutSuccess": "You have been logged out successfully.",
+      "logoutError": "Logout failed. Please try again.",
+      "noCustomerData": "No customer data available.",
+      "overviewWelcomeMessage": "Welcome back, {name}!",
+      "overviewLabel": "Overview",
+      "ordersLabel": "My Orders",
+      "orderDetailLabel": "Order Detail",
+      "ordersDescription": "Track shipments, return items, or view invoices",
+      "myDataLabel": "My Data",
+      "myDataDescription": "Change customer data and password, set favorite store and size profile",
+      "backButtonLabel": "Back to Account Overview",
+      "navigationAriaLabel": "Account Navigation",
+      "personalDataLabel": "Personal Data",
+      "addressesLabel": "Addresses",
+      "changePasswordLabel": "Change Password",
+      "edit": "Edit",
+      "save": "Save",
+      "cancel": "Cancel",
+      "saving": "Saving...",
+      "customerData": {
+        "title": "Contact Data",
+        "edit": "Edit contact data",
+        "email": "Email",
+        "firstName": "First Name",
+        "lastName": "Last Name",
+        "salutation": "Salutation",
+        "dateOfBirth": "Date of Birth",
+        "salutationOptions": {
+          "Ms": "Ms.",
+          "Mr": "Mr.",
+          "Diverse": "Diverse"
+        },
+        "updateSuccess": "Personal data updated successfully",
+        "errors": {
+          "general": "Failed to update personal data",
+          "firstNameRequired": "First name is required",
+          "lastNameRequired": "Last name is required"
+        }
+      },
+      "changePassword": {
+        "changePasswordTitle": "Password",
+        "changePasswordDescription": "Here you can set a new password (min. 8 characters including at least 1 letter/max 18 characters, no special characters). For security reasons, you need to enter your old password.",
+        "currentPassword": "Current Password",
+        "newPassword": "New Password",
+        "confirmNewPassword": "Confirm New Password",
+        "saving": "Saving...",
+        "passwordChangeSuccess": "Password changed successfully. Please sign in again with your new password.",
+        "passwordChangeError": "Failed to change password",
+        "submitButtonLabel": "Change Password",
+        "errors": {
+          "currentPasswordRequired": "Current password is required",
+          "newPasswordMinLength": "New password must be at least 8 characters",
+          "confirmPasswordRequired": "Please confirm your new password",
+          "passwordsDoNotMatch": "Passwords do not match"
+        }
+      },
+      "addresses": {
+        "title": "Billing Address",
+        "addAddress": "Add Address",
+        "manage": "Manage Addresses",
+        "noAddresses": "No addresses found",
+        "loadError": "Failed to load addresses",
+        "showMore": "More",
+        "showLess": "Less",
+        "edit": "Edit",
+        "close": "Close",
+        "delete": "Delete",
+        "defaultShipping": "Default Shipping",
+        "defaultBilling": "Default Billing",
+        "addSuccess": "Address added successfully",
+        "updateSuccess": "Address updated successfully",
+        "deleteSuccess": "Address deleted successfully",
+        "addError": "Failed to add address",
+        "updateError": "Failed to update address",
+        "deleteError": "Failed to delete address",
+        "deleteConfirmation": "Are you sure you want to delete {addressLabel}?",
+        "deleteConfirmationDescription": "This action cannot be undone. The address will be permanently removed.",
+        "deleting": "Deleting...",
+        "setDefaultShipping": "Set as Default Shipping",
+        "setDefaultBilling": "Set as Default Billing",
+        "setDefaultShippingSuccess": "Default shipping address updated successfully",
+        "setDefaultBillingSuccess": "Default billing address updated successfully",
+        "setDefaultShippingError": "Failed to set default shipping address",
+        "setDefaultBillingError": "Failed to set default billing address",
+        "backToList": "Back to Address List"
+      }
+    },
+    "refreshToken": {
+      "errors": {
+        "refreshTokenRequired": "Refresh token is required"
+      }
+    }
+  },
+  "address": {
+    "errors": {
+      "salutationRequired": "Salutation is required",
+      "firstNameRequired": "First name is required",
+      "lastNameRequired": "Last name is required",
+      "streetNameRequired": "Street name is required",
+      "streetNumberRequired": "Street number is required",
+      "additionalStreetInfoRequired": "Additional street info is required",
+      "postalCodeRequired": "Postal code is required",
+      "cityRequired": "City is required",
+      "countryRequired": "Country is required",
+      "emailRequired": "Email is required",
+      "emailInvalid": "Please enter a valid email address"
+    },
+    "form": {
+      "fields": {
+        "salutation": "Salutation",
+        "firstName": "First Name",
+        "lastName": "Last Name",
+        "streetName": "Street Name",
+        "streetNumber": "Street Number",
+        "additionalStreetInfo": "Additional Street Info",
+        "postalCode": "Postal Code",
+        "city": "City",
+        "country": "Country",
+        "email": "Email"
+      },
+      "additionalAddressLine": "+ Additional Address Line",
+      "defaultShipping": "Default Shipping",
+      "defaultBilling": "Default Billing",
+      "salutationOptions": {
+        "Ms": "Ms.",
+        "Mr": "Mr.",
+        "Diverse": "Diverse"
+      }
+    }
+  },
+  "orderHistory": {
+    "backToOrders": "Back to Orders",
+    "orderNotFound": "Order not found or failed to load",
+    "orderNumber": "Order #{orderNumber}",
+    "orderStatus": "Order status",
+    "orderStatusAria": "Order status: {state}",
+    "orderDate": "Order date",
+    "paymentMethod": "Payment method",
+    "notAvailable": "N/A",
+    "shipping": "Shipping",
+    "items": "Items",
+    "artNrLabel": "Art.-Nr.: {sku}",
+    "qtyLabel": "Qty:",
+    "subtotal": "Subtotal",
+    "shippingWithMethod": "Shipping ({method})",
+    "tax": "Tax",
+    "total": "Total",
+    "shippingAddress": "Shipping Address",
+    "billingAddress": "Billing Address",
+    "columns": {
+      "products": "Products",
+      "date": "Date",
+      "orderNumber": "Order Number",
+      "price": "Price",
+      "status": "Status"
+    },
+    "loadError": "Failed to load orders",
+    "emptyOrders": "You haven't placed any orders yet.",
+    "continueShopping": "Continue Shopping",
+    "showingResults": "Showing {from}-{to} of {total} orders",
+    "previous": "Previous",
+    "next": "Next",
+    "pageOf": "Page {current} of {total}",
+    "viewOrder": "View order",
+    "lastOrder": "Last order",
+    "deliveryTime": "Delivery time",
+    "deliveryTimeValue": "2-3 weeks",
+    "orderState": {
+      "Open": "Open",
+      "Confirmed": "Confirmed",
+      "Processing": "Processing",
+      "Shipped": "Shipped",
+      "Complete": "Complete",
+      "Delivered": "Delivered",
+      "Cancelled": "Cancelled"
+    }
+  },
+  "carousel": {
+    "nextSlide": "Next slide",
+    "previousSlide": "Previous slide",
+    "ariaLabel": "Carousel",
+    "slideXofY": "Slide {current} of {total}"
+  },
+  "pagination": {
+    "pageOf": "Page {currentPage} of {totalPages}",
+    "previousPage": "Previous page",
+    "nextPage": "Next page",
+    "ariaLabel": "Pagination",
+    "currentPageAriaLabel": "Page {currentPage} of {totalPages}"
+  },
+  "checkout": {
+    "breadcrumb": "Checkout",
+    "title": "Checkout",
+    "accountSelectionTitle": "Account Selection",
+    "backToCart": "Back to basket",
+    "login": {
+      "title": "Sign In",
+      "description": "Use your account and collect points for this purchase"
+    },
+    "guest": {
+      "title": "Order as Guest",
+      "description": "You can complete your purchases without creating an account",
+      "button": "Order as Guest"
+    },
+    "createAccount": {
+      "title": "Create Account",
+      "description": "Create an account and collect SHOPINCLUB points for your order.",
+      "button": "Create Account now"
+    },
+    "shipping": {
+      "title": "Shipping Address",
+      "requiredFields": "* Required fields",
+      "saving": "Saving...",
+      "noAddress": "No shipping address set",
+      "sameAsBilling": "The delivery address matches the billing address",
+      "saveError": "Failed to save shipping address. Please try again."
+    },
+    "deliveryMethod": {
+      "title": "Delivery",
+      "free": "Free",
+      "freeShippingThreshold": "Free shipping over {amount}",
+      "noMethodsAvailable": "No shipping methods available for your shipping address. This may be due to your language/currency selection. Please try selecting a different language or currency.",
+      "saveError": "Failed to save shipping method. Please try again."
+    },
+    "billing": {
+      "title": "Billing Address",
+      "requiredFields": "* Required fields",
+      "saving": "Saving...",
+      "noAddress": "No billing address set",
+      "saveError": "Failed to save billing address. Please try again."
+    },
+    "payment": {
+      "title": "Payment Method",
+      "noMethodsAvailable": "No payment methods available. Please try again later.",
+      "saveError": "Failed to save payment method. Please try again.",
+      "via": "via {interface}"
+    },
+    "paymentInitiationError": "Failed to initiate payment. Please try again.",
+    "orderCreationError": "Failed to create order. Please try again.",
+    "orderAlreadyExists": "Your order has already been processed. Please check your email or account order history.",
+    "cartMissing": "Please check your email or account order history to check if order is already placed.",
+    "processingOrder": "Processing your order...",
+    "retry": "Retry",
+    "paymentProcessing": "Processing payment result...",
+    "steps": {
+      "continueTo": "Continue to {step}",
+      "completeLabel": "Complete",
+      "placeOrder": "Place Order",
+      "billing": {
+        "title": "Billing Address"
+      },
+      "shipping": {
+        "title": "Shipping Address"
+      },
+      "deliveryMethod": {
+        "title": "Delivery Method"
+      },
+      "payment": {
+        "title": "Payment Method"
+      },
+      "review": {
+        "title": "Review Order",
+        "acceptTerms": "I have taken note of and accept the instruction regarding my right of withdrawal and the General Terms and Conditions.",
+        "buyNow": "Buy Now",
+        "termsRequired": "Please accept the Terms and Conditions to continue.",
+        "noCartError": "No cart found. Please try again.",
+        "processing": "Processing...",
+        "paymentFailure": "Payment failed. Please try again."
+      },
+      "complete": {
+        "title": "Complete"
+      }
+    },
+    "complete": {
+      "thankYou": "Thank you for your order",
+      "confirmationMessage": "Order No. {orderNumber} has been placed. A confirmation email will be sent shortly to {email}.",
+      "orderDetails": "Order Details",
+      "orderNumber": "Order Number: {orderNumber}",
+      "deliveryTime": "Delivery in 2-3 working days",
+      "delivery": "Delivery",
+      "deliveryAddress": "{name}, {address}, {city}, {country}",
+      "deliveryMethod": "Delivery Method",
+      "deliveryMethodDetails": "DHL Standard, 1 working day",
+      "payment": "Payment",
+      "paymentMethod": "unknown",
+      "orderSummary": "Order Summary",
+      "orderSummaryPlaceholder": "Order summary content will be displayed here",
+      "loadError": "Unable to load order details. Please try again later.",
+      "edit": "Edit"
+    },
+    "footer": {
+      "company": "Company",
+      "imprint": "Imprint",
+      "termsAndPrivacy": "Terms & Conditions, Privacy Policy & Right of Withdrawal",
+      "copyright": "© 2023 SHOPIN Store GmbH & Co. KG"
+    }
+  },
+  "teaser": {
+    "productCarousel": {
+      "noProducts": "No products to display."
+    },
+    "richText": {
+      "assetUnresolved": "Asset (unresolved)"
+    }
+  },
+  "wishlist": {
+    "title": "Wishlist",
+    "item": "item",
+    "items": "items",
+    "emptyMessage": "Your wishlist is empty. Start adding products you love!",
+    "loading": "Loading...",
+    "addSuccess": "Added to wishlist",
+    "removeSuccess": "Removed from wishlist",
+    "addError": "Failed to add to wishlist",
+    "removeError": "Failed to remove from wishlist"
+  }
+}

@@ -1,0 +1,52 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "ui": "tui",
+  "tasks": {
+    "setup": {
+      "dependsOn": ["^setup"],
+      "outputs": ["$TURBO_ROOT$/generated/**"],
+      "env": ["COMMERCETOOLS_*", "CONTENTFUL_*", "NEXT_*"]
+    },
+    "build": {
+      "dependsOn": ["setup", "^build"],
+      "inputs": ["$TURBO_DEFAULT$", ".env*"],
+      "outputs": [
+        ".next/**",
+        "!.next/cache/**",
+        ".output/**",
+        "dist/**",
+        "storybook-static/**",
+        "docs/**"
+      ],
+      "env": ["COMMERCETOOLS_*", "CONTENTFUL_*", "NEXT_*"]
+    },
+
+    "lint": {
+      "dependsOn": ["^lint"]
+    },
+    "format": {
+      "dependsOn": ["^format"]
+    },
+    "check-types": {
+      "dependsOn": ["^check-types"]
+    },
+    "test": {
+      "dependsOn": ["^test"]
+    },
+    "dev": {
+      "dependsOn": ["setup"],
+      "cache": false,
+      "persistent": true,
+      "inputs": ["$TURBO_DEFAULT$", ".env*"],
+      "env": ["COMMERCETOOLS_*", "CONTENTFUL_*", "NEXT_*"]
+    },
+    "start:local": {
+      "dependsOn": ["build"],
+      "cache": false,
+      "persistent": true,
+      "inputs": ["$TURBO_DEFAULT$", ".env*"],
+      "env": ["COMMERCETOOLS_*", "CONTENTFUL_*", "NEXT_*"]
+    }
+  },
+  "concurrency": "20"
+}

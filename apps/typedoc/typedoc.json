@@ -1,0 +1,13 @@
+{
+  "entryPoints": ["../../core/contracts/src/**/*.ts"],
+  "out": "docs",
+  "includeVersion": true,
+  "excludeExternals": false,
+  "excludePrivate": true,
+  "excludeProtected": true,
+  "excludeNotDocumented": false,
+  "basePath": "/typedoc/",
+  "name": "SHOPIN API Documentation",
+  "defaultCategory": "Core",
+  "categoryOrder": ["Core", "Navigation", "Products", "Responses", "*"]
+}

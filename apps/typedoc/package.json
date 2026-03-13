@@ -1,0 +1,22 @@
+{
+  "name": "@apps/typedoc",
+  "description": "Typedoc-generated API documentation site for SHOPin contracts and types.",
+  "private": true,
+  "scripts": {
+    "test:unit": "vitest",
+    "check-types": "tsc --noEmit",
+    "build": "typedoc",
+    "serve-docs": "serve docs",
+    "dev": "concurrently \"nodemon --config nodemon.config.json\" \"vite  --config vite.config.ts\""
+  },
+  "devDependencies": {
+    "@core/contracts": "*",
+    "@core/eslint-config": "*",
+    "@core/prettier-config": "*",
+    "@core/typescript-config": "*",
+    "concurrently": "^9.1.2",
+    "nodemon": "^3.1.9",
+    "typedoc": "^0.27.9",
+    "vite": "^6.2.0"
+  }
+}

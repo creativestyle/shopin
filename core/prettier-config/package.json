@@ -1,0 +1,13 @@
+{
+  "name": "@core/prettier-config",
+  "description": "Shared Prettier configuration (base and CJS export) for the monorepo.",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./base": "./base.js",
+    "./base.cjs": "./base.cjs"
+  },
+  "devDependencies": {
+    "prettier": "^3.5.1"
+  }
+}

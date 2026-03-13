@@ -1,0 +1,28 @@
+{
+  "name": "@demo/data-source-header-reader",
+  "version": "1.0.0",
+  "description": "Demo package for reading x-data-source headers",
+  "private": true,
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "lint": "eslint --fix ./src --max-warnings=0",
+    "format": "prettier --write ./src",
+    "check-types": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@nestjs/common": "^11.0.1",
+    "@nestjs/core": "^11.0.1",
+    "@config/constants": "*",
+    "@core/typescript-config": "*",
+    "@core/eslint-config": "*",
+    "@core/prettier-config": "*"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.0",
+    "eslint": "^9.20.1",
+    "typescript": "^5.7.3"
+  }
+}

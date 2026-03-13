@@ -1,0 +1,10 @@
+{
+  "exec": "PORT=4000 nest start --watch",
+  "ext": "js,ts",
+  "watch": [
+    "../../integrations/mock-api/dist",
+    "../../integrations/commercetools-api/dist",
+    "../../integrations/commercetools-auth/dist",
+    "../../integrations/contentful-api/dist"
+  ]
+}

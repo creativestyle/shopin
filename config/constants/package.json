@@ -1,0 +1,23 @@
+{
+  "name": "@config/constants",
+  "version": "1.0.0",
+  "description": "Shared constants and types (data source, auth, i18n) used across apps and integrations.",
+  "private": true,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "setup": "tsc",
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "lint": "eslint --fix ./src --max-warnings=0",
+    "format": "prettier --write ./src",
+    "check-types": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@core/typescript-config": "*",
+    "@core/eslint-config": "*",
+    "@core/prettier-config": "*",
+    "eslint": "^9.20.1",
+    "typescript": "^5.7.3"
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "name": "@core/typescript-config",
+  "description": "Shared TypeScript base config (Node 22) for apps and packages.",
+  "private": true,
+  "devDependencies": {
+    "@tsconfig/node22": "^22.0.0"
+  }
+}

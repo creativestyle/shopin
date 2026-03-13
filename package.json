@@ -1,0 +1,61 @@
+{
+  "name": "shopin-storefront-starter",
+  "version": "0.1.0",
+  "description": "Modular SHOPin storefront starter with BFF, Next.js presentation, and multi-data-source support",
+  "license": "OSL-3.0",
+  "private": true,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/creativestyle/shopin.git"
+  },
+  "bugs": {
+    "url": "https://github.com/creativestyle/shopin/issues"
+  },
+  "homepage": "https://github.com/creativestyle/shopin#readme",
+  "scripts": {
+    "setup": "turbo run setup",
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "start:local": "turbo run start:local",
+    "lint": "turbo run lint",
+    "format": "turbo run format",
+    "check-types": "turbo run check-types",
+    "check-dependencies": "npm audit --audit-level=high",
+    "test": "turbo run test",
+    "prepare": "husky install || true"
+  },
+  "devDependencies": {
+    "husky": "^8.0.0",
+    "lint-staged": "^15.2.10",
+    "prettier": "^3.5.0",
+    "turbo": "^2.4.2",
+    "typescript": "5.7.3",
+    "ts-node": "^10.9.2"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "packageManager": "npm@10.9.2",
+  "workspaces": [
+    "apps/*",
+    "core/*",
+    "integrations/*",
+    "config/*",
+    "demo/*",
+    "test/*"
+  ],
+  "lint-staged": {
+    "*.{js,ts,tsx}": [
+      "turbo run lint",
+      "turbo run format"
+    ],
+    "*.{json,css,md}": [
+      "turbo run format"
+    ]
+  },
+  "overrides": {
+    "minimatch": "^10.2.2",
+    "glob": "^11.1.0",
+    "bfj": "^9.1.3"
+  }
+}

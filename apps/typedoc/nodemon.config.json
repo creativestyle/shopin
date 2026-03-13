@@ -1,0 +1,5 @@
+{
+  "exec": "typedoc --out docs",
+  "ext": "js,ts",
+  "watch": ["../../core/contracts/src"]
+}

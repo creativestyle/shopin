@@ -1,0 +1,193 @@
+@import 'tailwindcss';
+@source '../../../demo/data-source-selector/';
+@tailwind utilities;
+@import 'tw-animate-css';
+
+@theme {
+  /* ===== BRAND COLORS ===== */
+  --color-primary: #b7183e;
+  --color-secondary: #d82b55;
+  --color-accent: #84cc16;
+
+  /* ===== SEMANTIC COLORS ===== */
+  --color-success: #15803d;
+  --color-warning: #f97316;
+  --color-error: #dc2626;
+  --color-info: #3b82f6;
+
+  /* ===== NEUTRAL SCALE ===== */
+  --color-gray-50: #f9fafb;
+  --color-gray-100: #f3f4f6;
+  --color-gray-200: #e5e7eb;
+  --color-gray-300: #d1d5db;
+  --color-gray-400: #9ca3af;
+  --color-gray-500: #6b7280;
+  --color-gray-600: #4b5563;
+  --color-gray-700: #374151;
+  --color-gray-800: #1f2937;
+  --color-gray-900: #111827;
+  --color-gray-950: #030712;
+
+  /* ===== ADDITIONAL COLORS ===== */
+  --color-green-100: #dcfce7;
+  --color-green-700: #15803d;
+  --color-blue-500: #3b82f6;
+  --color-blue-600: #2563eb;
+  --color-lime-500: #84cc16;
+  --color-orange-100: #ffedd5;
+  --color-orange-500: #f97316;
+  --color-orange-600: #ea580c;
+  --color-red-200: #fecaca;
+  --color-red-400: #f87171;
+  --color-red-600: #dc2626;
+  --color-red-700: #b91c1c;
+  --color-sky-100: #e0f2fe;
+  --color-white: #ffffff;
+
+  /* ===== TYPOGRAPHY ===== */
+  --font-base:
+    var(--font-dm-sans), -apple-system, BlinkMacSystemFont, 'Segoe UI',
+    'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+  --font-mono:
+    'JetBrains Mono', 'Fira Code', 'Monaco', 'Consolas', 'Liberation Mono',
+    'Courier New', monospace;
+  --font-base-bold:
+    var(--font-dm-sans), -apple-system, BlinkMacSystemFont, 'Segoe UI',
+    'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+
+  /* ===== Z-INDEX STACK ===== */
+  --z-carousel-arrow: 20;
+  --z-scroll-button-bg: 29;
+  --z-scroll-button: 30;
+  --z-tooltip: 40;
+  --z-header: 45;
+  --z-modal: 50;
+  --z-dropdown: 50;
+
+  /* ===== SHADOWS ===== */
+  --shadow-card: 0px 5px 10px 0px rgba(0, 0, 0, 0.05);
+}
+
+@layer base {
+  html {
+    /* this trick gives us possibility to use container query units. CW units makes sure scrollbar width is excluded */
+    container-type: inline-size;
+    line-height: 1.5;
+  }
+
+  body {
+    @apply bg-white font-base text-gray-950;
+  }
+
+  :where(html) {
+    --_container-padding: theme(spacing.3);
+    --_container-width: 1920px;
+    --_checkout-max-width: 1432px;
+    --_fullbleed: max(
+      var(--_container-padding),
+      50cqw - var(--_container-width) / 2
+    );
+
+    @variant sm {
+      --_container-padding: theme(spacing.6);
+    }
+  }
+
+  /* Carousel configuration - responsive slides per view */
+  [data-role='carousel'] {
+    --carousel-slidesPerView: var(--carousel-slidesPerView-base);
+    --carousel-arrow-position: 50%;
+    --carousel-gap: theme(spacing.4);
+
+    @variant sm {
+      --carousel-slidesPerView: var(--carousel-slidesPerView-sm);
+    }
+
+    @variant md {
+      --carousel-slidesPerView: var(--carousel-slidesPerView-md);
+    }
+
+    @variant lg {
+      --carousel-slidesPerView: var(--carousel-slidesPerView-lg);
+    }
+
+    @variant xl {
+      --carousel-slidesPerView: var(--carousel-slidesPerView-xl);
+    }
+
+    @variant 2xl {
+      --carousel-slidesPerView: var(--carousel-slidesPerView-2xl);
+    }
+  }
+
+  .ui-container {
+    margin-inline: var(--_fullbleed);
+  }
+
+  .ui-fullbleed {
+    margin-inline: calc(-1 * var(--_fullbleed));
+  }
+
+  /* Full viewport width: use with ui-fullbleed so content (e.g. hero) is not limited by container */
+  .ui-fullbleed-width {
+    width: calc(100% + 2 * var(--_fullbleed));
+    margin-inline: calc(-1 * var(--_fullbleed));
+  }
+
+  .ui-max-width-container {
+    max-width: calc(100vw - 2 * var(--_fullbleed));
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .ui-checkout-max-width-container {
+    max-width: min(
+      var(--_checkout-max-width),
+      calc(100vw - 2 * var(--_fullbleed))
+    );
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
+
+@layer utilities {
+  .card-inner-shadow {
+    box-shadow: 0px 0px 50px 0px #0000000d inset;
+  }
+  .transition-normal {
+    @apply duration-300 ease-out;
+  }
+}
+
+@utility no-scrollbar {
+  @apply [scrollbar-width:none] [&::-webkit-scrollbar]:hidden;
+}
+
+@utility shadow-down {
+  box-shadow: 0 5px 10px 0 rgba(0, 0, 0, 0.05);
+}
+
+@utility scroll-smooth-motion {
+  scroll-behavior: smooth;
+}
+
+@utility lord-of-the-focus-ring {
+  @apply rounded-md outline-none focus-visible:ring-1 focus-visible:ring-black/20;
+}
+
+@variant touchscreen {
+  @media (pointer: coarse) or (hover: none) {
+    @slot;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scroll-smooth-motion {
+    scroll-behavior: auto;
+  }
+}
+
+/* Fix Radix UI Dialog scroll lock adding unwanted margin */
+body[data-scroll-locked][data-scroll-locked] {
+  margin-right: 0 !important;
+}

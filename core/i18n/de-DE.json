@@ -1,0 +1,698 @@
+{
+  "common": {
+    "welcomeMessage": "Willkommen in unserer Anwendung!",
+    "yes": "Ja",
+    "no": "Nein",
+    "description": "Ihre E-Commerce-Plattform mit einem modernen Design-System.",
+    "homepage": "Startseite",
+    "close": "Schließen",
+    "scrollableDialogContent": "Scrollbarer Dialoginhalt",
+    "scrollLeft": "Nach links scrollen",
+    "scrollRight": "Nach rechts scrollen",
+    "hidePassword": "Passwort ausblenden",
+    "showPassword": "Passwort anzeigen",
+    "viewAll": "Alle anzeigen",
+    "navigation": "Navigation",
+    "mobileNavigationMenu": "Mobile Navigation Menü",
+    "wishlist": "Wunschliste",
+    "stores": "Stores",
+    "shopinclub": "SHOPINCLUB",
+    "contact": "Kontakt",
+    "faqHelp": "FAQ / Hilfe",
+    "countries": {
+      "PL": "Polen",
+      "DE": "Deutschland",
+      "FR": "Frankreich",
+      "GB": "Vereinigtes Königreich",
+      "US": "Vereinigte Staaten"
+    },
+    "loading": "Lädt...",
+    "loadingAriaLabel": "Lädt...",
+    "noDataFound": "Keine Daten gefunden",
+    "errors": {
+      "tooManyRequests": "Zu viele Anfragen. Bitte warten Sie einen Moment und versuchen Sie es erneut.",
+      "internalServerError": "Etwas ist schiefgelaufen. Bitte versuchen Sie es erneut.",
+      "validationFailed": "Bitte überprüfen Sie Ihre Eingabe."
+    }
+  },
+  "topBar": {
+    "freeReturns": "Kostenlose Retoure",
+    "largestSelection": "Größtes Shopin Sortiment weltweit",
+    "securePayment": "Sichere Zahlung",
+    "hugeSizeSelection": "Riesige Größenauswahl",
+    "directFromManufacturer": "Direkt vom Hersteller"
+  },
+  "userMenu": {
+    "storeLocator": "Store Locator",
+    "account": "Konto",
+    "wishlist": "Wunschliste",
+    "cart": "Warenkorb",
+    "search": "Suchen"
+  },
+  "footer": {
+    "newsletter": {
+      "title": "Newsletter",
+      "description": "Melden Sie sich für unseren Newsletter an und erhalten Sie einen",
+      "voucher": "5 € Gutschein",
+      "descriptionEnd": "auf Ihre erste Bestellung!",
+      "signUp": "Jetzt anmelden"
+    },
+    "company": {
+      "title": "Unternehmen",
+      "website": "Website",
+      "career": "Karriere",
+      "sustainability": "Nachhaltigkeit",
+      "forRetailers": "Für Fachhändler",
+      "press": "Presse"
+    },
+    "service": {
+      "title": "Service & Hilfe",
+      "shopinClub": "SHOPINCLUB",
+      "storeFinder": "Storefinder",
+      "sizeFinder": "Größenfinder",
+      "returns": "Retournieren",
+      "helpFaq": "Hilfe & FAQ"
+    },
+    "customerService": {
+      "title": "Kundenservice",
+      "phone": "0800 / 12 345 67",
+      "hours": "Mo - Fr: 09:00 - 17:00 Uhr",
+      "contactUs": "Kontaktieren Sie uns"
+    },
+    "social": {
+      "title": "Folgen Sie uns"
+    },
+    "giftVoucher": {
+      "title": "Geschenkgutschein",
+      "link": "Zu den Geschenkgutscheinen"
+    },
+    "paymentMethods": {
+      "title": "Zahlungsarten",
+      "invoice": "Rechnung",
+      "prepayment": "Vorkasse",
+      "applePay": "Apple Pay",
+      "paypal": "PayPal",
+      "amazon": "Amazon",
+      "visa": "Visa",
+      "mastercard": "MC",
+      "amex": "Amex"
+    },
+    "shipping": {
+      "title": "Versandpartner",
+      "dhl": "DHL",
+      "dhlExpress": "DHL Express",
+      "goGreen": "GoGreen"
+    },
+    "language": {
+      "title": "Sprachauswahl"
+    },
+    "legal": {
+      "imprint": "Impressum",
+      "terms": "AGB & Widerrufsrechte",
+      "privacy": "Datenschutzerklärung",
+      "privacySettings": "Privatsphäre-Einstellungen",
+      "copyright": "© 2023 SHOPIN Store GmbH & Co. KG"
+    }
+  },
+  "product": {
+    "noDataFound": "Keine Produktdaten für diese ID gefunden.",
+    "errorFetching": "Fehler beim Laden der Daten",
+    "gallery": {
+      "loadMore": "Mehr Fotos laden",
+      "dialogTitle": "Bildergalerie",
+      "dialogDescription": "Durch Produktbilder blättern"
+    },
+    "buyBox": {
+      "size": "Größe",
+      "findYourSize": "Finde deine Größe",
+      "reserveInStore": "Im Store reservieren",
+      "wishlistSaveAria": "Zur Wunschliste speichern",
+      "wishlistRemoveAria": "Von der Wunschliste entfernen",
+      "addToBasket": "In den Warenkorb",
+      "adding": "Wird hinzugefügt...",
+      "addToBasketSuccess": "Zum Warenkorb hinzugefügt",
+      "selectVariant": "Bitte wählen Sie die Variante aus, die Sie in den Warenkorb legen möchten",
+      "taxNote": "inkl. MwSt.",
+      "showMoreSizesButton": "+{count} mehr",
+      "showMoreSizesAria": "Zeige {count} weitere Größen",
+      "benefits": {
+        "returnsPolicy": "14 Tage Rückgaberecht",
+        "freeReturn": "Kostenlose Retoure",
+        "loyaltyBonus": "3% Treuebonus sammeln"
+      },
+      "recommendedRetailPrice": "UVP",
+      "omnibusPrice": "30-Tage Bestpreis"
+    },
+    "seo": {
+      "about": "Über dieses Produkt"
+    },
+    "details": "Details"
+  },
+  "productCollection": {
+    "sorting": {
+      "top-sellers": "Bestseller",
+      "price-asc": "Preis: aufsteigend",
+      "price-desc": "Preis: absteigend",
+      "newest": "Neueste",
+      "review-score": "Beste Bewertung",
+      "name-asc": "Name: A bis Z",
+      "name-desc": "Name: Z bis A"
+    },
+    "topbar": {
+      "showCategories": "Kategorien einblenden",
+      "hideCategories": "Kategorien ausblenden",
+      "sortBy": "Sortieren nach",
+      "allFilters": "Alle Filter"
+    },
+    "filters": {
+      "drawerTitle": "Filtern",
+      "saleOnly": "Nur Sale %",
+      "searchByName": "Nach Name suchen",
+      "priceRange": "Preis",
+      "color": "Farbe",
+      "size": "Größe",
+      "brand": "Marke",
+      "material": "Material",
+      "style": "Stil",
+      "finish": "Oberfläche",
+      "type": "Typ",
+      "new-arrival": "Neuheit",
+      "productspec": "Produktspezifikation",
+      "specification-color": "Farbe",
+      "specification-frame-material": "Rahmenmaterial",
+      "specification-wheel-size": "Radgröße",
+      "specification-frame-size-in-cm": "Rahmengröße (cm)",
+      "specification-gears": "Schaltung",
+      "specification-brakes": "Bremsen",
+      "appliedFilters": "Angewandte Filter",
+      "clearAll": "Alle Filter löschen",
+      "noResultsTitle": "Keine Produkte gefunden",
+      "noResultsMessage": "Versuche, deine Filter anzupassen oder zurückzusetzen, um das Gesuchte zu finden.",
+      "sizeShowMore": "+{count} mehr",
+      "sizeShowLess": "Weniger anzeigen",
+      "resetAll": "Alle löschen",
+      "applyFilters": "Filter anwenden"
+    }
+  },
+  "cart": {
+    "title": "Warenkorb",
+    "titleWithCount": "Warenkorb ({count})",
+    "checkout": "Zur Kasse",
+    "continueShopping": "Weiter einkaufen",
+    "item": {
+      "quantity": "Menge",
+      "remove": "Entfernen",
+      "removeAction": "Artikel entfernen",
+      "addToWishlist": "Zur Wunschliste hinzufügen",
+      "artNumber": "Art.-Nr.",
+      "color": "Farbe",
+      "size": "Größe",
+      "deliveryEstimate": "Lieferzeit",
+      "removeConfirmation": {
+        "message": "Möchten Sie {name} wirklich aus Ihrem Warenkorb entfernen?",
+        "description": "Diese Aktion kann nicht rückgängig gemacht werden.",
+        "cancel": "Abbrechen",
+        "confirm": "Entfernen",
+        "removing": "Wird entfernt..."
+      }
+    },
+    "summary": {
+      "title": "Bestellübersicht",
+      "subtotal": "Zwischensumme",
+      "shipping": "Versand",
+      "tax": "MwSt.",
+      "discount": "Rabatt",
+      "total": "Gesamtpreis",
+      "totalInclTax": "Gesamt inkl. MwSt.",
+      "taxNote": "inkl. MwSt.",
+      "promoCode": "Gutscheincode"
+    },
+    "errors": {
+      "addToCart": "Fehler beim Hinzufügen zum Warenkorb",
+      "updateItem": "Fehler beim Aktualisieren des Artikels",
+      "removeItem": "Fehler beim Entfernen des Artikels",
+      "fetchCart": "Fehler beim Laden des Warenkorbs"
+    },
+    "addToCartModal": {
+      "toastMessage": "Gute Wahl. Artikel wurde zum Warenkorb hinzugefügt.",
+      "moreProducts": "Mehr Produkte",
+      "goToCart": "Zum Warenkorb"
+    },
+    "empty": {
+      "title": "Ihr Warenkorb enthält aktuell keine Artikel.",
+      "message": "Ihr Warenkorb enthält aktuell keine Artikel. Wenn Sie ein Konto erstellt haben, können Sie sich hier anmelden und schauen, ob Sie Produkte im Warenkorb gespeichert haben.",
+      "continueShopping": "Weiter einkaufen",
+      "signIn": "Anmelden"
+    },
+    "cart": "Warenkorb"
+  },
+  "account": {
+    "signIn": {
+      "title": "Einloggen",
+      "description": "Nutzen Sie Ihr Konto und sammeln Sie Punkte für diesen Einkauf",
+      "emailLabel": "E-Mail-Adresse",
+      "passwordLabel": "Passwort",
+      "signInButton": "Einloggen",
+      "signingIn": "Wird angemeldet...",
+      "submitButton": "Absenden",
+      "submitting": "Wird gesendet...",
+      "stayLoggedIn": "Angemeldet bleiben",
+      "forgotPassword": "Passwort vergessen?",
+      "noAccount": "Noch kein Konto?",
+      "signUp": "Registrieren",
+      "success": "Sie wurden erfolgreich angemeldet.",
+      "errors": {
+        "emailRequired": "E-Mail ist erforderlich",
+        "emailInvalid": "Bitte geben Sie eine gültige E-Mail-Adresse ein",
+        "passwordRequired": "Passwort ist erforderlich",
+        "loginFailed": "Anmeldung fehlgeschlagen.",
+        "tooManyRequests": "Zu viele Anfragen. Bitte warten Sie einen Moment und versuchen Sie es erneut.",
+        "validationFailed": "Validierung fehlgeschlagen",
+        "unauthorized": "Anmeldung fehlgeschlagen. Bitte überprüfen Sie Ihre Anmeldedaten und versuchen Sie es erneut.",
+        "emailNotVerified": "Bitte bestätigen Sie Ihre E-Mail-Adresse, bevor Sie sich anmelden. Überprüfen Sie Ihren Posteingang auf eine Bestätigungs-E-Mail.",
+        "forbidden": "Zugriff verweigert. Bitte aktualisieren Sie die Seite und versuchen Sie es erneut.",
+        "internalServerError": "Interner Serverfehler"
+      }
+    },
+    "signUp": {
+      "title": "Registrieren",
+      "backToSignIn": "Zurück zur Anmeldung",
+      "backToCheckout": "Zurück zur Kasse",
+      "salutationOptions": {
+        "Ms": "Frau",
+        "Mr": "Herr",
+        "Diverse": "Divers"
+      },
+      "firstNameLabel": "Vorname",
+      "lastNameLabel": "Nachname",
+      "emailLabel": "E-Mail-Adresse",
+      "dateOfBirthLabel": "Geburtsdatum",
+      "passwordLabel": "Passwort",
+      "confirmPasswordLabel": "Passwort bestätigen",
+      "termsTextPrefix": "Ich habe die ",
+      "termsLink": "Teilnahmebedingungen",
+      "termsTextMiddle": " des SHOPINCLUBs gelesen und bin damit einverstanden, auf die ",
+      "privacyLink": "Datenschutzerklärung",
+      "termsTextSuffix": " bin ich hingewiesen worden.",
+      "submitButton": "kostenlos registrieren",
+      "submitting": "Wird registriert...",
+      "success": "Registrierung erfolgreich",
+      "successAndLoggedIn": "Registrierung erfolgreich. Sie wurden automatisch angemeldet.",
+      "errors": {
+        "firstNameRequired": "Vorname ist erforderlich",
+        "lastNameRequired": "Nachname ist erforderlich",
+        "emailInvalid": "Bitte geben Sie eine gültige E-Mail-Adresse ein",
+        "dateOfBirthInvalid": "Bitte geben Sie ein gültiges Datum im Format JJJJ-MM-TT ein",
+        "passwordMinLength": "Das Passwort muss mindestens 8 Zeichen lang sein",
+        "acceptTermsRequired": "Sie müssen den Allgemeinen Geschäftsbedingungen zustimmen",
+        "confirmPasswordRequired": "Bitte bestätigen Sie Ihr Passwort",
+        "passwordsDoNotMatch": "Die Passwörter stimmen nicht überein",
+        "validationFailed": "Bitte überprüfen Sie Ihre Eingaben",
+        "unauthorized": "Ungültige Anmeldedaten",
+        "forbidden": "Zugriff verweigert. Bitte aktualisieren Sie die Seite und versuchen Sie es erneut.",
+        "conflict": "Ein Benutzer mit dieser E-Mail-Adresse existiert bereits",
+        "internalServerError": "Ein Fehler ist aufgetreten. Bitte versuchen Sie es später erneut",
+        "tooManyRequests": "Zu viele Anfragen. Bitte warten Sie einen Moment und versuchen Sie es erneut.",
+        "registerFailed": "Registrierung fehlgeschlagen",
+        "autoLoginFailed": "Registrierung erfolgreich, aber automatische Anmeldung fehlgeschlagen. Bitte melden Sie sich manuell an."
+      }
+    },
+    "registrationSuccess": {
+      "title": "Registrierung erfolgreich",
+      "description": "Vielen Dank für Ihre Registrierung! Bitte bestätigen Sie Ihre E-Mail-Adresse, um die Einrichtung Ihres Kontos abzuschließen.",
+      "confirmButton": "E-Mail bestätigen",
+      "confirming": "Ihre E-Mail wird bestätigt...",
+      "success": "E-Mail erfolgreich bestätigt! Sie können sich jetzt anmelden.",
+      "confirmedMessage": "Ihre E-Mail wurde erfolgreich bestätigt!",
+      "continueButton": "Weiter zur Anmeldung",
+      "backToSignIn": "Zurück zur Anmeldung",
+      "errors": {
+        "tokenRequired": "E-Mail-Bestätigungstoken ist erforderlich. Bitte verwenden Sie den Link aus Ihrer E-Mail.",
+        "confirmFailed": "E-Mail-Bestätigung fehlgeschlagen. Bitte versuchen Sie es erneut oder verwenden Sie den Link aus Ihrer E-Mail.",
+        "validationFailed": "Bitte überprüfen Sie Ihre Eingabe",
+        "unauthorized": "Ungültiger Bestätigungstoken",
+        "forbidden": "Zugriff verweigert. Bitte aktualisieren Sie die Seite und versuchen Sie es erneut.",
+        "internalServerError": "Ein Fehler ist aufgetreten. Bitte versuchen Sie es später erneut",
+        "tooManyRequests": "Zu viele Anfragen. Bitte warten Sie einen Moment und versuchen Sie es erneut."
+      }
+    },
+    "forgotPassword": {
+      "title": "Passwort vergessen",
+      "description": "Geben Sie Ihre E-Mail-Adresse ein und wir senden Ihnen einen Link zum Zurücksetzen Ihres Passworts.",
+      "emailLabel": "E-Mail-Adresse",
+      "submitButton": "Link senden",
+      "submitting": "Wird gesendet...",
+      "backToSignIn": "Zurück zur Anmeldung",
+      "successTitle": "E-Mail überprüfen",
+      "successDescription": "Wenn ein Konto mit dieser E-Mail-Adresse existiert, erhalten Sie in Kürze einen Link zum Zurücksetzen des Passworts.",
+      "resetPasswordButton": "Passwort zurücksetzen",
+      "errors": {
+        "emailInvalid": "Bitte geben Sie eine gültige E-Mail-Adresse ein",
+        "forgotPasswordFailed": "Fehler beim Senden der Passwort-Zurücksetzen-E-Mail. Bitte versuchen Sie es erneut.",
+        "tooManyRequests": "Zu viele Anfragen. Bitte warten Sie einen Moment und versuchen Sie es erneut.",
+        "internalServerError": "Ein Fehler ist aufgetreten. Bitte versuchen Sie es später erneut"
+      }
+    },
+    "resetPassword": {
+      "title": "Passwort zurücksetzen",
+      "description": "Geben Sie unten Ihr neues Passwort ein.",
+      "newPasswordLabel": "Neues Passwort",
+      "confirmPasswordLabel": "Neues Passwort bestätigen",
+      "submitButton": "Passwort zurücksetzen",
+      "submitting": "Wird zurückgesetzt...",
+      "backToSignIn": "Zurück zur Anmeldung",
+      "requestNewLink": "Neuen Link anfordern",
+      "success": "Passwort erfolgreich zurückgesetzt. Sie können sich jetzt mit Ihrem neuen Passwort anmelden.",
+      "errors": {
+        "tokenRequired": "Passwort-Zurücksetzen-Token ist erforderlich. Bitte verwenden Sie den Link aus Ihrer E-Mail.",
+        "resetPasswordFailed": "Passwort konnte nicht zurückgesetzt werden. Bitte versuchen Sie es erneut oder fordern Sie einen neuen Link an.",
+        "expiredToken": "Ihr Link zum Zurücksetzen des Passworts ist abgelaufen. Bitte fordern Sie einen neuen an.",
+        "invalidToken": "Ungültiger Link. Bitte fordern Sie eine neue Passwortzurücksetzung an.",
+        "confirmPasswordRequired": "Bitte bestätigen Sie Ihr Passwort",
+        "passwordsDoNotMatch": "Passwörter stimmen nicht überein",
+        "newPasswordMinLength": "Das Passwort muss mindestens 8 Zeichen lang sein",
+        "tooManyRequests": "Zu viele Anfragen. Bitte warten Sie einen Moment und versuchen Sie es erneut.",
+        "internalServerError": "Ein Fehler ist aufgetreten. Bitte versuchen Sie es später erneut"
+      }
+    },
+    "myAccount": {
+      "title": "Mein Konto",
+      "personalInformation": "Persönliche Informationen",
+      "logout": "Abmelden",
+      "logoutSuccess": "Sie wurden erfolgreich abgemeldet.",
+      "logoutError": "Fehler beim Abmelden. Bitte versuchen Sie es erneut.",
+      "noCustomerData": "Keine Kundendaten verfügbar.",
+      "overviewWelcomeMessage": "Herzlich willkommen, {name}!",
+      "overviewLabel": "Übersicht",
+      "ordersLabel": "Meine Bestellungen",
+      "orderDetailLabel": "Bestelldetails",
+      "ordersDescription": "Sendung nachverfolgen, Artikel zurückgeben oder Rechnungen anzeigen",
+      "myDataLabel": "Meine Daten",
+      "myDataDescription": "Kundendaten und Passwort ändern, Lieblingsstore und Größenprofil festlegen",
+      "backButtonLabel": "Zurück zur Übersicht",
+      "navigationAriaLabel": "Konto Navigation",
+      "personalDataLabel": "Persönliche Daten",
+      "addressesLabel": "Adressen",
+      "changePasswordLabel": "Passwort ändern",
+      "edit": "Bearbeiten",
+      "save": "Speichern",
+      "cancel": "Abbrechen",
+      "saving": "Speichert...",
+      "customerData": {
+        "title": "Kontaktdaten",
+        "edit": "Kontaktdaten bearbeiten",
+        "email": "E-Mail",
+        "firstName": "Vorname",
+        "lastName": "Nachname",
+        "salutation": "Anrede",
+        "dateOfBirth": "Geburtsdatum",
+        "salutationOptions": {
+          "Ms": "Frau",
+          "Mr": "Herr",
+          "Diverse": "Divers"
+        },
+        "updateSuccess": "Persönliche Daten erfolgreich aktualisiert",
+        "errors": {
+          "general": "Fehler beim Aktualisieren der persönlichen Daten",
+          "firstNameRequired": "Vorname ist erforderlich",
+          "lastNameRequired": "Nachname ist erforderlich"
+        }
+      },
+      "changePassword": {
+        "changePasswordTitle": "Passwort",
+        "changePasswordDescription": "Hier können Sie ein neues Passwort (min. 8 Zeichen davon min 1 Buchstabe/max 18 Zeichen lang, keine Sonderzeichen) für sich festlegen. Dazu ist aus Sicherheitsgründen die Eingabe des alten Passworts erforderlich.",
+        "currentPassword": "Aktuelles Passwort",
+        "newPassword": "Neues Passwort",
+        "confirmNewPassword": "Neues Passwort bestätigen",
+        "saving": "Speichert...",
+        "passwordChangeSuccess": "Passwort erfolgreich geändert. Bitte melden Sie sich erneut mit Ihrem neuen Passwort an.",
+        "passwordChangeError": "Fehler beim Ändern des Passworts",
+        "submitButtonLabel": "Passwort ändern",
+        "errors": {
+          "currentPasswordRequired": "Aktuelles Passwort ist erforderlich",
+          "newPasswordMinLength": "Neues Passwort muss mindestens 8 Zeichen lang sein",
+          "confirmPasswordRequired": "Bitte bestätigen Sie Ihr neues Passwort",
+          "passwordsDoNotMatch": "Die Passwörter stimmen nicht überein"
+        }
+      },
+      "addresses": {
+        "title": "Rechnungsadresse",
+        "addAddress": "Adresse hinzufügen",
+        "manage": "Adressen verwalten",
+        "noAddresses": "Keine Adressen gefunden",
+        "loadError": "Fehler beim Laden der Adressen",
+        "showMore": "Mehr",
+        "showLess": "Weniger",
+        "edit": "Bearbeiten",
+        "close": "Abbrechen",
+        "delete": "Löschen",
+        "defaultShipping": "Standard Versand",
+        "defaultBilling": "Standard Rechnung",
+        "addSuccess": "Adresse erfolgreich hinzugefügt",
+        "updateSuccess": "Adresse erfolgreich aktualisiert",
+        "deleteSuccess": "Adresse erfolgreich gelöscht",
+        "addError": "Fehler beim Hinzufügen der Adresse",
+        "updateError": "Fehler beim Aktualisieren der Adresse",
+        "deleteError": "Fehler beim Löschen der Adresse",
+        "deleteConfirmation": "Möchten Sie {addressLabel} wirklich löschen?",
+        "deleteConfirmationDescription": "Diese Aktion kann nicht rückgängig gemacht werden. Die Adresse wird dauerhaft entfernt.",
+        "deleting": "Wird gelöscht...",
+        "setDefaultShipping": "Als Standard Versand festlegen",
+        "setDefaultBilling": "Als Standard Rechnung festlegen",
+        "setDefaultShippingSuccess": "Standard Versandadresse erfolgreich aktualisiert",
+        "setDefaultBillingSuccess": "Standard Rechnungsadresse erfolgreich aktualisiert",
+        "setDefaultShippingError": "Fehler beim Festlegen der Standard Versandadresse",
+        "setDefaultBillingError": "Fehler beim Festlegen der Standard Rechnungsadresse",
+        "backToList": "Zurück zur Adressliste"
+      }
+    },
+    "refreshToken": {
+      "errors": {
+        "refreshTokenRequired": "Refresh-Token ist erforderlich"
+      }
+    }
+  },
+  "address": {
+    "errors": {
+      "salutationRequired": "Anrede ist erforderlich",
+      "firstNameRequired": "Vorname ist erforderlich",
+      "lastNameRequired": "Nachname ist erforderlich",
+      "streetNameRequired": "Straßenname ist erforderlich",
+      "streetNumberRequired": "Hausnummer ist erforderlich",
+      "additionalStreetInfoRequired": "Zusätzliche Straßeninformationen sind erforderlich",
+      "postalCodeRequired": "Postleitzahl ist erforderlich",
+      "cityRequired": "Stadt ist erforderlich",
+      "countryRequired": "Land ist erforderlich",
+      "emailRequired": "E-Mail ist erforderlich",
+      "emailInvalid": "Bitte geben Sie eine gültige E-Mail-Adresse ein"
+    },
+    "form": {
+      "fields": {
+        "salutation": "Anrede",
+        "firstName": "Vorname",
+        "lastName": "Nachname",
+        "streetName": "Straßenname",
+        "streetNumber": "Hausnummer",
+        "additionalStreetInfo": "Zusätzliche Straßeninformationen",
+        "postalCode": "Postleitzahl",
+        "city": "Stadt",
+        "country": "Land",
+        "email": "E-Mail"
+      },
+      "additionalAddressLine": "+ Zusätzliche Adresszeile",
+      "defaultShipping": "Standard Versand",
+      "defaultBilling": "Standard Rechnung",
+      "salutationOptions": {
+        "Ms": "Frau",
+        "Mr": "Herr",
+        "Diverse": "Divers"
+      }
+    }
+  },
+  "orderHistory": {
+    "backToOrders": "Zurück zu Bestellungen",
+    "orderNotFound": "Bestellung nicht gefunden oder konnte nicht geladen werden",
+    "orderNumber": "Bestellung #{orderNumber}",
+    "orderStatus": "Bestellstatus",
+    "orderStatusAria": "Bestellstatus: {state}",
+    "orderDate": "Bestelldatum",
+    "paymentMethod": "Zahlungsart",
+    "notAvailable": "k. A.",
+    "shipping": "Versand",
+    "items": "Artikel",
+    "artNrLabel": "Art.-Nr.: {sku}",
+    "qtyLabel": "Menge:",
+    "subtotal": "Zwischensumme",
+    "shippingWithMethod": "Versand ({method})",
+    "tax": "MwSt.",
+    "total": "Gesamt",
+    "shippingAddress": "Versandadresse",
+    "billingAddress": "Rechnungsadresse",
+    "columns": {
+      "products": "Produkte",
+      "date": "Datum",
+      "orderNumber": "Bestellnummer",
+      "price": "Preis",
+      "status": "Status"
+    },
+    "loadError": "Bestellungen konnten nicht geladen werden",
+    "emptyOrders": "Sie haben noch keine Bestellungen aufgegeben.",
+    "continueShopping": "Weiter einkaufen",
+    "showingResults": "Anzeige {from}-{to} von {total} Bestellungen",
+    "previous": "Zurück",
+    "next": "Weiter",
+    "pageOf": "Seite {current} von {total}",
+    "viewOrder": "Bestellung ansehen",
+    "lastOrder": "Letzte Bestellung",
+    "deliveryTime": "Lieferzeit",
+    "deliveryTimeValue": "2-3 Wochen",
+    "orderState": {
+      "Open": "Offen",
+      "Confirmed": "Bestätigt",
+      "Processing": "In Bearbeitung",
+      "Shipped": "Versendet",
+      "Complete": "Abgeschlossen",
+      "Delivered": "Zugestellt",
+      "Cancelled": "Storniert"
+    }
+  },
+  "carousel": {
+    "nextSlide": "Nächste Slide",
+    "previousSlide": "Vorherige Slide",
+    "ariaLabel": "Karussell",
+    "slideXofY": "Slide {current} von {total}"
+  },
+  "pagination": {
+    "pageOf": "Seite {currentPage} von {totalPages}",
+    "previousPage": "Vorherige Seite",
+    "nextPage": "Nächste Seite",
+    "ariaLabel": "Seitennavigation",
+    "currentPageAriaLabel": "Seite {currentPage} von {totalPages}"
+  },
+  "checkout": {
+    "breadcrumb": "Kasse",
+    "title": "Kasse",
+    "accountSelectionTitle": "Kontoauswahl",
+    "backToCart": "Zurück zum Warenkorb",
+    "login": {
+      "title": "Einloggen",
+      "description": "Nutzen Sie Ihr Konto und sammeln Sie Punkte für diesen Einkauf"
+    },
+    "guest": {
+      "title": "Als Gast bestellen",
+      "description": "Sie können Ihre Einkäufe erledigen, ohne ein Konto zu erstellen",
+      "button": "Als Gast bestellen"
+    },
+    "createAccount": {
+      "title": "Konto erstellen",
+      "description": "Erstellen Sie ein Konto und sammeln Sie SHOPINCLUB-Punkte für Ihre Bestellung.",
+      "button": "Jetzt Konto erstellen"
+    },
+    "shipping": {
+      "title": "Versandadresse",
+      "requiredFields": "* Pflichtfelder",
+      "saving": "Wird gespeichert...",
+      "noAddress": "Keine Versandadresse gesetzt",
+      "sameAsBilling": "Die Lieferadresse entspricht der Rechnungsadresse",
+      "saveError": "Fehler beim Speichern der Versandadresse. Bitte versuchen Sie es erneut."
+    },
+    "deliveryMethod": {
+      "title": "Lieferung",
+      "free": "Kostenlos",
+      "freeShippingThreshold": "Kostenloser Versand ab {amount}",
+      "noMethodsAvailable": "Keine Versandarten für Ihre Lieferadresse verfügbar. Dies kann an Ihrer Sprach-/Währungsauswahl liegen. Bitte versuchen Sie, eine andere Sprache oder Währung auszuwählen.",
+      "saveError": "Fehler beim Speichern der Versandart. Bitte versuchen Sie es erneut."
+    },
+    "billing": {
+      "title": "Rechnungsadresse",
+      "requiredFields": "* Pflichtfelder",
+      "saving": "Wird gespeichert...",
+      "noAddress": "Keine Rechnungsadresse gesetzt",
+      "saveError": "Fehler beim Speichern der Rechnungsadresse. Bitte versuchen Sie es erneut."
+    },
+    "payment": {
+      "title": "Zahlungsart",
+      "noMethodsAvailable": "Keine Zahlungsarten verfügbar. Bitte versuchen Sie es später erneut.",
+      "saveError": "Fehler beim Speichern der Zahlungsart. Bitte versuchen Sie es erneut.",
+      "via": "über {interface}"
+    },
+    "paymentInitiationError": "Fehler beim Initiieren der Zahlung. Bitte versuchen Sie es erneut.",
+    "orderCreationError": "Fehler beim Erstellen der Bestellung. Bitte versuchen Sie es erneut.",
+    "orderAlreadyExists": "Ihre Bestellung wurde bereits verarbeitet. Bitte überprüfen Sie Ihre E-Mail oder Ihre Bestellhistorie im Konto.",
+    "cartMissing": "Bitte überprüfen Sie Ihre E-Mail oder Ihre Bestellhistorie im Konto, um zu prüfen, ob die Bestellung bereits aufgegeben wurde.",
+    "processingOrder": "Ihre Bestellung wird verarbeitet...",
+    "retry": "Erneut versuchen",
+    "paymentProcessing": "Zahlungsergebnis wird verarbeitet...",
+    "steps": {
+      "continueTo": "Weiter zu {step}",
+      "completeLabel": "Fertig",
+      "placeOrder": "Bestellung aufgeben",
+      "billing": {
+        "title": "Rechnungsadresse"
+      },
+      "shipping": {
+        "title": "Versandadresse"
+      },
+      "deliveryMethod": {
+        "title": "Lieferart"
+      },
+      "payment": {
+        "title": "Zahlungsart"
+      },
+      "review": {
+        "title": "Bestellung prüfen",
+        "acceptTerms": "Die Belehrung hinsichtlich meines Widerrufsrechts und die Allgemeinen Geschäftsbedingungen habe ich zur Kenntnis genommen und akzeptiere diese.",
+        "buyNow": "Jetzt kaufen",
+        "termsRequired": "Bitte akzeptieren Sie die Allgemeinen Geschäftsbedingungen, um fortzufahren.",
+        "noCartError": "Kein Warenkorb gefunden. Bitte versuchen Sie es erneut.",
+        "processing": "Wird verarbeitet...",
+        "paymentFailure": "Zahlung fehlgeschlagen. Bitte versuchen Sie es erneut."
+      },
+      "complete": {
+        "title": "Fertig"
+      }
+    },
+    "complete": {
+      "thankYou": "Vielen Dank für Ihre Bestellung",
+      "confirmationMessage": "Die Bestellung Nr. {orderNumber} wurde aufgegeben. Eine Bestätigungs-E-Mail wird in Kürze an {email} gesendet werden.",
+      "orderDetails": "Bestelldetails",
+      "orderNumber": "Bestellungsnummer: {orderNumber}",
+      "deliveryTime": "Lieferung in 2-3 Werktagen",
+      "delivery": "Lieferung",
+      "deliveryAddress": "{name}, {address}, {city}, {country}",
+      "deliveryMethod": "Lieferart",
+      "deliveryMethodDetails": "DHL Standard, 1 Werktag",
+      "payment": "Zahlung",
+      "paymentMethod": "unbekannt",
+      "orderSummary": "Bestellübersicht",
+      "orderSummaryPlaceholder": "Bestellübersicht wird hier angezeigt",
+      "loadError": "Bestelldetails konnten nicht geladen werden. Bitte versuchen Sie es später erneut.",
+      "edit": "Ändern"
+    },
+    "footer": {
+      "company": "Unternehmen",
+      "imprint": "Impressum",
+      "termsAndPrivacy": "AGB, Datenschutz & Widerrufsrechte",
+      "copyright": "© 2023 SHOPIN Store GmbH & Co. KG"
+    }
+  },
+  "teaser": {
+    "productCarousel": {
+      "noProducts": "Keine Produkte anzuzeigen."
+    },
+    "richText": {
+      "assetUnresolved": "Asset (nicht aufgelöst)"
+    }
+  },
+  "wishlist": {
+    "title": "Wunschliste",
+    "item": "Artikel",
+    "items": "Artikel",
+    "emptyMessage": "Ihre Wunschliste ist leer. Fügen Sie Produkte hinzu, die Ihnen gefallen!",
+    "loading": "Wird geladen...",
+    "addSuccess": "Zur Wunschliste hinzugefügt",
+    "removeSuccess": "Von der Wunschliste entfernt",
+    "addError": "Hinzufügen zur Wunschliste fehlgeschlagen",
+    "removeError": "Entfernen aus der Wunschliste fehlgeschlagen"
+  }
+}

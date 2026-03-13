@@ -1,0 +1,26 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "extends": ["//"],
+  "tasks": {
+    "build": {
+      "dependsOn": [
+        "@config/constants#build",
+        "@core/i18n#build",
+        "@integrations/mock-api#build",
+        "@integrations/commercetools-api#build",
+        "@integrations/commercetools-auth#build",
+        "@integrations/contentful-api#build"
+      ]
+    },
+    "dev": {
+      "with": [
+        "@config/constants#dev",
+        "@core/i18n#dev",
+        "@integrations/mock-api#dev",
+        "@integrations/commercetools-api#dev",
+        "@integrations/commercetools-auth#dev",
+        "@integrations/contentful-api#dev"
+      ]
+    }
+  }
+}
