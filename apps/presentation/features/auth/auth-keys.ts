@@ -10,6 +10,8 @@ export const authMutationKeys = {
   confirmEmail: () => [...authMutationKeys.all, 'confirmEmail'] as const,
   forgotPassword: () => [...authMutationKeys.all, 'forgotPassword'] as const,
   resetPassword: () => [...authMutationKeys.all, 'resetPassword'] as const,
+  resendVerificationEmail: () =>
+    [...authMutationKeys.all, 'resendVerificationEmail'] as const,
 }
 
 export type AuthMutationKind =
@@ -19,6 +21,7 @@ export type AuthMutationKind =
   | 'confirmEmail'
   | 'forgotPassword'
   | 'resetPassword'
+  | 'resendVerificationEmail'
 
 export function isAuthMutationKey(
   key: unknown
@@ -33,6 +36,7 @@ export function isAuthMutationKey(
       'confirmEmail',
       'forgotPassword',
       'resetPassword',
+      'resendVerificationEmail',
     ].includes(String(key[1]))
   )
 }

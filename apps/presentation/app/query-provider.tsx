@@ -52,6 +52,7 @@ const authInvalidationHandlers: Record<
   },
   forgotPassword: () => {},
   resetPassword: () => {},
+  resendVerificationEmail: () => {},
 }
 
 function createQueryClient() {

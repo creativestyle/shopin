@@ -1,9 +1,8 @@
 'use client'
 
 import { useTranslations } from 'next-intl'
-import Link from 'next/link'
-import { Button } from '@/components/ui/button'
-import { Toast } from '@/components/ui/toast'
+// TODO: Remove once email service provider is configured.
+import { TemporaryVerifyEmailButton } from './auth-temporary-verify-email-button'
 
 interface RegistrationSuccessProps {
   /** Verify-email link. Page is responsible for building the URL. */
@@ -23,20 +22,10 @@ export function RegistrationSuccess({
       </div>
 
       <div className='flex w-full flex-col gap-4'>
-        <Toast
-          type='warning'
-          withCloseButton={false}
-        >
-          Button and link are temporary until email service provider is set up
-        </Toast>
-        <Button
-          asChild
-          variant='primary'
-          scheme='red'
-          className='w-full uppercase'
-        >
-          <Link href={verifyEmailHref}>{t('confirmButton')}</Link>
-        </Button>
+        <TemporaryVerifyEmailButton
+          href={verifyEmailHref}
+          label={t('confirmButton')}
+        />
       </div>
     </div>
   )

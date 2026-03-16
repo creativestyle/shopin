@@ -270,9 +270,14 @@
         "validationFailed": "Validierung fehlgeschlagen",
         "unauthorized": "Anmeldung fehlgeschlagen. Bitte überprüfen Sie Ihre Anmeldedaten und versuchen Sie es erneut.",
         "emailNotVerified": "Bitte bestätigen Sie Ihre E-Mail-Adresse, bevor Sie sich anmelden. Überprüfen Sie Ihren Posteingang auf eine Bestätigungs-E-Mail.",
+        "resendFailed": "Bestätigungs-E-Mail konnte nicht gesendet werden. Bitte versuchen Sie es erneut.",
         "forbidden": "Zugriff verweigert. Bitte aktualisieren Sie die Seite und versuchen Sie es erneut.",
         "internalServerError": "Interner Serverfehler"
-      }
+      },
+      "resendButton": "Bestätigungs-E-Mail erneut senden",
+      "resendPending": "Wird gesendet...",
+      "resendSuccess": "Bestätigungs-E-Mail gesendet. Bitte überprüfen Sie Ihren Posteingang.",
+      "verifyEmailButton": "E-Mail bestätigen"
     },
     "signUp": {
       "title": "Registrieren",
@@ -326,8 +331,15 @@
       "confirmedMessage": "Ihre E-Mail wurde erfolgreich bestätigt!",
       "continueButton": "Weiter zur Anmeldung",
       "backToSignIn": "Zurück zur Anmeldung",
+      "registerAgain": "Erneut registrieren",
+      "resendEmailLabel": "Ihre E-Mail-Adresse",
+      "resendButton": "Bestätigungs-E-Mail erneut senden",
+      "resendPending": "Wird gesendet...",
+      "resendSuccess": "Bestätigungs-E-Mail gesendet. Bitte prüfen Sie Ihren Posteingang.",
       "errors": {
         "tokenRequired": "E-Mail-Bestätigungstoken ist erforderlich. Bitte verwenden Sie den Link aus Ihrer E-Mail.",
+        "tokenExpired": "Ihr Bestätigungslink ist abgelaufen. Geben Sie Ihre E-Mail-Adresse ein, um einen neuen zu erhalten.",
+        "resendFailed": "Bestätigungs-E-Mail konnte nicht gesendet werden. Bitte versuchen Sie es erneut.",
         "confirmFailed": "E-Mail-Bestätigung fehlgeschlagen. Bitte versuchen Sie es erneut oder verwenden Sie den Link aus Ihrer E-Mail.",
         "validationFailed": "Bitte überprüfen Sie Ihre Eingabe",
         "unauthorized": "Ungültiger Bestätigungstoken",

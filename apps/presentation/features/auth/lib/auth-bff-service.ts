@@ -16,6 +16,10 @@ import {
   ResetPasswordRequest,
   ResetPasswordResponse,
 } from '@core/contracts/auth/reset-password'
+import {
+  ResendVerificationEmailRequest,
+  ResendVerificationEmailResponse,
+} from '@core/contracts/auth/resend-verification-email'
 import { BaseService } from '@/lib/bff/services/base-service'
 
 /**
@@ -71,6 +75,19 @@ export class AuthService extends BaseService {
       request,
       {
         onError: (res) => handleErrorResponse<ResetPasswordResponse>(res),
+      }
+    )
+  }
+
+  async resendVerificationEmail(
+    request: ResendVerificationEmailRequest
+  ): Promise<ResendVerificationEmailResponse> {
+    return await this.post<ResendVerificationEmailResponse>(
+      '/auth/resend-verification-email',
+      request,
+      {
+        onError: (res) =>
+          handleErrorResponse<ResendVerificationEmailResponse>(res),
       }
     )
   }
