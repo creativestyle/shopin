@@ -35,7 +35,14 @@ The BFF provides flexible data source management through its `DataSourceFactory`
 
 The following describes the **current state of possibilities**; it will grow as new data sources and routing strategies are added.
 
-Controllers inject feature services (e.g. `ProductCollectionService`, `ContentService`, `NavigationService`); those services inject `DataSourceFactory`. The factory resolves the current data source (from request header or default) and returns the right set of services. For `commercetools-set`, catalog and content may come from Commercetools + Contentful (or mock content if Contentful is disabled); for `mock-set`, catalog, content, and navigation come from the mock provider. Customer, address, and order are always from Commercetools; payment is always from mock.
+Controllers inject feature services (e.g. `ProductCollectionService`, `ContentService`, `NavigationService`); those services inject `DataSourceFactory`. The factory resolves the current data source (from request header or default) and returns the right set of services.
+
+- **`commercetools-set`**: Catalog from Commercetools; content (page/layout) from **Contentful when `ContentfulApiModule` is imported** in `DataSourceModule`, otherwise from **mock** (see below). Customer, address, order from Commercetools; payment from mock.
+- **`mock-set`**: Catalog, content, and navigation from the mock provider. Customer, address, order from Commercetools; payment from mock.
+
+There is **no runtime or env switch** to turn Contentful on or off. The factory injects `CONTENTFUL_SERVICE_PROVIDER` with `@Optional()`. That injection is only `null` when `ContentfulApiModule` is **not** registered (i.e. not imported in the data-source module). If the module is imported, the provider is always present and Contentful is always used for `commercetools-set` content; the mock fallback is **not** reachable in that case.
+
+**Using mock content for `commercetools-set` (Contentful “disabled”):** To use mock page/layout instead of Contentful for `commercetools-set`, **do not import `ContentfulApiModule`** in the BFF. In **`apps/bff/src/data-source/data-source.module.ts`**: (1) remove the line `import { ContentfulApiModule } from '@integrations/contentful-api'`; (2) remove `ContentfulApiModule` from the `imports` array in the `@Module()` decorator. With the module removed, `CONTENTFUL_SERVICE_PROVIDER` is not registered, the optional injection in `DataSourceFactory` is `null`, and the factory uses the mock provider’s `pageService` and `layoutService` for that data source.
 
 **Example – controllers (real routes):**
 
@@ -52,7 +59,7 @@ export class ProductCollectionController {
 export class ContentController {
   @Get('page/:slug')
   async getContentPage(...) {
-    return this.contentService.getContentPage(...)  // page/layout from selected source (Contentful or mock)
+    return this.contentService.getContentPage(...)  // page/layout: Contentful when ContentfulApiModule is imported, else mock
   }
   @Get('header')
   async getHeader() { ... }
@@ -75,8 +82,9 @@ The factory builds a map from data source name to a service provider and selects
 
 ```typescript
 // In constructor: map each data source to its provider
+// commercetools-set: Commercetools catalog + Contentful page/layout when ContentfulApiModule is imported; otherwise mock page/layout
 this.serviceProviderMap = new Map<DataSource, DataSourceServiceProvider>([
-  ['commercetools-set', commercetoolsWithCMS],  // Commercetools + Contentful (or mock page/layout)
+  ['commercetools-set', commercetoolsWithCMS],
   ['mock-set', this.mockServiceProvider],
 ])
 
@@ -114,9 +122,9 @@ The BFF reads env from the **repo root `.env`**. Variables used by the BFF itsel
 - **`BFF_RATE_LIMIT_*`** – Rate limiting (optional)
 - **`JWT_ENCRYPTION_KEY`**, **`JWT_SIGNING_KEY`** – Token encryption/signing
 - **`CSRF_TOKEN_ENCRYPTION_KEY`**, **`CSRF_TOKEN_SIGNING_KEY`** – CSRF token handling
-- **`NEXT_DRAFT_MODE_SECRET`** – Contentful draft/preview (when Contentful is enabled)
+- **`NEXT_DRAFT_MODE_SECRET`** – Contentful draft/preview (only when `ContentfulApiModule` is imported in the BFF)
 
-The Commercetools and Contentful integration modules (used by the BFF) read **`COMMERCETOOLS_*`** and **`CONTENTFUL_*`** from the same `.env`. For the full list and descriptions, see [root `.env.example`](../../.env.example) and the [root README – Installation](../../README.md#installation).
+The Commercetools integration is always used. The Contentful integration is only loaded when `ContentfulApiModule` is imported in the BFF data-source module; then **`CONTENTFUL_*`** is read from the same `.env`. For the full list and descriptions, see [root `.env.example`](../../.env.example) and the [root README – Installation](../../README.md#installation).
 
 ## License
 

@@ -53,4 +53,4 @@ If you don't need the demo functionality, you can remove this entire workspace:
 
 ## License
 
-OSL-3.0 — see [root LICENSE](../../LICENSE).
+OSL-3.0 — see [root LICENSE](../LICENSE).
