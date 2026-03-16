@@ -2,6 +2,8 @@
 
 Shared TypeScript interfaces, types, and Zod schemas used across the SHOPin storefront starter (BFF, presentation, and integrations). Single source of truth for API contracts and domain types.
 
+**Objects in general should be defined here** — use this package for interfaces, object-shaped types, and API/domain contracts. For primitive constants and small derived types (e.g. from `as const`), use `@config/constants` instead.
+
 ## Features
 
 - **Type Safety**: Full TypeScript support with strict type checking

@@ -32,6 +32,6 @@ async function bootstrap() {
   app.setGlobalPrefix('bff')
   const documentFactory = () => SwaggerModule.createDocument(app, config)
   SwaggerModule.setup('api', app, documentFactory)
-  await app.listen(process.env.PORT ?? 4000)
+  await app.listen(4000)
 }
 bootstrap()

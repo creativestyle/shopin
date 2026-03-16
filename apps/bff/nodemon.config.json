@@ -1,5 +1,5 @@
 {
-  "exec": "PORT=4000 nest start --watch",
+  "exec": "nest start --watch",
   "ext": "js,ts",
   "watch": [
     "../../integrations/mock-api/dist",

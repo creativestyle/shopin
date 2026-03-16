@@ -4,7 +4,7 @@ NestJS module that integrates [Contentful](https://www.contentful.com/) with the
 
 ## Overview
 
-The module exposes a `ContentfulServiceProvider` compatible with the BFF data-source pattern. The BFF uses it for page and layout content when the selected data source is Commercetools; when the data source is mock, content is served from `@integrations/mock-api` instead.
+The module exposes a `ContentfulServiceProvider` that implements the BFF data-source content contract: `pageService` and `layoutService`. The BFF uses it to serve CMS pages and layout (header/footer) when Contentful is chosen as the content source for a given data source.
 
 ## Environment Variables
 
@@ -16,15 +16,19 @@ All env are set in the **repo root `.env`**. See [root `.env.example`](../../../
 
 ## Service Provider
 
-The module includes `ContentfulServiceProvider` that provides access to Contentful services (`pageService`, `layoutService`) through a unified interface. Inject `CONTENTFUL_SERVICE_PROVIDER` and call `getServices()` to use it.
+The module provides `ContentfulServiceProvider` with `pageService` and `layoutService`. It is registered under the token `CONTENTFUL_SERVICE_PROVIDER`. Inject that token and call `getServices()` to obtain the content services.
 
-## Usage
+## Adding to the data source
 
-This module is used by the BFF and is wired through the **data source** like other integrations. It's imported in `apps/bff/src/data-source/data-source.module.ts`. `DataSourceFactory.getServices()` exposes `pageService` and `layoutService`: from **mock** when the data source is `mock-set`, and from **Contentful** when it is `commercetools-set`. The BFF `ContentService` uses the factory, so content (page, header, footer) is available for both data sources.
+To use Contentful as the CMS for one or more data sources in the BFF:
 
-## Integration
+1. **Register the module** — Import `ContentfulApiModule` in the BFF data-source module (e.g. `apps/bff/src/data-source/data-source.module.ts`) and add it to the `imports` array. This makes `CONTENTFUL_SERVICE_PROVIDER` available.
 
-The module is loaded by the BFF's `DataSourceModule` and is used for all content pages and layout (header/footer), regardless of the product/cart data source.
+2. **Wire content in the data-source factory** — In the BFF data-source factory (e.g. `apps/bff/src/data-source/data-source.factory.ts`):
+   - Inject `CONTENTFUL_SERVICE_PROVIDER` (optional, so the BFF can run without Contentful configured).
+   - For each data source that should use Contentful for CMS, ensure the factory’s `getServices()` returns `pageService` and `layoutService` from `contentfulServiceProvider.getServices()` when that data source is active. If Contentful is not configured, fall back to another content provider (e.g. mock) for those data sources.
+
+3. **Use the factory in the BFF** — The BFF’s content layer (e.g. `ContentService`) should call the data-source factory’s `getServices()` and use the returned `pageService` and `layoutService` for pages and layout. No further Contentful-specific code is needed in the BFF beyond the data-source wiring above.
 
 ## Content model and migrations
 
