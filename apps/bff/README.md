@@ -26,6 +26,7 @@ The BFF provides flexible data source management through its `DataSourceFactory`
 
 #### Example Use Cases:
 
+- **Development without external APIs**: Use the mock as a supplement to build and test features until the real API (e.g. Commercetools, Contentful) is ready
 - **A/B Testing**: Route different user segments to different data sources
 - **Gradual Migration**: Gradually shift from one data source to another
 - **Feature Flags**: Enable new data sources for specific features
@@ -34,7 +35,7 @@ The BFF provides flexible data source management through its `DataSourceFactory`
 
 The following describes the **current state of possibilities**; it will grow as new data sources and routing strategies are added.
 
-Controllers inject feature services (e.g. `ProductCollectionService`, `ContentService`, `NavigationService`); those services inject `DataSourceFactory`. The factory resolves the current data source (from request header or default) and returns the right set of services. For `commercetools-set`, catalog and content may come from Commercetools + Contentful (or mock content if Contentful is disabled); for `mock-set`, everything comes from the mock provider. Customer, address and order are always from Commercetools; payment is always from mock.
+Controllers inject feature services (e.g. `ProductCollectionService`, `ContentService`, `NavigationService`); those services inject `DataSourceFactory`. The factory resolves the current data source (from request header or default) and returns the right set of services. For `commercetools-set`, catalog and content may come from Commercetools + Contentful (or mock content if Contentful is disabled); for `mock-set`, catalog, content, and navigation come from the mock provider. Customer, address, and order are always from Commercetools; payment is always from mock.
 
 **Example – controllers (real routes):**
 
@@ -83,7 +84,7 @@ this.serviceProviderMap = new Map<DataSource, DataSourceServiceProvider>([
 getServices(): AllServices {
   const serviceProvider = this.serviceProviderMap.get(this.dataSource)
   if (!serviceProvider) {
-    throw new Error(`Unknown data source: ${this.dataSource}. Allowed: ${ALLOWED_DATA_SOURCES.join(', ')}`)
+    throw new Error(`Unknown data source: ${this.dataSource}. Allowed values: ${ALLOWED_DATA_SOURCES.join(', ')}`)
   }
   const baseServices = serviceProvider.getServices()
   const { customerService, customerAddressService, orderService } =

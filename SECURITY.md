@@ -5,7 +5,7 @@
 If you discover a security vulnerability in this project, please report it responsibly:
 
 - **Do not** open a public GitHub issue.
-- Report via [GitHub Security Advisories](https://github.com/creativestyle/shopin/security/advisories/new) (private report), or email the repository maintainers with a description of the issue and steps to reproduce.
+- Email the repository maintainers with a description of the issue and steps to reproduce.
 
 We will acknowledge your report and work on a fix. We appreciate your help in disclosing security issues in a responsible manner.
 
