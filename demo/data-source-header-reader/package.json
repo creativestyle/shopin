@@ -2,6 +2,7 @@
   "name": "@demo/data-source-header-reader",
   "version": "1.0.0",
   "description": "Demo package for reading x-data-source headers",
+  "author": "creativestyle GmbH",
   "private": true,
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

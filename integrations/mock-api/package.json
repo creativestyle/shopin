@@ -1,6 +1,7 @@
 {
   "name": "@integrations/mock-api",
   "description": "NestJS module providing mock implementations of catalog, cart, content, auth, and navigation for development and demos",
+  "author": "creativestyle GmbH",
   "private": true,
   "exports": {
     ".": "./dist/index.js"

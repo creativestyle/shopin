@@ -1,6 +1,7 @@
 {
   "name": "@integrations/commercetools-auth",
   "description": "NestJS module for Commercetools auth: login, register, logout, password reset, anonymous sessions, and email tokens",
+  "author": "creativestyle GmbH",
   "private": true,
   "exports": {
     ".": "./dist/index.js"

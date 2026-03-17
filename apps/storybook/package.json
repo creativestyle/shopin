@@ -1,6 +1,7 @@
 {
   "name": "@apps/storybook",
   "description": "Storybook app for UI component documentation and development (Next.js integration).",
+  "author": "creativestyle GmbH",
   "private": true,
   "type": "module",
   "scripts": {

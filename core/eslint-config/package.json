@@ -1,6 +1,7 @@
 {
   "name": "@core/eslint-config",
   "description": "Shared ESLint configuration (TypeScript, React, Jest, Prettier) for the monorepo.",
+  "author": "creativestyle GmbH",
   "private": true,
   "type": "module",
   "exports": {

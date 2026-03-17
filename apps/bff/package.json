@@ -1,6 +1,7 @@
 {
   "name": "@apps/bff",
   "description": "NestJS Backend for Frontend (BFF) exposing a unified e-commerce API over multiple data sources (Commercetools, mock).",
+  "author": "creativestyle GmbH",
   "private": true,
   "scripts": {
     "build": "nest build",

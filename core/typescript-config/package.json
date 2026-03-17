@@ -1,6 +1,7 @@
 {
   "name": "@core/typescript-config",
   "description": "Shared TypeScript base config (Node 22) for apps and packages.",
+  "author": "creativestyle GmbH",
   "private": true,
   "devDependencies": {
     "@tsconfig/node22": "^22.0.0"

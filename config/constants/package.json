@@ -2,6 +2,7 @@
   "name": "@config/constants",
   "version": "1.0.0",
   "description": "Shared constants and types (data source, auth, i18n) used across apps and integrations.",
+  "author": "creativestyle GmbH",
   "private": true,
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

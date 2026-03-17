@@ -1,6 +1,7 @@
 {
   "name": "@integrations/commercetools-api",
   "description": "NestJS module for Commercetools e-commerce API: catalog, cart, orders, customers, and service provider interface",
+  "author": "creativestyle GmbH",
   "private": true,
   "exports": {
     ".": "./dist/index.js"

@@ -1,6 +1,7 @@
 {
   "name": "@apps/typedoc",
   "description": "Typedoc-generated API documentation site for SHOPin contracts and types.",
+  "author": "creativestyle GmbH",
   "private": true,
   "scripts": {
     "test:unit": "vitest",

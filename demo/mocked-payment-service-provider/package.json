@@ -2,6 +2,7 @@
   "name": "@demo/mocked-payment-service-provider",
   "version": "1.0.0",
   "description": "Demo package for mocked payment service provider UI components",
+  "author": "creativestyle GmbH",
   "private": true,
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

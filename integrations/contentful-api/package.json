@@ -1,6 +1,7 @@
 {
   "name": "@integrations/contentful-api",
   "description": "NestJS module for Contentful CMS: pages, layout (header/footer), and GraphQL delivery/preview API",
+  "author": "creativestyle GmbH",
   "private": true,
   "exports": {
     ".": "./dist/index.js"
