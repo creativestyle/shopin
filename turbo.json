@@ -28,10 +28,10 @@
       "dependsOn": ["^format"]
     },
     "check-types": {
-      "dependsOn": ["^check-types"]
+      "dependsOn": ["^build", "^check-types"]
     },
     "test": {
-      "dependsOn": ["^test"]
+      "dependsOn": ["^build", "^test"]
     },
     "dev": {
       "dependsOn": ["setup"],
