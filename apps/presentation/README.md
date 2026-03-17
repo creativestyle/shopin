@@ -1,6 +1,6 @@
 # @apps/presentation
 
-Next.js (App Router) storefront UI for the SHOPin storefront starter. Renders product catalog, cart, checkout, auth, and CMS-driven pages; talks to the BFF for all e-commerce and content APIs.
+Next.js (App Router) storefront UI for the SHOPin storefront accelerator. Renders product catalog, cart, checkout, auth, and CMS-driven pages; talks to the BFF for all e-commerce and content APIs.
 
 ## Environment Variables
 

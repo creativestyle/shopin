@@ -1,6 +1,6 @@
 # @integrations/mock-api
 
-NestJS module that provides mock implementations of the SHOPin storefront starter data-source services. Used for local development, demos, and testing when the data source is `mock-set` (no Commercetools or Contentful required).
+NestJS module that provides mock implementations of the SHOPin storefront accelerator data-source services. Used for local development, demos, and testing when the data source is `mock-set` (no Commercetools or Contentful required).
 
 ## Overview
 

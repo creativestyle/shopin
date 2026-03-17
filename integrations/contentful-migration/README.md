@@ -1,6 +1,6 @@
 # @integrations/contentful-migration
 
-Content model and demo content for the SHOPin storefront starter, applied via [Contentful migrations](https://contentful.com/developers/docs/tutorials/cli/scripting-migrations/) (CMS-as-code). Defines content types (Page, teasers, layout, etc.) and optional seed data; run against your Contentful space so the BFF and `@integrations/contentful-api` can serve pages and layout.
+Content model and demo content for the SHOPin storefront accelerator, applied via [Contentful migrations](https://contentful.com/developers/docs/tutorials/cli/scripting-migrations/) (CMS-as-code). Defines content types (Page, teasers, layout, etc.) and optional seed data; run against your Contentful space so the BFF and `@integrations/contentful-api` can serve pages and layout.
 
 ## Prerequisites
 

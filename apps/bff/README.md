@@ -1,6 +1,6 @@
 # @apps/bff
 
-NestJS Backend for Frontend (BFF) for the SHOPin storefront starter. Exposes a unified REST API for products, cart, checkout, auth, content, and navigation; routes requests to [integrations](../../integrations) (e.g. Commercetools, Contentful, mock) based on the selected data source.
+NestJS Backend for Frontend (BFF) for the SHOPin storefront accelerator. Exposes a unified REST API for products, cart, checkout, auth, content, and navigation; routes requests to [integrations](../../integrations) (e.g. Commercetools, Contentful, mock) based on the selected data source.
 
 ## Overview
 
