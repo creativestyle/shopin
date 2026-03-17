@@ -1,6 +1,7 @@
 {
   "name": "@core/logger-config",
   "description": "Shared Pino logger configuration (log level, pretty print) for BFF and presentation.",
+  "author": "creativestyle GmbH",
   "private": true,
   "exports": {
     ".": "./dist/index.js"

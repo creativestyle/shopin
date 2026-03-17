@@ -2,6 +2,7 @@
   "name": "@apps/presentation",
   "version": "0.1.0",
   "description": "Next.js (App Router) storefront UI; consumes BFF for e-commerce and CMS content.",
+  "author": "creativestyle GmbH",
   "private": true,
   "scripts": {
     "dev": "dotenv -e ../../.env -- next dev",

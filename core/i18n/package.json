@@ -2,6 +2,7 @@
   "name": "@core/i18n",
   "version": "1.0.0",
   "description": "Internationalization module with translation files and configuration",
+  "author": "creativestyle GmbH",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "private": true,

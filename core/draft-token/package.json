@@ -1,6 +1,7 @@
 {
   "name": "@core/draft-token",
   "description": "Utilities to sign and verify draft/preview tokens (e.g. for Contentful draft mode).",
+  "author": "creativestyle GmbH",
   "private": true,
   "type": "commonjs",
   "main": "./dist/index.js",

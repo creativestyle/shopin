@@ -1,6 +1,7 @@
 {
   "name": "@integrations/contentful-migration",
   "description": "Contentful CMS-as-code: migration scripts for content types (Page, teasers, layout) and optional demo content seed",
+  "author": "creativestyle GmbH",
   "private": true,
   "scripts": {
     "build": "rm -rf dist && tsc",

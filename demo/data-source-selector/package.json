@@ -2,6 +2,7 @@
   "name": "@demo/data-source-selector",
   "version": "1.0.0",
   "description": "Demo UI components to switch data source (mock vs Commercetools): DataSourceSelector dropdown and DataSourceIndicator",
+  "author": "creativestyle GmbH",
   "private": true,
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

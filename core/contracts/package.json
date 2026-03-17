@@ -1,6 +1,7 @@
 {
   "name": "@core/contracts",
   "description": "Shared TypeScript types, Zod schemas, and contracts used by BFF, presentation, and integrations.",
+  "author": "creativestyle GmbH",
   "private": true,
   "scripts": {
     "check-types": "tsc --noEmit",

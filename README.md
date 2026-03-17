@@ -83,3 +83,13 @@ The architecture aims to keep **core, BFF, and presentation as platform-agnostic
 - **[CONTRIBUTING.md](CONTRIBUTING.md)** — How to set up for development and submit changes.
 - **[SECURITY.md](SECURITY.md)** — How to report vulnerabilities and what not to commit.
 - **License** — [OSL-3.0](LICENSE). See [LICENSE](LICENSE) for the full text.
+
+---
+
+Brought to life by<br/>
+<a href="https://creativestyle.de">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="./images/cs_logo_dark.png">
+      <img src="./images/cs_logo_light.png" width="211px">
+    </picture>
+</a>
