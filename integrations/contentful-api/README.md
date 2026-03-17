@@ -1,6 +1,6 @@
 # @integrations/contentful-api
 
-NestJS module that integrates [Contentful](https://www.contentful.com/) with the SHOPin storefront starter for CMS content. Provides `PageService` (pages by slug/locale/preview) and `LayoutService` (header/footer) via the Contentful GraphQL API.
+NestJS module that integrates [Contentful](https://www.contentful.com/) with the SHOPin storefront accelerator for CMS content. Provides `PageService` (pages by slug/locale/preview) and `LayoutService` (header/footer) via the Contentful GraphQL API.
 
 ## Overview
 

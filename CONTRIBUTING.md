@@ -1,6 +1,6 @@
 # Contributing
 
-Thank you for your interest in contributing to the SHOPin storefront starter.
+Thank you for your interest in contributing to the SHOPin storefront accelerator.
 
 ## Development setup
 

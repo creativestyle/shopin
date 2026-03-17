@@ -1,6 +1,6 @@
 # @integrations/commercetools-auth
 
-NestJS module that handles customer authentication and registration via [Commercetools](https://commercetools.com/) for the SHOPin storefront starter. Provides login, registration, password reset, email verification, and anonymous sessions.
+NestJS module that handles customer authentication and registration via [Commercetools](https://commercetools.com/) for the SHOPin storefront accelerator. Provides login, registration, password reset, email verification, and anonymous sessions.
 
 ## Overview
 

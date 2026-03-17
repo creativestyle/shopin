@@ -1,6 +1,6 @@
 # Demo Workspace
 
-⚠️ **DEMO ONLY** — This workspace contains optional demo packages for the SHOPin storefront starter. None of these packages are required for production.
+⚠️ **DEMO ONLY** — This workspace contains optional demo packages for the SHOPin storefront accelerator. None of these packages are required for production.
 
 Demo functionality showcases multi–data-source switching and mocked payment; you can remove this entire workspace when building a production storefront.
 

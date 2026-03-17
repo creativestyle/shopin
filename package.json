@@ -1,7 +1,7 @@
 {
   "name": "shopin",
   "version": "0.1.0",
-  "description": "Modular SHOPin storefront starter with BFF, Next.js presentation, and multi-data-source support",
+  "description": "Modular SHOPin storefront accelerator with BFF, Next.js presentation, and multi-data-source support",
   "author": "creativestyle GmbH",
   "license": "OSL-3.0",
   "private": true,

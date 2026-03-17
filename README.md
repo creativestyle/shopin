@@ -1,13 +1,13 @@
-# SHOPin storefront starter
+# SHOPin storefront accelerator
 
 [![License: OSL-3.0](https://img.shields.io/badge/License-OSL--3.0-blue.svg)](https://opensource.org/licenses/OSL-3.0)
 
-A modular storefront starter with a NestJS Backend for Frontend (BFF), Next.js presentation app, and pluggable data sources. Swap e-commerce backends and CMSs via a data-source layer; built for flexibility and type-safe development in a monorepo. **[Turborepo](https://turbo.build/repo)** orchestrates the monorepo: builds, tasks, and caching across all apps and packages.
+A modular storefront accelerator with a NestJS Backend for Frontend (BFF), Next.js presentation app, and pluggable data sources. Swap e-commerce backends and CMSs via a data-source layer; built for flexibility and type-safe development in a monorepo. **[Turborepo](https://turbo.build/repo)** orchestrates the monorepo: builds, tasks, and caching across all apps and packages.
 
 ## Features
 
 - **BFF + storefront** — Clear separation between API gateway (NestJS) and frontend (Next.js App Router). Suits any e-commerce or CMS backend you wire behind the BFF.
-- **Pluggable data sources** — Switch backends (e.g. e-commerce API, mock) and optionally attach a CMS for pages and layout. The starter ships with one integration set; you can add or replace integrations.
+- **Pluggable data sources** — Switch backends (e.g. e-commerce API, mock) and optionally attach a CMS for pages and layout. SHOPin ships with one integration set; you can add or replace integrations.
 - **Turborepo** — [Turborepo](https://turbo.build/repo) orchestrates builds, tasks, and caching across the monorepo. Shared packages for contracts, i18n, config, and tooling.
 - **Demo tooling** — Optional data-source selector and mocked flows for development; safe to remove for production.
 - **Documentation** — [Storybook](apps/storybook/README.md) for UI components, [Typedoc](apps/typedoc/README.md) for API docs.
@@ -20,7 +20,7 @@ A modular storefront starter with a NestJS Backend for Frontend (BFF), Next.js p
 
    ```bash
    git clone <repository-url>
-   cd starter
+   cd shopin
    npm ci
    ```
 

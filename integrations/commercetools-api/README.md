@@ -1,6 +1,6 @@
 # @integrations/commercetools-api
 
-NestJS module that integrates [Commercetools](https://commercetools.com/) with the SHOPin storefront starter. Implements product catalog, cart, checkout, navigation, and customer services against the Commercetools API.
+NestJS module that integrates [Commercetools](https://commercetools.com/) with the SHOPin storefront accelerator. Implements product catalog, cart, checkout, navigation, and customer services against the Commercetools API.
 
 ## Overview
 
