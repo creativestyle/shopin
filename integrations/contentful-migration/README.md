@@ -9,7 +9,7 @@ Content model and demo content for the SHOPin storefront starter, applied via [C
 
 ## Environment
 
-Set in **repo root `.env`** (see [.env.example](../../../.env.example) for all descriptions):
+Set in **repo root `.env`** (see [.env.example](../../.env.example) for all descriptions):
 
 - `CONTENTFUL_MANAGEMENT_ACCESS_TOKEN` – Management API (Personal access token), not Delivery/Preview
 - `CONTENTFUL_SPACE` – Space ID
@@ -75,4 +75,4 @@ Details: `migrations/lib/README.md`.
 
 ## License
 
-OSL-3.0 — see [root LICENSE](../../../LICENSE).
+OSL-3.0 — see [root LICENSE](../../LICENSE).

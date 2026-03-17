@@ -20,4 +20,4 @@ The module is automatically loaded by the BFF's `DataSourceModule` and provides 
 
 ## License
 
-OSL-3.0 — see [root LICENSE](../../../LICENSE).
+OSL-3.0 — see [root LICENSE](../../LICENSE).

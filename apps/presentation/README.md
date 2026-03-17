@@ -10,6 +10,8 @@ Variables used by this app:
 
 - **`NEXT_BFF_INTERNAL_URL`** — Server-side only. Base URL for the BFF including the `/bff` path (e.g. `http://localhost:4000/bff` or `http://bff:4000/bff` in Docker).
 - **`NEXT_PUBLIC_BFF_EXTERNAL_URL`** — Client and SSR. Public BFF URL including `/bff` (e.g. `http://localhost:4000/bff`). Embedded at build time; set in CI/Docker when building.
+- **`FRONTEND_URL`** — Used when building **canonical URLs and metadata** (e.g. `getSiteBaseUrl()` for hreflang and canonical links on pages). Required for that; the app throws if unset. Also used as the **draft redirect base** in `/api/draft`: after enabling draft mode, the redirect target uses this URL when set (e.g. so CMS preview, e.g. Contentful, sends users to the canonical origin); when unset (e.g. local dev), the redirect falls back to the request origin.
+- **`NEXT_DRAFT_MODE_SECRET`** — Used only when you use **draft/preview from a headless CMS** (e.g. Contentful). It secures the `/api/draft` route: the CMS preview URL must include `?secret=<NEXT_DRAFT_MODE_SECRET>`. The same secret is used to sign the draft cookie so the BFF can verify it. Omit or leave empty if you do not use draft/preview.
 
 The `bffFetch` utility uses the internal URL on the server and the public URL in the browser, so the BFF base URL is never exposed to the client. For the full list of env variables (Contentful, logging, etc.), see the [root README – Installation](../../README.md#installation).
 

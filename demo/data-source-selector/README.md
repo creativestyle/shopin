@@ -20,4 +20,4 @@ See [demo/README.md](../README.md) for removal steps.
 
 ## License
 
-OSL-3.0 — see [root LICENSE](../../../LICENSE).
+OSL-3.0 — see [root LICENSE](../../LICENSE).

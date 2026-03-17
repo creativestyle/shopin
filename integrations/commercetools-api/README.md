@@ -8,7 +8,7 @@ This module implements the data-source service interfaces used by the BFF. When 
 
 ## Environment Variables
 
-Env are set in the **repo root `.env`**. See [root `.env.example`](../../../.env.example) for descriptions. This module uses: `COMMERCETOOLS_CLIENT_ID`, `COMMERCETOOLS_CLIENT_SECRET`, `COMMERCETOOLS_PROJECT_KEY`, `COMMERCETOOLS_API_URL`, `COMMERCETOOLS_AUTH_URL`.
+Env are set in the **repo root `.env`**. See [root `.env.example`](../../.env.example) for descriptions. This module uses: `COMMERCETOOLS_CLIENT_ID`, `COMMERCETOOLS_CLIENT_SECRET`, `COMMERCETOOLS_PROJECT_KEY`, `COMMERCETOOLS_API_URL`, `COMMERCETOOLS_AUTH_URL`.
 
 ## Service Provider
 
@@ -24,4 +24,4 @@ The module is automatically loaded by the BFF's `DataSourceModule` and provides 
 
 ## License
 
-OSL-3.0 — see [root LICENSE](../../../LICENSE).
+OSL-3.0 — see [root LICENSE](../../LICENSE).
