@@ -13,6 +13,7 @@ export const AUTH_ACTIONS = [
   'token_refresh',
   'forgot_password',
   'reset_password',
+  'resend_verification_email',
 ] as const
 
 export type AuthAction = (typeof AUTH_ACTIONS)[number]

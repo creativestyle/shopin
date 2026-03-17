@@ -5,6 +5,7 @@ import type {
   GenerateEmailTokenRequest,
   GenerateEmailTokenResponse,
 } from '@core/contracts/auth/generate-email-token'
+import { EMAIL_TOKEN_TTL_MINUTES } from '@config/constants'
 
 @Injectable()
 export class CommercetoolsGenerateEmailTokenService {
@@ -57,7 +58,7 @@ export class CommercetoolsGenerateEmailTokenService {
         .post({
           body: {
             id: customer.id,
-            ttlMinutes: 60,
+            ttlMinutes: EMAIL_TOKEN_TTL_MINUTES,
           },
         })
         .execute()

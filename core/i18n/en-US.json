@@ -271,9 +271,14 @@
         "validationFailed": "Validation failed",
         "unauthorized": "Login failed. Please check your credentials and try again.",
         "emailNotVerified": "Please verify your email address before logging in. Check your inbox for a confirmation email.",
+        "resendFailed": "Failed to resend verification email. Please try again.",
         "forbidden": "Access denied. Please refresh the page and try again.",
         "internalServerError": "Internal server error"
-      }
+      },
+      "resendButton": "Resend verification email",
+      "resendPending": "Sending...",
+      "resendSuccess": "Verification email sent. Please check your inbox.",
+      "verifyEmailButton": "Verify email"
     },
     "signUp": {
       "title": "Register",
@@ -327,8 +332,15 @@
       "confirmedMessage": "Your email has been confirmed successfully!",
       "continueButton": "Continue to Sign In",
       "backToSignIn": "Back to Sign In",
+      "registerAgain": "Register again",
+      "resendEmailLabel": "Your email address",
+      "resendButton": "Resend verification email",
+      "resendPending": "Sending...",
+      "resendSuccess": "Verification email sent. Please check your inbox.",
       "errors": {
         "tokenRequired": "Email verification token is required. Please use the link from your email.",
+        "tokenExpired": "Your verification link has expired. Enter your email to receive a new one.",
+        "resendFailed": "Failed to resend verification email. Please try again.",
         "confirmFailed": "Failed to confirm email. Please try again or use the link from your email.",
         "validationFailed": "Please check your input",
         "unauthorized": "Invalid verification token",

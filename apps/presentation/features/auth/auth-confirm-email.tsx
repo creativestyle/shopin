@@ -6,6 +6,7 @@ import { useTranslations } from 'next-intl'
 import Link from 'next/link'
 import { useConfirmEmail } from './hooks/use-confirm-email'
 import { getConfirmEmailErrorTranslationKey } from './lib/error-translations'
+import { ResendVerificationEmailForm } from './auth-resend-verification-email'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { StandardContainer } from '@/components/ui/standard-container'
 import { ErrorDisplay } from '@/components/ui/error-display'
@@ -19,6 +20,12 @@ export function ConfirmEmail({ onVerified }: ConfirmEmailProps) {
   const t = useTranslations('account.registrationSuccess')
   const searchParams = useSearchParams()
   const { confirmEmailMutation } = useConfirmEmail({ onVerified })
+  const {
+    mutate: confirmEmailMutate,
+    isPending: isMutationPending,
+    isError: isMutationError,
+    data: confirmEmailData,
+  } = confirmEmailMutation
   const hasAttemptedRef = useRef(false)
 
   const token = searchParams.get('token')
@@ -30,21 +37,24 @@ export function ConfirmEmail({ onVerified }: ConfirmEmailProps) {
     }
 
     hasAttemptedRef.current = true
-    confirmEmailMutation.mutate({ tokenValue: token })
+    confirmEmailMutate({ tokenValue: token })
 
     return () => {
       hasAttemptedRef.current = false
     }
-  }, [token, confirmEmailMutation])
+  }, [token, confirmEmailMutate])
 
-  const isError =
-    confirmEmailMutation.isError || confirmEmailMutation.data?.success === false
+  const isError = isMutationError || confirmEmailData?.success === false
+
+  const isExpiredToken = confirmEmailData?.message === 'token_expired'
 
   let displayError: string | null = null
   if (!token) {
     displayError = t('errors.tokenRequired')
+  } else if (isExpiredToken) {
+    displayError = t('errors.tokenExpired')
   } else if (isError) {
-    const errorData = confirmEmailMutation.data
+    const errorData = confirmEmailData
     displayError = t(
       getConfirmEmailErrorTranslationKey(errorData?.statusCode) as any
     )
@@ -62,16 +72,20 @@ export function ConfirmEmail({ onVerified }: ConfirmEmailProps) {
               {displayError}
             </ErrorDisplay>
             <div className='my-4 w-full border-t border-gray-200' />
-            <Link
-              href={signInLink}
-              className='text-center text-sm text-gray-700 underline transition-colors hover:text-gray-900'
-            >
-              {t('backToSignIn')}
-            </Link>
+            {isExpiredToken ? (
+              <ResendVerificationEmailForm />
+            ) : (
+              <Link
+                href={signInLink}
+                className='text-center text-sm text-gray-700 underline transition-colors hover:text-gray-900'
+              >
+                {t('backToSignIn')}
+              </Link>
+            )}
           </>
         )}
 
-        {token !== null && confirmEmailMutation.isPending && (
+        {token !== null && isMutationPending && (
           <LoadingSpinner className='size-8' />
         )}
       </div>

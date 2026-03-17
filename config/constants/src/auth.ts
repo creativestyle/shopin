@@ -37,6 +37,11 @@ export const CSRF_TOKEN_CONFIG = {
 export const ACCESS_TOKEN_TOKEN = 'ACCESS_TOKEN_TOKEN'
 
 /**
+ * TTL for email verification tokens (in minutes)
+ */
+export const EMAIL_TOKEN_TTL_MINUTES = 60
+
+/**
  * TTL for password reset tokens (in minutes)
  */
 export const PASSWORD_RESET_TOKEN_TTL_MINUTES = 60

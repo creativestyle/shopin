@@ -70,6 +70,20 @@ export class CommercetoolsErrorMatcher {
     )
   }
 
+  isExpiredEmailTokenError(error: unknown): boolean {
+    if (!this.isHttpError(error)) {
+      return false
+    }
+
+    return (
+      error.statusCode === 400 &&
+      (error.body?.errors?.some(
+        (e) => e.code === 'ExpiredCustomerEmailToken'
+      ) ??
+        false)
+    )
+  }
+
   isDuplicateEmailError(error: unknown): boolean {
     if (!this.isHttpError(error)) {
       return false

@@ -17,6 +17,10 @@ import type {
   ResetPasswordRequest,
   ResetPasswordResponse,
 } from '@core/contracts/auth/reset-password'
+import type {
+  ResendVerificationEmailRequest,
+  ResendVerificationEmailResponse,
+} from '@core/contracts/auth/resend-verification-email'
 import { DataSourceFactory } from '../../data-source/data-source.factory'
 import { TokenStorageService } from '../../common/token-management/token-storage.service'
 import { CartIdService } from '../cart-id/cart-id.service'
@@ -114,5 +118,18 @@ export class AuthService {
   ): Promise<ResetPasswordResponse> {
     const { resetPasswordService } = this.dataSourceFactory.getAuthServices()
     return await resetPasswordService.resetPassword(resetPasswordRequest)
+  }
+
+  async resendVerificationEmail(
+    request: ResendVerificationEmailRequest
+  ): Promise<ResendVerificationEmailResponse> {
+    const { generateEmailTokenService } =
+      this.dataSourceFactory.getAuthServices()
+    const result = await generateEmailTokenService.generateEmailToken({
+      email: request.email,
+    })
+    // Always return success to prevent email enumeration.
+    // TODO: remove emailToken once email service is configured.
+    return { success: true, emailToken: result.emailToken }
   }
 }

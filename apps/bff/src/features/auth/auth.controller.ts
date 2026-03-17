@@ -51,6 +51,12 @@ import {
   type ResetPasswordRequest,
   type ResetPasswordResponse,
 } from '@core/contracts/auth/reset-password'
+import {
+  ResendVerificationEmailRequestSchema,
+  ResendVerificationEmailResponseSchema,
+  type ResendVerificationEmailRequest,
+  type ResendVerificationEmailResponse,
+} from '@core/contracts/auth/resend-verification-email'
 import { ZodBody } from '../../common/validation'
 import { UseCsrfGuard } from '../csrf/csrf.decorator'
 import { CsrfTokenCleanupInterceptor } from '../csrf/csrf-token-cleanup.interceptor'
@@ -356,6 +362,32 @@ export class AuthController {
       async () =>
         ResetPasswordResponseSchema.strip().parse(
           await this.authService.resetPassword(resetPasswordRequest)
+        )
+    )
+  }
+
+  @Post('resend-verification-email')
+  @UseCsrfGuard()
+  @HttpCode(HttpStatus.OK)
+  @ApiOkResponse({
+    description: 'Verification email resent successfully',
+  })
+  @ApiBadRequestResponse({
+    description: 'Validation failed',
+  })
+  async resendVerificationEmail(
+    @Req() req: Request,
+    @ZodBody(ResendVerificationEmailRequestSchema)
+    resendRequest: ResendVerificationEmailRequest
+  ): Promise<ResendVerificationEmailResponse> {
+    // Always returns success to prevent email enumeration.
+    return this.executeWithAuthLogging(
+      req,
+      'resend_verification_email',
+      (statusCode) => (statusCode >= 500 ? 'error' : 'unknown'),
+      async () =>
+        ResendVerificationEmailResponseSchema.strip().parse(
+          await this.authService.resendVerificationEmail(resendRequest)
         )
     )
   }
