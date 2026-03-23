@@ -1,38 +1,32 @@
 ---
 name: Bug report
 about: Create a report to help us improve
-title: ''
-labels: ''
+title: 'BUG: '
+labels: bug
 assignees: ''
+type: Bug
 
 ---
 
-**Describe the bug**
-A clear and concise description of what the bug is.
+### Summary
+Provide a clear and meaningful sentence describing what is wrong. Mention the area (e.g. [PDP], [Checkout]) and specific conditions (e.g. [Mobile], [Logged-in]). 
+Avoid vague titles like "Everything is wrong" or "Checkout not working."
 
-**To Reproduce**
-Steps to reproduce the behavior:
-1. Go to '...'
-2. Click on '....'
-3. Scroll down to '....'
-4. See error
+### Environment
+Device: 
+Browser: 
+Test System URL: 
 
-**Expected behavior**
-A clear and concise description of what you expected to happen.
+### Steps to Reproduce
+1. Go to...
+2. Add...
+3. Click...
+4. 
 
-**Screenshots**
-If applicable, add screenshots to help explain your problem.
+### Results
+**Expected:** (How it should work)
 
-**Desktop (please complete the following information):**
- - OS: [e.g. iOS]
- - Browser [e.g. chrome, safari]
- - Version [e.g. 22]
+**Actual:** (How it is working currently)
 
-**Smartphone (please complete the following information):**
- - Device: [e.g. iPhone6]
- - OS: [e.g. iOS8.1]
- - Browser [e.g. stock browser, safari]
- - Version [e.g. 22]
-
-**Additional context**
-Add any other context about the problem here.
+### Visual Proof
+(Drag and drop screenshots here or add a link to a video recording)
