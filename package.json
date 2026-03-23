@@ -37,6 +37,10 @@
     "node": ">=22"
   },
   "packageManager": "npm@10.9.2",
+  "optionalDependencies": {
+    "@parcel/watcher-linux-x64-glibc": "2.5.6",
+    "@swc/core-linux-x64-gnu": "1.15.18"
+  },
   "workspaces": [
     "apps/*",
     "core/*",
@@ -53,10 +57,5 @@
     "*.{json,css,md}": [
       "turbo run format"
     ]
-  },
-  "overrides": {
-    "minimatch": "^10.2.2",
-    "glob": "^11.1.0",
-    "bfj": "^9.1.3"
   }
 }
