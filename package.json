@@ -53,10 +53,5 @@
     "*.{json,css,md}": [
       "turbo run format"
     ]
-  },
-  "overrides": {
-    "minimatch": "^10.2.2",
-    "glob": "^11.1.0",
-    "bfj": "^9.1.3"
   }
 }
