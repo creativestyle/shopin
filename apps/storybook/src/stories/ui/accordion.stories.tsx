@@ -133,7 +133,6 @@ function AccordionDemo({
   accordionClassName?: string
   items?: Item[]
 }) {
-  const data = items ?? EXAMPLES.support
   const rootProps =
     type === 'single'
       ? {
@@ -155,7 +154,7 @@ function AccordionDemo({
         {...rootProps}
         className={accordionClassName}
       >
-        {data.map((item) => (
+        {items.map((item) => (
           <AccordionItem
             key={item.value}
             value={item.value}
@@ -195,12 +194,7 @@ type Story = StoryObj<typeof meta>
 
 export const Multiple: Story = {
   args: { defaultValue: [], type: 'multiple' },
-  render: (args) => (
-    <AccordionDemo
-      {...args}
-      items={EXAMPLES.support}
-    />
-  ),
+  render: (args) => <AccordionDemo {...args} />,
 }
 
 export const Single: Story = {

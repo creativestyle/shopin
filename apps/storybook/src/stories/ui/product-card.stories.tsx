@@ -1,8 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ProductCard } from '@/components/ui/product-card'
-
-const queryClient = new QueryClient()
 
 const meta: Meta<typeof ProductCard> = {
   title: 'UI/ProductCard',
@@ -12,11 +9,9 @@ const meta: Meta<typeof ProductCard> = {
   },
   decorators: [
     (Story) => (
-      <QueryClientProvider client={queryClient}>
-        <div className='mx-auto box-border w-[min(100%,320px)] min-w-[260px] shrink-0'>
-          <Story />
-        </div>
-      </QueryClientProvider>
+      <div className='mx-auto box-border w-[min(100%,320px)] min-w-[260px] shrink-0'>
+        <Story />
+      </div>
     ),
   ],
   tags: ['autodocs'],

@@ -1,8 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { action } from 'storybook/actions'
 import { ProductGrid } from '@/components/ui/product-grid'
+import { ProductGridStoryCardActions } from '../../mocks/product-grid-story-card-actions'
 
-const queryClient = new QueryClient()
+const logAddToBasket = action('cardActions.addToBasket')
 
 // Mock product data for Storybook
 const mockProducts = [
@@ -75,18 +76,21 @@ const meta: Meta<typeof ProductGrid> = {
   parameters: {
     layout: 'padded',
   },
-  decorators: [
-    (Story) => (
-      <QueryClientProvider client={queryClient}>
-        <Story />
-      </QueryClientProvider>
-    ),
-  ],
   args: {
     products: mockProducts,
     locale: 'en-US',
-    showAddToCart: false,
   },
+  render: (args) => (
+    <ProductGrid
+      {...args}
+      renderCardActions={(product) => (
+        <ProductGridStoryCardActions
+          className='z-2 w-full'
+          onAction={() => logAddToBasket(product)}
+        />
+      )}
+    />
+  ),
 }
 
 export default meta

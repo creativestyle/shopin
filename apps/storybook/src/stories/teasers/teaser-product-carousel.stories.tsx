@@ -1,11 +1,8 @@
 import React, { Suspense } from 'react'
 import type { Meta, StoryObj } from '@storybook/react'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ProductCarouselWithMock } from './product-carousel-with-mock'
 import { MOCK_PRODUCT_LIST } from '../../mocks/mock-product-list'
 import { PRODUCT_CAROUSEL } from './teaser-mock-data'
-
-const queryClient = new QueryClient()
 
 const meta: Meta<typeof ProductCarouselWithMock> = {
   title: 'Teasers/Product carousel',
@@ -14,13 +11,11 @@ const meta: Meta<typeof ProductCarouselWithMock> = {
   parameters: { layout: 'padded' },
   decorators: [
     (Story) => (
-      <QueryClientProvider client={queryClient}>
-        <Suspense
-          fallback={<div className='p-4 text-gray-500'>Loading products…</div>}
-        >
-          <Story />
-        </Suspense>
-      </QueryClientProvider>
+      <Suspense
+        fallback={<div className='p-4 text-gray-500'>Loading products…</div>}
+      >
+        <Story />
+      </Suspense>
     ),
   ],
 }

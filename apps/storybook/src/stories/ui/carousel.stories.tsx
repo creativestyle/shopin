@@ -2,7 +2,6 @@ import React from 'react'
 import type { Meta, StoryObj } from '@storybook/react'
 import { Carousel, CarouselSlide } from '@/components/ui/carousel'
 import { ProductCard } from '@/components/ui/product-card'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 
 const PRODUCTS = [
   {
@@ -67,8 +66,6 @@ const PRODUCTS = [
   },
 ]
 
-const queryClient = new QueryClient()
-
 const meta = {
   title: 'UI/Carousel',
   component: Carousel,
@@ -110,20 +107,18 @@ export const Default: Story = {
 export const ProductCards: Story = {
   args: { children: null },
   render: () => (
-    <QueryClientProvider client={queryClient}>
-      <Carousel
-        gridConfig={{
-          'base': 2.12,
-          'sm': 3.12,
-          'md': 4.25,
-          'lg': 4,
-          'xl': 5,
-          '2xl': 5,
-        }}
-      >
-        {renderProductSlides()}
-      </Carousel>
-    </QueryClientProvider>
+    <Carousel
+      gridConfig={{
+        'base': 2.12,
+        'sm': 3.12,
+        'md': 4.25,
+        'lg': 4,
+        'xl': 5,
+        '2xl': 5,
+      }}
+    >
+      {renderProductSlides()}
+    </Carousel>
   ),
 }
 

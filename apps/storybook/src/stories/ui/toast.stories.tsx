@@ -333,9 +333,9 @@ const ToasterShowcaseComponent = () => {
 
   return (
     <div className='flex flex-col gap-4 pb-34'>
-      {scenarios.map((scenario, index) => (
+      {scenarios.map((scenario) => (
         <ToastShowcaseRow
-          key={`${scenario.title}-${index}`}
+          key={scenario.title}
           title={scenario.title}
           description={scenario.description}
           isOpen={
