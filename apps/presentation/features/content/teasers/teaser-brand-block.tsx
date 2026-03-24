@@ -73,8 +73,7 @@ export function TeaserBrandBlock({
                   <TeaserBrandItemContent
                     item={item}
                     preload={
-                      imagePreload &&
-                      index < BRAND_CAROUSEL_PRELOAD_ITEM_COUNT
+                      imagePreload && index < BRAND_CAROUSEL_PRELOAD_ITEM_COUNT
                     }
                   />
                 </CmsLink>

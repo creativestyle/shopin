@@ -175,49 +175,49 @@ export const SLIDER_SLIDES = (
   ctaRef2: EntryLinkRef,
   ctaRef3: EntryLinkRef
 ) => [
-    {
-      'en-US': {
-        caption: 'Slide 1 – New season',
-        headline: 'New season',
-        body: 'Discover the latest styles and trends for the season ahead.',
-        cta: ctaRef1,
-      },
-      'de-DE': {
-        caption: 'Slide 1 – Neue Saison',
-        headline: 'Neue Saison',
-        body: 'Die neuesten Styles und Trends.',
-        cta: ctaRef1,
-      },
+  {
+    'en-US': {
+      caption: 'Slide 1 – New season',
+      headline: 'New season',
+      body: 'Discover the latest styles and trends for the season ahead.',
+      cta: ctaRef1,
     },
-    {
-      'en-US': {
-        caption: 'Slide 2 – Best sellers',
-        headline: 'Best sellers',
-        body: 'Our most loved pieces, chosen by you.',
-        cta: ctaRef2,
-      },
-      'de-DE': {
-        caption: 'Slide 2 – Bestseller',
-        headline: 'Bestseller',
-        body: 'Unsere beliebtesten Stücke.',
-        cta: ctaRef2,
-      },
+    'de-DE': {
+      caption: 'Slide 1 – Neue Saison',
+      headline: 'Neue Saison',
+      body: 'Die neuesten Styles und Trends.',
+      cta: ctaRef1,
     },
-    {
-      'en-US': {
-        caption: 'Slide 3 – Sale',
-        headline: 'Sale',
-        body: "Limited time offers on selected items. Don't miss out.",
-        cta: ctaRef3,
-      },
-      'de-DE': {
-        caption: 'Slide 3 – Sale',
-        headline: 'Sale',
-        body: 'Zeitlich begrenzte Angebote.',
-        cta: ctaRef3,
-      },
+  },
+  {
+    'en-US': {
+      caption: 'Slide 2 – Best sellers',
+      headline: 'Best sellers',
+      body: 'Our most loved pieces, chosen by you.',
+      cta: ctaRef2,
     },
-  ]
+    'de-DE': {
+      caption: 'Slide 2 – Bestseller',
+      headline: 'Bestseller',
+      body: 'Unsere beliebtesten Stücke.',
+      cta: ctaRef2,
+    },
+  },
+  {
+    'en-US': {
+      caption: 'Slide 3 – Sale',
+      headline: 'Sale',
+      body: "Limited time offers on selected items. Don't miss out.",
+      cta: ctaRef3,
+    },
+    'de-DE': {
+      caption: 'Slide 3 – Sale',
+      headline: 'Sale',
+      body: 'Zeitlich begrenzte Angebote.',
+      cta: ctaRef3,
+    },
+  },
+]
 export const SLIDER_TITLE = {
   'en-US': { title: 'Hero slider' },
   'de-DE': { title: 'Hero-Slider' },
@@ -253,47 +253,47 @@ export const CAROUSEL_ITEMS = (
   linkC: EntryLinkRef,
   linkSale: EntryLinkRef
 ) => [
-    {
-      'en-US': { caption: 'Summer essentials', link: linkNew },
-      'de-DE': { caption: 'Sommer-Basics', link: linkNew },
-    },
-    {
-      'en-US': { caption: 'Best sellers', link: linkNew },
-      'de-DE': { caption: 'Bestseller', link: linkNew },
-    },
-    {
-      'en-US': { caption: 'Gift ideas', link: linkNew },
-      'de-DE': { caption: 'Geschenkideen', link: linkNew },
-    },
-    {
-      'en-US': { caption: 'New arrivals', link: linkC },
-      'de-DE': { caption: 'Neuheiten', link: linkC },
-    },
-    {
-      'en-US': { caption: 'Sale', link: linkSale },
-      'de-DE': { caption: 'Sale', link: linkSale },
-    },
-    {
-      'en-US': { caption: 'Trending now', link: linkC },
-      'de-DE': { caption: 'Im Trend', link: linkC },
-    },
-    {
-      'en-US': { caption: 'Staff picks', link: linkC },
-      'de-DE': { caption: 'Team-Favoriten', link: linkC },
-    },
-    {
-      'en-US': { caption: 'Limited edition', link: linkNew },
-      'de-DE': { caption: 'Limitierte Edition', link: linkNew },
-    },
-    {
-      'en-US': { caption: 'Back in stock', link: linkC },
-      'de-DE': { caption: 'Wieder da', link: linkC },
-    },
-    {
-      'en-US': { caption: 'Winter collection', link: linkC },
-      'de-DE': { caption: 'Winter-Kollektion', link: linkC },
-    },
-  ]
+  {
+    'en-US': { caption: 'Summer essentials', link: linkNew },
+    'de-DE': { caption: 'Sommer-Basics', link: linkNew },
+  },
+  {
+    'en-US': { caption: 'Best sellers', link: linkNew },
+    'de-DE': { caption: 'Bestseller', link: linkNew },
+  },
+  {
+    'en-US': { caption: 'Gift ideas', link: linkNew },
+    'de-DE': { caption: 'Geschenkideen', link: linkNew },
+  },
+  {
+    'en-US': { caption: 'New arrivals', link: linkC },
+    'de-DE': { caption: 'Neuheiten', link: linkC },
+  },
+  {
+    'en-US': { caption: 'Sale', link: linkSale },
+    'de-DE': { caption: 'Sale', link: linkSale },
+  },
+  {
+    'en-US': { caption: 'Trending now', link: linkC },
+    'de-DE': { caption: 'Im Trend', link: linkC },
+  },
+  {
+    'en-US': { caption: 'Staff picks', link: linkC },
+    'de-DE': { caption: 'Team-Favoriten', link: linkC },
+  },
+  {
+    'en-US': { caption: 'Limited edition', link: linkNew },
+    'de-DE': { caption: 'Limitierte Edition', link: linkNew },
+  },
+  {
+    'en-US': { caption: 'Back in stock', link: linkC },
+    'de-DE': { caption: 'Wieder da', link: linkC },
+  },
+  {
+    'en-US': { caption: 'Winter collection', link: linkC },
+    'de-DE': { caption: 'Winter-Kollektion', link: linkC },
+  },
+]
 export const CAROUSEL_TITLE = {
   'en-US': { title: 'Featured' },
   'de-DE': { title: 'Empfohlen' },

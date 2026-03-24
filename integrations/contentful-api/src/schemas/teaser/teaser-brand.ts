@@ -19,4 +19,6 @@ export const TeaserBrandApiResponseSchema = z.object({
     .nullable(),
 })
 
-export type TeaserBrandApiResponse = z.infer<typeof TeaserBrandApiResponseSchema>
+export type TeaserBrandApiResponse = z.infer<
+  typeof TeaserBrandApiResponseSchema
+>

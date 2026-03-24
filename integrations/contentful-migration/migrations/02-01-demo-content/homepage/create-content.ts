@@ -267,27 +267,40 @@ export async function createTeasers(
     })
   )
 
-   const brandItemsId: string[] = []
+  const brandItemsId: string[] = []
   for (const item of BRAND) {
     const caption = String(
       item['en-US']?.caption ?? item['de-DE']?.caption ?? 'Brand image'
     )
-    const imageUrl = BRAND_IMAGES[brandItemsId.length % BRAND_IMAGES.length] ?? ''
+    const imageUrl =
+      BRAND_IMAGES[brandItemsId.length % BRAND_IMAGES.length] ?? ''
     const assetLink = {
       sys: {
         type: 'Link' as const,
         linkType: 'Asset' as const,
         id: await createImageAsset(
           client,
-          { title: caption, url: imageUrl, fileName: `brand-item-${brandItemsId.length}.jpg` },
+          {
+            title: caption,
+            url: imageUrl,
+            fileName: `brand-item-${brandItemsId.length}.jpg`,
+          },
           [...LOCALES]
         ),
       },
     }
     brandItemsId.push(
       await createEntryWithLocales(client, 'teaserBrandItem', {
-        'en-US': { ...item['en-US'], image: assetLink, link: toEntryRef(links.linkCId) },
-        'de-DE': { ...item['de-DE'], image: assetLink, link: toEntryRef(links.linkCId) },
+        'en-US': {
+          ...item['en-US'],
+          image: assetLink,
+          link: toEntryRef(links.linkCId),
+        },
+        'de-DE': {
+          ...item['de-DE'],
+          image: assetLink,
+          link: toEntryRef(links.linkCId),
+        },
       })
     )
   }

@@ -11,8 +11,14 @@ export function mapTeaserBrand(entry: TeaserBrandApiResponse): BrandTeaser {
       caption: item.caption ?? undefined,
       link: mapLinkEntryToCmsLink(item.link),
     }))
-    .filter((item): item is { image: NonNullable<typeof item.image>; caption: typeof item.caption; link: typeof item.link } =>
-      item.image !== undefined
+    .filter(
+      (
+        item
+      ): item is {
+        image: NonNullable<typeof item.image>
+        caption: typeof item.caption
+        link: typeof item.link
+      } => item.image !== undefined
     )
   return {
     type: 'brand',
