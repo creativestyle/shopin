@@ -1,5 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ProductGrid } from '@/components/ui/product-grid'
+
+const queryClient = new QueryClient()
 
 // Mock product data for Storybook
 const mockProducts = [
@@ -72,8 +75,17 @@ const meta: Meta<typeof ProductGrid> = {
   parameters: {
     layout: 'padded',
   },
+  decorators: [
+    (Story) => (
+      <QueryClientProvider client={queryClient}>
+        <Story />
+      </QueryClientProvider>
+    ),
+  ],
   args: {
     products: mockProducts,
+    locale: 'en-US',
+    showAddToCart: false,
   },
 }
 

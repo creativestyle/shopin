@@ -61,13 +61,9 @@ export const BANNER: BannerTeaser = {
   cta: { link: { label: 'Shop now', url: '/new' } },
 }
 
-/** MageSuite demo hero image (CloudFront CDN) – aspect 1920/523 */
-export const MAGESUITE_HERO_IMAGE =
-  'https://d187yychpee5t0.cloudfront.net/wysiwyg/teasers_2023/hero_1_1.png'
-
 export const HERO: HeroTeaser = {
   type: 'hero',
-  backgroundImage: img(MAGESUITE_HERO_IMAGE, 1920, 523, 'Hero'),
+  backgroundImage: img(MOCK_IMAGES.banner, 1200, 400, 'Hero'),
   headline: 'Close to (your) nature',
   body: 'See our new collection made of recycled materials. Sustainable style for every day.',
   cta: { link: { label: 'Shop now', url: '/c' } },
@@ -279,10 +275,16 @@ const RICH_TEXT_DOCUMENT: RichTextDocumentResponse = {
               data: {},
               content: [
                 {
-                  nodeType: 'text',
-                  value: 'Col A',
+                  nodeType: 'paragraph',
                   data: {},
-                  marks: [],
+                  content: [
+                    {
+                      nodeType: 'text',
+                      value: 'Column A',
+                      data: {},
+                      marks: [],
+                    },
+                  ],
                 },
               ],
             },
@@ -291,10 +293,16 @@ const RICH_TEXT_DOCUMENT: RichTextDocumentResponse = {
               data: {},
               content: [
                 {
-                  nodeType: 'text',
-                  value: 'Col B',
+                  nodeType: 'paragraph',
                   data: {},
-                  marks: [],
+                  content: [
+                    {
+                      nodeType: 'text',
+                      value: 'Column B',
+                      data: {},
+                      marks: [],
+                    },
+                  ],
                 },
               ],
             },
@@ -309,10 +317,16 @@ const RICH_TEXT_DOCUMENT: RichTextDocumentResponse = {
               data: {},
               content: [
                 {
-                  nodeType: 'text',
-                  value: 'Cell 1',
+                  nodeType: 'paragraph',
                   data: {},
-                  marks: [],
+                  content: [
+                    {
+                      nodeType: 'text',
+                      value: 'Cell 1',
+                      data: {},
+                      marks: [],
+                    },
+                  ],
                 },
               ],
             },
@@ -321,10 +335,16 @@ const RICH_TEXT_DOCUMENT: RichTextDocumentResponse = {
               data: {},
               content: [
                 {
-                  nodeType: 'text',
-                  value: 'Cell 2',
+                  nodeType: 'paragraph',
                   data: {},
-                  marks: [],
+                  content: [
+                    {
+                      nodeType: 'text',
+                      value: 'Cell 2',
+                      data: {},
+                      marks: [],
+                    },
+                  ],
                 },
               ],
             },
@@ -522,14 +542,14 @@ export const PRODUCT_CAROUSEL: ProductCarouselTeaser = {
 
 export const SECTION: SectionTeaser = {
   type: 'section',
-  categoryLabel: 'DAMEN',
-  headline: 'Jeans & Hosen',
-  body: 'Entdecken Sie unsere Auswahl an Jeans und Hosen – von Slim bis Wide Fit.',
+  categoryLabel: 'Category',
+  headline: 'Featured collection',
+  body: 'Explore a curated selection of everyday essentials and seasonal highlights.',
   subcategoryLinks: [
-    { label: 'Jeans', url: '/c/damen/jeans' },
-    { label: 'Hosen', url: '/c/damen/hosen' },
+    { label: 'Category A', url: '/c/category-a' },
+    { label: 'Category B', url: '/c/category-b' },
   ],
-  image: img(MOCK_IMAGES.landscape, 800, 600, 'Jeans & Hosen'),
+  image: img(MOCK_IMAGES.landscape, 800, 600, 'Featured collection'),
 }
 
 export const REGULAR: RegularTeaser = {

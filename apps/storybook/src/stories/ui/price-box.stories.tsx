@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react'
 import { PriceBox } from '@/components/ui/price/price-box'
 
 const meta: Meta<typeof PriceBox> = {
-  title: 'Price/PriceBox',
+  title: 'UI/PriceBox',
   component: PriceBox,
   tags: ['autodocs'],
   args: {

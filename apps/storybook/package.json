@@ -25,6 +25,7 @@
     "@demo/data-source-selector": "*",
     "@demo/mocked-payment-service-provider": "*",
     "@storybook/nextjs": "^10.2.7",
+    "@tanstack/react-query": "^5.83.0",
     "@tailwindcss/postcss": "^4.1.13",
     "@types/react": "19.2.7",
     "@types/react-dom": "19.2.3",

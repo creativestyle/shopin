@@ -1,163 +1,110 @@
 import type { Meta, StoryObj } from '@storybook/react'
 import { action } from 'storybook/actions'
 import { Button } from '@/components/ui/button'
-import Link from 'next/link'
 import CartIcon from '@/public/icons/cart.svg'
+import Link from 'next/link'
 
-const meta: Meta<typeof Button> = {
+const meta = {
   title: 'UI/Button',
   component: Button,
   tags: ['autodocs'],
   parameters: {
-    layout: 'fullscreen',
+    layout: 'centered',
   },
   argTypes: {
     variant: {
       control: { type: 'select' },
       options: ['primary', 'secondary', 'tertiary'],
-      description: 'The visual style variant of the button',
     },
     scheme: {
       control: { type: 'select' },
       options: ['red', 'white', 'black'],
-      description: 'The color scheme (brand palettes)',
-    },
-    asChild: {
-      control: { type: 'boolean' },
-      description: 'Whether to render as a child component instead of a button',
     },
     disabled: {
       control: { type: 'boolean' },
-      description: 'Whether the button is disabled',
     },
     children: {
       control: 'text',
-      description: 'The button content',
-    },
-    className: {
-      control: 'text',
-      description: 'Additional CSS classes',
     },
   },
   args: {
-    children: 'Button Text',
+    children: 'Add to cart',
     variant: 'primary',
     scheme: 'red',
-    asChild: false,
     disabled: false,
+    onClick: action('click'),
   },
-  decorators: [
-    (Story, context) => {
-      // Pick background color based on button scheme
-      const bg = context.args.scheme === 'white' ? '#757575' : '#fff'
-
-      return (
-        <div
-          style={{
-            backgroundColor: bg,
-            width: '100vw',
-            height: '100vh',
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-          }}
-        >
-          <Story />
-        </div>
-      )
-    },
-  ],
-}
+} satisfies Meta<typeof Button>
 
 export default meta
 type Story = StoryObj<typeof meta>
 
-// Default button stories
 export const Default: Story = {
   args: {
-    children: 'Jetzt entdecken',
+    children: 'Add to cart',
     variant: 'primary',
     scheme: 'red',
-    onClick: action('click'),
   },
 }
 
-export const Secondary: Story = {
+export const WithIcon: Story = {
   args: {
-    children: 'Jetzt entdecken',
-    variant: 'secondary',
+    children: 'Add to cart',
+    variant: 'primary',
     scheme: 'red',
-    onClick: action('click'),
   },
+  render: (args) => (
+    <Button {...args}>
+      <CartIcon className='size-6' />
+      {args.children}
+    </Button>
+  ),
 }
 
-export const Tertiary: Story = {
+export const WithRightIcon: Story = {
   args: {
-    children: 'Jetzt entdecken',
-    variant: 'tertiary',
+    children: 'Checkout',
+    variant: 'primary',
     scheme: 'red',
-    onClick: action('click'),
   },
+  render: (args) => (
+    <Button {...args}>
+      {args.children}
+      <CartIcon className='size-6' />
+    </Button>
+  ),
 }
 
-// Polymorphic button as Link component
 export const AsInternalLink: Story = {
   args: {
-    variant: 'primary',
-    scheme: 'red',
+    variant: 'secondary',
+    scheme: 'black',
     asChild: true,
-    onClick: action('click'),
+    children: 'View product',
   },
-  render: (args) => {
-    const { ...buttonProps } = args
-    return (
-      <Button {...buttonProps}>
-        <Link href='/products'>Internal Link</Link>
-      </Button>
-    )
-  },
+  render: (args) => (
+    <Button {...args}>
+      <Link href='/products/lightweight-rain-jacket'>{args.children}</Link>
+    </Button>
+  ),
 }
 
-// Polymorphic button as anchor tag
 export const AsExternalLink: Story = {
   args: {
-    variant: 'secondary',
-    scheme: 'white',
+    variant: 'tertiary',
+    scheme: 'black',
     asChild: true,
-    onClick: action('click'),
+    children: 'Track shipment',
   },
-  render: (args) => {
-    const { ...buttonProps } = args
-    return (
-      <Button {...buttonProps}>
-        <a
-          href='https://example.com'
-          target='_blank'
-          rel='noopener noreferrer'
-        >
-          External Link
-        </a>
-      </Button>
-    )
-  },
-}
-
-// Button with icon
-export const WithIcons: Story = {
-  args: {
-    variant: 'primary',
-    scheme: 'red',
-    onClick: action('click'),
-    children: 'Add to Cart',
-  },
-  render: (args) => {
-    const { children, ...buttonProps } = args
-
-    return (
-      <Button {...buttonProps}>
-        <CartIcon className='size-6' />
-        {children as string}
-      </Button>
-    )
-  },
+  render: (args) => (
+    <Button {...args}>
+      <a
+        href='https://shopin.dev/track'
+        target='_blank'
+        rel='noopener noreferrer'
+      >
+        {args.children}
+      </a>
+    </Button>
+  ),
 }

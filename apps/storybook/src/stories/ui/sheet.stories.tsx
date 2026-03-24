@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import type { ReactNode } from 'react'
 import type { Meta, StoryObj } from '@storybook/react'
 import {
   Sheet,
@@ -13,84 +14,211 @@ import {
 } from '@/components/ui/sheet'
 import { Button } from '@/components/ui/button'
 
-// READ FULL API OPTIONS HERE: https://www.radix-ui.com/primitives/docs/components/dialog
-// For accessibility reasons the SheetTitle and SheetDescription components MUST be included in the SheetContent. To get rid of it you can wrap it in VisuallyHidden component.
+const SHEET_TITLE = 'Order summary'
 
-const meta: Meta<typeof Sheet> = {
-  title: 'UI/Sheet',
-  component: Sheet,
-  tags: ['autodocs'],
-  argTypes: {},
-  args: {},
-}
+const COPY = {
+  lead: 'Review your items and delivery details before checkout.',
+  detail:
+    'You can still update quantities, remove items, or choose another delivery method before confirming.',
+} as const
 
-export default meta
-type Story = StoryObj<typeof meta>
+const SCROLL_INTRO =
+  'Delivery windows are estimates and can vary by carrier and postcode.'
 
-const sheetTitle = 'Lorem ipsum dolor'
-const paragraph = `Lorem ipsum dolor sit amet, consectetur adipisicing elit. Velit dolore, quis repellendus dolor sapiente soluta, voluptas sequi architecto dignissimos consectetur optio iure error ipsam, nesciunt rerum animi adipisci officia libero placeat veritatis nulla aspernatur vitae. Reiciendis aliquam hic, laboriosam magnam quos iure doloremque maxime debitis eveniet sit, at minima soluta?`
-
-const ShortParagraph = () => {
-  return <p className='not-last:mb-[1em]'>{paragraph}</p>
-}
-
-const LongParagraph = () => {
+function BodyDefault() {
   return (
-    <p className='not-last:mb-[1em]'>
-      Lorem ipsum dolor sit amet, consectetur adipisicing elit. Eveniet harum
-      dolores asperiores neque cum quia dicta maxime veritatis. Consequatur hic
-      sed debitis doloremque minus accusantium libero? Voluptas accusamus quam
-      quidem vero quasi eos sunt quod cum laudantium quibusdam culpa nemo
-      inventore iusto saepe, sequi animi corrupti excepturi obcaecati neque
-      consequuntur? Assumenda veritatis, enim saepe, impedit aliquam consequatur
-      eaque fugit, vero distinctio iusto omnis odit placeat doloribus quam
-      magnam! Alias repellendus quam delectus tempora qui nisi exercitationem
-      architecto doloribus consequatur corrupti. Atque labore ipsam ratione
-      excepturi. Alias repudiandae obcaecati quod? Perspiciatis dolores omnis
-      aspernatur tempora explicabo commodi libero voluptates modi vero fugiat
-      vel eligendi dignissimos eum, quisquam deserunt earum asperiores non,
-      quidem culpa quo. Eum fugiat dolorum sed. Similique repellat harum est
-      minus. Necessitatibus, praesentium! Magnam deleniti necessitatibus
-      possimus quidem. Dicta modi ad nemo. Dolorum, quas dolore? Accusantium
-      dicta soluta rerum nostrum, consectetur quos impedit voluptate tenetur
-      vero nobis mollitia iusto illo repudiandae vel. Numquam odit impedit
-      distinctio ab facilis laboriosam, suscipit provident est. Corporis totam
-      est, iste aliquid cupiditate illum facere vel soluta? Dolore distinctio
-      vero vitae error voluptatem, alias aliquid molestias reiciendis cum.
-      Voluptatum iste neque molestias facere consectetur nulla sequi. A illo
-      cumque accusantium, debitis excepturi vel neque sint laboriosam culpa
-      provident omnis esse at iusto. Voluptate consequatur libero possimus
-      omnis. Obcaecati eaque ipsa ea accusamus. Magnam nisi consequatur modi et
-      quibusdam dolorum cupiditate eligendi! Quia quo, rem itaque beatae nemo
-      maxime ratione, illum, quasi quam vel suscipit velit consequatur totam sit
-      quod officia pariatur iste. Eius repellat fugiat, distinctio consequuntur
-      consectetur deleniti voluptas nulla quod esse eos velit labore quo
-      molestiae corrupti officia atque quos. Laboriosam est deleniti laborum
-      veritatis. Labore id expedita odit quidem fugit dolores velit
-      exercitationem assumenda ipsa, nobis dolorum voluptatum provident pariatur
-      unde. Aut dicta aliquam beatae veniam nemo aperiam aspernatur fuga
-      assumenda!
-    </p>
+    <>
+      <SheetDescription>{COPY.lead}</SheetDescription>
+      <p className='text-gray-500 not-last:mb-[1em]'>{COPY.detail}</p>
+    </>
   )
 }
 
-const OutsideControlledSheet = () => {
+function BodyScrollable() {
+  return (
+    <>
+      <SheetDescription>{SCROLL_INTRO}</SheetDescription>
+      <p className='text-gray-500 not-last:mb-[1em]'>
+        If a line is unavailable after payment, we refund only that line and
+        ship the remainder.
+      </p>
+      <p className='text-gray-500 not-last:mb-[1em]'>
+        Split shipments may produce separate tracking numbers and delivery
+        dates.
+      </p>
+      <p className='text-gray-500 not-last:mb-[1em]'>
+        Restricted items can require an adult signature at the delivery address.
+      </p>
+      <p className='text-gray-500 not-last:mb-[1em]'>
+        Customs fees for international deliveries are not included unless
+        clearly stated at checkout.
+      </p>
+      <p className='text-gray-500 not-last:mb-[1em]'>
+        If your order contains pre-order items, we may hold the shipment until
+        all items are available unless split delivery is selected.
+      </p>
+      <p className='text-gray-500 not-last:mb-[1em]'>
+        Gift packaging is offered only for eligible products and can add one
+        extra business day to dispatch time.
+      </p>
+      <p className='text-gray-500 not-last:mb-[1em]'>
+        Delivery instructions are shared with the carrier when supported, but
+        access codes and gate details are not guaranteed to be used.
+      </p>
+      <p className='text-gray-500 not-last:mb-[1em]'>
+        Return windows begin on the confirmed delivery date shown in tracking.
+        Final sale products are excluded from standard returns.
+      </p>
+      <p className='text-gray-500 not-last:mb-[1em]'>
+        Refunds are issued to the original payment method after the return is
+        received and inspected at our warehouse.
+      </p>
+      <p className='text-gray-500 not-last:mb-[1em]'>
+        Subscription items renew automatically at the interval you choose.
+        Upcoming renewals can be managed in your account settings.
+      </p>
+      <p className='text-gray-500 not-last:mb-[1em]'>
+        Large-item deliveries may require a scheduled appointment; missed
+        appointments can result in additional carrier charges.
+      </p>
+      <p className='text-gray-500 not-last:mb-[1em]'>
+        We send shipment updates by email and, where enabled, via SMS. Delivery
+        updates may continue directly from the carrier after handoff.
+      </p>
+      <p className='text-gray-500 not-last:mb-[1em]'>
+        Orders paid by bank transfer are processed after funds clear. Processing
+        delays can shift dispatch to the next business day.
+      </p>
+      <p className='text-gray-500 not-last:mb-[1em]'>
+        For marketplace items, packaging and return addresses can differ by
+        seller. The return label in your account always reflects the correct
+        destination.
+      </p>
+      <p className='text-gray-500 not-last:mb-[1em]'>
+        Exchange requests are handled as a return and a new order to maintain
+        stock accuracy and payment security.
+      </p>
+      <p className='text-gray-500 not-last:mb-[1em]'>
+        During peak seasons, carrier scans can appear later than usual even when
+        parcels are already in transit.
+      </p>
+      <p className='text-gray-500 not-last:mb-[1em]'>
+        If your package arrives visibly damaged, keep the outer packaging and
+        contact support with photos so we can open a carrier claim.
+      </p>
+      <p className='text-gray-500 not-last:mb-[1em]'>
+        Delivery to parcel lockers may have size and weight limits depending on
+        local carrier networks.
+      </p>
+      <p className='text-gray-500 not-last:mb-[1em]'>
+        Tax invoices are generated once payment is captured and can be
+        downloaded from your order details page.
+      </p>
+      <p className='text-gray-500 not-last:mb-[1em]'>
+        Replacement shipments for lost parcels require carrier confirmation
+        before we can dispatch at no additional cost.
+      </p>
+      <p className='text-gray-500 not-last:mb-[1em]'>
+        Some promotional codes exclude subscription products, gift cards, or
+        already discounted bundles.
+      </p>
+      <p className='text-gray-500 not-last:mb-[1em]'>
+        If you change the delivery address after dispatch, rerouting options are
+        subject to carrier availability in your region.
+      </p>
+      <p className='text-gray-500'>{COPY.detail}</p>
+    </>
+  )
+}
+
+function SheetShowcaseRow({
+  title,
+  description,
+  children,
+}: {
+  title: string
+  description: string
+  children: ReactNode
+}) {
+  return (
+    <div className='flex flex-col gap-4 rounded-lg border border-gray-200 bg-white p-4 sm:flex-row sm:items-center sm:justify-between sm:gap-6'>
+      <div className='min-w-0 flex-1'>
+        <h3 className='font-medium text-gray-950'>{title}</h3>
+        <p className='mt-1 text-sm text-gray-500'>{description}</p>
+      </div>
+      <div className='shrink-0'>{children}</div>
+    </div>
+  )
+}
+
+function SimpleSheet({
+  side,
+  showCloseButton = true,
+  withFooter = false,
+  customCloseFooter = false,
+}: {
+  side?: 'top' | 'right' | 'bottom' | 'left'
+  showCloseButton?: boolean
+  withFooter?: boolean
+  customCloseFooter?: boolean
+}) {
+  return (
+    <Sheet>
+      <SheetTrigger asChild>
+        <Button>Open</Button>
+      </SheetTrigger>
+      <SheetContent
+        side={side}
+        showCloseButton={showCloseButton}
+      >
+        <SheetHeader>
+          <SheetTitle>{SHEET_TITLE}</SheetTitle>
+        </SheetHeader>
+        <SheetBody>
+          <BodyDefault />
+        </SheetBody>
+        {withFooter ? (
+          <SheetFooter>
+            {customCloseFooter ? (
+              <SheetClose asChild>
+                <Button
+                  variant='secondary'
+                  className='w-full'
+                >
+                  Close
+                </Button>
+              </SheetClose>
+            ) : (
+              <Button
+                variant='secondary'
+                className='w-full'
+              >
+                View basket
+              </Button>
+            )}
+          </SheetFooter>
+        ) : null}
+      </SheetContent>
+    </Sheet>
+  )
+}
+
+function OutsideControlledSheet() {
   const [open, setOpen] = useState<boolean>(false)
 
   return (
     <>
-      <Button onClick={() => setOpen(true)}>Open Sheet</Button>
+      <Button onClick={() => setOpen(true)}>Open sheet</Button>
       <Sheet
         open={open}
         onOpenChange={setOpen}
       >
         <SheetContent>
           <SheetHeader>
-            <SheetTitle>{sheetTitle}</SheetTitle>
+            <SheetTitle>{SHEET_TITLE}</SheetTitle>
           </SheetHeader>
           <SheetBody>
-            <SheetDescription>{paragraph}</SheetDescription>
-            <ShortParagraph />
+            <BodyDefault />
           </SheetBody>
         </SheetContent>
       </Sheet>
@@ -98,234 +226,106 @@ const OutsideControlledSheet = () => {
   )
 }
 
-export const Showcase: Story = {
-  render: () => {
-    return (
-      <div className='relative overflow-x-auto'>
-        <table className='w-full text-left text-sm text-gray-500'>
-          <thead className='bg-gray-100 text-xs uppercase'>
-            <tr>
-              <th
-                scope='col'
-                className='w-[70%] px-6 py-3'
-              >
-                Combination description
-              </th>
-              <th
-                scope='col'
-                className='px-6 py-3'
-              >
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr className='border-b border-gray-200 bg-white'>
-              <th
-                scope='row'
-                className='px-6 py-4 font-medium whitespace-nowrap text-gray-900'
-              >
-                Simple sheet without footer
-              </th>
-              <td
-                className='px-6 py-4'
-                aria-label='Simple sheet without footer'
-              >
-                <Sheet>
-                  <SheetTrigger asChild>
-                    <Button aria-label='Open simple sheet'>Open</Button>
-                  </SheetTrigger>
-                  <SheetContent>
-                    <SheetHeader>
-                      <SheetTitle>{sheetTitle}</SheetTitle>
-                    </SheetHeader>
-                    <SheetBody>
-                      <SheetDescription>{paragraph}</SheetDescription>
-                      <ShortParagraph />
-                    </SheetBody>
-                  </SheetContent>
-                </Sheet>
-              </td>
-            </tr>
-            <tr className='border-b border-gray-200 bg-white'>
-              <th
-                scope='row'
-                className='px-6 py-4 font-medium whitespace-nowrap text-gray-900'
-              >
-                Sheet with header and footer
-              </th>
-              <td
-                className='px-6 py-4'
-                aria-label='Sheet with header and footer actions'
-              >
-                <Sheet>
-                  <SheetTrigger asChild>
-                    <Button aria-label='Open sheet with header and footer'>
-                      Open
-                    </Button>
-                  </SheetTrigger>
-                  <SheetContent>
-                    <SheetHeader>
-                      <SheetTitle>{sheetTitle}</SheetTitle>
-                    </SheetHeader>
-                    <SheetBody>
-                      <SheetDescription>{paragraph}</SheetDescription>
-                      <ShortParagraph />
-                    </SheetBody>
-                    <SheetFooter>
-                      <Button
-                        variant='secondary'
-                        className='w-full'
-                      >
-                        Button
-                      </Button>
-                    </SheetFooter>
-                  </SheetContent>
-                </Sheet>
-              </td>
-            </tr>
-            <tr className='border-b border-gray-200 bg-white'>
-              <th
-                scope='row'
-                className='px-6 py-4 font-medium whitespace-nowrap text-gray-900'
-              >
-                Sheet with custom close button in the footer
-              </th>
-              <td
-                className='px-6 py-4'
-                aria-label='Sheet with custom close button in the footer actions'
-              >
-                <Sheet>
-                  <SheetTrigger asChild>
-                    <Button aria-label='Open sheet with custom close button'>
-                      Open
-                    </Button>
-                  </SheetTrigger>
-                  <SheetContent showCloseButton={false}>
-                    <SheetHeader>
-                      <SheetTitle>{sheetTitle}</SheetTitle>
-                    </SheetHeader>
-                    <SheetBody>
-                      <SheetDescription>{paragraph}</SheetDescription>
-                      <ShortParagraph />
-                    </SheetBody>
-                    <SheetFooter>
-                      <SheetClose asChild>
-                        <Button
-                          variant='secondary'
-                          className='w-full'
-                        >
-                          Close sheet
-                        </Button>
-                      </SheetClose>
-                    </SheetFooter>
-                  </SheetContent>
-                </Sheet>
-              </td>
-            </tr>
-            <tr className='border-b border-gray-200 bg-white'>
-              <th
-                scope='row'
-                className='px-6 py-4 font-medium whitespace-nowrap text-gray-900'
-              >
-                Rich content sheet (scrollable)
-              </th>
-              <td
-                className='px-6 py-4'
-                aria-label='Rich content sheet (scrollable) actions'
-              >
-                <Sheet>
-                  <SheetTrigger asChild>
-                    <Button aria-label='Open rich content sheet'>Open</Button>
-                  </SheetTrigger>
-                  <SheetContent>
-                    <SheetHeader>
-                      <SheetTitle>{sheetTitle}</SheetTitle>
-                    </SheetHeader>
-                    <SheetBody>
-                      <SheetDescription>{paragraph}</SheetDescription>
-                      <LongParagraph />
-                      <ShortParagraph />
-                      <LongParagraph />
-                    </SheetBody>
-                    <SheetFooter>
-                      <div className='flex flex-col gap-2'>
-                        <Button
-                          variant='secondary'
-                          className='w-full'
-                        >
-                          Cancel
-                        </Button>
-                        <Button className='w-full'>Confirm</Button>
-                      </div>
-                    </SheetFooter>
-                  </SheetContent>
-                </Sheet>
-              </td>
-            </tr>
-            <tr className='border-b border-gray-200 bg-white'>
-              <th
-                scope='row'
-                className='px-6 py-4 font-medium whitespace-nowrap text-gray-900'
-              >
-                Sheet appearing from the left side of the screen
-              </th>
-              <td
-                className='px-6 py-4'
-                aria-label='Sheet appearing from the left side of the screen actions'
-              >
-                <Sheet>
-                  <SheetTrigger asChild>
-                    <Button aria-label='Open left-sided sheet'>Open</Button>
-                  </SheetTrigger>
-                  <SheetContent side='left'>
-                    <SheetHeader>
-                      <SheetTitle>{sheetTitle}</SheetTitle>
-                    </SheetHeader>
-                    <SheetBody>
-                      <SheetDescription>{paragraph}</SheetDescription>
-                      <ShortParagraph />
-                    </SheetBody>
-                  </SheetContent>
-                </Sheet>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    )
+const meta = {
+  title: 'UI/Sheet',
+  component: Sheet,
+  tags: ['autodocs'],
+  parameters: {
+    layout: 'centered',
   },
+  decorators: [
+    (Story) => (
+      <div className='mx-auto w-full max-w-2xl'>
+        <Story />
+      </div>
+    ),
+  ],
+} satisfies Meta<typeof Sheet>
+
+export default meta
+type Story = StoryObj<typeof meta>
+
+export const Showcase: Story = {
+  render: () => (
+    <div className='flex flex-col gap-4'>
+      <SheetShowcaseRow
+        title='Body only'
+        description='Simple sheet with title and body content.'
+      >
+        <SimpleSheet />
+      </SheetShowcaseRow>
+
+      <SheetShowcaseRow
+        title='Header and footer'
+        description='Includes a secondary footer action.'
+      >
+        <SimpleSheet withFooter />
+      </SheetShowcaseRow>
+
+      <SheetShowcaseRow
+        title='Footer close only'
+        description='Top-right close hidden; dismissal via footer button.'
+      >
+        <SimpleSheet
+          showCloseButton={false}
+          withFooter
+          customCloseFooter
+        />
+      </SheetShowcaseRow>
+
+      <SheetShowcaseRow
+        title='Scrollable content'
+        description='Long content with Cancel and Confirm actions.'
+      >
+        <Sheet>
+          <SheetTrigger asChild>
+            <Button>Open</Button>
+          </SheetTrigger>
+          <SheetContent>
+            <SheetHeader>
+              <SheetTitle>Delivery information</SheetTitle>
+            </SheetHeader>
+            <SheetBody>
+              <BodyScrollable />
+            </SheetBody>
+            <SheetFooter>
+              <div className='flex w-full gap-4 max-md:flex-col md:justify-end'>
+                <Button variant='secondary'>Cancel</Button>
+                <Button>Confirm</Button>
+              </div>
+            </SheetFooter>
+          </SheetContent>
+        </Sheet>
+      </SheetShowcaseRow>
+
+      <SheetShowcaseRow
+        title='Left side sheet'
+        description='Alternative side placement from the left.'
+      >
+        <SimpleSheet side='left' />
+      </SheetShowcaseRow>
+    </div>
+  ),
 }
 
 export const InitiallyOpen: Story = {
-  parameters: {
-    layout: 'centered',
-  },
-  render: () => {
-    return (
-      <Sheet defaultOpen>
-        <SheetTrigger asChild>
-          <Button aria-label='Open initially open sheet'>Open</Button>
-        </SheetTrigger>
-        <SheetContent>
-          <SheetHeader>
-            <SheetTitle>{sheetTitle}</SheetTitle>
-          </SheetHeader>
-          <SheetBody>
-            <SheetDescription>{paragraph}</SheetDescription>
-            <ShortParagraph />
-          </SheetBody>
-        </SheetContent>
-      </Sheet>
-    )
-  },
+  render: () => (
+    <Sheet defaultOpen>
+      <SheetTrigger asChild>
+        <Button>Open</Button>
+      </SheetTrigger>
+      <SheetContent>
+        <SheetHeader>
+          <SheetTitle>{SHEET_TITLE}</SheetTitle>
+        </SheetHeader>
+        <SheetBody>
+          <BodyDefault />
+        </SheetBody>
+      </SheetContent>
+    </Sheet>
+  ),
 }
 
 export const ControlledFromAnywhere: Story = {
-  parameters: {
-    layout: 'centered',
-  },
-  render: () => {
-    return <OutsideControlledSheet />
-  },
+  render: () => <OutsideControlledSheet />,
 }

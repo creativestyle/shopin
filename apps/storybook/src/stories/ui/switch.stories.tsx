@@ -73,7 +73,7 @@ export const WithLabel: Story = {
             htmlFor='airplane-mode-2'
             className='pl-2'
           >
-            Airplane Mode
+            Email notifications
           </Label>
         </div>
       </>

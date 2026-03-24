@@ -9,12 +9,14 @@ interface ProductGridProps {
   products: ProductCardResponse[]
   className?: string
   locale: string
+  showAddToCart?: boolean
 }
 
 export const ProductGrid: React.FC<ProductGridProps> = ({
   products,
   className,
   locale,
+  showAddToCart = true,
 }) => {
   return (
     <div
@@ -39,15 +41,17 @@ export const ProductGrid: React.FC<ProductGridProps> = ({
           data={product}
           locale={locale}
           actions={
-            <AddToCart
-              productId={product.id}
-              productSlug={product.slug}
-              productName={product.name}
-              variantId={product.variantId}
-              variantCount={product.variantCount}
-              variant='primary'
-              className='z-2 w-full'
-            />
+            showAddToCart ? (
+              <AddToCart
+                productId={product.id}
+                productSlug={product.slug}
+                productName={product.name}
+                variantId={product.variantId}
+                variantCount={product.variantCount}
+                variant='primary'
+                className='z-2 w-full'
+              />
+            ) : undefined
           }
         />
       ))}
