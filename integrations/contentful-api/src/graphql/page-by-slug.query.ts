@@ -15,6 +15,8 @@ import { TeaserProductCarouselFragment } from './teaser-product-carousel.fragmen
 import { TeaserSectionFragment } from './teaser-section.fragment'
 import { TeaserRegularFragment } from './teaser-regular.fragment'
 import { TeaserAccordionFragment } from './teaser-accordion.fragment'
+import { TeaserBrandFragment } from './teaser-brand.fragment'
+import { TeaserBrandItemFragment } from './teaser-brand-item.fragment'
 import { TeaserCarouselItemFragment } from './teaser-carousel-item.fragment'
 import { AssetFragment } from './asset.fragment'
 
@@ -24,6 +26,7 @@ export const PageBySlugQuery = gql`
   ${LinkEntryFragment}
   ${ButtonEntryFragment}
   ${TeaserCarouselItemFragment}
+  ${TeaserBrandItemFragment}
   ${TeaserBannerFragment}
   ${TeaserHeroFragment}
   ${TeaserHeadlineFragment}
@@ -36,6 +39,7 @@ export const PageBySlugQuery = gql`
   ${TeaserSectionFragment}
   ${TeaserRegularFragment}
   ${TeaserAccordionFragment}
+  ${TeaserBrandFragment}
   query PageBySlug($slug: String!, $locale: String!, $preview: Boolean!) {
     pageCollection(
       where: { slug: $slug }
@@ -94,6 +98,7 @@ export const PageBySlugQuery = gql`
             ...TeaserSectionFragment
             ...TeaserRegularFragment
             ...TeaserAccordionFragment
+            ...TeaserBrandFragment
           }
         }
       }

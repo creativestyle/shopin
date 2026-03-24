@@ -13,6 +13,7 @@ import { TeaserSliderBlock } from './teaser-slider-block'
 import { TeaserSectionBlock } from './teaser-section-block'
 import { TeaserRegularBlock } from './teaser-regular-block'
 import { TeaserAccordionBlock } from './teaser-accordion-block'
+import { TeaserBrandBlock } from './teaser-brand-block'
 
 function renderTeaser(
   teaser: TeaserResponse,
@@ -104,6 +105,15 @@ function renderTeaser(
   }
   if (isTeaserOfType(teaser, 'text')) {
     return <TeaserTextBlock teaser={teaser} />
+  }
+  if (isTeaserOfType(teaser, 'brand')) {
+    return (
+      <TeaserBrandBlock
+        teaser={teaser}
+        imagePreload={imagePreload}
+        carouselId={index !== undefined ? `brand-carousel-${index}` : undefined}
+      />
+    )
   }
   return null
 }

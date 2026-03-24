@@ -15,6 +15,7 @@ const TEASERS = [
   'teaserSection',
   'teaserRegular',
   'teaserAccordion',
+  'teaserBrand',
 ]
 
 /** All content types in dependency-safe order. Reset deletes entries then content types in this order. */
@@ -25,6 +26,7 @@ export const CONTENT_TYPE_IDS = [
   'footerSection',
   ...TEASERS,
   'teaserCarouselItem',
+  'teaserBrandItem',
   'accordion',
   'accordionItem',
   'button',
