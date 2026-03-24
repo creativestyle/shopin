@@ -4,6 +4,7 @@ import { useSyncExternalStore, useCallback } from 'react'
 import { useTranslations } from 'next-intl'
 import { ProductCollectionToolbarWrapper } from './product-collection-toolbar-wrapper'
 import { ProductGrid } from '@/components/ui/product-grid'
+import { AddToCart } from '@/features/cart/cart-add-to-cart'
 import { PaginationWrapper } from '@/components/ui/pagination-wrapper'
 import { ActiveFilters } from './components/active-filters'
 import { CategoryTree } from './components/category-tree'
@@ -104,6 +105,17 @@ export function ProductCollectionContent({
             <ProductGrid
               products={products}
               locale={locale}
+              renderCardActions={(product) => (
+                <AddToCart
+                  productId={product.id}
+                  productSlug={product.slug}
+                  productName={product.name}
+                  variantId={product.variantId}
+                  variantCount={product.variantCount}
+                  variant='primary'
+                  className='z-2 w-full'
+                />
+              )}
             />
           )}
           {totalPages > 1 && (

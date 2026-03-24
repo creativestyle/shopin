@@ -3,20 +3,19 @@ import { cn } from '@/lib/utils'
 import type { ProductCardResponse } from '@core/contracts/product-collection/product-card'
 import { ProductCard } from './product-card'
 import { getProductVariantKey } from '@/lib/product-utils'
-import { AddToCart } from '@/features/cart/cart-add-to-cart'
 
 interface ProductGridProps {
   products: ProductCardResponse[]
   className?: string
   locale: string
-  showAddToCart?: boolean
+  renderCardActions: (product: ProductCardResponse) => React.ReactNode
 }
 
 export const ProductGrid: React.FC<ProductGridProps> = ({
   products,
   className,
   locale,
-  showAddToCart = true,
+  renderCardActions,
 }) => {
   return (
     <div
@@ -40,19 +39,7 @@ export const ProductGrid: React.FC<ProductGridProps> = ({
           key={getProductVariantKey(product.id, product.variantId)}
           data={product}
           locale={locale}
-          actions={
-            showAddToCart ? (
-              <AddToCart
-                productId={product.id}
-                productSlug={product.slug}
-                productName={product.name}
-                variantId={product.variantId}
-                variantCount={product.variantCount}
-                variant='primary'
-                className='z-2 w-full'
-              />
-            ) : undefined
-          }
+          actions={renderCardActions(product)}
         />
       ))}
     </div>
