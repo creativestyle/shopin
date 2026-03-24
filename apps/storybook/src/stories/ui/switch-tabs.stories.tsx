@@ -6,7 +6,98 @@ import {
   SwitchTabsContent,
 } from '@/components/ui/switch-tabs'
 
-const meta: Meta<typeof SwitchTabs> = {
+type SegmentConfig = {
+  value: string
+  trigger: string
+  title: string
+  description: string
+  detailsTitle: string
+  detailsText: string
+  benefitsTitle: string
+  benefits: string[]
+}
+
+const checkoutSegments: SegmentConfig[] = [
+  {
+    value: 'delivery',
+    trigger: 'Delivery',
+    title: 'Delivery options',
+    description:
+      'Choose how and when your order should arrive at your address.',
+    detailsTitle: 'Scheduling',
+    detailsText: 'Select standard, express, or nominated-day delivery windows.',
+    benefitsTitle: 'What is included',
+    benefits: [
+      'Live tracking updates',
+      'Delivery window preferences',
+      'Safe-place instructions',
+      'Address validation',
+    ],
+  },
+  {
+    value: 'payment',
+    trigger: 'Payment',
+    title: 'Payment methods',
+    description:
+      'Pick the payment flow that best fits your order and billing needs.',
+    detailsTitle: 'Supported methods',
+    detailsText:
+      'Cards, bank transfer, and invoice are available where supported.',
+    benefitsTitle: 'What is included',
+    benefits: [
+      'Secure card processing',
+      'Saved payment tokens',
+      'Instant payment confirmation',
+      'Downloadable invoices',
+    ],
+  },
+  {
+    value: 'returns',
+    trigger: 'Returns',
+    title: 'Returns and refunds',
+    description:
+      'Review return eligibility, deadlines, and refund processing timelines.',
+    detailsTitle: 'Return policy',
+    detailsText:
+      'Start a return from order history and print your return label.',
+    benefitsTitle: 'What is included',
+    benefits: [
+      'Self-service return flow',
+      'Status updates by email',
+      'Refund to original payment method',
+      'Exchange guidance',
+    ],
+  },
+]
+
+function SegmentPanel({ segment }: { segment: SegmentConfig }) {
+  return (
+    <div className='rounded-lg bg-gray-100 p-6'>
+      <h3 className='mb-3 text-xl font-semibold'>{segment.title}</h3>
+      <p className='mb-4 text-gray-600'>{segment.description}</p>
+      <div className='space-y-4'>
+        <div className='rounded-lg bg-white p-4 shadow-sm'>
+          <h4 className='mb-2 font-medium text-gray-900'>
+            {segment.detailsTitle}
+          </h4>
+          <p className='text-sm text-gray-600'>{segment.detailsText}</p>
+        </div>
+        <div className='rounded-lg bg-white p-4 shadow-sm'>
+          <h4 className='mb-2 font-medium text-gray-900'>
+            {segment.benefitsTitle}
+          </h4>
+          <ul className='space-y-1 text-sm text-gray-600'>
+            {segment.benefits.map((benefit) => (
+              <li key={benefit}>- {benefit}</li>
+            ))}
+          </ul>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+const meta = {
   title: 'UI/SwitchTabs',
   component: SwitchTabs,
   tags: ['autodocs'],
@@ -18,90 +109,37 @@ const meta: Meta<typeof SwitchTabs> = {
       control: { type: 'text' },
     },
   },
-}
+} satisfies Meta<typeof SwitchTabs>
 
 export default meta
 type Story = StoryObj<typeof meta>
 
 export const CustomerType: Story = {
+  name: 'Checkout context',
   render: () => (
     <div className='max-w-[600px]'>
       <SwitchTabs
-        defaultValue='private'
+        defaultValue='delivery'
         className='w-full'
       >
         <SwitchTabsList>
-          <SwitchTabsTrigger value='private'>Privatkunde</SwitchTabsTrigger>
-          <SwitchTabsTrigger value='business'>Firmenkunde</SwitchTabsTrigger>
+          {checkoutSegments.map((segment) => (
+            <SwitchTabsTrigger
+              key={segment.value}
+              value={segment.value}
+            >
+              {segment.trigger}
+            </SwitchTabsTrigger>
+          ))}
         </SwitchTabsList>
-        <SwitchTabsContent value='private'>
-          <div className='rounded-lg bg-gray-100 p-6'>
-            <h3 className='mb-3 text-xl font-semibold'>
-              Private Customer Registration
-            </h3>
-            <p className='mb-4 text-gray-600'>
-              Create your personal account to enjoy exclusive benefits, track
-              your orders, and manage your wishlist. Perfect for individual
-              shoppers who want a personalized shopping experience.
-            </p>
-            <div className='space-y-4'>
-              <div className='rounded-lg bg-white p-4 shadow-sm'>
-                <h4 className='mb-2 font-medium text-gray-900'>
-                  Personal Information
-                </h4>
-                <p className='text-sm text-gray-600'>
-                  Enter your name, email, and contact details for your personal
-                  account.
-                </p>
-              </div>
-              <div className='rounded-lg bg-white p-4 shadow-sm'>
-                <h4 className='mb-2 font-medium text-gray-900'>
-                  Account Benefits
-                </h4>
-                <ul className='space-y-1 text-sm text-gray-600'>
-                  <li>• Order tracking and history</li>
-                  <li>• Wishlist and favorites</li>
-                  <li>• Personalized recommendations</li>
-                  <li>• Exclusive member discounts</li>
-                </ul>
-              </div>
-            </div>
-          </div>
-        </SwitchTabsContent>
-        <SwitchTabsContent value='business'>
-          <div className='rounded-lg bg-gray-100 p-6'>
-            <h3 className='mb-3 text-xl font-semibold'>
-              Business Customer Registration
-            </h3>
-            <p className='mb-4 text-gray-600'>
-              Set up your business account to access wholesale pricing, bulk
-              ordering, and dedicated business support. Ideal for companies and
-              organizations.
-            </p>
-            <div className='space-y-4'>
-              <div className='rounded-lg bg-white p-4 shadow-sm'>
-                <h4 className='mb-2 font-medium text-gray-900'>
-                  Company Information
-                </h4>
-                <p className='text-sm text-gray-600'>
-                  Provide your business details, tax information, and company
-                  registration data.
-                </p>
-              </div>
-              <div className='rounded-lg bg-white p-4 shadow-sm'>
-                <h4 className='mb-2 font-medium text-gray-900'>
-                  Business Benefits
-                </h4>
-                <ul className='space-y-1 text-sm text-gray-600'>
-                  <li>• Wholesale pricing and bulk discounts</li>
-                  <li>• Dedicated account manager</li>
-                  <li>• Flexible payment terms</li>
-                  <li>• Priority customer support</li>
-                </ul>
-              </div>
-            </div>
-          </div>
-        </SwitchTabsContent>
+        {checkoutSegments.map((segment) => (
+          <SwitchTabsContent
+            key={segment.value}
+            value={segment.value}
+          >
+            <SegmentPanel segment={segment} />
+          </SwitchTabsContent>
+        ))}
       </SwitchTabs>
     </div>
   ),

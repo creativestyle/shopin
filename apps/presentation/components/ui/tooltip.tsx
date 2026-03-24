@@ -85,7 +85,7 @@ function TooltipContent({
       >
         {children}
         {withArrow && (
-          <TooltipPrimitive.Arrow className='z-(--z-tooltip) size-4 translate-y-[calc(-50%_-_0.5)] rotate-45 bg-gray-950 fill-gray-950' />
+          <TooltipPrimitive.Arrow className='z-(--z-tooltip) fill-gray-950' />
         )}
       </TooltipPrimitive.Content>
     </TooltipPrimitive.Portal>

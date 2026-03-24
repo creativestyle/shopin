@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import type { Meta, StoryObj } from '@storybook/react'
 import { Toast, addToast, dismissToastById } from '@/components/ui/toast'
 import { Badge } from '@/components/ui/badge/badge'
+import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 
 const meta: Meta<typeof Toast> = {
@@ -98,26 +99,196 @@ export const Playground: Story = {
 
     switch (args.type) {
       case 'infoLight':
-        text =
-          'Die Zahlung der im LANDI Laden abzuholenden Artikel erfolgt bei Abholung im Laden.'
+        text = 'Pickup orders are paid in store when you collect your items.'
         break
       case 'error':
-        text = 'Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut.'
+        text = 'Something went wrong. Please try again.'
         break
       case 'success':
-        text = 'Artikel wurde erfolgreich zum Warenkorb hinzugefügt.'
+        text = 'The item was added to your cart.'
         break
       case 'warning':
-        text =
-          'Ihre Sitzung läuft in 5 Minuten ab. Bitte speichern Sie Ihre Änderungen.'
+        text = 'Your session expires in 5 minutes. Please save your changes.'
         break
       default:
-        text = 'Bitte geben Sie Ihre Rechnungsadresse und Kontaktdaten an.'
+        text = 'Please provide your billing address and contact details.'
     }
 
     return <Toast {...args}>{text}</Toast>
   },
 }
+
+type ToastScenario = {
+  id?: string | number
+  title: string
+  description: string
+  config: {
+    id?: string | number
+    type?: 'info' | 'infoLight' | 'success' | 'error' | 'warning'
+    children: React.ReactNode
+    critical?: boolean
+    withCloseButton?: boolean
+    withIcon?: boolean
+    duration?: number
+  }
+  trackState?: boolean
+}
+
+function ToastShowcaseRow({
+  title,
+  description,
+  isOpen,
+  onShow,
+  onDismiss,
+  hideDismiss = false,
+}: {
+  title: string
+  description: string
+  isOpen?: boolean
+  onShow: () => void
+  onDismiss?: () => void
+  hideDismiss?: boolean
+}) {
+  return (
+    <div className='flex flex-col gap-4 rounded-lg border border-gray-200 bg-white p-4 sm:flex-row sm:items-center sm:justify-between sm:gap-6'>
+      <div className='min-w-0 flex-1'>
+        <h3 className='font-medium text-gray-950'>{title}</h3>
+        <p className='mt-1 text-sm text-gray-500'>{description}</p>
+      </div>
+      <div className='flex items-center gap-3'>
+        <Button
+          variant='secondary'
+          onClick={onShow}
+        >
+          Show
+        </Button>
+        {!hideDismiss && onDismiss ? (
+          <Button
+            variant='tertiary'
+            onClick={onDismiss}
+          >
+            Dismiss
+          </Button>
+        ) : null}
+        {typeof isOpen === 'boolean' ? (
+          <Badge variant={isOpen ? 'green' : 'gray'}>
+            {isOpen ? 'Open' : 'Closed'}
+          </Badge>
+        ) : null}
+      </div>
+    </div>
+  )
+}
+
+const scenarios: ToastScenario[] = [
+  {
+    id: 1,
+    title: 'Info toast',
+    description: 'General account guidance.',
+    config: {
+      id: 1,
+      type: 'info',
+      children: 'Please provide your billing address details.',
+    },
+    trackState: true,
+  },
+  {
+    id: 2,
+    title: 'Info light toast',
+    description: 'Checkout-specific neutral hint.',
+    config: {
+      id: 2,
+      type: 'infoLight',
+      children: 'Please provide your shipping address details.',
+    },
+    trackState: true,
+  },
+  {
+    id: 3,
+    title: 'Success toast',
+    description: 'Confirms successful add-to-cart action.',
+    config: {
+      id: 3,
+      type: 'success',
+      children: (
+        <>
+          <Link href='#'>Product</Link> added to cart.
+        </>
+      ),
+    },
+    trackState: true,
+  },
+  {
+    id: 4,
+    title: 'Error toast',
+    description: 'Critical issue that needs immediate attention.',
+    config: {
+      id: 4,
+      type: 'error',
+      children: "Sorry, you can't buy more than 15 units of this product.",
+      critical: true,
+      withCloseButton: true,
+    },
+    trackState: true,
+  },
+  {
+    id: 5,
+    title: 'Warning toast',
+    description: 'Action needed to proceed.',
+    config: {
+      id: 5,
+      type: 'warning',
+      children: 'Please update your payment details to continue.',
+    },
+    trackState: true,
+  },
+  {
+    id: 6,
+    title: 'Critical announcement',
+    description: 'Announced immediately for assistive technologies.',
+    config: {
+      id: 6,
+      critical: true,
+      children: 'This message is announced immediately by screen readers.',
+    },
+    trackState: true,
+  },
+  {
+    id: 7,
+    title: 'Long-duration toast',
+    description: 'Stays visible for 15 seconds.',
+    config: {
+      id: 7,
+      duration: 15000,
+      children: 'This toast will close automatically after 15 seconds.',
+    },
+    trackState: true,
+  },
+  {
+    id: 8,
+    title: 'Toast without icon',
+    description: 'Custom content with no leading icon.',
+    config: {
+      id: 8,
+      withIcon: false,
+      children: (
+        <>
+          Custom toast without icon and with{' '}
+          <span className='underline'>JSX</span> content.
+        </>
+      ),
+    },
+    trackState: true,
+  },
+  {
+    title: 'Multiple toasts',
+    description: 'Can be triggered repeatedly with dynamic IDs.',
+    config: {
+      children: 'This toast can be shown multiple times with unique IDs.',
+    },
+    trackState: false,
+  },
+]
 
 const ToasterShowcaseComponent = () => {
   const [openedToastsIds, setOpenedToastsIds] = useState<(string | number)[]>(
@@ -161,363 +332,24 @@ const ToasterShowcaseComponent = () => {
   }
 
   return (
-    <div className='relative overflow-x-auto pb-34'>
-      <table className='w-full text-left text-sm text-gray-500'>
-        <thead className='bg-gray-100 text-xs uppercase'>
-          <tr>
-            <th
-              scope='col'
-              className='w-[70%] px-6 py-3'
-            >
-              Type
-            </th>
-            <th
-              scope='col'
-              className='px-6 py-3'
-            >
-              Actions
-            </th>
-            <th
-              scope='col'
-              className='px-6 py-3'
-            >
-              Status
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr className='border-b border-gray-200 bg-white'>
-            <th
-              scope='row'
-              className='px-6 py-4 font-medium whitespace-nowrap text-gray-900'
-            >
-              Info toast (default)
-            </th>
-            <td className='px-6 py-4'>
-              <div className='flex gap-3'>
-                <button
-                  onClick={() =>
-                    handleToastAdd({
-                      id: 1,
-                      type: 'info',
-                      children: 'Please provide your billing address details.',
-                    })
-                  }
-                  aria-label='Show info toast'
-                >
-                  Show
-                </button>
-                <span>|</span>
-                <button
-                  onClick={() => handleToastDismiss(1)}
-                  aria-label='Dismiss info toast'
-                >
-                  Dismiss
-                </button>
-              </div>
-            </td>
-            <td className='px-6 py-4'>
-              <Badge variant={isOpen(1) ? 'green' : 'gray'}>
-                {isOpen(1) ? 'Open' : 'Closed'}
-              </Badge>
-            </td>
-          </tr>
-          <tr className='border-b border-gray-200 bg-white'>
-            <th
-              scope='row'
-              className='px-6 py-4 font-medium whitespace-nowrap text-gray-900'
-            >
-              Info toast (checkout layout)
-            </th>
-            <td className='px-6 py-4'>
-              <div className='flex gap-3'>
-                <button
-                  onClick={() =>
-                    handleToastAdd({
-                      id: 2,
-                      type: 'infoLight',
-                      children: 'Please provide your shipping address details.',
-                    })
-                  }
-                  aria-label='Show checkout info toast'
-                >
-                  Show
-                </button>
-                <span>|</span>
-                <button
-                  onClick={() => handleToastDismiss(2)}
-                  aria-label='Dismiss checkout info toast'
-                >
-                  Dismiss
-                </button>
-              </div>
-            </td>
-            <td className='px-6 py-4'>
-              <Badge variant={isOpen(2) ? 'green' : 'gray'}>
-                {isOpen(2) ? 'Open' : 'Closed'}
-              </Badge>
-            </td>
-          </tr>
-          <tr className='border-b border-gray-200 bg-white'>
-            <th
-              scope='row'
-              className='px-6 py-4 font-medium whitespace-nowrap text-gray-900'
-            >
-              Success toast
-            </th>
-            <td className='px-6 py-4'>
-              <div className='flex gap-3'>
-                <button
-                  onClick={() =>
-                    handleToastAdd({
-                      id: 3,
-                      type: 'success',
-                      children: (
-                        <>
-                          <Link href='#'>A product</Link> was successfully added
-                          to your cart.
-                        </>
-                      ),
-                    })
-                  }
-                  aria-label='Show success toast'
-                >
-                  Show
-                </button>
-                <span>|</span>
-                <button
-                  onClick={() => handleToastDismiss(3)}
-                  aria-label='Dismiss success toast'
-                >
-                  Dismiss
-                </button>
-              </div>
-            </td>
-            <td className='px-6 py-4'>
-              <Badge variant={isOpen(3) ? 'green' : 'gray'}>
-                {isOpen(3) ? 'Open' : 'Closed'}
-              </Badge>
-            </td>
-          </tr>
-          <tr className='border-b border-gray-200 bg-white'>
-            <th
-              scope='row'
-              className='px-6 py-4 font-medium whitespace-nowrap text-gray-900'
-            >
-              Error toast
-            </th>
-            <td className='px-6 py-4'>
-              <div className='flex gap-3'>
-                <button
-                  onClick={() =>
-                    handleToastAdd({
-                      id: 4,
-                      type: 'error',
-                      children:
-                        "Sorry, you can't buy more than 15 pieces of this product.",
-                      critical: true,
-                      withCloseButton: true,
-                    })
-                  }
-                  aria-label='Show error toast'
-                >
-                  Show
-                </button>
-                <span>|</span>
-                <button
-                  onClick={() => handleToastDismiss(4)}
-                  aria-label='Dismiss error toast'
-                >
-                  Dismiss
-                </button>
-              </div>
-            </td>
-            <td className='px-6 py-4'>
-              <Badge variant={isOpen(4) ? 'green' : 'gray'}>
-                {isOpen(4) ? 'Open' : 'Closed'}
-              </Badge>
-            </td>
-          </tr>
-          <tr className='border-b border-gray-200 bg-white'>
-            <th
-              scope='row'
-              className='px-6 py-4 font-medium whitespace-nowrap text-gray-900'
-            >
-              Warning toast
-            </th>
-            <td className='px-6 py-4'>
-              <div className='flex gap-3'>
-                <button
-                  onClick={() =>
-                    handleToastAdd({
-                      id: 5,
-                      type: 'warning',
-                      children:
-                        'Please update your payment details in order to continue.',
-                    })
-                  }
-                  aria-label='Show warning toast'
-                >
-                  Show
-                </button>
-                <span>|</span>
-                <button
-                  onClick={() => handleToastDismiss(5)}
-                  aria-label='Dismiss warning toast'
-                >
-                  Dismiss
-                </button>
-              </div>
-            </td>
-            <td className='px-6 py-4'>
-              <Badge variant={isOpen(5) ? 'green' : 'gray'}>
-                {isOpen(5) ? 'Open' : 'Closed'}
-              </Badge>
-            </td>
-          </tr>
-          <tr className='border-b border-gray-200 bg-white'>
-            <th
-              scope='row'
-              className='px-6 py-4 font-medium whitespace-nowrap text-gray-900'
-            >
-              Critically important toast
-            </th>
-            <td className='px-6 py-4'>
-              <div className='flex gap-3'>
-                <button
-                  onClick={() =>
-                    handleToastAdd({
-                      id: 6,
-                      critical: true,
-                      children:
-                        'I will be announced immediately by screen reader.',
-                    })
-                  }
-                  aria-label='Show critical toast'
-                >
-                  Show
-                </button>
-                <span>|</span>
-                <button
-                  onClick={() => handleToastDismiss(6)}
-                  aria-label='Dismiss critical toast'
-                >
-                  Dismiss
-                </button>
-              </div>
-            </td>
-            <td className='px-6 py-4'>
-              <Badge variant={isOpen(6) ? 'green' : 'gray'}>
-                {isOpen(6) ? 'Open' : 'Closed'}
-              </Badge>
-            </td>
-          </tr>
-          <tr className='border-b border-gray-200 bg-white'>
-            <th
-              scope='row'
-              className='px-6 py-4 font-medium whitespace-nowrap text-gray-900'
-            >
-              Longtime displayed toast
-            </th>
-            <td className='px-6 py-4'>
-              <div className='flex gap-3'>
-                <button
-                  onClick={() =>
-                    handleToastAdd({
-                      id: 7,
-                      duration: 15000,
-                      children: 'I will be removed after 15 seconds.',
-                    })
-                  }
-                  aria-label='Show longtime displayed toast'
-                >
-                  Show
-                </button>
-                <span>|</span>
-                <button
-                  onClick={() => handleToastDismiss(7)}
-                  aria-label='Dismiss longtime displayed toast'
-                >
-                  Dismiss
-                </button>
-              </div>
-            </td>
-            <td className='px-6 py-4'>
-              <Badge variant={isOpen(7) ? 'green' : 'gray'}>
-                {isOpen(7) ? 'Open' : 'Closed'}
-              </Badge>
-            </td>
-          </tr>
-          <tr className='border-b border-gray-200 bg-white'>
-            <th
-              scope='row'
-              className='px-6 py-4 font-medium whitespace-nowrap text-gray-900'
-            >
-              No icon toast
-            </th>
-            <td className='px-6 py-4'>
-              <div className='flex gap-3'>
-                <button
-                  onClick={() =>
-                    handleToastAdd({
-                      id: 8,
-                      withIcon: false,
-                      children: (
-                        <>
-                          I could be also displayed without an icon and with{' '}
-                          <span className='underline'>JSX</span> content
-                        </>
-                      ),
-                    })
-                  }
-                  aria-label='Show no icon toast'
-                >
-                  Show
-                </button>
-                <span>|</span>
-                <button
-                  onClick={() => handleToastDismiss(8)}
-                  aria-label='Dismiss no icon toast'
-                >
-                  Dismiss
-                </button>
-              </div>
-            </td>
-            <td className='px-6 py-4'>
-              <Badge variant={isOpen(8) ? 'green' : 'gray'}>
-                {isOpen(8) ? 'Open' : 'Closed'}
-              </Badge>
-            </td>
-          </tr>
-          <tr className='border-b border-gray-200 bg-white'>
-            <th
-              scope='row'
-              className='px-6 py-4 font-medium whitespace-nowrap text-gray-900'
-            >
-              Multiple toasts (open me multiple times)
-            </th>
-            <td className='px-6 py-4'>
-              <div className='flex gap-3'>
-                <button
-                  onClick={() =>
-                    handleToastAdd({
-                      children:
-                        'I can be displayed multiple times, because I have dynamic ID.',
-                    })
-                  }
-                  aria-label='Show multiple toasts'
-                >
-                  Show
-                </button>
-              </div>
-            </td>
-            <td
-              className='px-6 py-4'
-              aria-label='No status for multiple toasts'
-            ></td>
-          </tr>
-        </tbody>
-      </table>
+    <div className='flex flex-col gap-4 pb-34'>
+      {scenarios.map((scenario, index) => (
+        <ToastShowcaseRow
+          key={`${scenario.title}-${index}`}
+          title={scenario.title}
+          description={scenario.description}
+          isOpen={
+            scenario.trackState && scenario.id ? isOpen(scenario.id) : undefined
+          }
+          onShow={() => handleToastAdd(scenario.config)}
+          onDismiss={
+            scenario.trackState && scenario.id
+              ? () => handleToastDismiss(scenario.id as string | number)
+              : undefined
+          }
+          hideDismiss={!scenario.trackState}
+        />
+      ))}
     </div>
   )
 }

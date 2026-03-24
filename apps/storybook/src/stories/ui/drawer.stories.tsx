@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react'
 
 import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui/card'
 import { VisuallyHidden } from '@/components/ui/visually-hidden'
 import {
   Drawer,
@@ -93,35 +94,41 @@ export const Default: Story = {
         modal={modal}
       >
         <DrawerTrigger asChild>
-          <Button>Open Drawer</Button>
+          <Button>Open drawer</Button>
         </DrawerTrigger>
         <DrawerContent
           scheme={contentScheme}
           showCloseButton={showCloseButton}
         >
           <DrawerHeader>
-            <DrawerTitle>Wählen Sie Ihre Versandart</DrawerTitle>
+            <DrawerTitle>Choose delivery</DrawerTitle>
             <VisuallyHidden>
               <DrawerDescription>
-                Setzen Sie Ihr tägliches Aktivitätsziel.
+                Pick a shipping speed for this order. You can change the address
+                from your basket before you pay.
               </DrawerDescription>
             </VisuallyHidden>
           </DrawerHeader>
-          <div className='flex flex-col gap-4 px-4'>
-            <p>
-              Unsere Versandoptionen sind darauf ausgelegt, Ihnen Flexibilität
-              und Komfort zu bieten. Wählen Sie zwischen Standardversand, der
-              3-5 Werktage dauert, oder Expressversand für eine schnellere
-              Lieferung innerhalb von 1-2 Werktagen.
-            </p>
-            <p>
-              Alle Bestellungen werden sorgfältig verpackt und sind vollständig
-              versichert. Verfolgen Sie Ihre Sendung in Echtzeit über unser
-              spezielles Tracking-Portal.
-            </p>
+          <div className='px-4'>
+            <Card
+              className='flex flex-col gap-4'
+              scheme={contentScheme === 'gray' ? 'white' : 'gray'}
+            >
+              <p>
+                Standard delivery usually leaves our warehouse within one
+                business day and arrives in three to five working days,
+                depending on your postcode. Express and nominated-day slots
+                appear at checkout when carriers can offer them.
+              </p>
+              <p>
+                Orders are packed to survive the journey and are insured in
+                transit. You will get tracking as soon as the carrier scans the
+                parcel; the first scan may appear on the evening of dispatch.
+              </p>
+            </Card>
           </div>
           <DrawerFooter className='md:flex-row md:justify-between'>
-            <Button className='md:flex-1'>Submit</Button>
+            <Button className='md:flex-1'>Continue</Button>
             <DrawerClose asChild>
               <Button
                 variant='secondary'
