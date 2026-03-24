@@ -1,5 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react'
+import { action } from 'storybook/actions'
 import { ProductGrid } from '@/components/ui/product-grid'
+import { ProductGridStoryCardActions } from '../../mocks/product-grid-story-card-actions'
+
+const logAddToBasket = action('cardActions.addToBasket')
 
 // Mock product data for Storybook
 const mockProducts = [
@@ -74,7 +78,19 @@ const meta: Meta<typeof ProductGrid> = {
   },
   args: {
     products: mockProducts,
+    locale: 'en-US',
   },
+  render: (args) => (
+    <ProductGrid
+      {...args}
+      renderCardActions={(product) => (
+        <ProductGridStoryCardActions
+          className='z-2 w-full'
+          onAction={() => logAddToBasket(product)}
+        />
+      )}
+    />
+  ),
 }
 
 export default meta

@@ -5,8 +5,15 @@ const meta: Meta<typeof ProductCard> = {
   title: 'UI/ProductCard',
   component: ProductCard,
   parameters: {
-    layout: 'centered',
+    layout: 'padded',
   },
+  decorators: [
+    (Story) => (
+      <div className='mx-auto box-border w-[min(100%,320px)] min-w-[260px] shrink-0'>
+        <Story />
+      </div>
+    ),
+  ],
   tags: ['autodocs'],
   argTypes: {
     data: {

@@ -1,85 +1,64 @@
 import type { Meta, StoryObj } from '@storybook/react'
 import { Breadcrumbs } from '@/components/ui/breadcrumbs'
-import { Button } from '@/components/ui/button'
-import { CrumbResponse } from '@core/contracts/core/crumb'
-import { useState } from 'react'
+import type { CrumbResponse } from '@core/contracts/core/crumb'
 
-const meta: Meta<typeof Breadcrumbs> = {
+const CRUMBS = {
+  category: [
+    { label: 'Women', path: '/women' },
+    { label: 'Shoes', path: '/women/shoes' },
+    { label: 'Sneakers', path: '/women/shoes/sneakers' },
+  ],
+  product: [
+    { label: 'Men', path: '/men' },
+    { label: 'Jackets', path: '/men/jackets' },
+    { label: 'Outdoor', path: '/men/jackets/outdoor' },
+    {
+      label: 'Lightweight Rain Jacket',
+      path: '/men/jackets/outdoor/lightweight-rain-jacket',
+    },
+  ],
+  checkout: [
+    { label: 'Cart', path: '/cart' },
+    { label: 'Checkout', path: '/checkout' },
+    { label: 'Delivery', path: '/checkout/delivery' },
+    { label: 'Payment', path: '/checkout/payment' },
+  ],
+  longPath: [
+    { label: 'Home & Living', path: '/home-living' },
+    { label: 'Kitchen', path: '/home-living/kitchen' },
+    { label: 'Cookware', path: '/home-living/kitchen/cookware' },
+    {
+      label: 'Stainless Steel',
+      path: '/home-living/kitchen/cookware/stainless-steel',
+    },
+    {
+      label: '3-Piece Induction Pan Set',
+      path: '/home-living/kitchen/cookware/stainless-steel/3-piece-induction-pan-set',
+    },
+  ],
+} satisfies Record<
+  'category' | 'product' | 'checkout' | 'longPath',
+  CrumbResponse[]
+>
+
+const meta = {
   title: 'UI/Breadcrumbs',
   component: Breadcrumbs,
   tags: ['autodocs'],
+  parameters: {
+    layout: 'padded',
+  },
   argTypes: {
     crumbs: {
       control: { type: 'object' },
       description: 'Array of breadcrumb items',
     },
-    className: {
-      control: { type: 'text' },
-      description: 'Additional CSS classes',
-    },
   },
-  parameters: {
-    layout: 'centered',
-  },
-}
+} satisfies Meta<typeof Breadcrumbs>
 
 export default meta
 type Story = StoryObj<typeof meta>
 
-// Interactive component for the story
-const InteractiveBreadcrumbs = () => {
-  const fullCrumbsArray: CrumbResponse[] = [
-    { label: 'Sortiment', path: '/sortiment' },
-    { label: 'Garten', path: '/sortiment/garten' },
-    { label: 'Dünger', path: '/sortiment/garten/deunger' },
-    { label: 'Gartendünger', path: '/sortiment/garten/duenger/gartenduenger' },
-    {
-      label: 'Meeresalgenkalk Biorga HBG 8 kg',
-      path: '/sortiment/garten/duenger/gartenduenger/meeresalgenkalk-biorga-hbg-8-kg',
-    },
-  ]
-
-  const [visibleCrumbsCount, setVisibleCrumbsCount] = useState<number>(5)
-
-  const addCrumb = () => {
-    if (visibleCrumbsCount < fullCrumbsArray.length) {
-      setVisibleCrumbsCount(visibleCrumbsCount + 1)
-    }
-  }
-
-  const removeCrumb = () => {
-    if (visibleCrumbsCount > 1) {
-      setVisibleCrumbsCount(visibleCrumbsCount - 1)
-    }
-  }
-
-  const visibleCrumbs = fullCrumbsArray.slice(0, visibleCrumbsCount)
-
-  return (
-    <div className='w-audo max-w-[calc(100vw-2rem)]'>
-      <Breadcrumbs crumbs={visibleCrumbs} />
-
-      <div className='mt-8 flex justify-center gap-2'>
-        <Button
-          onClick={addCrumb}
-          disabled={visibleCrumbsCount >= fullCrumbsArray.length}
-          variant='primary'
-        >
-          Add Crumb
-        </Button>
-        <Button
-          onClick={removeCrumb}
-          disabled={visibleCrumbsCount <= 1}
-          variant='secondary'
-        >
-          Remove Crumb
-        </Button>
-      </div>
-    </div>
-  )
-}
-
-// Interactive story with add/remove functionality
-export const Interactive: Story = {
-  render: () => <InteractiveBreadcrumbs />,
+export const Default: Story = {
+  args: { crumbs: CRUMBS.product },
 }

@@ -1,5 +1,7 @@
+import type { FormEvent, ReactNode } from 'react'
+import { useState } from 'react'
 import type { Meta, StoryObj } from '@storybook/react'
-import React, { useState } from 'react'
+import { action } from 'storybook/actions'
 import {
   Field,
   FieldDescription,
@@ -14,135 +16,147 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-button'
 import { Select } from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
 
-const meta: Meta<typeof Field> = {
+function FieldStoryFrame({ children }: { children: ReactNode }) {
+  return (
+    <div className='mx-auto box-border w-[min(100%,450px)] min-w-[300px] shrink-0'>
+      {children}
+    </div>
+  )
+}
+
+const meta = {
   title: 'UI/Field',
   component: Field,
   tags: ['autodocs'],
   parameters: {
     layout: 'centered',
   },
-}
+} satisfies Meta<typeof Field>
 
 export default meta
 type Story = StoryObj<typeof meta>
 
-export const BasicWithTextInput: Story = {
+export const Default: Story = {
+  name: 'Basic (text input)',
   render: () => (
-    <div className='w-[400px]'>
+    <FieldStoryFrame>
       <Field>
         <TextInput
-          id='firstName'
-          label='Vorname'
+          id='field-first-name'
+          label='First name'
           required
         />
       </Field>
-    </div>
+    </FieldStoryFrame>
   ),
 }
 
 export const WithDescription: Story = {
   render: () => (
-    <div className='w-[400px]'>
+    <FieldStoryFrame>
       <Field>
         <TextInput
-          id='email'
-          label='E-Mail-Adresse'
+          id='field-email'
+          label='Email'
           type='email'
           required
         />
         <FieldDescription>
-          Wir senden Ihnen eine Bestätigung per E-Mail.
+          We will send your order confirmation and tracking to this address.
         </FieldDescription>
       </Field>
-    </div>
+    </FieldStoryFrame>
   ),
 }
 
 export const WithError: Story = {
   render: () => (
-    <div className='w-[400px]'>
+    <FieldStoryFrame>
       <Field data-invalid={true}>
         <TextInput
-          id='lastName'
-          label='Nachname'
+          id='field-last-name'
+          label='Last name'
           required
           defaultValue='M'
         />
         <FieldError
-          error={{ message: 'Nachname muss mindestens 2 Zeichen lang sein' }}
+          error={{ message: 'account.signUp.errors.lastNameRequired' }}
         />
       </Field>
-    </div>
+    </FieldStoryFrame>
   ),
 }
 
 export const MultipleFields: Story = {
   render: () => (
-    <div className='flex w-[400px] flex-col gap-4'>
-      <Field>
-        <TextInput
-          id='firstName-multi'
-          label='Vorname'
-          required
-        />
-      </Field>
+    <FieldStoryFrame>
+      <div className='flex flex-col gap-4'>
+        <Field>
+          <TextInput
+            id='field-multi-first'
+            label='First name'
+            required
+          />
+        </Field>
 
-      <Field data-invalid={true}>
-        <TextInput
-          id='lastName-multi'
-          label='Nachname'
-          required
-          defaultValue='A'
-        />
-        <FieldError error={{ message: 'Nachname ist zu kurz' }} />
-      </Field>
+        <Field data-invalid={true}>
+          <TextInput
+            id='field-multi-last'
+            label='Last name'
+            required
+            defaultValue='A'
+          />
+          <FieldError
+            error={{ message: 'account.signUp.errors.lastNameRequired' }}
+          />
+        </Field>
 
-      <Field>
-        <TextInput
-          id='email-multi'
-          label='E-Mail'
-          type='email'
-          required
-        />
-        <FieldDescription>
-          Wir werden Ihre E-Mail-Adresse niemals weitergeben
-        </FieldDescription>
-      </Field>
-    </div>
+        <Field>
+          <TextInput
+            id='field-multi-email'
+            label='Email'
+            type='email'
+            required
+          />
+          <FieldDescription>
+            We never sell your email address to third parties.
+          </FieldDescription>
+        </Field>
+      </div>
+    </FieldStoryFrame>
   ),
 }
 
 export const WithCheckbox: Story = {
   render: () => (
-    <div className='w-[500px]'>
+    <FieldStoryFrame>
       <Field data-invalid={true}>
         <div className='flex items-start gap-3'>
-          <Checkbox id='terms' />
+          <Checkbox id='field-terms' />
           <Label
-            htmlFor='terms'
-            className='text-base font-normal'
-            required
+            htmlFor='field-terms'
+            className='!block min-w-0 flex-1 font-normal'
           >
-            Ich akzeptiere die Allgemeinen Geschäftsbedingungen
+            I accept the terms and conditions
           </Label>
         </div>
         <FieldError
           variant='checkbox'
-          error={{ message: 'Sie müssen die AGB akzeptieren' }}
+          error={{ message: 'checkout.steps.review.termsRequired' }}
         />
       </Field>
-    </div>
+    </FieldStoryFrame>
   ),
 }
 
-const RadioGroupExample = () => {
+function RadioGroupExample() {
   const [value, setValue] = useState('')
 
   return (
-    <div className='w-[500px]'>
+    <FieldStoryFrame>
       <Field data-invalid={true}>
         <FieldSet>
-          <FieldLegend required>Anrede</FieldLegend>
+          <FieldLegend required>Title</FieldLegend>
           <RadioGroup
             orientation='horizontal'
             value={value}
@@ -150,28 +164,28 @@ const RadioGroupExample = () => {
           >
             <div className='flex items-center gap-3'>
               <RadioGroupItem
-                id='female'
-                value='female'
+                id='field-salutation-ms'
+                value='ms'
                 invalid={true}
               />
-              <Label htmlFor='female'>Frau</Label>
+              <Label htmlFor='field-salutation-ms'>Ms.</Label>
             </div>
             <div className='flex items-center gap-3'>
               <RadioGroupItem
-                id='male'
-                value='male'
+                id='field-salutation-mr'
+                value='mr'
                 invalid={true}
               />
-              <Label htmlFor='male'>Herr</Label>
+              <Label htmlFor='field-salutation-mr'>Mr.</Label>
             </div>
           </RadioGroup>
         </FieldSet>
         <FieldError
           variant='radio'
-          error={{ message: 'Bitte wählen Sie eine Anrede aus' }}
+          error={{ message: 'address.errors.salutationRequired' }}
         />
       </Field>
-    </div>
+    </FieldStoryFrame>
   )
 }
 
@@ -179,27 +193,27 @@ export const WithRadioGroup: Story = {
   render: () => <RadioGroupExample />,
 }
 
-const SelectExample = () => {
+function SelectExample() {
   const [value, setValue] = useState('')
 
   return (
-    <div className='w-[400px]'>
+    <FieldStoryFrame>
       <Field data-invalid={true}>
         <Select
-          label='Land'
+          label='Country'
           value={value}
           onValueChange={setValue}
           required
           options={[
-            { value: 'ch', label: 'Schweiz' },
-            { value: 'de', label: 'Deutschland' },
-            { value: 'fr', label: 'Frankreich' },
-            { value: 'at', label: 'Österreich' },
+            { value: 'gb', label: 'United Kingdom' },
+            { value: 'de', label: 'Germany' },
+            { value: 'fr', label: 'France' },
+            { value: 'ch', label: 'Switzerland' },
           ]}
         />
-        <FieldError error={{ message: 'Bitte wählen Sie ein Land aus' }} />
+        <FieldError error={{ message: 'address.errors.countryRequired' }} />
       </Field>
-    </div>
+    </FieldStoryFrame>
   )
 }
 
@@ -207,7 +221,7 @@ export const WithSelect: Story = {
   render: () => <SelectExample />,
 }
 
-const FormExampleComponent = () => {
+function CheckoutFormExample() {
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -217,40 +231,40 @@ const FormExampleComponent = () => {
 
   const [errors, setErrors] = useState<Record<string, string>>({})
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: FormEvent) => {
     e.preventDefault()
     const newErrors: Record<string, string> = {}
 
     if (!formData.firstName) {
-      newErrors.firstName = 'Vorname ist erforderlich'
+      newErrors.firstName = 'account.signUp.errors.firstNameRequired'
     }
     if (!formData.lastName) {
-      newErrors.lastName = 'Nachname ist erforderlich'
+      newErrors.lastName = 'account.signUp.errors.lastNameRequired'
     }
     if (!formData.email) {
-      newErrors.email = 'E-Mail ist erforderlich'
+      newErrors.email = 'address.errors.emailRequired'
     }
     if (!formData.country) {
-      newErrors.country = 'Land ist erforderlich'
+      newErrors.country = 'address.errors.countryRequired'
     }
 
     setErrors(newErrors)
 
     if (Object.keys(newErrors).length === 0) {
-      alert('Form submitted successfully!')
+      action('submit')(formData)
     }
   }
 
   return (
-    <div className='w-[400px]'>
+    <FieldStoryFrame>
       <form
         onSubmit={handleSubmit}
         className='flex flex-col gap-4'
       >
         <Field data-invalid={!!errors.firstName}>
           <TextInput
-            id='firstName-form'
-            label='Vorname'
+            id='field-form-first'
+            label='First name'
             required
             value={formData.firstName}
             onChange={(e) =>
@@ -264,8 +278,8 @@ const FormExampleComponent = () => {
 
         <Field data-invalid={!!errors.lastName}>
           <TextInput
-            id='lastName-form'
-            label='Nachname'
+            id='field-form-last'
+            label='Last name'
             required
             value={formData.lastName}
             onChange={(e) =>
@@ -279,8 +293,8 @@ const FormExampleComponent = () => {
 
         <Field data-invalid={!!errors.email}>
           <TextInput
-            id='email-form'
-            label='E-Mail'
+            id='field-form-email'
+            label='Email'
             type='email'
             required
             value={formData.email}
@@ -289,62 +303,62 @@ const FormExampleComponent = () => {
             }
           />
           <FieldDescription>
-            Wir senden Ihnen eine Bestätigung per E-Mail
+            Used for your order confirmation and delivery updates.
           </FieldDescription>
           {errors.email && <FieldError error={{ message: errors.email }} />}
         </Field>
 
         <Field data-invalid={!!errors.country}>
           <Select
-            label='Land'
+            label='Country'
             value={formData.country}
-            onValueChange={(value) =>
-              setFormData({ ...formData, country: value })
-            }
+            onValueChange={(v) => setFormData({ ...formData, country: v })}
             required
             options={[
-              { value: 'ch', label: 'Schweiz' },
-              { value: 'de', label: 'Deutschland' },
-              { value: 'fr', label: 'Frankreich' },
-              { value: 'at', label: 'Österreich' },
+              { value: 'gb', label: 'United Kingdom' },
+              { value: 'de', label: 'Germany' },
+              { value: 'fr', label: 'France' },
+              { value: 'ch', label: 'Switzerland' },
             ]}
           />
           {errors.country && <FieldError error={{ message: errors.country }} />}
         </Field>
 
-        <Button type='submit'>Absenden</Button>
+        <Button type='submit'>Continue</Button>
       </form>
-    </div>
+    </FieldStoryFrame>
   )
 }
 
-export const FormExample: Story = {
-  render: () => <FormExampleComponent />,
+export const CheckoutForm: Story = {
+  name: 'Form (validation)',
+  render: () => <CheckoutFormExample />,
 }
 
-export const FieldSetExample: Story = {
+export const FieldsetGroup: Story = {
+  name: 'Fieldset',
   render: () => (
-    <div className='w-[500px]'>
+    <FieldStoryFrame>
       <FieldSet>
-        <FieldLegend>Persönliche Informationen</FieldLegend>
+        <FieldLegend>Contact details</FieldLegend>
         <div className='flex flex-col gap-4'>
           <Field>
             <TextInput
-              id='name-fieldset'
-              label='Name'
+              id='field-fieldset-name'
+              label='Full name'
               required
             />
           </Field>
           <Field>
             <TextInput
-              id='email-fieldset'
-              label='E-Mail'
+              id='field-fieldset-email'
+              label='Email'
               type='email'
               required
             />
           </Field>
         </div>
       </FieldSet>
-    </div>
+    </FieldStoryFrame>
   ),
 }
