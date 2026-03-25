@@ -26,7 +26,7 @@ function TeaserBrandItemContent({
             image={item.image}
             fill
             className='object-cover'
-            sizes='300px'
+            sizes='(min-width: 1536px) 192px, (min-width: 1280px) 160px, (min-width: 1024px) 170px, (min-width: 768px) 192px, (min-width: 640px) 320px, 50vw'
             preload={preload}
           />
         </div>
@@ -48,6 +48,9 @@ export function TeaserBrandBlock({
   if (!items?.length) {
     return null
   }
+
+  const shouldPreload = (index: number) =>
+    imagePreload && index < BRAND_CAROUSEL_PRELOAD_ITEM_COUNT
 
   return (
     <div className='space-y-2'>
@@ -72,17 +75,13 @@ export function TeaserBrandBlock({
                 >
                   <TeaserBrandItemContent
                     item={item}
-                    preload={
-                      imagePreload && index < BRAND_CAROUSEL_PRELOAD_ITEM_COUNT
-                    }
+                    preload={shouldPreload(index)}
                   />
                 </CmsLink>
               ) : (
                 <TeaserBrandItemContent
                   item={item}
-                  preload={
-                    imagePreload && index < BRAND_CAROUSEL_PRELOAD_ITEM_COUNT
-                  }
+                  preload={shouldPreload(index)}
                 />
               )}
             </Card>

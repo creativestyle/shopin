@@ -486,6 +486,7 @@ export const BRAND_ITEMS: BrandTeaser['items'] = [
 
 export const BRAND: BrandTeaser = {
   type: 'brand',
+  title: 'Shop by brand',
   items: [...BRAND_ITEMS],
 }
 

@@ -21,6 +21,7 @@ const definition: ContentTypeDefinition = {
         type: 'Array',
         name: 'Brand items',
         localized: false,
+        required: true,
         items: {
           type: 'Link',
           linkType: 'Entry',

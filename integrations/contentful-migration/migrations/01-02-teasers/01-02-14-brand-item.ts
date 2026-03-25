@@ -36,7 +36,7 @@ const definition: ContentTypeDefinition = {
         name: 'Link',
         linkType: 'Entry',
         validations: [{ linkContentType: ['link'] }],
-        localized: true,
+        localized: false,
       },
     },
   ],
