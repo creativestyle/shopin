@@ -20,6 +20,7 @@
     "start:local": "turbo run start:local",
     "lint": "turbo run lint",
     "format": "turbo run format",
+    "format:check": "turbo run format:check",
     "check-types": "turbo run check-types",
     "check-dependencies": "npm audit --audit-level=high",
     "test": "turbo run test",

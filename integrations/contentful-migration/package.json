@@ -8,6 +8,7 @@
     "migrate": "npm run build && dotenv -e ../../.env -- node dist/scripts/run-migrations.js",
     "lint": "eslint --fix . --max-warnings=0",
     "format": "prettier --write --ignore-unknown .",
+    "format:check": "prettier --check --ignore-unknown .",
     "check-types": "tsc --noEmit"
   },
   "devDependencies": {
