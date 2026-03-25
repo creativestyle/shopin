@@ -6,6 +6,10 @@
     "description": "Ihre E-Commerce-Plattform mit einem modernen Design-System.",
     "homepage": "Startseite",
     "close": "Schließen",
+    "searchPlaceholder": "Wonach suchen Sie?",
+    "suggestions": "Vorschläge",
+    "products": "Produkte",
+    "showAllResults": "Alle Ergebnisse anzeigen",
     "scrollableDialogContent": "Scrollbarer Dialoginhalt",
     "scrollLeft": "Nach links scrollen",
     "scrollRight": "Nach rechts scrollen",
@@ -695,6 +699,13 @@
     "richText": {
       "assetUnresolved": "Asset (nicht aufgelöst)"
     }
+  },
+  "searchResults": {
+    "title": "Suchergebnisse",
+    "result": "Ergebnis",
+    "results": "Ergebnisse",
+    "emptyMessage": "Keine Produkte für Ihre Suche gefunden.",
+    "loading": "Wird geladen..."
   },
   "wishlist": {
     "title": "Wunschliste",

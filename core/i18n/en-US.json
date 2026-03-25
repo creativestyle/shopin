@@ -6,6 +6,10 @@
     "description": "Your e-commerce platform with a modern design system.",
     "homepage": "Home",
     "close": "Close",
+    "searchPlaceholder": "What are you looking for?",
+    "suggestions": "Suggestions",
+    "products": "Products",
+    "showAllResults": "Show all results",
     "scrollableDialogContent": "Scrollable dialog content",
     "scrollLeft": "Scroll left",
     "scrollRight": "Scroll right",
@@ -696,6 +700,13 @@
     "richText": {
       "assetUnresolved": "Asset (unresolved)"
     }
+  },
+  "searchResults": {
+    "title": "Search results",
+    "result": "result",
+    "results": "results",
+    "emptyMessage": "No products found for your search.",
+    "loading": "Loading..."
   },
   "wishlist": {
     "title": "Wishlist",
