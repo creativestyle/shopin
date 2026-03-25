@@ -47,9 +47,7 @@ export function useProductSearch(
           setResults(data)
         }
       } catch {
-        if (!controller.signal.aborted) {
-          setResults(null)
-        }
+        // Keep previous results visible on error
       } finally {
         if (!controller.signal.aborted) {
           setIsLoading(false)

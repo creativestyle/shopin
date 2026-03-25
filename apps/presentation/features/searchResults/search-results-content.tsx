@@ -45,7 +45,7 @@ export function SearchResultsContent({
     <>
       <h1 className='mb-6 text-center text-[36px] font-normal'>
         {t('title')}{' '}
-        {!isLoading && results && (
+        {results && (
           <span className='text-base font-normal'>
             ({productCount} {countLabel})
           </span>
@@ -71,20 +71,22 @@ export function SearchResultsContent({
         currentPriceMax={priceMax}
       />
 
-      {isLoading ? (
-        <div className='py-12 text-center'>
-          <p className='text-muted-foreground'>{t('loading')}</p>
-        </div>
-      ) : !results?.products.length ? (
+      {!results?.products.length && !isLoading ? (
         <div className='py-12 text-center'>
           <p className='text-muted-foreground'>{t('emptyMessage')}</p>
         </div>
-      ) : (
-        <ProductGrid
-          products={results.products}
-          locale={locale}
-        />
-      )}
+      ) : results?.products.length ? (
+        <div
+          className={`transition-opacity duration-200 ${
+            isLoading ? 'pointer-events-none opacity-50' : 'opacity-100'
+          }`}
+        >
+          <ProductGrid
+            products={results.products}
+            locale={locale}
+          />
+        </div>
+      ) : null}
     </>
   )
 }
