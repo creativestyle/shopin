@@ -1,5 +1,6 @@
 'use client'
 
+import { useMemo } from 'react'
 import { useRouter, usePathname, useSearchParams } from 'next/navigation'
 import {
   DEFAULT_SORT_OPTION,
@@ -9,8 +10,50 @@ import {
   SEARCH_PARAM_SALE_ONLY,
   SEARCH_PARAM_PRICE_MIN,
   SEARCH_PARAM_PRICE_MAX,
+  type SortOption,
 } from '@config/constants'
 
+export function parseFilters(
+  raw: string | null | undefined
+): Record<string, string[]> | undefined {
+  if (!raw) return undefined
+  try {
+    return JSON.parse(raw) as Record<string, string[]>
+  } catch {
+    return undefined
+  }
+}
+
+function parseOptionalNumber(
+  raw: string | null | undefined
+): number | undefined {
+  if (!raw) return undefined
+  const n = Number(raw)
+  return Number.isFinite(n) ? n : undefined
+}
+
+/** Read the current filter state from URL search params. */
+export function useFilterState() {
+  const searchParams = useSearchParams()
+
+  const currentSort = (searchParams?.get(SEARCH_PARAM_SORT) ??
+    DEFAULT_SORT_OPTION) as SortOption
+  const saleOnly = searchParams?.get(SEARCH_PARAM_SALE_ONLY) === 'true'
+  const priceMin = parseOptionalNumber(
+    searchParams?.get(SEARCH_PARAM_PRICE_MIN)
+  )
+  const priceMax = parseOptionalNumber(
+    searchParams?.get(SEARCH_PARAM_PRICE_MAX)
+  )
+  const currentFilters = useMemo(
+    () => parseFilters(searchParams?.get(SEARCH_PARAM_FILTERS)),
+    [searchParams]
+  )
+
+  return { currentSort, saleOnly, priceMin, priceMax, currentFilters }
+}
+
+/** Write (mutate) filter state into URL search params. */
 export function useFilterParams() {
   const router = useRouter()
   const pathname = usePathname()
@@ -38,15 +81,8 @@ export function useFilterParams() {
     const params = new URLSearchParams(searchParams?.toString() ?? '')
     params.delete(SEARCH_PARAM_PAGE)
 
-    const filtersParam = params.get(SEARCH_PARAM_FILTERS)
-    let filters: Record<string, string[]> = {}
-    if (filtersParam) {
-      try {
-        filters = JSON.parse(filtersParam)
-      } catch {
-        filters = {}
-      }
-    }
+    const filters: Record<string, string[]> =
+      parseFilters(params.get(SEARCH_PARAM_FILTERS)) ?? {}
 
     const currentValues = filters[facetName] || []
     const isCurrentlySelected = currentValues.includes(value)

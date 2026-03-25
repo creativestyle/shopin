@@ -1,27 +1,45 @@
 'use client'
 
+import { useMemo } from 'react'
 import { useTranslations } from 'next-intl'
 import { useProductSearch } from '@/hooks/use-product-search'
-import { ProductCard } from '@/components/ui/product-card'
-import { AddToCart } from '@/features/cart/cart-add-to-cart'
+import { ProductGrid } from '@/components/ui/product-grid'
+import { ProductCollectionToolbarWrapper } from '@/features/productCollection/product-collection-toolbar-wrapper'
+import { ActiveFilters } from '@/features/productCollection/components/active-filters'
+import { useFilterState } from '@/features/productCollection/hooks/use-filter-params'
+import { ITEMS_PER_PAGE } from '@config/constants'
 
 interface SearchResultsContentProps {
   locale: string
   query: string
 }
 
-const SEARCH_RESULTS_LIMIT = 100
+const SEARCH_RESULTS_LIMIT = ITEMS_PER_PAGE
 
 export function SearchResultsContent({
   locale,
   query,
 }: SearchResultsContentProps) {
   const t = useTranslations('searchResults')
-  const { results, isLoading } = useProductSearch(query, SEARCH_RESULTS_LIMIT)
+  const { currentSort, saleOnly, priceMin, priceMax, currentFilters } =
+    useFilterState()
 
-  const productCount = results?.products.length ?? 0
-  const countLabel =
-    productCount === 1 ? t('result') : t('results')
+  const searchOptions = useMemo(
+    () => ({
+      limit: SEARCH_RESULTS_LIMIT,
+      filters: currentFilters,
+      priceMin,
+      priceMax,
+      sort: currentSort,
+      saleOnly: saleOnly || undefined,
+    }),
+    [currentFilters, priceMin, priceMax, currentSort, saleOnly]
+  )
+
+  const { results, isLoading } = useProductSearch(query, searchOptions)
+
+  const productCount = results?.total ?? results?.products.length ?? 0
+  const countLabel = productCount === 1 ? t('result') : t('results')
 
   return (
     <>
@@ -34,6 +52,25 @@ export function SearchResultsContent({
         )}
       </h1>
 
+      <ProductCollectionToolbarWrapper
+        currentSort={currentSort}
+        facets={results?.facets}
+        currentFilters={currentFilters}
+        saleOnly={saleOnly}
+        priceRange={results?.priceRange}
+        currentPriceMin={priceMin}
+        currentPriceMax={priceMax}
+        showCategoriesButton={false}
+        className='mb-4'
+      />
+
+      <ActiveFilters
+        facets={results?.facets}
+        saleOnly={saleOnly}
+        currentPriceMin={priceMin}
+        currentPriceMax={priceMax}
+      />
+
       {isLoading ? (
         <div className='py-12 text-center'>
           <p className='text-muted-foreground'>{t('loading')}</p>
@@ -43,27 +80,10 @@ export function SearchResultsContent({
           <p className='text-muted-foreground'>{t('emptyMessage')}</p>
         </div>
       ) : (
-        <div className='grid grid-cols-2 gap-4 sm:gap-6 md:grid-cols-3 lg:grid-cols-4 lg:gap-8'>
-          {results.products.map((product) => (
-            <ProductCard
-              key={product.id}
-              data={product}
-              locale={locale}
-              actions={
-                <AddToCart
-                  productId={product.id}
-                  productSlug={product.slug}
-                  productName={product.name}
-                  variantId={product.variantId}
-                  variantCount={product.variantCount}
-                  variant='primary'
-                  className='z-2 w-full'
-                  showLoadingText
-                />
-              }
-            />
-          ))}
-        </div>
+        <ProductGrid
+          products={results.products}
+          locale={locale}
+        />
       )}
     </>
   )

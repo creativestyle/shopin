@@ -6,6 +6,7 @@
  *
  * Reads CT and Algolia credentials from the root .env file.
  * Fetches all published products from CT and pushes them to the Algolia index.
+ * Also syncs filterable variant attributes and configures faceting.
  */
 
 import 'dotenv/config'
@@ -13,6 +14,23 @@ import { algoliasearch } from 'algoliasearch'
 
 const BATCH_SIZE = 100
 const LANGUAGES = ['en-US', 'de-DE'] as const
+
+// Attribute types that can be used for faceting (matches CT filterable-attributes logic)
+const FACETABLE_TYPES = new Set(['ltext', 'text', 'enum', 'lenum'])
+
+const EXCLUDED_ATTR_NAMES = new Set([
+  'product-description',
+  'product-list-short-description',
+  'features-long-description',
+  'product-spec',
+  'shortDescription',
+])
+
+interface FilterableAttribute {
+  name: string
+  label: Record<string, string>
+  fieldType: 'ltext' | 'text' | 'enum' | 'lenum'
+}
 
 // ---- env validation ----
 function requireEnv(key: string): string {
@@ -48,11 +66,105 @@ async function getCtToken(): Promise<string> {
 // ---- Algolia client ----
 const algoliaClient = algoliasearch(ALGOLIA_APP_ID, ALGOLIA_WRITE_API_KEY)
 
+// ---- filterable attributes ----
+async function fetchFilterableAttributes(
+  token: string
+): Promise<FilterableAttribute[]> {
+  const url = `${CT_API_URL}/${CT_PROJECT_KEY}/product-types?limit=100`
+  const response = await fetch(url, {
+    headers: { Authorization: `Bearer ${token}` },
+  })
+  const data = (await response.json()) as {
+    results: Array<{
+      attributes?: Array<{
+        name: string
+        label: Record<string, string>
+        isSearchable: boolean
+        type: { name: string }
+      }>
+    }>
+  }
+
+  const seen = new Map<string, FilterableAttribute>()
+  for (const pt of data.results) {
+    for (const attr of pt.attributes ?? []) {
+      if (seen.has(attr.name)) continue
+      if (!attr.isSearchable) continue
+      if (!FACETABLE_TYPES.has(attr.type.name)) continue
+      if (EXCLUDED_ATTR_NAMES.has(attr.name)) continue
+      seen.set(attr.name, {
+        name: attr.name,
+        label: attr.label,
+        fieldType: attr.type.name as FilterableAttribute['fieldType'],
+      })
+    }
+  }
+  return Array.from(seen.values())
+}
+
+function extractVariantAttributes(
+  variants: Record<string, any>[],
+  filterableAttributes: FilterableAttribute[]
+): Record<string, unknown> {
+  const result: Record<string, unknown> = {}
+
+  for (const attr of filterableAttributes) {
+    const isEnum = attr.fieldType === 'enum' || attr.fieldType === 'lenum'
+    const isLocalizedText = attr.fieldType === 'ltext'
+
+    if (isLocalizedText) {
+      // ltext: store per-language to avoid mixing German/English values
+      for (const lang of LANGUAGES) {
+        const langKey = lang.replace('-', '_')
+        const values = new Set<string>()
+        for (const variant of variants) {
+          const attrValue = variant.attributes?.find(
+            (a: any) => a.name === attr.name
+          )?.value
+          if (attrValue == null) continue
+          const langVal = attrValue[lang]
+          if (langVal) values.add(String(langVal))
+        }
+        if (values.size > 0) {
+          result[`attr_${attr.name}_${langKey}`] = Array.from(values)
+        }
+      }
+    } else {
+      const values = new Set<string>()
+      for (const variant of variants) {
+        const attrValue = variant.attributes?.find(
+          (a: any) => a.name === attr.name
+        )?.value
+        if (attrValue == null) continue
+
+        if (isEnum) {
+          // enum/lenum value is { key: string, label: string | Record<string,string> }
+          if (typeof attrValue === 'object' && attrValue.key) {
+            values.add(String(attrValue.key))
+          }
+        } else {
+          // text
+          values.add(String(attrValue))
+        }
+      }
+      if (values.size > 0) {
+        result[`attr_${attr.name}`] = Array.from(values)
+      }
+    }
+  }
+
+  return result
+}
+
 // ---- mapping ----
-function mapToAlgoliaRecord(product: Record<string, any>) {
+function mapToAlgoliaRecord(
+  product: Record<string, any>,
+  filterableAttributes: FilterableAttribute[]
+) {
   const masterVariant = product.masterVariant
+  const allVariants = [masterVariant, ...(product.variants || [])]
   const image = masterVariant?.images?.[0]
-  const variantCount = 1 + (product.variants?.length || 0)
+  const variantCount = allVariants.length
 
   const record: Record<string, unknown> = {
     objectID: product.id,
@@ -108,6 +220,10 @@ function mapToAlgoliaRecord(product: Record<string, any>) {
     }
   }
 
+  // Extract filterable variant attributes
+  const attrFields = extractVariantAttributes(allVariants, filterableAttributes)
+  Object.assign(record, attrFields)
+
   return record
 }
 
@@ -115,6 +231,13 @@ function mapToAlgoliaRecord(product: Record<string, any>) {
 async function main() {
   console.log('Authenticating with commercetools...')
   const token = await getCtToken()
+
+  console.log('Fetching filterable attributes from product types...')
+  const filterableAttributes = await fetchFilterableAttributes(token)
+  console.log(
+    `  Found ${filterableAttributes.length} filterable attributes:`,
+    filterableAttributes.map((a) => a.name).join(', ')
+  )
 
   console.log('Fetching products from commercetools...')
 
@@ -134,7 +257,7 @@ async function main() {
 
     total = data.total ?? data.results.length
     for (const product of data.results) {
-      allRecords.push(mapToAlgoliaRecord(product))
+      allRecords.push(mapToAlgoliaRecord(product, filterableAttributes))
     }
 
     offset += data.results.length
@@ -152,15 +275,47 @@ async function main() {
 
   console.log(`Done! Pushed ${allRecords.length} records.`, result)
 
+  // Build attributesForFaceting from filterable attributes + price fields
+  // Variant attributes need full faceting (counts), price fields need filtering only
+  // ltext attributes get per-language entries; enum/text are language-independent
+  const facetAttributes: string[] = []
+  for (const a of filterableAttributes) {
+    if (a.fieldType === 'ltext') {
+      for (const lang of LANGUAGES) {
+        facetAttributes.push(`attr_${a.name}_${lang.replace('-', '_')}`)
+      }
+    } else {
+      facetAttributes.push(`attr_${a.name}`)
+    }
+  }
+  for (const lang of LANGUAGES) {
+    const prefix = `price_${lang.replace('-', '_')}`
+    facetAttributes.push(`filterOnly(${prefix}_centAmount)`)
+    facetAttributes.push(`filterOnly(${prefix}_discountedCentAmount)`)
+  }
+
+  // Store attribute metadata as userData so the search service can read labels
+  const attributeMetadata = filterableAttributes.map((a) => ({
+    name: a.name,
+    label: a.label,
+    fieldType: a.fieldType,
+  }))
+
   console.log('\nConfiguring index settings...')
   await algoliaClient.setSettings({
     indexName: ALGOLIA_INDEX_NAME,
     indexSettings: {
       searchableAttributes: ['name_en_US', 'name_de_DE'],
       typoTolerance: false,
+      attributesForFaceting: facetAttributes,
+      userData: { filterableAttributes: attributeMetadata },
     },
   })
   console.log('Index settings updated.')
+  console.log(
+    '  attributesForFaceting:',
+    facetAttributes.join(', ')
+  )
 }
 
 main().catch((err) => {

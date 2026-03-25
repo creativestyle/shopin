@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useBffFetchClient } from '@/lib/bff/core/bff-fetch-client'
-import { ProductSearchBffService } from '@/lib/bff/services/product-search-service'
+import { ProductSearchBffService, type ProductSearchParams } from '@/lib/bff/services/product-search-service'
 import type { ProductSearchResponse } from '@core/contracts/product-search/product-search'
 
 const DEBOUNCE_MS = 300
@@ -13,7 +13,10 @@ interface UseProductSearchResult {
   isLoading: boolean
 }
 
-export function useProductSearch(query: string, limit?: number): UseProductSearchResult {
+export function useProductSearch(
+  query: string,
+  params?: Omit<ProductSearchParams, 'query'>
+): UseProductSearchResult {
   const bffFetch = useBffFetchClient()
   const [results, setResults] = useState<ProductSearchResponse | null>(null)
   const [isLoading, setIsLoading] = useState(false)
@@ -24,6 +27,9 @@ export function useProductSearch(query: string, limit?: number): UseProductSearc
     serviceRef.current = new ProductSearchBffService(bffFetch)
   }
 
+  // Serialize params for dependency comparison
+  const paramsKey = JSON.stringify(params ?? {})
+
   const search = useCallback(
     async (searchQuery: string) => {
       abortControllerRef.current?.abort()
@@ -33,7 +39,10 @@ export function useProductSearch(query: string, limit?: number): UseProductSearc
       setIsLoading(true)
       try {
         const data =
-          await serviceRef.current!.searchProducts(searchQuery, limit)
+          await serviceRef.current!.searchProducts({
+            query: searchQuery,
+            ...params,
+          })
         if (!controller.signal.aborted) {
           setResults(data)
         }
@@ -47,7 +56,8 @@ export function useProductSearch(query: string, limit?: number): UseProductSearc
         }
       }
     },
-    [limit]
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [paramsKey]
   )
 
   useEffect(() => {

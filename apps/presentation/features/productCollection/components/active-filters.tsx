@@ -15,6 +15,7 @@ import {
   useActiveFilterChips,
   type ActiveFilterChip,
 } from '../hooks/use-active-filter-chips'
+import { parseFilters } from '../hooks/use-filter-params'
 
 interface ActiveFiltersProps {
   facets?: Facet[]
@@ -67,27 +68,22 @@ export function ActiveFilters({
           params.delete(SEARCH_PARAM_PRICE_MAX)
         }
       } else {
-        const filtersParam = params.get(SEARCH_PARAM_FILTERS)
-        if (!filtersParam) {
+        const parsed = parseFilters(params.get(SEARCH_PARAM_FILTERS))
+        if (!parsed) {
           return
         }
-        try {
-          const parsed = JSON.parse(filtersParam) as Record<string, string[]>
-          const remaining = (parsed[chip.filterKey] ?? []).filter(
-            (v) => v !== chip.filterValue
-          )
-          if (remaining.length === 0) {
-            delete parsed[chip.filterKey]
-          } else {
-            parsed[chip.filterKey] = remaining
-          }
-          if (Object.keys(parsed).length === 0) {
-            params.delete(SEARCH_PARAM_FILTERS)
-          } else {
-            params.set(SEARCH_PARAM_FILTERS, JSON.stringify(parsed))
-          }
-        } catch {
-          // Ignore invalid JSON
+        const remaining = (parsed[chip.filterKey] ?? []).filter(
+          (v) => v !== chip.filterValue
+        )
+        if (remaining.length === 0) {
+          delete parsed[chip.filterKey]
+        } else {
+          parsed[chip.filterKey] = remaining
+        }
+        if (Object.keys(parsed).length === 0) {
+          params.delete(SEARCH_PARAM_FILTERS)
+        } else {
+          params.set(SEARCH_PARAM_FILTERS, JSON.stringify(parsed))
         }
       }
     })
