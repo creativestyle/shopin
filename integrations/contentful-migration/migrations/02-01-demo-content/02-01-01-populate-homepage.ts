@@ -43,6 +43,10 @@ async function run(migration: unknown) {
 
   const links = await createLinks(client)
   const buttons = await createButtons(client, links)
+
+  let assetIndex = 0
+  const nextUrl = () =>
+    HOMEPAGE_IMAGES[assetIndex++ % HOMEPAGE_IMAGES.length] ?? ''
   const componentIds = await createTeasers(client, links, buttons, {
     assetId: richTextAssetId,
   })
@@ -60,12 +64,8 @@ async function run(migration: unknown) {
     return
   }
 
-  let assetIndex = 0
-  const nextUrl = () =>
-    HOMEPAGE_IMAGES[assetIndex++ % HOMEPAGE_IMAGES.length] ?? ''
   await attachImagesToMainTeasers(client, components, nextUrl)
   await attachImagesToCarouselAndSliderItems(client, components, nextUrl)
-
   await attachImageToEntry(client, updated.sys.id, 'ogImage', [...LOCALES], {
     title: 'Homepage OG',
     url: HOMEPAGE_IMAGES[1] ?? 'https://picsum.photos/seed/og-home/1200/630',

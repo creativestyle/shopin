@@ -5,6 +5,8 @@ import type { PlainClientAPI } from 'contentful-management'
 import type { EntryLinkRef } from '../../lib/links'
 import { toEntryRef } from '../../lib/links'
 import { createEntryWithLocales, createLinkEntries } from '../../lib/entries'
+import { createImageAsset } from '../../lib/page-teasers'
+import { LOCALES } from '../../lib/constants'
 import {
   LINK_SHOP,
   LINK_NEW_ARRIVALS,
@@ -24,6 +26,9 @@ import {
   TEXT_TEASER,
   ACCORDION_ITEMS,
   ACCORDION_TITLE,
+  BRAND_TITLE,
+  BRAND,
+  BRAND_IMAGES,
 } from './data'
 
 export async function createLinks(client: PlainClientAPI) {
@@ -258,6 +263,57 @@ export async function createTeasers(
       'de-DE': {
         ...ACCORDION_TITLE['de-DE'],
         accordion: toEntryRef(accordionId),
+      },
+    })
+  )
+
+  const brandItemsId: string[] = []
+  for (const item of BRAND) {
+    const caption = String(
+      item['en-US']?.caption ?? item['de-DE']?.caption ?? 'Brand image'
+    )
+    const imageUrl =
+      BRAND_IMAGES[brandItemsId.length % BRAND_IMAGES.length] ?? ''
+    const assetLink = {
+      sys: {
+        type: 'Link' as const,
+        linkType: 'Asset' as const,
+        id: await createImageAsset(
+          client,
+          {
+            title: caption,
+            url: imageUrl,
+            fileName: `brand-item-${brandItemsId.length}.jpg`,
+          },
+          [...LOCALES]
+        ),
+      },
+    }
+    brandItemsId.push(
+      await createEntryWithLocales(client, 'teaserBrandItem', {
+        'en-US': {
+          ...item['en-US'],
+          image: assetLink,
+          link: toEntryRef(links.linkCId),
+        },
+        'de-DE': {
+          ...item['de-DE'],
+          image: assetLink,
+          link: toEntryRef(links.linkCId),
+        },
+      })
+    )
+  }
+
+  componentIds.push(
+    await createEntryWithLocales(client, 'teaserBrand', {
+      'en-US': {
+        ...BRAND_TITLE['en-US'],
+        brandItems: brandItemsId.map((id) => toEntryRef(id)),
+      },
+      'de-DE': {
+        ...BRAND_TITLE['de-DE'],
+        brandItems: brandItemsId.map((id) => toEntryRef(id)),
       },
     })
   )

@@ -344,3 +344,79 @@ export const ACCORDION_TITLE = {
   'en-US': { title: 'FAQ' },
   'de-DE': { title: 'FAQ' },
 }
+
+export const BRAND = [
+  {
+    'en-US': { caption: 'Brand A' },
+    'de-DE': { caption: 'Marke A' },
+  },
+  {
+    'en-US': { caption: 'Brand B' },
+    'de-DE': { caption: 'Marke B' },
+  },
+  {
+    'en-US': { caption: 'Brand C' },
+    'de-DE': { caption: 'Marke C' },
+  },
+  {
+    'en-US': { caption: 'Brand D' },
+    'de-DE': { caption: 'Marke D' },
+  },
+  {
+    'en-US': { caption: 'Brand E' },
+    'de-DE': { caption: 'Marke E' },
+  },
+  {
+    'en-US': { caption: 'Brand F' },
+    'de-DE': { caption: 'Marke F' },
+  },
+  {
+    'en-US': { caption: 'Brand G' },
+    'de-DE': { caption: 'Marke G' },
+  },
+  {
+    'en-US': { caption: 'Brand H' },
+    'de-DE': { caption: 'Marke H' },
+  },
+  {
+    'en-US': { caption: 'Brand I' },
+    'de-DE': { caption: 'Marke I' },
+  },
+  {
+    'en-US': { caption: 'Brand J' },
+    'de-DE': { caption: 'Marke J' },
+  },
+  {
+    'en-US': { caption: 'Brand K' },
+    'de-DE': { caption: 'Marke K' },
+  },
+  {
+    'en-US': { caption: 'Brand L' },
+    'de-DE': { caption: 'Marke L' },
+  },
+  {
+    'en-US': { caption: 'Brand M' },
+    'de-DE': { caption: 'Marke M' },
+  },
+]
+
+export const BRAND_IMAGES = [
+  'https://picsum.photos/seed/brand-a/800/600',
+  'https://picsum.photos/seed/brand-b/800/600',
+  'https://picsum.photos/seed/brand-c/800/600',
+  'https://picsum.photos/seed/brand-d/800/600',
+  'https://picsum.photos/seed/brand-e/800/600',
+  'https://picsum.photos/seed/brand-f/800/600',
+  'https://picsum.photos/seed/brand-g/800/600',
+  'https://picsum.photos/seed/brand-h/800/600',
+  'https://picsum.photos/seed/brand-i/800/600',
+  'https://picsum.photos/seed/brand-j/800/600',
+  'https://picsum.photos/seed/brand-k/800/600',
+  'https://picsum.photos/seed/brand-l/800/600',
+  'https://picsum.photos/seed/brand-m/800/600',
+]
+
+export const BRAND_TITLE = {
+  'en-US': { title: 'Brands' },
+  'de-DE': { title: 'Marken' },
+}

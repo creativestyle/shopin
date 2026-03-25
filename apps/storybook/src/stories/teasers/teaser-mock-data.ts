@@ -14,6 +14,7 @@ import type { ImageTeaser } from '@core/contracts/content/teaser-image'
 import type { TextTeaser } from '@core/contracts/content/teaser-text'
 import type { RichTextTeaser } from '@core/contracts/content/teaser-rich-text'
 import type { CarouselTeaser } from '@core/contracts/content/teaser-carousel'
+import type { BrandTeaser } from '@core/contracts/content/teaser-brand'
 import type { SliderTeaser } from '@core/contracts/content/teaser-slider'
 import type { ProductCarouselTeaser } from '@core/contracts/content/teaser-product-carousel'
 import type { SectionTeaser } from '@core/contracts/content/teaser-section'
@@ -434,6 +435,79 @@ export const CAROUSEL: CarouselTeaser = {
   type: 'carousel',
   title: 'Featured',
   items: [...CAROUSEL_ITEMS],
+}
+export const BRAND_ITEMS: BrandTeaser['items'] = [
+  {
+    image: img(MOCK_IMAGES.landscape, 800, 600, 'Brand A'),
+    caption: 'Brand A',
+    link: { label: 'Brand A', url: '/c/brand-a' },
+  },
+  {
+    image: img(MOCK_IMAGES.landscape, 800, 600, 'Brand B'),
+    caption: 'Brand B',
+    link: { label: 'Brand B', url: '/c/brand-b' },
+  },
+  {
+    image: img(MOCK_IMAGES.landscape, 800, 600, 'Brand C'),
+    caption: 'Brand C',
+    link: { label: 'Brand C', url: '/c/brand-c' },
+  },
+  {
+    image: img(MOCK_IMAGES.landscape, 800, 600, 'Brand D'),
+    caption: 'Brand D',
+    link: { label: 'Brand D', url: '/c/brand-d' },
+  },
+  {
+    image: img(MOCK_IMAGES.landscape, 800, 600, 'Brand E'),
+    caption: 'Brand E',
+    link: { label: 'Brand E', url: '/c/brand-e' },
+  },
+  {
+    image: img(MOCK_IMAGES.landscape, 800, 600, 'Brand F'),
+    caption: 'Brand F',
+    link: { label: 'Brand F', url: '/c/brand-f' },
+  },
+  {
+    image: img(MOCK_IMAGES.landscape, 800, 600, 'Brand G'),
+    caption: 'Brand G',
+    link: { label: 'Brand G', url: '/c/brand-g' },
+  },
+  {
+    image: img(MOCK_IMAGES.landscape, 800, 600, 'Brand H'),
+    caption: 'Brand H',
+    link: { label: 'Brand H', url: '/c/brand-h' },
+  },
+  {
+    image: img(MOCK_IMAGES.landscape, 800, 600, 'Brand I'),
+    caption: 'Brand I',
+    link: { label: 'Brand I', url: '/c/brand-i' },
+  },
+  {
+    image: img(MOCK_IMAGES.landscape, 800, 600, 'Brand J'),
+    caption: 'Brand J',
+    link: { label: 'Brand J', url: '/c/brand-j' },
+  },
+  {
+    image: img(MOCK_IMAGES.landscape, 800, 600, 'Brand K'),
+    caption: 'Brand K',
+    link: { label: 'Brand K', url: '/c/brand-k' },
+  },
+  {
+    image: img(MOCK_IMAGES.landscape, 800, 600, 'Brand L'),
+    caption: 'Brand L',
+    link: { label: 'Brand L', url: '/c/brand-l' },
+  },
+  {
+    image: img(MOCK_IMAGES.landscape, 800, 600, 'Brand M'),
+    caption: 'Brand M',
+    link: { label: 'Brand M', url: '/c/brand-m' },
+  },
+]
+
+export const BRAND: BrandTeaser = {
+  type: 'brand',
+  title: 'Shop by brand',
+  items: [...BRAND_ITEMS],
 }
 
 export const SLIDER_ITEMS: SliderTeaser['items'] = [

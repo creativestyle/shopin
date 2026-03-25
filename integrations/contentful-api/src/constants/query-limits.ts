@@ -24,6 +24,8 @@ export const QUERY_LIMITS = {
   CAROUSEL_ITEMS: 30,
   /** Teaser accordion: accordion items. */
   ACCORDION_ITEMS: 30,
+  /** Teaser brand: brand items. */
+  BRAND_ITEMS: 20,
 
   /** Layout: single footer / single top bar. */
   LAYOUT_COLLECTION: 1,

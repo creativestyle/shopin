@@ -11,6 +11,7 @@ import { TeaserProductCarouselApiResponseSchema } from './teaser-product-carouse
 import { TeaserSectionApiResponseSchema } from './teaser-section'
 import { TeaserRegularApiResponseSchema } from './teaser-regular'
 import { TeaserAccordionApiResponseSchema } from './teaser-accordion'
+import { TeaserBrandApiResponseSchema } from './teaser-brand'
 
 /** Union of all teaser/component content types from Contentful. */
 export const TeaserEntryApiResponseSchema = z.union([
@@ -26,6 +27,7 @@ export const TeaserEntryApiResponseSchema = z.union([
   TeaserSectionApiResponseSchema,
   TeaserRegularApiResponseSchema,
   TeaserAccordionApiResponseSchema,
+  TeaserBrandApiResponseSchema,
 ])
 
 export type TeaserEntryApiResponse = z.infer<
