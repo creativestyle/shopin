@@ -21,6 +21,7 @@
     "@core/i18n": "*",
     "@core/logger-config": "*",
     "@demo/data-source-header-reader": "*",
+    "@integrations/algolia-api": "*",
     "@integrations/commercetools-api": "*",
     "@integrations/commercetools-auth": "*",
     "@integrations/contentful-api": "*",

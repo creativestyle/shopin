@@ -2,11 +2,11 @@
 
 import { useMemo } from 'react'
 import { useTranslations } from 'next-intl'
-import { useProductSearch } from '@/hooks/use-product-search'
+import { useProductSearch } from './hooks/use-product-search'
 import { ProductGrid } from '@/components/ui/product-grid'
 import { ProductCollectionToolbarWrapper } from '@/features/productCollection/product-collection-toolbar-wrapper'
-import { ActiveFilters } from '@/features/productCollection/components/active-filters'
-import { useFilterState } from '@/features/productCollection/hooks/use-filter-params'
+import { ActiveFilters } from '@/features/productCollection/active-filters'
+import { useFilterState } from '@/features/productCollection/use-filter-params'
 import { ITEMS_PER_PAGE } from '@config/constants'
 
 interface SearchResultsContentProps {

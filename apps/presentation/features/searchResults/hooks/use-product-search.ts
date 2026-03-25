@@ -2,7 +2,10 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useBffFetchClient } from '@/lib/bff/core/bff-fetch-client'
-import { ProductSearchBffService, type ProductSearchParams } from '@/lib/bff/services/product-search-service'
+import {
+  ProductSearchBffService,
+  type ProductSearchParams,
+} from '@/lib/bff/services/product-search-service'
 import type { ProductSearchResponse } from '@core/contracts/product-search/product-search'
 
 const DEBOUNCE_MS = 300
@@ -38,11 +41,10 @@ export function useProductSearch(
 
       setIsLoading(true)
       try {
-        const data =
-          await serviceRef.current!.searchProducts({
-            query: searchQuery,
-            ...params,
-          })
+        const data = await serviceRef.current!.searchProducts({
+          query: searchQuery,
+          ...params,
+        })
         if (!controller.signal.aborted) {
           setResults(data)
         }

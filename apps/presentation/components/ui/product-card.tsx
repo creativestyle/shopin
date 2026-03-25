@@ -14,6 +14,7 @@ interface ProductCardProps extends Omit<LinkProps, 'href' | 'className'> {
   locale: string
   actions?: React.ReactNode
   imagePreload?: boolean
+  compact?: boolean
 }
 
 export const ProductCard: React.FC<ProductCardProps> = ({
@@ -22,6 +23,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   actions,
   locale,
   imagePreload,
+  compact,
   ...props
 }) => {
   const href = getProductHref(data.slug, data.variantId)
@@ -40,7 +42,12 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         {...props}
       />
 
-      <div className='pointer-events-none relative h-44 w-full overflow-hidden sm:h-52 md:h-76 lg:min-h-110 lg:grow lg:basis-0'>
+      <div className={cn(
+        'pointer-events-none relative w-full overflow-hidden',
+        compact
+          ? 'h-28 sm:h-32 md:h-40 lg:h-48'
+          : 'h-44 sm:h-52 md:h-76 lg:min-h-110 lg:grow lg:basis-0'
+      )}>
         <Image
           src={data.image.src}
           alt={data.image.alt || data.name}

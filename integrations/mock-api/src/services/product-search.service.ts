@@ -3,10 +3,7 @@ import type { ProductSearchResponse } from '@core/contracts/product-search/produ
 
 @Injectable()
 export class ProductSearchService {
-  async searchProducts(
-    _query: string,
-    _limit?: number
-  ): Promise<ProductSearchResponse> {
+  async searchProducts(): Promise<ProductSearchResponse> {
     return {
       suggestions: [],
       products: [],

@@ -5,13 +5,12 @@ import { useTranslations } from 'next-intl'
 import { useLocale } from 'next-intl'
 import * as DialogPrimitive from '@radix-ui/react-dialog'
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden'
-import Image from 'next/image'
 import Link from 'next/link'
 import { Logo } from '../ui/logo'
+import { Button } from '../ui/button'
 import { cn } from '@/lib/utils'
-import { useProductSearch } from '@/hooks/use-product-search'
-import { getProductHref } from '@/lib/product-utils'
-import { PriceBox } from '@/components/ui/price/price-box'
+import { useProductSearch } from '@/features/searchResults/use-product-search'
+import { ProductCard } from '@/components/ui/product-card'
 import SearchIcon from '@/public/icons/search.svg'
 import CloseIcon from '@/public/icons/close.svg'
 import ChevronLeftIcon from '@/public/icons/chevronleft.svg'
@@ -28,14 +27,13 @@ export function SearchPopup({ open, onOpenChange }: SearchPopupProps) {
   const { results, isLoading } = useProductSearch(query)
 
   const hasResults =
-    results &&
-    (results.suggestions.length > 0 || results.products.length > 0)
+    results && (results.suggestions.length > 0 || results.products.length > 0)
 
   return (
     <DialogPrimitive.Root
       open={open}
       onOpenChange={(value) => {
-        if (!value) setQuery('')
+        if (!value) {setQuery('')}
         onOpenChange(value)
       }}
     >
@@ -50,7 +48,9 @@ export function SearchPopup({ open, onOpenChange }: SearchPopupProps) {
           )}
         >
           <VisuallyHidden>
-            <DialogPrimitive.Title>{t('searchPlaceholder')}</DialogPrimitive.Title>
+            <DialogPrimitive.Title>
+              {t('searchPlaceholder')}
+            </DialogPrimitive.Title>
           </VisuallyHidden>
 
           {/* Top bar - 136px */}
@@ -86,7 +86,7 @@ export function SearchPopup({ open, onOpenChange }: SearchPopupProps) {
             </div>
 
             {/* Close Button - Desktop only */}
-            <DialogPrimitive.Close className='hidden flex-shrink-0 cursor-pointer items-center gap-2 text-base underline text-gray-950 transition-colors hover:text-gray-700 lg:flex'>
+            <DialogPrimitive.Close className='hidden flex-shrink-0 cursor-pointer items-center gap-2 text-base text-gray-950 underline transition-colors hover:text-gray-700 lg:flex'>
               <span>{t('close')}</span>
               <CloseIcon className='size-6' />
             </DialogPrimitive.Close>
@@ -97,18 +97,21 @@ export function SearchPopup({ open, onOpenChange }: SearchPopupProps) {
             <div className='border-t border-gray-100 px-5 py-6 lg:px-[30px]'>
               {isLoading && !hasResults && (
                 <div className='flex justify-center py-8'>
-                  <span className='text-sm text-gray-500'>
-                    {t('loading')}
-                  </span>
+                  <span className='text-sm text-gray-500'>{t('loading')}</span>
                 </div>
               )}
 
               {hasResults && (
-                <div className={cn('mx-auto flex max-w-[920px] gap-10 transition-opacity duration-150', isLoading && 'pointer-events-none opacity-50')}>
-                  {/* Left column - Suggestions */}
+                <div
+                  className={cn(
+                    'mx-auto flex w-full flex-col gap-4 transition-opacity duration-150 lg:flex-row lg:justify-between lg:gap-4',
+                    isLoading && 'pointer-events-none opacity-50'
+                  )}
+                >
+                  {/* Suggestions */}
                   {results.suggestions.length > 0 && (
-                    <div className='flex min-w-0 flex-1 flex-col gap-3'>
-                      <h3 className='text-xs font-bold uppercase tracking-wider text-gray-400'>
+                    <div className='flex max-w-[160px] shrink-0 flex-col items-start gap-3'>
+                      <h3 className='text-xs font-bold tracking-wider text-gray-400 uppercase'>
                         {t('suggestions' as Parameters<typeof t>[0])}
                       </h3>
                       <ul className='flex flex-col gap-2'>
@@ -118,79 +121,75 @@ export function SearchPopup({ open, onOpenChange }: SearchPopupProps) {
                           const matchIndex = lowerSuggestion.indexOf(lowerQuery)
 
                           return (
-                          <li key={suggestion}>
-                            <button
-                              onClick={() => setQuery(suggestion)}
-                              className='flex cursor-pointer items-center gap-2 text-sm text-gray-700 hover:text-gray-950'
-                            >
-                              <SearchIcon className='size-4 flex-shrink-0 text-gray-400' />
-                              <span>
-                                {matchIndex >= 0 ? (
-                                  <>
-                                    {suggestion.slice(0, matchIndex)}
-                                    <span className='font-bold'>
-                                      {suggestion.slice(matchIndex, matchIndex + lowerQuery.length)}
-                                    </span>
-                                    {suggestion.slice(matchIndex + lowerQuery.length)}
-                                  </>
-                                ) : (
-                                  suggestion
-                                )}
-                              </span>
-                            </button>
-                          </li>
+                            <li key={suggestion}>
+                              <button
+                                onClick={() => setQuery(suggestion)}
+                                className='flex cursor-pointer items-center gap-2 text-left text-sm text-gray-700 hover:text-gray-950'
+                              >
+                                <SearchIcon className='size-4 flex-shrink-0 text-gray-400' />
+                                <span>
+                                  {matchIndex >= 0 ? (
+                                    <>
+                                      {suggestion.slice(0, matchIndex)}
+                                      <span className='font-bold'>
+                                        {suggestion.slice(
+                                          matchIndex,
+                                          matchIndex + lowerQuery.length
+                                        )}
+                                      </span>
+                                      {suggestion.slice(
+                                        matchIndex + lowerQuery.length
+                                      )}
+                                    </>
+                                  ) : (
+                                    suggestion
+                                  )}
+                                </span>
+                              </button>
+                            </li>
                           )
                         })}
                       </ul>
                     </div>
                   )}
 
-                  {/* Right column - Product results */}
+                  {/* Product cards grid */}
                   {results.products.length > 0 && (
-                    <div className='flex min-w-0 flex-1 flex-col gap-3'>
-                      <h3 className='text-xs font-bold uppercase tracking-wider text-gray-400'>
+                    <div className='flex max-w-[1226px] min-w-0 flex-1 flex-col gap-4'>
+                      <h3 className='text-xs font-bold tracking-wider text-gray-400 uppercase'>
                         {t('products' as Parameters<typeof t>[0])}
                       </h3>
-                      <div className='flex flex-col gap-3'>
+                      <div className='grid grid-cols-2 gap-[15px] lg:grid-cols-4 lg:gap-[30px]'>
                         {results.products.map((product) => (
-                          <Link
+                          <ProductCard
                             key={product.id}
-                            href={getProductHref(product.slug, product.variantId)}
+                            data={product}
+                            locale={locale}
+                            compact
                             onClick={() => onOpenChange(false)}
-                            className='flex items-center gap-3 rounded-lg p-2 transition-colors hover:bg-gray-50'
-                          >
-                            <div className='relative size-16 flex-shrink-0 overflow-hidden rounded bg-gray-50'>
-                              <Image
-                                src={product.image.src}
-                                alt={product.image.alt || product.name}
-                                fill
-                                className='object-contain'
-                                sizes='64px'
-                              />
-                            </div>
-                            <div className='flex min-w-0 flex-col gap-1'>
-                              <span className='truncate text-sm font-bold text-gray-900'>
-                                {product.name}
-                              </span>
-                              <PriceBox
-                                price={product.price}
-                                locale={locale}
-                                size='small'
-                                className='text-sm font-bold text-gray-950'
-                              />
-                            </div>
-                          </Link>
+                          />
                         ))}
                       </div>
-                      <Link
-                        href={`/search?q=${encodeURIComponent(query)}`}
-                        onClick={() => onOpenChange(false)}
-                        className='mt-1 inline-flex items-center justify-center rounded-full border border-gray-950 px-6 py-2.5 text-sm font-bold text-gray-950 transition-colors hover:bg-gray-950 hover:text-white'
-                      >
-                        {t('showAllResults')}
-                      </Link>
                     </div>
                   )}
+                </div>
+              )}
+
+              {hasResults && (
+                <div className='flex justify-center'>
+                  <Button
+                    variant='secondary'
+                    scheme='red'
+                    asChild
+                    className='border-rose-700 text-gray-950 hover:text-gray-950'
+                  >
+                    <Link
+                      href={`/search?q=${encodeURIComponent(query)}`}
+                      onClick={() => onOpenChange(false)}
+                    >
+                      {t('showAllResults')}
+                    </Link>
+                  </Button>
                 </div>
               )}
 

@@ -20,21 +20,33 @@ export class ProductSearchBffService extends BaseService {
   async searchProducts(
     params: ProductSearchParams
   ): Promise<ProductSearchResponse> {
-    const { query, limit = 4, page, filters, priceMin, priceMax, sort, saleOnly } = params
+    const {
+      query,
+      limit = 4,
+      page,
+      filters,
+      priceMin,
+      priceMax,
+      sort,
+      saleOnly,
+    } = params
     ProductSearchQuerySchema.parse(query)
 
-    const queryParams: Record<string, string | number | boolean | null | undefined> = {
+    const queryParams: Record<
+      string,
+      string | number | boolean | null | undefined
+    > = {
       query,
       limit,
     }
-    if (page !== undefined) queryParams.page = page
+    if (page !== undefined) {queryParams.page = page}
     if (filters && Object.keys(filters).length > 0) {
       queryParams.filters = JSON.stringify(filters)
     }
-    if (priceMin !== undefined) queryParams.priceMin = priceMin
-    if (priceMax !== undefined) queryParams.priceMax = priceMax
-    if (sort) queryParams.sort = sort
-    if (saleOnly) queryParams.saleOnly = true
+    if (priceMin !== undefined) {queryParams.priceMin = priceMin}
+    if (priceMax !== undefined) {queryParams.priceMax = priceMax}
+    if (sort) {queryParams.sort = sort}
+    if (saleOnly) {queryParams.saleOnly = true}
 
     const data = await this.get<ProductSearchResponse>('productSearch', {
       queryParams,

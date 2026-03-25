@@ -2,7 +2,10 @@ import { Injectable, Inject } from '@nestjs/common'
 import { LANGUAGE_TOKEN } from '@core/i18n'
 import type { LanguageProvider } from '../../common/language/language.provider'
 import type { ProductSearchResponse } from '@core/contracts/product-search/product-search'
-import { SEARCH_PROVIDER, type SearchProvider } from './search-provider.interface'
+import {
+  SEARCH_PROVIDER,
+  type SearchProvider,
+} from './search-provider.interface'
 
 export interface SearchProductsParams {
   query: string
@@ -26,7 +29,8 @@ export class ProductSearchService {
     params: SearchProductsParams
   ): Promise<ProductSearchResponse> {
     const language = this.languageProvider.getCurrentLanguage()
-    const { query, limit, page, filters, priceMin, priceMax, sort, saleOnly } = params
+    const { query, limit, page, filters, priceMin, priceMax, sort, saleOnly } =
+      params
 
     const [searchResult, suggestions] = await Promise.all([
       this.searchProvider.searchProducts({
