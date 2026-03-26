@@ -29,6 +29,8 @@ import {
   BRAND_TITLE,
   BRAND,
   BRAND_IMAGES,
+  VIDEO_TEASER,
+  VIDEO_URLS,
 } from './data'
 
 export async function createLinks(client: PlainClientAPI) {
@@ -317,5 +319,36 @@ export async function createTeasers(
       },
     })
   )
+
+  const videoAssetId = await createImageAsset(
+    client,
+    {
+      title: 'Video teaser',
+      url: VIDEO_URLS[0] ?? '',
+      fileName: 'video-teaser.mp4',
+      contentType: 'video/mp4',
+    },
+    [...LOCALES]
+  )
+  const videoAssetLink = {
+    sys: {
+      type: 'Link' as const,
+      linkType: 'Asset' as const,
+      id: videoAssetId,
+    },
+  }
+  const videoTeaser = VIDEO_TEASER(toEntryRef(links.linkNewId))
+  componentIds.push(
+    await createEntryWithLocales(client, 'teaserVideo', {
+      'en-US': {
+        ...videoTeaser['en-US'],
+        video: videoAssetLink,
+        autoplay: videoTeaser.autoplay,
+        controls: videoTeaser.controls,
+      },
+      'de-DE': { ...videoTeaser['de-DE'], video: videoAssetLink },
+    })
+  )
+
   return componentIds
 }

@@ -13,6 +13,7 @@ import { mapTeaserSection } from './map-teaser-section'
 import { mapTeaserRegular } from './map-teaser-regular'
 import { mapTeaserAccordion } from './map-teaser-accordion'
 import { mapTeaserBrand } from './map-teaser-brand'
+import { mapTeaserVideo } from './map-teaser-video'
 
 /**
  * Maps a Contentful teaser/component entry to contract TeaserResponse.
@@ -47,6 +48,8 @@ export function mapTeaserEntryToResponse(
       return mapTeaserAccordion(entry)
     case 'TeaserBrand':
       return mapTeaserBrand(entry)
+    case 'TeaserVideo':
+      return mapTeaserVideo(entry)
     default:
       return null
   }
