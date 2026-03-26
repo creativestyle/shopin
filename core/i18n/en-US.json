@@ -10,6 +10,8 @@
     "suggestions": "Suggestions",
     "products": "Products",
     "showAllResults": "Show all results",
+    "noSuggestions": "<bold>0</bold> Results",
+    "noSearchProducts": "Sorry - we couldn't find any results for <bold>\"{query}\"</bold>.",
     "scrollableDialogContent": "Scrollable dialog content",
     "scrollLeft": "Scroll left",
     "scrollRight": "Scroll right",
@@ -702,10 +704,13 @@
     }
   },
   "searchResults": {
-    "title": "Search results",
+    "titlePrefix": "Your search results for:",
+    "breadcrumb": "Search",
+    "articles": "Articles",
     "result": "result",
     "results": "results",
-    "emptyMessage": "No products found for your search.",
+    "emptyTitle": "Your search for: \"{query}\" returned no results.",
+    "emptyMessage": "Unfortunately, no results were found for your search term. Please try a different term or browse our assortment for inspiration.",
     "loading": "Loading..."
   },
   "wishlist": {

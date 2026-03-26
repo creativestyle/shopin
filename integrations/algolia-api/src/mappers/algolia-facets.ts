@@ -1,4 +1,5 @@
 import type { Facet, FacetTerm } from '@core/contracts/product-collection/facet'
+import { getLocalizedString } from '@core/i18n'
 import {
   inferDisplayType,
   stripColorSuffix,
@@ -51,7 +52,7 @@ export function mapAlgoliaFacets(
           }))
         : rawTerms
 
-    const label = attr.label[language] ?? attr.label['en-US'] ?? attr.name
+    const label = getLocalizedString(attr.label, language) ?? attr.name
 
     facets.push({ name: attr.name, label, displayType, terms })
   }

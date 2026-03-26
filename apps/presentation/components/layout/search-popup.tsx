@@ -28,6 +28,7 @@ export function SearchPopup({ open, onOpenChange }: SearchPopupProps) {
 
   const hasResults =
     results && (results.suggestions.length > 0 || results.products.length > 0)
+  const hasData = !!results
 
   return (
     <DialogPrimitive.Root
@@ -43,7 +44,7 @@ export function SearchPopup({ open, onOpenChange }: SearchPopupProps) {
         <DialogPrimitive.Overlay className='fixed inset-0 z-(--z-modal) bg-black/50 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:animate-in data-[state=open]:fade-in-0' />
         <DialogPrimitive.Content
           className={cn(
-            'fixed inset-x-0 top-0 z-(--z-modal) bg-white shadow-lg',
+            'fixed inset-x-0 top-0 z-(--z-modal) max-h-dvh overflow-y-auto bg-white shadow-lg',
             'data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:slide-out-to-top',
             'data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:slide-in-from-top',
             'duration-200'
@@ -56,7 +57,7 @@ export function SearchPopup({ open, onOpenChange }: SearchPopupProps) {
           </VisuallyHidden>
 
           {/* Top bar - 136px */}
-          <div className='flex h-[136px] w-full items-center justify-between gap-[15px] px-5 lg:gap-6 lg:px-[30px]'>
+          <div className='flex h-auto p-2 w-full items-center justify-between gap-[15px] px-5 lg:h-[136px] lg:p-0 lg:gap-6 lg:px-[30px]'>
             {/* Logo (desktop) / Back chevron (mobile) */}
             <div className='flex flex-shrink-0 items-center'>
               <div className='hidden lg:block'>
@@ -97,13 +98,13 @@ export function SearchPopup({ open, onOpenChange }: SearchPopupProps) {
           {/* Search Results */}
           {query.length >= 3 && (
             <div className='border-t border-gray-100 px-5 py-6 lg:px-[30px]'>
-              {isLoading && !hasResults && (
+              {isLoading && !hasData && (
                 <div className='flex justify-center py-8'>
                   <span className='text-sm text-gray-500'>{t('loading')}</span>
                 </div>
               )}
 
-              {hasResults && (
+              {hasData && (
                 <div
                   className={cn(
                     'mx-auto flex w-full max-w-[1640px] flex-col gap-4 transition-opacity duration-150 lg:flex-row lg:justify-center lg:gap-12',
@@ -111,11 +112,11 @@ export function SearchPopup({ open, onOpenChange }: SearchPopupProps) {
                   )}
                 >
                   {/* Suggestions */}
-                  {results.suggestions.length > 0 && (
-                    <div className='flex shrink-0 flex-col items-start gap-3 lg:w-[250px]'>
-                      <h3 className='text-xs font-bold tracking-wider text-gray-400 uppercase'>
-                        {t('suggestions' as Parameters<typeof t>[0])}
-                      </h3>
+                  <div className='flex shrink-0 flex-col items-start gap-3 lg:w-[250px]'>
+                    <h3 className='text-xs font-bold tracking-wider text-gray-950 uppercase'>
+                      {t('suggestions' as Parameters<typeof t>[0])}
+                    </h3>
+                    {results.suggestions.length > 0 ? (
                       <ul className='flex flex-col gap-2'>
                         {results.suggestions.map((suggestion) => {
                           const lowerSuggestion = suggestion.toLowerCase()
@@ -152,15 +153,26 @@ export function SearchPopup({ open, onOpenChange }: SearchPopupProps) {
                           )
                         })}
                       </ul>
-                    </div>
-                  )}
+                    ) : (
+                      <p className='text-sm text-gray-500'>
+                        {t.rich(
+                          'noSuggestions' as Parameters<typeof t.rich>[0],
+                          {
+                            bold: (chunks) => (
+                              <span className='font-bold'>{chunks}</span>
+                            ),
+                          }
+                        )}
+                      </p>
+                    )}
+                  </div>
 
                   {/* Product cards grid */}
-                  {results.products.length > 0 && (
-                    <div className='flex max-w-[860px] min-w-0 flex-1 flex-col gap-4'>
-                      <h3 className='text-xs font-bold tracking-wider text-gray-400 uppercase'>
-                        {t('products' as Parameters<typeof t>[0])}
-                      </h3>
+                  <div className='flex max-w-[860px] min-w-0 flex-1 flex-col gap-4'>
+                    <h3 className='text-xs font-bold tracking-wider text-gray-950 uppercase'>
+                      {t('products' as Parameters<typeof t>[0])}
+                    </h3>
+                    {results.products.length > 0 ? (
                       <div className='grid grid-cols-2 gap-[15px] lg:grid-cols-4 lg:gap-[30px]'>
                         {results.products.map((product) => (
                           <ProductCard
@@ -172,8 +184,20 @@ export function SearchPopup({ open, onOpenChange }: SearchPopupProps) {
                           />
                         ))}
                       </div>
-                    </div>
-                  )}
+                    ) : (
+                      <p className='text-sm text-gray-500'>
+                        {t.rich(
+                          'noSearchProducts' as Parameters<typeof t.rich>[0],
+                          {
+                            query,
+                            bold: (chunks) => (
+                              <span className='font-bold'>{chunks}</span>
+                            ),
+                          }
+                        )}
+                      </p>
+                    )}
+                  </div>
                 </div>
               )}
 
@@ -192,14 +216,6 @@ export function SearchPopup({ open, onOpenChange }: SearchPopupProps) {
                       {t('showAllResults')}
                     </Link>
                   </Button>
-                </div>
-              )}
-
-              {!isLoading && !hasResults && query.length >= 3 && (
-                <div className='flex justify-center py-8'>
-                  <span className='text-sm text-gray-500'>
-                    {t('noDataFound')}
-                  </span>
                 </div>
               )}
             </div>

@@ -14,7 +14,7 @@ export async function SearchResultsPage({
 }: SearchResultsPageProps) {
   const t = await getTranslations('searchResults')
 
-  const breadcrumbs = [{ label: t('title'), path: '/search' }]
+  const breadcrumbs = [{ label: t('breadcrumb'), path: '/search' }]
 
   return (
     <StandardContainer className='py-4'>

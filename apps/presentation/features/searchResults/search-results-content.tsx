@@ -39,15 +39,20 @@ export function SearchResultsContent({
   const { results, isLoading } = useProductSearch(query, searchOptions)
 
   const productCount = results?.total ?? results?.products.length ?? 0
-  const countLabel = productCount === 1 ? t('result') : t('results')
 
   return (
     <>
-      <h1 className='mb-6 text-center text-[36px] font-normal'>
-        {t('title')}{' '}
+      <h1 className='mb-6 flex flex-col items-center text-center lg:block'>
+        <span className='text-base font-normal text-gray-500'>
+          {t('titlePrefix')}{' '}
+        </span>
+        <span className='text-[36px] font-normal text-gray-950'>
+          &ldquo;{query}&rdquo;
+        </span>
         {results && (
-          <span className='text-base font-normal'>
-            ({productCount} {countLabel})
+          <span className='text-base font-normal text-gray-500'>
+            {' '}
+            ({productCount} {t('articles')})
           </span>
         )}
       </h1>
@@ -72,8 +77,11 @@ export function SearchResultsContent({
       />
 
       {!results?.products.length && !isLoading ? (
-        <div className='py-12 text-center'>
-          <p className='text-muted-foreground'>{t('emptyMessage')}</p>
+        <div className='flex flex-col items-center gap-8 py-12 text-center'>
+          <p className='text-[36px] font-normal text-gray-950'>
+            {t('emptyTitle', { query })}
+          </p>
+          <p className='text-base text-gray-300'>{t('emptyMessage')}</p>
         </div>
       ) : results?.products.length ? (
         <div
