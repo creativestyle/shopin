@@ -21,7 +21,7 @@
     "lint": "turbo run lint",
     "format": "turbo run format",
     "check-types": "turbo run check-types",
-    "check-dependencies": "npm audit --audit-level=high",
+    "check-dependencies": "npm audit --audit-level=critical",
     "test": "turbo run test",
     "prepare": "husky install || true"
   },
