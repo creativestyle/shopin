@@ -1,1 +1,5 @@
-export { useFilterState, parseFilters, useFilterParams } from './hooks/use-filter-params'
+export {
+  useFilterState,
+  parseFilters,
+  useFilterParams,
+} from './hooks/use-filter-params'

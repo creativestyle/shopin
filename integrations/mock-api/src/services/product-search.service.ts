@@ -3,7 +3,8 @@ import type { ProductSearchResponse } from '@core/contracts/product-search/produ
 
 @Injectable()
 export class ProductSearchService {
-  async searchProducts(): Promise<ProductSearchResponse> {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async searchProducts(..._args: unknown[]): Promise<ProductSearchResponse> {
     return {
       suggestions: [],
       products: [],

@@ -15,6 +15,7 @@ import {
   mergeAlgoliaFacets,
   mapAlgoliaPriceRange,
 } from '@integrations/algolia-api'
+import { extractQuerySuggestions } from './suggestion-utils'
 
 @Injectable()
 export class AlgoliaSearchService implements SearchProvider {
@@ -38,7 +39,9 @@ export class AlgoliaSearchService implements SearchProvider {
   }
 
   private async getAttributeMetadata(): Promise<AttributeMetadata[]> {
-    if (this.attributeMetadataCache) {return this.attributeMetadataCache}
+    if (this.attributeMetadataCache) {
+      return this.attributeMetadataCache
+    }
 
     const settings = await this.getClient().getSettings({
       indexName: this.indexName,
@@ -62,7 +65,7 @@ export class AlgoliaSearchService implements SearchProvider {
         indexName: this.indexName,
         searchParams: {
           query,
-          hitsPerPage: limit,
+          hitsPerPage: 30,
           attributesToRetrieve: [nameAttr],
           attributesToHighlight: [],
           restrictSearchableAttributes: [nameAttr],
@@ -70,19 +73,11 @@ export class AlgoliaSearchService implements SearchProvider {
         },
       })
 
-    const seen = new Set<string>()
-    const suggestions: string[] = []
+    const names = response.hits
+      .map((hit) => hit[nameAttr])
+      .filter((name): name is string => typeof name === 'string')
 
-    for (const hit of response.hits) {
-      const name = hit[nameAttr]
-      if (typeof name !== 'string') {continue}
-      const lower = name.toLowerCase()
-      if (seen.has(lower)) {continue}
-      seen.add(lower)
-      suggestions.push(lower)
-    }
-
-    return suggestions
+    return extractQuerySuggestions(names, query, limit)
   }
 
   async searchProducts(

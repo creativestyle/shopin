@@ -86,7 +86,16 @@ export interface ProductService {
 }
 
 export interface ProductSearchService {
-  searchProducts(query: string, limit?: number): Promise<ProductSearchResponse>
+  searchProducts(
+    query: string,
+    limit?: number,
+    page?: number,
+    filters?: Filters,
+    priceMin?: number,
+    priceMax?: number,
+    sort?: SortOption,
+    saleOnly?: boolean
+  ): Promise<ProductSearchResponse>
 }
 
 /**

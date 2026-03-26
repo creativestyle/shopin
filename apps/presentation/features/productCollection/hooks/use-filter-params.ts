@@ -16,7 +16,9 @@ import {
 export function parseFilters(
   raw: string | null | undefined
 ): Record<string, string[]> | undefined {
-  if (!raw) {return undefined}
+  if (!raw) {
+    return undefined
+  }
   try {
     return JSON.parse(raw) as Record<string, string[]>
   } catch {
@@ -27,7 +29,9 @@ export function parseFilters(
 function parseOptionalNumber(
   raw: string | null | undefined
 ): number | undefined {
-  if (!raw) {return undefined}
+  if (!raw) {
+    return undefined
+  }
   const n = Number(raw)
   return Number.isFinite(n) ? n : undefined
 }

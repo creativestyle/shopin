@@ -20,8 +20,12 @@ import { DataSourceModule } from '../../data-source/data-source.module'
         ct: CtSearchAdapter
       ) => {
         const provider = configService.get<string>('SEARCH_PROVIDER')
-        if (provider === 'commercetools') {return ct}
-        if (provider === 'algolia') {return algolia}
+        if (provider === 'commercetools') {
+          return ct
+        }
+        if (provider === 'algolia') {
+          return algolia
+        }
 
         // Auto-detect: use Algolia if keys are present, otherwise CT
         const algoliaAppId = configService.get<string>('ALGOLIA_APP_ID')

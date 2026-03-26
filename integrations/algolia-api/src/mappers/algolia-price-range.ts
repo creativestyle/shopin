@@ -6,8 +6,11 @@ export function mapAlgoliaPriceRange(
   statsResponse: SearchResponse<AlgoliaProductHit>,
   priceField: string
 ): PriceRange | undefined {
-  const stats =
-    (statsResponse as SearchResponse<AlgoliaProductHit> & { facets_stats?: Record<string, { min: number; max: number }> }).facets_stats?.[priceField]
+  const stats = (
+    statsResponse as SearchResponse<AlgoliaProductHit> & {
+      facets_stats?: Record<string, { min: number; max: number }>
+    }
+  ).facets_stats?.[priceField]
   if (!stats) {
     return undefined
   }

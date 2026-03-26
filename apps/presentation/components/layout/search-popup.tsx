@@ -33,7 +33,9 @@ export function SearchPopup({ open, onOpenChange }: SearchPopupProps) {
     <DialogPrimitive.Root
       open={open}
       onOpenChange={(value) => {
-        if (!value) {setQuery('')}
+        if (!value) {
+          setQuery('')
+        }
         onOpenChange(value)
       }}
     >
@@ -104,13 +106,13 @@ export function SearchPopup({ open, onOpenChange }: SearchPopupProps) {
               {hasResults && (
                 <div
                   className={cn(
-                    'mx-auto flex w-full flex-col gap-4 transition-opacity duration-150 lg:flex-row lg:justify-between lg:gap-4',
+                    'mx-auto flex w-full max-w-[1640px] flex-col gap-4 transition-opacity duration-150 lg:flex-row lg:justify-center lg:gap-12',
                     isLoading && 'pointer-events-none opacity-50'
                   )}
                 >
                   {/* Suggestions */}
                   {results.suggestions.length > 0 && (
-                    <div className='flex max-w-[160px] shrink-0 flex-col items-start gap-3'>
+                    <div className='flex shrink-0 flex-col items-start gap-3 lg:w-[250px]'>
                       <h3 className='text-xs font-bold tracking-wider text-gray-400 uppercase'>
                         {t('suggestions' as Parameters<typeof t>[0])}
                       </h3>
@@ -155,7 +157,7 @@ export function SearchPopup({ open, onOpenChange }: SearchPopupProps) {
 
                   {/* Product cards grid */}
                   {results.products.length > 0 && (
-                    <div className='flex max-w-[1226px] min-w-0 flex-1 flex-col gap-4'>
+                    <div className='flex max-w-[860px] min-w-0 flex-1 flex-col gap-4'>
                       <h3 className='text-xs font-bold tracking-wider text-gray-400 uppercase'>
                         {t('products' as Parameters<typeof t>[0])}
                       </h3>
@@ -165,7 +167,7 @@ export function SearchPopup({ open, onOpenChange }: SearchPopupProps) {
                             key={product.id}
                             data={product}
                             locale={locale}
-                            compact
+                            imageClassName='lg:h-60 lg:min-h-0 lg:grow-0 lg:basis-auto'
                             onClick={() => onOpenChange(false)}
                           />
                         ))}
@@ -176,7 +178,7 @@ export function SearchPopup({ open, onOpenChange }: SearchPopupProps) {
               )}
 
               {hasResults && (
-                <div className='flex justify-center'>
+                <div className='mt-8 flex justify-center'>
                   <Button
                     variant='secondary'
                     scheme='red'
