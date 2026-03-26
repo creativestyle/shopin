@@ -2,6 +2,7 @@
 
 import { useRef, useState, useEffect } from 'react'
 import { cn } from '@/lib/utils'
+import { useTranslations } from 'next-intl'
 
 interface LazyVideoProps {
   src?: string
@@ -28,6 +29,7 @@ export function LazyVideo({
   const [inView, setInView] = useState(eager)
   const [loaded, setLoaded] = useState(false)
   const [error, setError] = useState(false)
+  const t = useTranslations('teaser')
 
   useEffect(() => {
     if (inView) {
@@ -60,7 +62,7 @@ export function LazyVideo({
       )}
       {error && (
         <div className='absolute inset-0 flex items-center justify-center bg-gray-100 text-sm text-gray-500'>
-          Video unavailable
+          {t('video.unavailable')}
         </div>
       )}
       {!error && (
