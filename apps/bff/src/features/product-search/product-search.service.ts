@@ -5,18 +5,10 @@ import type { ProductSearchResponse } from '@core/contracts/product-search/produ
 import {
   SEARCH_PROVIDER,
   type SearchProvider,
+  type SearchProductsOptions,
 } from './search-provider.interface'
 
-export interface SearchProductsParams {
-  query: string
-  limit?: number
-  page?: number
-  filters?: Record<string, string[]>
-  priceMin?: number
-  priceMax?: number
-  sort?: string
-  saleOnly?: boolean
-}
+export type SearchProductsParams = Omit<SearchProductsOptions, 'language'>
 
 @Injectable()
 export class ProductSearchService {

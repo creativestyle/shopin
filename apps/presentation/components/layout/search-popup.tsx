@@ -57,7 +57,7 @@ export function SearchPopup({ open, onOpenChange }: SearchPopupProps) {
           </VisuallyHidden>
 
           {/* Top bar - 136px */}
-          <div className='flex h-auto p-2 w-full items-center justify-between gap-[15px] px-5 lg:h-[136px] lg:p-0 lg:gap-6 lg:px-[30px]'>
+          <div className='flex h-auto w-full items-center justify-between gap-[15px] p-2 px-5 lg:h-[136px] lg:gap-6 lg:p-0 lg:px-[30px]'>
             {/* Logo (desktop) / Back chevron (mobile) */}
             <div className='flex flex-shrink-0 items-center'>
               <div className='hidden lg:block'>

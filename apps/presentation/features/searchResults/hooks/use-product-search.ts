@@ -5,7 +5,7 @@ import { useBffFetchClient } from '@/lib/bff/core/bff-fetch-client'
 import {
   ProductSearchBffService,
   type ProductSearchParams,
-} from '@/lib/bff/services/product-search-service'
+} from '../lib/product-search-service'
 import type { ProductSearchResponse } from '@core/contracts/product-search/product-search'
 
 const DEBOUNCE_MS = 300

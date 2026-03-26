@@ -1,5 +1,6 @@
 export * from './customer.service'
 export * from './customer-address.service'
+export * from './filterable-attributes-cache.service'
 export * from './navigation.service'
 export * from './product.service'
 export * from './product-collection.service'
