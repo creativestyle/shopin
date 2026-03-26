@@ -12,6 +12,7 @@
     "build": "tsc",
     "lint": "eslint --fix . --max-warnings=0",
     "format": "prettier --write --ignore-unknown .",
+    "format:check": "prettier --check --ignore-unknown .",
     "dev": "nodemon --watch . --ext ts,json --exec 'npm run build'"
   },
   "exports": {

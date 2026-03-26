@@ -12,7 +12,7 @@ defaults:
 
 jobs:
   lint-format-types-test:
-    name: Lint, format, typecheck & test
+    name: Lint, format check, typecheck & test
     runs-on: ubuntu-latest
 
     steps:
@@ -31,8 +31,8 @@ jobs:
       - name: Lint
         run: npm run lint
 
-      - name: Format
-        run: npm run format
+      - name: Format check
+        run: npm run format:check
 
       - name: Check types
         run: npm run check-types

@@ -8,12 +8,12 @@
   },
   "scripts": {
     "build": "tsc --build",
-    "check-format": "prettier --check --ignore-unknown .",
     "check-lint": "eslint --max-warnings=0 .",
     "check-types": "tsc --noEmit",
     "clean": "rm -rf .turbo dist",
     "dev": "tsc --build --watch",
     "format": "prettier --write --ignore-unknown .",
+    "format:check": "prettier --check --ignore-unknown .",
     "lint": "eslint --max-warnings=0 --fix .",
     "setup": "npm run build"
   },
