@@ -10,10 +10,10 @@
   },
   "scripts": {
     "build": "tsc",
-    "check-format": "prettier --check --ignore-unknown .",
     "check-lint": "eslint --max-warnings=0 .",
     "check-types": "tsc --noEmit",
     "format": "prettier --write --ignore-unknown .",
+    "format:check": "prettier --check --ignore-unknown .",
     "lint": "eslint --max-warnings=0 --fix .",
     "setup": "npm run build"
   },

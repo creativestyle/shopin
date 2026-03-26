@@ -8,6 +8,7 @@
     "dev": "nodemon --config nodemon.config.json",
     "start:local": "npm run build && node dist/main.js",
     "format": "prettier --write --ignore-unknown .",
+    "format:check": "prettier --check --ignore-unknown .",
     "lint": "eslint --fix . --max-warnings=0",
     "check-types": "tsc --noEmit",
     "test": "jest",
