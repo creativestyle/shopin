@@ -6,7 +6,7 @@ import type { TeaserResponse } from '@core/contracts/content/teaser'
 import { ContentfulGraphQLClientService } from '../client/contentful-graphql-client.service'
 import {
   PageCollectionApiResponseSchema,
-  type TeaserEntryApiResponse,
+  TeaserEntryApiResponseSchema,
 } from '../schemas'
 import {
   collectAssetIdsFromPageResponse,
@@ -72,9 +72,30 @@ export class PageService extends ContentfulBaseService {
 
     const components: TeaserResponse[] = (
       pageWithAssets.componentsCollection?.items ?? []
-    )
-      .map((entry: TeaserEntryApiResponse) => mapTeaserEntryToResponse(entry))
-      .filter((teaser): teaser is TeaserResponse => teaser != null)
+    ).flatMap((entry: unknown): TeaserResponse[] => {
+      // Validate each teaser independently so one bad entry does not break the whole page.
+      const parsedTeaser = TeaserEntryApiResponseSchema.safeParse(entry)
+
+      if (!parsedTeaser.success) {
+        // Try to extract __typename for observability; if missing/malformed log as "unknown".
+        let teaserType = 'unknown'
+        if (typeof entry === 'object' && entry !== null) {
+          const maybeType = (entry as { __typename?: unknown }).__typename
+          if (typeof maybeType === 'string') {
+            teaserType = maybeType
+          }
+        }
+
+        this.logger.warn(
+          { teaserType, issues: parsedTeaser.error.issues },
+          'Skipping unsupported or invalid teaser entry from Contentful'
+        )
+        return []
+      }
+
+      const mappedTeaser = mapTeaserEntryToResponse(parsedTeaser.data)
+      return mappedTeaser == null ? [] : [mappedTeaser]
+    })
 
     return mapPageItemToContentPageResponse(pageWithAssets, components)
   }
