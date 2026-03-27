@@ -27,10 +27,22 @@ function getHomepageComponents(
   return [
     {
       type: 'hero',
-      backgroundImage: placeholder(400, 300),
-      headline: 'Close to (your) nature',
-      body: 'See our new collection made of recycled materials. Sustainable style for every day.',
-      cta: { link: { label: 'Shop now', url: '/c' } },
+      backgroundImage: {
+        url: '/shopin-hero-gradient.png',
+        alt: 'Hero gradient background',
+        title: 'Hero gradient background',
+        width: 1920,
+        height: 1080,
+      },
+      headline: 'This demo store showcases the SHOPin storefront accelerator',
+      body: 'No real orders can be placed here.',
+      cta: {
+        link: {
+          label: 'Explore SHOPin',
+          url: 'https://shopin.dev',
+          target: '_blank',
+        },
+      },
     },
     {
       type: 'productCarousel',

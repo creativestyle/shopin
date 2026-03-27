@@ -5,17 +5,27 @@ import type { PlainClientAPI } from 'contentful-management'
 import type { EntryProps } from 'contentful-management'
 import { LOCALES, DEFAULT_LOCALE } from '../../lib/constants'
 import { getEntryLinkIds } from '../../lib/links'
-import { attachImageToEntry } from '../../lib/page-teasers'
+import {
+  attachImageToEntry,
+  attachImageToEntryFromLocalFile,
+} from '../../lib/page-teasers'
 
 function getContentTypeId(entry: EntryProps): string | undefined {
   const sys = entry.sys?.contentType?.sys as { id?: string } | undefined
   return sys?.id
 }
 
+export type HeroBackgroundLocalFile = {
+  absolutePath: string
+  fileName: string
+  title?: string
+}
+
 export async function attachImagesToMainTeasers(
   client: PlainClientAPI,
   components: EntryProps[],
-  nextUrl: () => string
+  nextUrl: () => string,
+  options?: { heroBackgroundLocalFile?: HeroBackgroundLocalFile }
 ) {
   for (const entry of components) {
     const ct = getContentTypeId(entry)
@@ -32,17 +42,34 @@ export async function attachImagesToMainTeasers(
         }
       )
     } else if (ct === 'teaserHero') {
-      await attachImageToEntry(
-        client,
-        entry.sys.id,
-        'backgroundImage',
-        [...LOCALES],
-        {
-          title: String(entry.fields?.headline?.[DEFAULT_LOCALE] ?? 'Hero'),
-          url: nextUrl(),
-          fileName: `teaser-${entry.sys.id}.jpg`,
-        }
-      )
+      const heroLocal = options?.heroBackgroundLocalFile
+      if (heroLocal) {
+        await attachImageToEntryFromLocalFile(
+          client,
+          entry.sys.id,
+          'backgroundImage',
+          [...LOCALES],
+          {
+            title:
+              heroLocal.title ??
+              String(entry.fields?.headline?.[DEFAULT_LOCALE] ?? 'Hero'),
+            absoluteFilePath: heroLocal.absolutePath,
+            fileName: heroLocal.fileName,
+          }
+        )
+      } else {
+        await attachImageToEntry(
+          client,
+          entry.sys.id,
+          'backgroundImage',
+          [...LOCALES],
+          {
+            title: String(entry.fields?.headline?.[DEFAULT_LOCALE] ?? 'Hero'),
+            url: nextUrl(),
+            fileName: `teaser-${entry.sys.id}.jpg`,
+          }
+        )
+      }
     } else if (ct === 'teaserImage') {
       await attachImageToEntry(client, entry.sys.id, 'image', [...LOCALES], {
         title: String(entry.fields?.title?.[DEFAULT_LOCALE] ?? 'Teaser image'),
