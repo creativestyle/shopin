@@ -75,6 +75,7 @@ export function LazyVideo({
           loop={autoPlay}
           controls={controls}
           preload='none'
+          playsInline={autoPlay && muted}
           onCanPlay={() => setLoaded(true)}
           onError={() => setError(true)}
           className={cn(

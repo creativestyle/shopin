@@ -253,14 +253,14 @@ export const VIDEO_TEASER = (linkRef: EntryLinkRef) => ({
     title: 'New in',
     caption: 'Discover the latest trends.',
     link: linkRef,
+    autoplay: true,
+    controls: false,
   },
   'de-DE': {
     title: 'Neu eingetroffen',
     caption: 'Entdecke die neuesten Trends.',
     link: linkRef,
   },
-  'autoplay': true,
-  'controls': false,
 })
 
 export const VIDEO_URLS = [

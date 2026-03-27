@@ -343,8 +343,6 @@ export async function createTeasers(
       'en-US': {
         ...videoTeaser['en-US'],
         video: videoAssetLink,
-        autoplay: videoTeaser.autoplay,
-        controls: videoTeaser.controls,
       },
       'de-DE': { ...videoTeaser['de-DE'], video: videoAssetLink },
     })
