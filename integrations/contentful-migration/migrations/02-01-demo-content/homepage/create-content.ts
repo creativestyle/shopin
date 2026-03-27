@@ -54,8 +54,8 @@ const BUTTON_SPECS: Record<
 > = {
   buttonShopNowId: {
     'linkKey': 'linkCId',
-    'en-US': { name: 'Shop now' },
-    'de-DE': { name: 'Jetzt einkaufen' },
+    'en-US': { name: 'Explore demo' },
+    'de-DE': { name: 'Demo ansehen' },
   },
   buttonViewCollectionId: {
     'linkKey': 'linkNewId',
@@ -125,13 +125,14 @@ export async function createTeasers(
 ): Promise<string[]> {
   const HERO = {
     'en-US': {
-      headline: 'Close to (your) nature',
-      body: 'See our new collection made of recycled materials. Sustainable style for every day.',
+      headline: 'This demo store showcases the SHOPin storefront accelerator',
+      body: 'No real orders can be placed here.',
       cta: toEntryRef(buttons.buttonShopNowId),
     },
     'de-DE': {
-      headline: 'Nah an (deiner) Natur',
-      body: 'Entdecke unsere neue Kollektion aus recycelten Materialien. Nachhaltiger Stil für jeden Tag.',
+      headline:
+        'Nur Demo-Shop zur Praesentation des SHOPin Storefront Accelerators',
+      body: 'Echte Bestellungen sind hier nicht moeglich.',
       cta: toEntryRef(buttons.buttonShopNowId),
     },
   }

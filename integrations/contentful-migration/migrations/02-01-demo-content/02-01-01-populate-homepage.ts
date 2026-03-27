@@ -21,9 +21,16 @@ import {
   attachImagesToMainTeasers,
   attachImagesToCarouselAndSliderItems,
 } from './homepage/attach-images'
+import { HERO_GRADIENT_PNG_PATH } from '../lib/hero-gradient-path'
+import { existsSync } from 'node:fs'
 
 async function run(migration: unknown) {
   const client = getManagementClient(migration)
+  if (!existsSync(HERO_GRADIENT_PNG_PATH)) {
+    throw new Error(
+      `Hero gradient not found at ${HERO_GRADIENT_PNG_PATH}. Expected integrations/contentful-api/src/assets/gradient.png`
+    )
+  }
   const { page } = await getOrCreatePage(client, 'homepage', HOMEPAGE_PAGE)
   if (getLocalizedArrayLength(page, 'components', DEFAULT_LOCALE) > 0) {
     throw new Error('Homepage already has components')
@@ -64,7 +71,13 @@ async function run(migration: unknown) {
     return
   }
 
-  await attachImagesToMainTeasers(client, components, nextUrl)
+  await attachImagesToMainTeasers(client, components, nextUrl, {
+    heroBackgroundLocalFile: {
+      absolutePath: HERO_GRADIENT_PNG_PATH,
+      fileName: 'gradient.png',
+      title: 'Hero gradient background',
+    },
+  })
   await attachImagesToCarouselAndSliderItems(client, components, nextUrl)
   await attachImageToEntry(client, updated.sys.id, 'ogImage', [...LOCALES], {
     title: 'Homepage OG',

@@ -63,10 +63,16 @@ export const BANNER: BannerTeaser = {
 
 export const HERO: HeroTeaser = {
   type: 'hero',
-  backgroundImage: img(MOCK_IMAGES.banner, 1200, 400, 'Hero'),
-  headline: 'Close to (your) nature',
-  body: 'See our new collection made of recycled materials. Sustainable style for every day.',
-  cta: { link: { label: 'Shop now', url: '/c' } },
+  backgroundImage: img('/shopin-hero-gradient.png', 1920, 1080, 'Hero'),
+  headline: 'This demo store showcases the SHOPin storefront accelerator',
+  body: 'No real orders can be placed here.',
+  cta: {
+    link: {
+      label: 'Explore demo',
+      url: 'https://shopin.dev',
+      target: '_blank',
+    },
+  },
 }
 
 export const HEADLINE: HeadlineTeaser = {

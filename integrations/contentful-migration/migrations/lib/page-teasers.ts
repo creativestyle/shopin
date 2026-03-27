@@ -1,6 +1,7 @@
 /**
  * Helpers for page + component content migrations. Minimal API to cut boilerplate.
  */
+import { existsSync, readFileSync } from 'node:fs'
 import type { PlainClientAPI } from 'contentful-management'
 import type { EntryProps } from 'contentful-management'
 import { getEntryLinkIds, getLinkId, getLocalizedString } from './links'
@@ -8,6 +9,15 @@ import { createEntryWithLocales } from './entries'
 import { DEFAULT_LOCALE, LOCALES } from './constants'
 
 const ENTRY_QUERY_LIMIT = 100
+
+/**
+ * contentful-management defaults to ~30s polling for asset.processForLocale (3s × 10).
+ * Demo migrations upload many assets; Contentful processing can exceed that under load.
+ */
+const ASSET_PROCESS_FOR_LOCALE_OPTIONS = {
+  processingCheckWait: 3000,
+  processingCheckRetries: 45,
+} as const
 
 /** Paginate entries by content type until predicate matches; returns first match or undefined. */
 async function findEntry(
@@ -232,7 +242,83 @@ export async function createImageAsset(
     const processed = await client.asset.processForLocale(
       {},
       accumulatedAsset,
-      loc
+      loc,
+      ASSET_PROCESS_FOR_LOCALE_OPTIONS
+    )
+    const processedFileForLocale = processed.fields?.file?.[loc]
+    accumulatedAsset = {
+      ...processed,
+      fields: {
+        ...processed.fields,
+        file: {
+          ...(accumulatedAsset.fields?.file ?? {}),
+          ...(processedFileForLocale && { [loc]: processedFileForLocale }),
+        },
+      },
+    }
+  }
+  await client.asset.publish(
+    { assetId: accumulatedAsset.sys.id },
+    accumulatedAsset
+  )
+  return accumulatedAsset.sys.id
+}
+
+/**
+ * Create, process and publish an image asset from a local file (binary upload).
+ * Use when the image is not available at a public HTTP URL.
+ */
+export async function createImageAssetFromLocalFile(
+  client: PlainClientAPI,
+  opts: {
+    title: string
+    absoluteFilePath: string
+    fileName: string
+    contentType?: string
+  },
+  locales: string[] = [DEFAULT_LOCALE]
+): Promise<string> {
+  if (!existsSync(opts.absoluteFilePath)) {
+    throw new Error(`Asset file not found: ${opts.absoluteFilePath}`)
+  }
+  const fileBuffer = readFileSync(opts.absoluteFilePath)
+  const arrayBuffer = fileBuffer.buffer.slice(
+    fileBuffer.byteOffset,
+    fileBuffer.byteOffset + fileBuffer.byteLength
+  )
+  const upload = await client.upload.create({}, { file: arrayBuffer })
+  const uploadId = upload.sys?.id
+  if (!uploadId) {
+    throw new Error(
+      'createImageAssetFromLocalFile: upload response missing sys.id'
+    )
+  }
+  const contentType = getImageContentType(opts.fileName, opts.contentType)
+  const filePayload = {
+    contentType,
+    fileName: opts.fileName,
+    uploadFrom: {
+      sys: {
+        type: 'Link' as const,
+        linkType: 'Upload' as const,
+        id: uploadId,
+      },
+    },
+  }
+  const title: Record<string, string> = {}
+  const file: Record<string, typeof filePayload> = {}
+  for (const loc of locales) {
+    title[loc] = opts.title
+    file[loc] = filePayload
+  }
+  const asset = await client.asset.create({}, { fields: { title, file } })
+  let accumulatedAsset: typeof asset = asset
+  for (const loc of locales) {
+    const processed = await client.asset.processForLocale(
+      {},
+      accumulatedAsset,
+      loc,
+      ASSET_PROCESS_FOR_LOCALE_OPTIONS
     )
     const processedFileForLocale = processed.fields?.file?.[loc]
     accumulatedAsset = {
@@ -266,6 +352,51 @@ export async function attachImageToEntry(
     throw new Error('attachImageToEntry: at least one locale required')
   }
   const assetId = await createImageAsset(client, opts, localeList)
+  const link = {
+    sys: {
+      type: 'Link' as const,
+      linkType: 'Asset' as const,
+      id: assetId,
+    },
+  }
+  const entry = await client.entry.get({ entryId })
+  const fieldValue: Record<string, typeof link> = {}
+  for (const loc of localeList) {
+    fieldValue[loc] = link
+  }
+  const updated = await client.entry.update(
+    { entryId },
+    {
+      ...entry,
+      fields: {
+        ...entry.fields,
+        [fieldId]: fieldValue,
+      },
+    }
+  )
+  await client.entry.publish({ entryId: updated.sys.id }, updated)
+}
+
+export async function attachImageToEntryFromLocalFile(
+  client: PlainClientAPI,
+  entryId: string,
+  fieldId: string,
+  locales: string | string[],
+  opts: {
+    title: string
+    absoluteFilePath: string
+    fileName: string
+    contentType?: string
+  }
+): Promise<void> {
+  const localeList: string[] = Array.isArray(locales) ? [...locales] : [locales]
+  const firstLocale = localeList[0]
+  if (!firstLocale) {
+    throw new Error(
+      'attachImageToEntryFromLocalFile: at least one locale required'
+    )
+  }
+  const assetId = await createImageAssetFromLocalFile(client, opts, localeList)
   const link = {
     sys: {
       type: 'Link' as const,

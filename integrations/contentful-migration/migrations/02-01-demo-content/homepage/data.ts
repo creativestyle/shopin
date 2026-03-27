@@ -42,8 +42,8 @@ export const HOMEPAGE_IMAGES = [
 ]
 
 export const LINK_SHOP = {
-  'en-US': { label: 'Shop', url: '/c' },
-  'de-DE': { label: 'Shop', url: '/c' },
+  'en-US': { label: 'SHOPin', url: 'https://shopin.dev', target: '_blank' },
+  'de-DE': { label: 'SHOPin', url: 'https://shopin.dev', target: '_blank' },
 }
 export const LINK_NEW_ARRIVALS = {
   'en-US': { label: 'New arrivals', url: '/new' },
