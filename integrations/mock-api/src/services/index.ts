@@ -1,6 +1,7 @@
 export { NavigationService } from './navigation.service'
 export { ProductService } from './product.service'
 export { ProductCollectionService } from './product-collection.service'
+export { ProductSearchService } from './product-search.service'
 export { CartService } from './cart.service'
 export { CartPaymentService } from './cart-payment.service'
 export { StoreConfigService } from './store-config.service'

@@ -1,0 +1,25 @@
+{
+  "name": "@integrations/algolia-api",
+  "description": "Algolia search integration: mappers and utilities for product search, facets, and price range",
+  "author": "creativestyle GmbH",
+  "private": true,
+  "exports": {
+    ".": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc --build",
+    "dev": "tsc --build --watch",
+    "lint": "eslint --fix ./src --max-warnings=0",
+    "format": "prettier --write ./src",
+    "check-types": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@core/contracts": "*",
+    "algoliasearch": "^5.25.0"
+  },
+  "devDependencies": {
+    "@core/eslint-config": "*",
+    "@core/prettier-config": "*",
+    "@core/typescript-config": "*"
+  }
+}
