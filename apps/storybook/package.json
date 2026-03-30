@@ -8,7 +8,7 @@
     "lint": "eslint --max-warnings=0 --fix .",
     "check-lint": "eslint --max-warnings=0 .",
     "format": "prettier --write --ignore-unknown .",
-    "check-format": "prettier --check --ignore-unknown .",
+    "format:check": "prettier --check --ignore-unknown .",
     "check-types": "tsc --noEmit",
     "dev": "storybook dev -p 6006",
     "build": "storybook build"

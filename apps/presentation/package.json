@@ -10,6 +10,7 @@
     "start:local": "dotenv -e ../../.env -- next build && dotenv -e ../../.env -- next start",
     "lint": "eslint --fix .",
     "format": "prettier --write --ignore-unknown .",
+    "format:check": "prettier --check --ignore-unknown .",
     "check-types": "tsc --noEmit",
     "test": "jest",
     "test:watch": "jest --watch"
