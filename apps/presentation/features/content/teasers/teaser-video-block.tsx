@@ -11,11 +11,11 @@ export function TeaserVideoBlock({ teaser, imagePreload }: TeaserVideoProps) {
   const { videoUrl, thumbnailUrl, autoplay, controls, link } = teaser
   return (
     <div className='relative'>
-      {link && (
+      {link && !controls && (
         <CmsLink
           link={link}
           className='absolute inset-0 z-10'
-          aria-label={link.title}
+          useLabelAsFallbackContent={false}
         />
       )}
       <LazyVideo

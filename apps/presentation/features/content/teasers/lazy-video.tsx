@@ -20,7 +20,7 @@ export function LazyVideo({
   poster,
   autoPlay,
   muted,
-  controls,
+  controls = false,
   eager = false,
   className,
   aspectRatio = '16 / 9',
