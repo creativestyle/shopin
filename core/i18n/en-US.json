@@ -695,6 +695,9 @@
     },
     "richText": {
       "assetUnresolved": "Asset (unresolved)"
+    },
+    "video": {
+      "unavailable": "Video unavailable"
     }
   },
   "wishlist": {

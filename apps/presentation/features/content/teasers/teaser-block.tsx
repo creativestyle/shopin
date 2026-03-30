@@ -14,6 +14,7 @@ import { TeaserSectionBlock } from './teaser-section-block'
 import { TeaserRegularBlock } from './teaser-regular-block'
 import { TeaserAccordionBlock } from './teaser-accordion-block'
 import { TeaserBrandBlock } from './teaser-brand-block'
+import { TeaserVideoBlock } from './teaser-video-block'
 
 function renderTeaser(
   teaser: TeaserResponse,
@@ -112,6 +113,14 @@ function renderTeaser(
         teaser={teaser}
         imagePreload={imagePreload}
         carouselId={index !== undefined ? `brand-carousel-${index}` : undefined}
+      />
+    )
+  }
+  if (isTeaserOfType(teaser, 'video')) {
+    return (
+      <TeaserVideoBlock
+        teaser={teaser}
+        imagePreload={imagePreload}
       />
     )
   }
