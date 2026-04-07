@@ -6,9 +6,10 @@ on:
   pull_request:
     branches: [main]
 
-defaults:
-  run:
-    shell: bash
+# Ensures that if you push a new commit, the previous stale run is cancelled
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   lint-format-types-test:
@@ -22,8 +23,9 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "24"
-          cache: "npm"
+          # This automatically reads the "engines" field in package.json
+          node-version-file: 'package.json'
+          cache: 'npm'
 
       - name: Install dependencies
         run: npm ci
