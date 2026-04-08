@@ -1,4 +1,7 @@
 {
+  "legalBar": {
+    "copyright": "© 2026 SHOPin storefront accelerator."
+  },
   "common": {
     "welcomeMessage": "Welcome to our application!",
     "yes": "Yes",
@@ -111,8 +114,7 @@
       "imprint": "Imprint",
       "terms": "Terms & Conditions",
       "privacy": "Privacy Policy",
-      "privacySettings": "Privacy Settings",
-      "copyright": "© 2023 SHOPIN Store GmbH & Co. KG"
+      "privacySettings": "Privacy Settings"
     }
   },
   "product": {
@@ -683,9 +685,9 @@
       "edit": "Edit"
     },
     "footer": {
-      "company": "Company",
       "imprint": "Imprint",
-      "termsAndPrivacy": "Terms & Conditions, Privacy Policy & Right of Withdrawal",
+      "terms": "Terms & Conditions",
+      "privacyPolicy": "Privacy Policy",
       "copyright": "© 2023 SHOPIN Store GmbH & Co. KG"
     }
   },

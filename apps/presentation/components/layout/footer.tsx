@@ -10,17 +10,15 @@ import { ShippingBlock } from './footer/shipping-block'
 import { LanguageBlock } from './footer/language-block'
 import { LegalBar } from './footer/legal-bar'
 
-/**
- * Footer: all content from BFF (GET content/footer). No hardcoded or i18n content.
- * Renders only sections that the BFF returns.
- */
 export async function Footer() {
   const layout = await getFooterLayout()
   if (!layout) {
-    return <footer className='relative w-full bg-gray-100' />
+    return (
+      <footer className='relative w-full bg-gray-100'>
+        <LegalBar legalLinks={[]} />
+      </footer>
+    )
   }
-
-  const hasLegal = layout.legalLinks.length > 0 || Boolean(layout.copyright)
 
   return (
     <footer className='relative w-full bg-gray-100'>
@@ -52,12 +50,10 @@ export async function Footer() {
         </div>
       </StandardContainer>
 
-      {hasLegal && (
-        <LegalBar
-          legalLinks={layout.legalLinks}
-          copyright={layout.copyright}
-        />
-      )}
+      <LegalBar
+        legalLinks={layout.legalLinks}
+        copyright={layout.copyright}
+      />
     </footer>
   )
 }

@@ -2,13 +2,18 @@ import type { CmsLinkResponse } from '@core/contracts/content/cms-link'
 import { CmsLink } from '@/features/content/cms-link'
 import { StandardContainer } from '../../ui/standard-container'
 
-export function LegalBar({
-  legalLinks,
-  copyright,
-}: {
+export interface LegalBarProps {
   legalLinks: CmsLinkResponse[]
-  copyright?: string
-}) {
+  copyright?: string | null
+}
+
+/** Bottom legal strip from GET content/footer only (`legalLinks` + `copyright`). */
+export function LegalBar({ legalLinks, copyright }: LegalBarProps) {
+  const text = copyright?.trim()
+  if (legalLinks.length === 0 && !text) {
+    return null
+  }
+
   return (
     <div className='bg-gray-950 py-6 text-white'>
       <StandardContainer>
@@ -22,11 +27,11 @@ export function LegalBar({
               />
             ))}
           </div>
-          {copyright && (
+          {text ? (
             <div className='w-full text-center text-sm font-bold text-white md:w-auto md:text-left'>
-              {copyright}
+              {text}
             </div>
-          )}
+          ) : null}
         </div>
       </StandardContainer>
     </div>

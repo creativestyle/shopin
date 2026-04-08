@@ -15,22 +15,22 @@ export async function CheckoutFooter() {
           {/* Links on the right */}
           <div className='flex flex-col items-start gap-2.5 text-sm text-white md:flex-row md:items-center md:gap-6'>
             <Link
-              href='/unternehmen'
-              className='transition-colors hover:text-gray-300'
-            >
-              {t('company')}
-            </Link>
-            <Link
-              href='/impressum'
+              href='/imprint'
               className='transition-colors hover:text-gray-300'
             >
               {t('imprint')}
             </Link>
             <Link
-              href='/agb'
+              href='/terms'
               className='transition-colors hover:text-gray-300'
             >
-              {t('termsAndPrivacy')}
+              {t('terms')}
+            </Link>
+            <Link
+              href='/privacy'
+              className='transition-colors hover:text-gray-300'
+            >
+              {t('privacyPolicy')}
             </Link>
           </div>
         </div>

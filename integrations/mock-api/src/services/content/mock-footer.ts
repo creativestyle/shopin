@@ -24,12 +24,7 @@ export function getMockFooter(): FooterResponse {
         ],
       },
     ],
-    legalLinks: [
-      { label: 'Imprint', url: '/impressum' },
-      { label: 'Terms', url: '/agb' },
-      { label: 'Privacy', url: '/datenschutz' },
-      { label: 'Privacy settings', url: '/privacy-settings' },
-    ],
+    legalLinks: [],
     copyright: '© Shopin Store. All rights reserved.',
     newsletter: {
       title: 'Subscribe to our newsletter',
