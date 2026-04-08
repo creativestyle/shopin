@@ -27,11 +27,11 @@ export function LegalBar({ legalLinks, copyright }: LegalBarProps) {
               />
             ))}
           </div>
-          {text ? (
+          {text && (
             <div className='w-full text-center text-sm font-bold text-white md:w-auto md:text-left'>
               {text}
             </div>
-          ) : null}
+          )}
         </div>
       </StandardContainer>
     </div>
