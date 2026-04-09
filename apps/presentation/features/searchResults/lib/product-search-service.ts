@@ -16,13 +16,15 @@ export interface ProductSearchParams {
   saleOnly?: boolean
 }
 
+import { SEARCH_POPUP_PRODUCT_LIMIT } from '@config/constants'
+
 export class ProductSearchBffService extends BaseService {
   async searchProducts(
     params: ProductSearchParams
   ): Promise<ProductSearchResponse> {
     const {
       query,
-      limit = 4,
+      limit = SEARCH_POPUP_PRODUCT_LIMIT,
       page,
       filters,
       priceMin,

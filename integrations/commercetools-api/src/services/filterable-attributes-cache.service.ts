@@ -4,6 +4,7 @@ import {
   mapFilterableAttributes,
   type FilterableAttribute,
 } from '../mappers/product-collection'
+import { PRODUCT_TYPES_FETCH_LIMIT } from '@config/constants'
 
 @Injectable()
 export class FilterableAttributesCacheService {
@@ -18,7 +19,7 @@ export class FilterableAttributesCacheService {
 
     const response = await this.client
       .productTypes()
-      .get({ queryArgs: { limit: 100 } })
+      .get({ queryArgs: { limit: PRODUCT_TYPES_FETCH_LIMIT } })
       .execute()
 
     this.cache = mapFilterableAttributes(response.body.results)

@@ -33,7 +33,7 @@
     "@nestjs/platform-express": "^11.1.14",
     "@nestjs/swagger": "^11.1.14",
     "@nestjs/throttler": "^6.0.0",
-    "algoliasearch": "5.50.0",
+    "algoliasearch": "^5.25.0",
     "cookie-parser": "1.4.7",
     "jose": "^6.1.2",
     "nestjs-pino": "4.5.0",

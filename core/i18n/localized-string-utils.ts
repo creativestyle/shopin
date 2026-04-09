@@ -12,17 +12,9 @@ export function getLocalizedString(
     return undefined
   }
 
-  const fallbackLocale = I18N_CONFIG.fallbackLanguage
-
-  let selectedValue = localizedValue[currentLanguage]
-  if (!selectedValue) {
-    selectedValue = localizedValue[fallbackLocale]
-  }
-  if (!selectedValue) {
-    const firstKey = Object.keys(localizedValue)[0]
-    if (firstKey) {
-      selectedValue = localizedValue[firstKey]
-    }
-  }
-  return selectedValue
+  return (
+    localizedValue[currentLanguage] ??
+    localizedValue[I18N_CONFIG.fallbackLanguage] ??
+    Object.values(localizedValue)[0]
+  )
 }

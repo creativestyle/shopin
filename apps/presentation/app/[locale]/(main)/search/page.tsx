@@ -6,8 +6,10 @@ interface PageProps {
 }
 
 export default async function Page({ params, searchParams }: PageProps) {
-  const { locale } = await params
-  const resolvedSearchParams = await searchParams
+  const [{ locale }, resolvedSearchParams] = await Promise.all([
+    params,
+    searchParams,
+  ])
 
   const query =
     typeof resolvedSearchParams.q === 'string' ? resolvedSearchParams.q : ''

@@ -9,17 +9,24 @@
   "scripts": {
     "build": "tsc --build",
     "dev": "tsc --build --watch",
+    "sync": "npm run build && dotenv -e ../../.env -- node dist/scripts/algolia-sync.js",
     "lint": "eslint --fix ./src --max-warnings=0",
     "format": "prettier --write ./src",
+    "format:check": "prettier --check --ignore-unknown ./src",
     "check-types": "tsc --noEmit"
   },
   "dependencies": {
+    "@config/constants": "*",
     "@core/contracts": "*",
+    "@core/i18n": "*",
     "algoliasearch": "^5.25.0"
   },
   "devDependencies": {
+    "@commercetools/platform-sdk": "^8.2.0",
     "@core/eslint-config": "*",
     "@core/prettier-config": "*",
-    "@core/typescript-config": "*"
+    "@core/typescript-config": "*",
+    "commander": "14.0.3",
+    "dotenv-cli": "^8.0.0"
   }
 }

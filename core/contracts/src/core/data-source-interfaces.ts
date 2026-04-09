@@ -85,17 +85,20 @@ export interface ProductService {
   getProduct(productSlug: string, variantId?: string): Promise<ProductResponse>
 }
 
+export interface ProductSearchParams {
+  query: string
+  faceted?: boolean
+  limit?: number
+  page?: number
+  filters?: Filters
+  priceMin?: number
+  priceMax?: number
+  sort?: SortOption
+  saleOnly?: boolean
+}
+
 export interface ProductSearchService {
-  searchProducts(
-    query: string,
-    limit?: number,
-    page?: number,
-    filters?: Filters,
-    priceMin?: number,
-    priceMax?: number,
-    sort?: SortOption,
-    saleOnly?: boolean
-  ): Promise<ProductSearchResponse>
+  searchProducts(params: ProductSearchParams): Promise<ProductSearchResponse>
 }
 
 /**

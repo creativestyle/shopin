@@ -1,4 +1,5 @@
 import { Injectable, Inject } from '@nestjs/common'
+import type { _SearchQuery } from '@commercetools/platform-sdk'
 import { COMMERCETOOLS_CLIENT, Client } from '../client/client.module'
 import {
   LANGUAGE_TOKEN,
@@ -7,11 +8,11 @@ import {
 } from '@core/i18n'
 import type { LanguageProvider } from '@apps/bff/src/common/language/language.provider'
 import type { ProductSearchResponse } from '@core/contracts/product-search/product-search'
-import type { Filters } from '@core/contracts/product-collection/product-collection-page'
+import type { ProductSearchParams } from '@core/contracts/core/data-source-interfaces'
 import {
   DEFAULT_SORT_OPTION,
   MIN_PAGE,
-  type SortOption,
+  SEARCH_POPUP_PRODUCT_LIMIT,
 } from '@config/constants'
 import {
   buildPostFilters,
@@ -23,8 +24,6 @@ import { executeFacetedSearch } from '../helpers/faceted-search'
 import { mapSearchResultsToCards } from '../mappers/search-results'
 import { FilterableAttributesCacheService } from './filterable-attributes-cache.service'
 
-const DEFAULT_SEARCH_LIMIT = 4
-
 @Injectable()
 export class ProductSearchService {
   constructor(
@@ -33,11 +32,11 @@ export class ProductSearchService {
     private readonly filterableAttributesCache: FilterableAttributesCacheService
   ) {}
 
-  private buildTextQuery(
+  private buildQueryParts(
     query: string,
     language: string,
     saleOnly: boolean
-  ): { baseQuery: object; textQuery: object } {
+  ): _SearchQuery[] {
     const lowerQuery = query.toLowerCase()
 
     const textQuery = {
@@ -61,53 +60,41 @@ export class ProductSearchService {
       ],
     }
 
-    if (saleOnly) {
-      return {
-        textQuery,
-        baseQuery: {
-          and: [textQuery, { exists: { field: 'variants.prices.discounted' } }],
-        },
-      }
-    }
-
-    return { textQuery, baseQuery: textQuery }
+    return saleOnly
+      ? [textQuery, { exists: { field: 'variants.prices.discounted' } }]
+      : [textQuery]
   }
 
   async searchProducts(
-    query: string,
-    limit: number = DEFAULT_SEARCH_LIMIT,
-    page: number = MIN_PAGE,
-    filters?: Filters,
-    priceMin?: number,
-    priceMax?: number,
-    sort: SortOption = DEFAULT_SORT_OPTION,
-    saleOnly: boolean = false
+    params: ProductSearchParams
   ): Promise<ProductSearchResponse> {
+    const {
+      query,
+      faceted = false,
+      limit = SEARCH_POPUP_PRODUCT_LIMIT,
+      page = MIN_PAGE,
+      filters,
+      priceMin,
+      priceMax,
+      sort = DEFAULT_SORT_OPTION,
+      saleOnly = false,
+    } = params
+
     const currentLanguage = this.languageProvider.getCurrentLanguage()
     const currency = resolveCurrencyFromLanguage(currentLanguage)
     const country = resolveCountryFromLanguage(currentLanguage)
     const offset = (page - 1) * limit
 
-    const hasFacetedSearch =
-      filters !== undefined ||
-      priceMin !== undefined ||
-      priceMax !== undefined ||
-      page > MIN_PAGE ||
-      limit > DEFAULT_SEARCH_LIMIT
-
-    // Simple search (popup) — no facets/filters needed
-    if (!hasFacetedSearch && !saleOnly) {
+    if (!faceted && !saleOnly) {
       return this.simpleSearch(query, limit, currentLanguage, currency, country)
     }
 
     // Full faceted search (results page)
     const filterableAttributes =
       await this.filterableAttributesCache.getFilterableAttributes()
-    const { baseQuery, textQuery } = this.buildTextQuery(
-      query,
-      currentLanguage,
-      saleOnly
-    )
+    const queryParts = this.buildQueryParts(query, currentLanguage, saleOnly)
+    const baseQuery =
+      queryParts.length === 1 ? queryParts[0] : { and: queryParts }
 
     const attributeFilters = buildAttributeFilters(
       filters,
@@ -131,13 +118,7 @@ export class ProductSearchService {
       priceMax !== undefined ||
       saleOnly
 
-    const countQueryParts = saleOnly
-      ? [
-          textQuery,
-          { exists: { field: 'variants.prices.discounted' } },
-          ...attributeFilters,
-        ]
-      : [textQuery, ...attributeFilters]
+    const countQueryParts = [...queryParts, ...attributeFilters]
     const countQuery =
       countQueryParts.length === 1
         ? countQueryParts[0]
@@ -161,12 +142,10 @@ export class ProductSearchService {
       country,
       limit,
       offset,
-      saleOnly,
       filterableAttributes,
     })
 
     return {
-      suggestions: [],
       products,
       facets: mappedFacets,
       priceRange,
@@ -181,7 +160,7 @@ export class ProductSearchService {
     currency: string,
     country: string
   ): Promise<ProductSearchResponse> {
-    const { baseQuery } = this.buildTextQuery(query, language, false)
+    const [baseQuery] = this.buildQueryParts(query, language, false)
 
     const searchResponse = await this.client
       .products()
@@ -206,8 +185,8 @@ export class ProductSearchService {
     )
 
     return {
-      suggestions: [],
       products,
+      total: searchResponse.body.total ?? products.length,
     }
   }
 }

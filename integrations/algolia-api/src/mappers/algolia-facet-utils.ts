@@ -1,7 +1,19 @@
 import type { FacetTerm } from '@core/contracts/product-collection/facet'
 
+/** Matches CSS color functions and hex prefixes: #abc, rgb(...), hsl(...) */
 const CSS_COLOR_PATTERN = /^(#[0-9a-f]{3,8}|rgb\(|hsl\()/i
-const COLOR_PAIR_HEX_PATTERN = /[:=]\s*#[0-9a-f]{3,8}$/i
+
+/** Matches a standalone hex color value exactly: #fff, #a1b2c3 */
+const STANDALONE_HEX_PATTERN = /^#[0-9a-f]{3,8}$/i
+
+/** Extracts the value after a key:value or key=value separator */
+const PAIR_VALUE_PATTERN = /[:=]\s*(.+)$/
+
+/** Extracts a hex color from a key:value or key=value pair */
+const PAIR_HEX_PATTERN = /[:=]\s*(#[0-9a-f]{3,8})$/i
+
+/** Matches a key:value separator followed by any color suffix (for stripping) */
+const PAIR_SEPARATOR_PATTERN = /^(.*?)\s*[:=]\s*(.+)$/
 const CSS_COLOR_KEYWORDS = new Set([
   'transparent',
   'currentcolor',
@@ -69,10 +81,10 @@ function isColorTerm(term: string): boolean {
   if (isColorValue(term)) {
     return true
   }
-  if (COLOR_PAIR_HEX_PATTERN.test(term)) {
+  if (PAIR_HEX_PATTERN.test(term)) {
     return true
   }
-  const sepMatch = term.match(/[:=]\s*(.+)$/)
+  const sepMatch = term.match(PAIR_VALUE_PATTERN)
   if (sepMatch?.[1] && isColorValue(sepMatch[1].trim())) {
     return true
   }
@@ -80,14 +92,14 @@ function isColorTerm(term: string): boolean {
 }
 
 export function extractColorHex(term: string): string | undefined {
-  const pairMatch = term.match(/[:=]\s*(#[0-9a-f]{3,8})$/i)
+  const pairMatch = term.match(PAIR_HEX_PATTERN)
   if (pairMatch) {
     return pairMatch[1]
   }
-  if (/^#[0-9a-f]{3,8}$/i.test(term)) {
+  if (STANDALONE_HEX_PATTERN.test(term)) {
     return term
   }
-  const sepMatch = term.match(/[:=]\s*(.+)$/)
+  const sepMatch = term.match(PAIR_VALUE_PATTERN)
   if (sepMatch?.[1]) {
     const val = sepMatch[1].trim().toLowerCase()
     if (CSS_COLOR_KEYWORDS.has(val)) {
@@ -98,11 +110,11 @@ export function extractColorHex(term: string): string | undefined {
 }
 
 export function stripColorSuffix(label: string): string {
-  const hexStripped = label.replace(/\s*[:=]\s*#[0-9a-f]{3,8}$/i, '').trim()
-  if (hexStripped !== label) {
+  const hexStripped = label.replace(PAIR_HEX_PATTERN, '').trim()
+  if (hexStripped !== label.trim()) {
     return hexStripped
   }
-  const sepMatch = label.match(/^(.*?)\s*[:=]\s*(.+)$/)
+  const sepMatch = label.match(PAIR_SEPARATOR_PATTERN)
   if (sepMatch?.[1] && sepMatch[2]) {
     const val = sepMatch[2].trim().toLowerCase()
     if (CSS_COLOR_KEYWORDS.has(val)) {
@@ -115,7 +127,7 @@ export function stripColorSuffix(label: string): string {
 export function inferDisplayType(
   terms: FacetTerm[]
 ): 'color' | 'size' | 'text' {
-  if (terms.every((t) => isColorTerm(t.term))) {
+  if (terms.length > 0 && terms.every((t) => isColorTerm(t.term))) {
     return 'color'
   }
   if (

@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common'
+import { Injectable, type OnModuleInit } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { algoliasearch, type SearchResponse } from 'algoliasearch'
 import type { PriceRange } from '@core/contracts/product-collection/product-collection'
@@ -14,28 +14,32 @@ import {
   mapAlgoliaFacets,
   mergeAlgoliaFacets,
   mapAlgoliaPriceRange,
+  buildAlgoliaFieldNames,
+  buildFacetAttributeNames,
+  buildAlgoliaFacetFilters,
+  buildAlgoliaNumericFilters,
 } from '@integrations/algolia-api'
 import { extractQuerySuggestions } from './suggestion-utils'
+import {
+  DEFAULT_SUGGESTION_LIMIT,
+  SUGGESTION_FETCH_SIZE,
+} from './search-provider.interface'
 
 @Injectable()
-export class AlgoliaSearchService implements SearchProvider {
-  private client: ReturnType<typeof algoliasearch> | null = null
+export class AlgoliaSearchService implements SearchProvider, OnModuleInit {
+  private client!: ReturnType<typeof algoliasearch>
   private indexName = ''
   private attributeMetadataCache: AttributeMetadata[] | null = null
 
   constructor(private readonly configService: ConfigService) {}
 
-  private getClient(): ReturnType<typeof algoliasearch> {
-    if (!this.client) {
-      const appId = this.configService.getOrThrow<string>('ALGOLIA_APP_ID')
-      const searchApiKey = this.configService.getOrThrow<string>(
-        'ALGOLIA_SEARCH_API_KEY'
-      )
-      this.indexName =
-        this.configService.getOrThrow<string>('ALGOLIA_INDEX_NAME')
-      this.client = algoliasearch(appId, searchApiKey)
-    }
-    return this.client
+  onModuleInit(): void {
+    const appId = this.configService.getOrThrow<string>('ALGOLIA_APP_ID')
+    const searchApiKey = this.configService.getOrThrow<string>(
+      'ALGOLIA_SEARCH_API_KEY'
+    )
+    this.indexName = this.configService.getOrThrow<string>('ALGOLIA_INDEX_NAME')
+    this.client = algoliasearch(appId, searchApiKey)
   }
 
   private async getAttributeMetadata(): Promise<AttributeMetadata[]> {
@@ -43,7 +47,7 @@ export class AlgoliaSearchService implements SearchProvider {
       return this.attributeMetadataCache
     }
 
-    const settings = await this.getClient().getSettings({
+    const settings = await this.client.getSettings({
       indexName: this.indexName,
     })
     const userData = settings.userData as
@@ -56,16 +60,16 @@ export class AlgoliaSearchService implements SearchProvider {
   async getSuggestions(
     query: string,
     language: string,
-    limit: number = 10
+    limit: number = DEFAULT_SUGGESTION_LIMIT
   ): Promise<string[]> {
-    const nameAttr = `name_${language.replace('-', '_')}`
+    const { nameAttr } = buildAlgoliaFieldNames(language)
 
     const response: SearchResponse<AlgoliaProductHit> =
-      await this.getClient().searchSingleIndex({
+      await this.client.searchSingleIndex({
         indexName: this.indexName,
         searchParams: {
           query,
-          hitsPerPage: 30,
+          hitsPerPage: SUGGESTION_FETCH_SIZE,
           attributesToRetrieve: [nameAttr],
           attributesToHighlight: [],
           restrictSearchableAttributes: [nameAttr],
@@ -93,53 +97,30 @@ export class AlgoliaSearchService implements SearchProvider {
       priceMax,
       saleOnly,
     } = options
-    const langKey = language.replace('-', '_')
-    const nameAttr = `name_${langKey}`
-    const priceField = `price_${langKey}_centAmount`
-    const discountedPriceField = `price_${langKey}_discountedCentAmount`
+    const { langKey, nameAttr, priceField, discountedPriceField } =
+      buildAlgoliaFieldNames(language)
 
     const attributeMetadata = await this.getAttributeMetadata()
-    // ltext attributes are stored per-language; enum/text are language-independent
-    const facetAttrNames = attributeMetadata.map((a) =>
-      a.fieldType === 'ltext' ? `attr_${a.name}_${langKey}` : `attr_${a.name}`
+    const facetAttrNames = buildFacetAttributeNames(attributeMetadata, langKey)
+
+    const facetFilters = buildAlgoliaFacetFilters(
+      filters,
+      attributeMetadata,
+      langKey
     )
-
-    // Build facet filters from the filters object
-    const facetFilters: string[][] = []
-    if (filters) {
-      for (const [attrName, values] of Object.entries(filters)) {
-        if (values.length > 0) {
-          const meta = attributeMetadata.find((a) => a.name === attrName)
-          const algoliaKey =
-            meta?.fieldType === 'ltext'
-              ? `attr_${attrName}_${langKey}`
-              : `attr_${attrName}`
-          // Values within the same attribute are OR'd
-          facetFilters.push(values.map((v) => `${algoliaKey}:${v}`))
-        }
-      }
-    }
-
-    // Build numeric filters for price range and sale-only
-    const numericFilters: string[] = []
-    if (priceMin !== undefined) {
-      numericFilters.push(`${priceField} >= ${priceMin}`)
-    }
-    if (priceMax !== undefined) {
-      numericFilters.push(`${priceField} <= ${priceMax}`)
-    }
-    if (saleOnly) {
-      numericFilters.push(`${discountedPriceField} > 0`)
-    }
-
-    // Build sort (index sorting in Algolia requires replicas; use built-in relevance for now)
-    // For price sorting, we can use Algolia's custom ranking or replicas in the future
+    const numericFilters = buildAlgoliaNumericFilters(
+      priceField,
+      discountedPriceField,
+      priceMin,
+      priceMax,
+      saleOnly
+    )
 
     const hasActiveFilters =
       facetFilters.length > 0 || numericFilters.length > 0
 
     const response: SearchResponse<AlgoliaProductHit> =
-      await this.getClient().searchSingleIndex({
+      await this.client.searchSingleIndex({
         indexName: this.indexName,
         searchParams: {
           query,
@@ -159,7 +140,7 @@ export class AlgoliaSearchService implements SearchProvider {
     let allFacets = response.facets
     if (hasActiveFilters) {
       const unfiltered: SearchResponse<AlgoliaProductHit> =
-        await this.getClient().searchSingleIndex({
+        await this.client.searchSingleIndex({
           indexName: this.indexName,
           searchParams: {
             query,
@@ -172,25 +153,23 @@ export class AlgoliaSearchService implements SearchProvider {
       allFacets = mergeAlgoliaFacets(unfiltered.facets, response.facets)
     }
 
-    const products = response.hits.map((hit) =>
-      mapAlgoliaHitToProduct(hit, language, langKey)
-    )
-
-    const facets = mapAlgoliaFacets(allFacets, attributeMetadata, language)
-
-    const priceRange = await this.getPriceRange(
-      query,
-      nameAttr,
-      priceField,
-      facetFilters,
-      numericFilters
-    )
+    const [products, facets, priceRange] = await Promise.all([
+      response.hits.map((hit) => mapAlgoliaHitToProduct(hit, language)),
+      mapAlgoliaFacets(allFacets, attributeMetadata, language),
+      this.getPriceRange(
+        query,
+        nameAttr,
+        priceField,
+        facetFilters,
+        numericFilters
+      ),
+    ])
 
     return {
       products,
       facets,
       priceRange,
-      total: response.nbHits,
+      total: response.nbHits ?? 0,
     }
   }
 
@@ -206,7 +185,7 @@ export class AlgoliaSearchService implements SearchProvider {
     )
 
     const statsResponse: SearchResponse<AlgoliaProductHit> =
-      await this.getClient().searchSingleIndex({
+      await this.client.searchSingleIndex({
         indexName: this.indexName,
         searchParams: {
           query,

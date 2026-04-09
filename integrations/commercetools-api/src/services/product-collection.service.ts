@@ -150,7 +150,6 @@ export class ProductCollectionService {
       country,
       limit,
       offset,
-      saleOnly,
       filterableAttributes,
     })
 

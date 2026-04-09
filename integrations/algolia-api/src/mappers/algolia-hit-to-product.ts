@@ -1,4 +1,10 @@
 import type { ProductCardResponse } from '@core/contracts/product-collection/product-card'
+import { buildAlgoliaFieldNames } from './algolia-filters'
+
+const DEFAULT_PRODUCT_NAME = 'Unnamed Product'
+const DEFAULT_IMAGE_SRC = '/images/product-image.png'
+const DEFAULT_IMAGE_ALT = 'Product image'
+const DEFAULT_FRACTION_DIGITS = 2
 
 export interface AlgoliaProductHit {
   objectID: string
@@ -14,30 +20,29 @@ export interface AlgoliaProductHit {
 
 export function mapAlgoliaHitToProduct(
   hit: AlgoliaProductHit,
-  language: string,
-  langKey: string
+  language: string
 ): ProductCardResponse {
+  const { langKey } = buildAlgoliaFieldNames(language)
   const nameAttr = `name_${langKey}`
   const pricePrefix = `price_${langKey}`
-  const slug = hit.slug as Record<string, string> | undefined
-  const slugStr =
-    (slug && typeof slug === 'object' ? slug[language] : undefined) ||
-    hit.objectID
+  const slugStr = hit.slug?.[language] ?? hit.objectID
 
   return {
     id: hit.objectID,
-    name: (hit[nameAttr] as string) || 'Unnamed Product',
+    name: (hit[nameAttr] as string) || DEFAULT_PRODUCT_NAME,
     slug: slugStr,
     image: {
-      src: (hit.imageUrl as string) || '/images/product-image.png',
-      alt: (hit.imageAlt as string) || 'Product image',
+      src: (hit.imageUrl as string) || DEFAULT_IMAGE_SRC,
+      alt: (hit.imageAlt as string) || DEFAULT_IMAGE_ALT,
     },
     price: {
       regularPriceInCents: (hit[`${pricePrefix}_centAmount`] as number) || 0,
       ...(hit[`${pricePrefix}_currency`] != null && {
         currency: hit[`${pricePrefix}_currency`] as string,
       }),
-      fractionDigits: (hit[`${pricePrefix}_fractionDigits`] as number) ?? 2,
+      fractionDigits:
+        (hit[`${pricePrefix}_fractionDigits`] as number) ??
+        DEFAULT_FRACTION_DIGITS,
       ...(hit[`${pricePrefix}_discountedCentAmount`] != null && {
         discountedPriceInCents: hit[
           `${pricePrefix}_discountedCentAmount`
@@ -52,7 +57,7 @@ export function mapAlgoliaHitToProduct(
         omnibusPriceInCents: hit[`${pricePrefix}_omnibusCentAmount`] as number,
       }),
     },
-    variantId: (hit.variantId as string) || '1',
-    variantCount: (hit.variantCount as number) || 1,
+    variantId: hit.variantId,
+    variantCount: hit.variantCount,
   }
 }

@@ -1,20 +1,11 @@
 import type { LocalizedString, ProductType } from '@commercetools/platform-sdk'
+import { FACETABLE_TYPES, EXCLUDED_ATTR_NAMES } from '@config/constants'
 
 export interface FilterableAttribute {
   name: string
   label: LocalizedString
   fieldType: 'ltext' | 'text' | 'enum' | 'lenum'
 }
-
-const FACETABLE_TYPES = new Set(['ltext', 'text', 'enum', 'lenum'])
-
-const EXCLUDED_ATTR_NAMES = new Set([
-  'product-description',
-  'product-list-short-description',
-  'features-long-description',
-  'product-spec',
-  'shortDescription',
-])
 
 export function mapFilterableAttributes(
   productTypes: ProductType[]

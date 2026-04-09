@@ -711,7 +711,11 @@
     "results": "results",
     "emptyTitle": "Your search for: \"{query}\" returned no results.",
     "emptyMessage": "Unfortunately, no results were found for your search term. Please try a different term or browse our assortment for inspiration.",
-    "loading": "Loading..."
+    "loading": "Loading...",
+    "errors": {
+      "queryMinLength": "Search query must be at least 3 characters",
+      "queryMaxLength": "Search query is too long"
+    }
   },
   "wishlist": {
     "title": "Wishlist",

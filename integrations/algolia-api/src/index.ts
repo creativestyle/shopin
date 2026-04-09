@@ -15,4 +15,12 @@ export {
   inferDisplayType,
   extractColorHex,
   stripColorSuffix,
-} from './mappers/algolia-color-utils'
+} from './mappers/algolia-facet-utils'
+
+export {
+  type AlgoliaFieldNames,
+  buildAlgoliaFieldNames,
+  buildFacetAttributeNames,
+  buildAlgoliaFacetFilters,
+  buildAlgoliaNumericFilters,
+} from './mappers/algolia-filters'

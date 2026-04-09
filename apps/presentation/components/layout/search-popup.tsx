@@ -1,8 +1,7 @@
 'use client'
 
 import * as React from 'react'
-import { useTranslations } from 'next-intl'
-import { useLocale } from 'next-intl'
+import { useTranslations, useLocale } from 'next-intl'
 import * as DialogPrimitive from '@radix-ui/react-dialog'
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden'
 import Link from 'next/link'
@@ -20,25 +19,65 @@ interface SearchPopupProps {
   onOpenChange: (open: boolean) => void
 }
 
+function SuggestionItem({
+  suggestion,
+  query,
+  onClick,
+}: {
+  suggestion: string
+  query: string
+  onClick: () => void
+}) {
+  const lowerSuggestion = suggestion.toLowerCase()
+  const lowerQuery = query.toLowerCase()
+  const matchIndex = lowerSuggestion.indexOf(lowerQuery)
+
+  return (
+    <li>
+      <button
+        onClick={onClick}
+        className='flex cursor-pointer items-center gap-2 text-left text-sm text-gray-700 hover:text-gray-950'
+      >
+        <SearchIcon className='size-4 flex-shrink-0 text-gray-400' />
+        <span>
+          {matchIndex >= 0 ? (
+            <>
+              {suggestion.slice(0, matchIndex)}
+              <span className='font-bold'>
+                {suggestion.slice(matchIndex, matchIndex + lowerQuery.length)}
+              </span>
+              {suggestion.slice(matchIndex + lowerQuery.length)}
+            </>
+          ) : (
+            suggestion
+          )}
+        </span>
+      </button>
+    </li>
+  )
+}
+
 export function SearchPopup({ open, onOpenChange }: SearchPopupProps) {
   const t = useTranslations('common')
   const locale = useLocale()
   const [query, setQuery] = React.useState('')
   const { results, isLoading } = useProductSearch(query)
 
+  const suggestions = results?.suggestions ?? []
   const hasResults =
-    results && (results.suggestions.length > 0 || results.products.length > 0)
-  const hasData = !!results
+    results && (suggestions.length > 0 || results.products.length > 0)
+
+  const handleOpenChange = (value: boolean) => {
+    if (!value) {
+      setQuery('')
+    }
+    onOpenChange(value)
+  }
 
   return (
     <DialogPrimitive.Root
       open={open}
-      onOpenChange={(value) => {
-        if (!value) {
-          setQuery('')
-        }
-        onOpenChange(value)
-      }}
+      onOpenChange={handleOpenChange}
     >
       <DialogPrimitive.Portal>
         <DialogPrimitive.Overlay className='fixed inset-0 z-(--z-modal) bg-black/50 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:animate-in data-[state=open]:fade-in-0' />
@@ -98,13 +137,26 @@ export function SearchPopup({ open, onOpenChange }: SearchPopupProps) {
           {/* Search Results */}
           {query.length >= 3 && (
             <div className='border-t border-gray-100 px-5 py-6 lg:px-[30px]'>
-              {isLoading && !hasData && (
+              {isLoading && !results && (
                 <div className='flex justify-center py-8'>
                   <span className='text-sm text-gray-500'>{t('loading')}</span>
                 </div>
               )}
 
-              {hasData && (
+              {results && !hasResults && (
+                <div className='mx-auto flex w-full max-w-[1640px] justify-center py-8'>
+                  <p className='text-sm text-gray-500'>
+                    {t.rich('noSearchProducts', {
+                      query,
+                      bold: (chunks) => (
+                        <span className='font-bold'>{chunks}</span>
+                      ),
+                    })}
+                  </p>
+                </div>
+              )}
+
+              {hasResults && (
                 <div
                   className={cn(
                     'mx-auto flex w-full max-w-[1640px] flex-col gap-4 transition-opacity duration-150 lg:flex-row lg:justify-center lg:gap-12',
@@ -114,55 +166,26 @@ export function SearchPopup({ open, onOpenChange }: SearchPopupProps) {
                   {/* Suggestions */}
                   <div className='flex shrink-0 flex-col items-start gap-3 lg:w-[250px]'>
                     <h3 className='text-xs font-bold tracking-wider text-gray-950 uppercase'>
-                      {t('suggestions' as Parameters<typeof t>[0])}
+                      {t('suggestions')}
                     </h3>
-                    {results.suggestions.length > 0 ? (
+                    {suggestions.length > 0 ? (
                       <ul className='flex flex-col gap-2'>
-                        {results.suggestions.map((suggestion) => {
-                          const lowerSuggestion = suggestion.toLowerCase()
-                          const lowerQuery = query.toLowerCase()
-                          const matchIndex = lowerSuggestion.indexOf(lowerQuery)
-
-                          return (
-                            <li key={suggestion}>
-                              <button
-                                onClick={() => setQuery(suggestion)}
-                                className='flex cursor-pointer items-center gap-2 text-left text-sm text-gray-700 hover:text-gray-950'
-                              >
-                                <SearchIcon className='size-4 flex-shrink-0 text-gray-400' />
-                                <span>
-                                  {matchIndex >= 0 ? (
-                                    <>
-                                      {suggestion.slice(0, matchIndex)}
-                                      <span className='font-bold'>
-                                        {suggestion.slice(
-                                          matchIndex,
-                                          matchIndex + lowerQuery.length
-                                        )}
-                                      </span>
-                                      {suggestion.slice(
-                                        matchIndex + lowerQuery.length
-                                      )}
-                                    </>
-                                  ) : (
-                                    suggestion
-                                  )}
-                                </span>
-                              </button>
-                            </li>
-                          )
-                        })}
+                        {suggestions.map((suggestion) => (
+                          <SuggestionItem
+                            key={suggestion}
+                            suggestion={suggestion}
+                            query={query}
+                            onClick={() => setQuery(suggestion)}
+                          />
+                        ))}
                       </ul>
                     ) : (
                       <p className='text-sm text-gray-500'>
-                        {t.rich(
-                          'noSuggestions' as Parameters<typeof t.rich>[0],
-                          {
-                            bold: (chunks) => (
-                              <span className='font-bold'>{chunks}</span>
-                            ),
-                          }
-                        )}
+                        {t.rich('noSuggestions', {
+                          bold: (chunks) => (
+                            <span className='font-bold'>{chunks}</span>
+                          ),
+                        })}
                       </p>
                     )}
                   </div>
@@ -170,7 +193,7 @@ export function SearchPopup({ open, onOpenChange }: SearchPopupProps) {
                   {/* Product cards grid */}
                   <div className='flex max-w-[860px] min-w-0 flex-1 flex-col gap-4'>
                     <h3 className='text-xs font-bold tracking-wider text-gray-950 uppercase'>
-                      {t('products' as Parameters<typeof t>[0])}
+                      {t('products')}
                     </h3>
                     {results.products.length > 0 ? (
                       <div className='grid grid-cols-2 gap-[15px] lg:grid-cols-4 lg:gap-[30px]'>
@@ -186,15 +209,12 @@ export function SearchPopup({ open, onOpenChange }: SearchPopupProps) {
                       </div>
                     ) : (
                       <p className='text-sm text-gray-500'>
-                        {t.rich(
-                          'noSearchProducts' as Parameters<typeof t.rich>[0],
-                          {
-                            query,
-                            bold: (chunks) => (
-                              <span className='font-bold'>{chunks}</span>
-                            ),
-                          }
-                        )}
+                        {t.rich('noSearchProducts', {
+                          query,
+                          bold: (chunks) => (
+                            <span className='font-bold'>{chunks}</span>
+                          ),
+                        })}
                       </p>
                     )}
                   </div>

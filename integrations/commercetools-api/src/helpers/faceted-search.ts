@@ -1,4 +1,8 @@
-import type { SearchSorting } from '@commercetools/platform-sdk'
+import type {
+  SearchSorting,
+  _SearchQuery,
+  ProductSearchFacetExpression,
+} from '@commercetools/platform-sdk'
 import type { Client } from '../client/client.module'
 import type { Facet } from '@core/contracts/product-collection/facet'
 import type { PriceRange } from '@core/contracts/product-collection/product-collection'
@@ -7,25 +11,23 @@ import {
   mapFacetsFromResponse,
   extractPriceRange,
   mergeFacetCounts,
-  filterSaleOnlyResults,
   type FilterableAttribute,
 } from '../mappers/product-collection'
 import { mapSearchResultsToCards } from '../mappers/search-results'
 
 export interface FacetedSearchParams {
   client: Client
-  baseQuery: object
-  countQuery: object
+  baseQuery: _SearchQuery
+  countQuery: _SearchQuery
   hasActiveFilters: boolean
-  postFilters: object[]
-  facets: object[]
+  postFilters: _SearchQuery[]
+  facets: ProductSearchFacetExpression[]
   sortExpressions: SearchSorting[]
   language: string
   currency: string
   country: string
   limit: number
   offset: number
-  saleOnly: boolean
   filterableAttributes: FilterableAttribute[]
 }
 
@@ -52,7 +54,6 @@ export async function executeFacetedSearch(
     country,
     limit,
     offset,
-    saleOnly,
     filterableAttributes,
   } = params
 
@@ -104,11 +105,8 @@ export async function executeFacetedSearch(
     countsResponse?.body.facets
   )
 
-  const rawResults = searchResponse.body.results || []
-  const results = saleOnly ? filterSaleOnlyResults(rawResults) : rawResults
-  const total = saleOnly
-    ? (countsResponse?.body.total ?? searchResponse.body.total ?? 0)
-    : searchResponse.body.total || 0
+  const results = searchResponse.body.results || []
+  const total = searchResponse.body.total ?? 0
 
   return {
     products: mapSearchResultsToCards(results, language),

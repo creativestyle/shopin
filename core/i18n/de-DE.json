@@ -710,7 +710,11 @@
     "results": "Ergebnisse",
     "emptyTitle": "Ihre Suche nach: \"{query}\" ergab leider keine Treffer.",
     "emptyMessage": "Es wurden leider keine Ergebnisse für Ihren Suchbegriff gefunden. Bitte versuchen Sie es mit einem anderen Begriff oder lassen Sie sich von unserem Sortiment inspirieren.",
-    "loading": "Wird geladen..."
+    "loading": "Wird geladen...",
+    "errors": {
+      "queryMinLength": "Der Suchbegriff muss mindestens 3 Zeichen lang sein",
+      "queryMaxLength": "Der Suchbegriff ist zu lang"
+    }
   },
   "wishlist": {
     "title": "Wunschliste",

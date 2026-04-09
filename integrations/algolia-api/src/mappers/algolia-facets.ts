@@ -1,10 +1,10 @@
 import type { Facet, FacetTerm } from '@core/contracts/product-collection/facet'
-import { getLocalizedString } from '@core/i18n'
+import { getLocalizedString, LanguageTagUtils } from '@core/i18n'
 import {
   inferDisplayType,
   stripColorSuffix,
   extractColorHex,
-} from './algolia-color-utils'
+} from './algolia-facet-utils'
 
 export interface AttributeMetadata {
   name: string
@@ -22,7 +22,7 @@ export function mapAlgoliaFacets(
   }
 
   const facets: Facet[] = []
-  const langKey = language.replace('-', '_')
+  const langKey = LanguageTagUtils.toUnderscoreKey(language)
   for (const attr of attributeMetadata) {
     const facetKey =
       attr.fieldType === 'ltext'
