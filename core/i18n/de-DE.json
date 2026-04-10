@@ -39,11 +39,7 @@
     }
   },
   "topBar": {
-    "freeReturns": "Kostenlose Retoure",
-    "largestSelection": "Größtes Shopin Sortiment weltweit",
-    "securePayment": "Sichere Zahlung",
-    "hugeSizeSelection": "Riesige Größenauswahl",
-    "directFromManufacturer": "Direkt vom Hersteller"
+    "ariaLabel": "Siteweite Ankündigung"
   },
   "userMenu": {
     "storeLocator": "Store Locator",

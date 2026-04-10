@@ -1,6 +1,5 @@
 import { NavigationMobileMenu } from '@/features/navigation/navigation-mobile-menu'
 import { NavigationDesktop } from '@/features/navigation/navigation-desktop'
-import { TopBar } from './top-bar'
 import { SearchBarWrapper } from './search-bar-wrapper'
 import { UserMenuWrapper } from './user-menu-wrapper'
 import { MobileAccountLink } from './mobile-account-link'
@@ -9,18 +8,11 @@ import { Logo } from '../ui/logo'
 import { HeaderSearchButton } from './header-search-button'
 import { HeaderCartButton } from './header-cart-button'
 import { StandardContainer } from '../ui/standard-container'
-import { getHeaderLayout } from '@/features/content/get-layout'
 
 export async function Header() {
-  const [t, headerLayout] = await Promise.all([
-    getTranslations('userMenu'),
-    getHeaderLayout(),
-  ])
+  const t = await getTranslations('userMenu')
   return (
     <header className='relative shadow-card'>
-      {/* Top Bar - Full Width Background (from BFF header layout) */}
-      <TopBar messages={headerLayout?.topBarMessages ?? []} />
-
       {/* Mobile Header */}
       <div className='bg-background relative h-14 w-full overflow-hidden lg:hidden'>
         <StandardContainer className='h-full'>
