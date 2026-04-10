@@ -22,7 +22,7 @@ export interface CmsLinkProps {
 
 export const CmsLink = React.forwardRef<HTMLAnchorElement, CmsLinkProps>(
   function CmsLink(
-    { link, className, children, useLabelAsFallbackContent },
+    { link, className, children, useLabelAsFallbackContent = true },
     ref
   ) {
     return (
