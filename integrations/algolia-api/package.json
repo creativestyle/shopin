@@ -9,7 +9,8 @@
   "scripts": {
     "build": "tsc --build",
     "dev": "tsc --build --watch",
-    "sync": "npm run build && dotenv -e ../../.env -- node dist/scripts/algolia-sync.js",
+    "build:all": "tsc --build tsconfig.json tsconfig.scripts.json",
+    "sync": "npm run build:all && dotenv -e ../../.env -- node dist/scripts/algolia-sync.js",
     "lint": "eslint --fix ./src --max-warnings=0",
     "format": "prettier --write ./src",
     "format:check": "prettier --check --ignore-unknown ./src",
