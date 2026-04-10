@@ -42,3 +42,6 @@ export * from './cache'
 
 // Re-export content-image constants
 export * from './content-image'
+
+// Re-export search constants
+export * from './search'

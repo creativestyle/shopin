@@ -6,6 +6,7 @@ export {
   resolveCurrencyFromLanguage,
   resolveCountryFromLanguage,
 } from './currency-utils'
+export { getLocalizedString } from './localized-string-utils'
 
 // Header constants
 export const LANGUAGE_HEADER = 'accept-language'

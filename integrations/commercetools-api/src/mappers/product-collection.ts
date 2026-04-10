@@ -6,4 +6,3 @@ export {
 } from './product-collection-filterable-attributes'
 export { mapCategoryTree } from './product-collection-category-tree'
 export { mergeFacetCounts } from './product-collection-merge-facet-counts'
-export { filterSaleOnlyResults } from './product-collection-sale-filter'

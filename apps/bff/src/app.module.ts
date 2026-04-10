@@ -6,6 +6,7 @@ import { APP_GUARD } from '@nestjs/core'
 import { LoggerModule } from 'nestjs-pino'
 import { ProductModule } from './features/product/product.module'
 import { ProductCollectionModule } from './features/product-collection/product-collection.module'
+import { ProductSearchModule } from './features/product-search/product-search.module'
 import { NavigationModule } from './features/navigation/navigation.module'
 import { DataSourceModule } from './data-source/data-source.module'
 import { I18nModule } from './features/i18n/i18n.module'
@@ -44,6 +45,7 @@ import { ContentModule } from './features/content/content.module'
     DataSourceModule,
     ProductModule,
     ProductCollectionModule,
+    ProductSearchModule,
     NavigationModule,
     I18nModule,
     LanguageModule,

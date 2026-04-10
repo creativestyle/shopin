@@ -78,10 +78,27 @@ import type {
   HeaderResponse,
   FooterResponse,
 } from '@core/contracts/content/layout'
+import type { ProductSearchResponse } from '@core/contracts/product-search/product-search'
 
 // Define service interfaces for type safety
 export interface ProductService {
   getProduct(productSlug: string, variantId?: string): Promise<ProductResponse>
+}
+
+export interface ProductSearchParams {
+  query: string
+  faceted?: boolean
+  limit?: number
+  page?: number
+  filters?: Filters
+  priceMin?: number
+  priceMax?: number
+  sort?: SortOption
+  saleOnly?: boolean
+}
+
+export interface ProductSearchService {
+  searchProducts(params: ProductSearchParams): Promise<ProductSearchResponse>
 }
 
 /**
@@ -274,6 +291,7 @@ export interface ResetPasswordService {
 export interface AllServices {
   productService: ProductService
   productCollectionService: ProductCollectionService
+  productSearchService: ProductSearchService
   navigationService: NavigationService
   cartService: CartService
   cartPaymentService: CartPaymentService

@@ -51,4 +51,12 @@ export class LanguageTagUtils {
   static isSupported(tag: string): tag is SupportedLanguage {
     return I18N_CONFIG.supportedLanguages.includes(tag as SupportedLanguage)
   }
+
+  /**
+   * Convert language tag to underscore key (e.g., "en-US" -> "en_US").
+   * Useful for Algolia field name conventions.
+   */
+  static toUnderscoreKey(tag: string): string {
+    return tag.replace('-', '_')
+  }
 }

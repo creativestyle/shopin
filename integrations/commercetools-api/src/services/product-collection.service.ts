@@ -16,8 +16,6 @@ import {
 } from '@config/constants'
 import type { LocalizedString, Category } from '@commercetools/platform-sdk'
 import { getLocalizedString as mapLocalized } from '../helpers/get-localized-string'
-import { mapProductToCard } from '../mappers/product-card'
-import type { ProductProjectionApiResponse } from '../schemas/product-projection'
 import {
   buildQueryFilters,
   buildPostFilters,
@@ -25,40 +23,17 @@ import {
   buildSortExpressions,
   buildAttributeFilters,
 } from '../helpers/product-collection-filters'
-import {
-  mapFacetsFromResponse,
-  extractPriceRange,
-  mapFilterableAttributes,
-  mapCategoryTree,
-  mergeFacetCounts,
-  filterSaleOnlyResults,
-  type FilterableAttribute,
-} from '../mappers/product-collection'
+import { executeFacetedSearch } from '../helpers/faceted-search'
+import { mapCategoryTree } from '../mappers/product-collection'
+import { FilterableAttributesCacheService } from './filterable-attributes-cache.service'
 
 @Injectable()
 export class ProductCollectionService {
-  private filterableAttributesCache: FilterableAttribute[] | null = null
-
   constructor(
     @Inject(COMMERCETOOLS_CLIENT) private readonly client: Client,
-    @Inject(LANGUAGE_TOKEN) private readonly languageProvider: LanguageProvider
+    @Inject(LANGUAGE_TOKEN) private readonly languageProvider: LanguageProvider,
+    private readonly filterableAttributesCache: FilterableAttributesCacheService
   ) {}
-
-  private async getFilterableAttributes(): Promise<FilterableAttribute[]> {
-    if (this.filterableAttributesCache) {
-      return this.filterableAttributesCache
-    }
-
-    const response = await this.client
-      .productTypes()
-      .get({ queryArgs: { limit: 100 } })
-      .execute()
-
-    this.filterableAttributesCache = mapFilterableAttributes(
-      response.body.results
-    )
-    return this.filterableAttributesCache
-  }
 
   private async resolveCategory(
     slug: string,
@@ -122,7 +97,7 @@ export class ProductCollectionService {
 
     const [filterableAttributes, { category, categoryId, categoryTree }] =
       await Promise.all([
-        this.getFilterableAttributes(),
+        this.filterableAttributesCache.getFilterableAttributes(),
         this.resolveCategory(productCollectionSlug, currentLanguage),
       ])
 
@@ -146,38 +121,6 @@ export class ProductCollectionService {
     const baseQuery =
       queryFilters.length === 1 ? queryFilters[0] : { and: queryFilters }
 
-    // postFilter keeps all facet options visible regardless of active filters
-    const mainSearchPromise = this.client
-      .products()
-      .search()
-      .post({
-        body: {
-          query: baseQuery,
-          ...(postFilters.length > 0 && {
-            postFilter:
-              postFilters.length === 1 ? postFilters[0] : { and: postFilters },
-          }),
-          productProjectionParameters: {
-            localeProjection: [currentLanguage],
-            priceCurrency: currency,
-            priceCountry: country,
-            staged: false,
-          },
-          facets,
-          sort: sortExpressions,
-          limit,
-          offset,
-        },
-      })
-      .execute()
-
-    // The main search uses `postFilter` so facet buckets reflect ALL available
-    // options regardless of the active selection (standard faceted-navigation UX).
-    // However, `postFilter` does not affect facet counts — they still reflect
-    // the unfiltered result set. To get accurate counts that respect active
-    // filters we run a second facet-only query (limit:0) with the filters in
-    // `query` instead of `postFilter`. The two sets of facets are then merged
-    // by `mergeFacetCounts` (buckets from the main query, counts from here).
     const hasActiveFilters =
       attributeFilters.length > 0 ||
       priceMin !== undefined ||
@@ -189,35 +132,26 @@ export class ProductCollectionService {
         ? countQueryFilters[0]
         : { and: countQueryFilters }
 
-    const countsPromise = hasActiveFilters
-      ? this.client
-          .products()
-          .search()
-          .post({
-            body: {
-              query: countQuery,
-              facets,
-              limit: 0,
-            },
-          })
-          .execute()
-      : Promise.resolve(null)
-
-    const [searchResponse, countsResponse] = await Promise.all([
-      mainSearchPromise,
-      countsPromise,
-    ])
-
-    const facetResults = mergeFacetCounts(
-      searchResponse.body.facets,
-      countsResponse?.body.facets
-    )
-
-    const rawResults = searchResponse.body.results || []
-    const results = saleOnly ? filterSaleOnlyResults(rawResults) : rawResults
-    const total = saleOnly
-      ? (countsResponse?.body.total ?? searchResponse.body.total ?? 0)
-      : searchResponse.body.total || 0
+    const {
+      products,
+      facets: mappedFacets,
+      priceRange,
+      total,
+    } = await executeFacetedSearch({
+      client: this.client,
+      baseQuery,
+      countQuery,
+      hasActiveFilters,
+      postFilters,
+      facets,
+      sortExpressions,
+      language: currentLanguage,
+      currency,
+      country,
+      limit,
+      offset,
+      filterableAttributes,
+    })
 
     const categoryName =
       mapLocalized(
@@ -226,24 +160,13 @@ export class ProductCollectionService {
       ) || productCollectionSlug
 
     return {
-      productList: results
-        .filter((r) => r.productProjection)
-        .map((r) =>
-          mapProductToCard(
-            r.productProjection as ProductProjectionApiResponse,
-            currentLanguage
-          )
-        ),
+      productList: products,
       breadcrumb: [
         { label: categoryName, path: `/c/${productCollectionSlug}` },
       ],
       total,
-      facets: mapFacetsFromResponse(
-        facetResults,
-        filterableAttributes,
-        currentLanguage
-      ),
-      priceRange: extractPriceRange(facetResults),
+      facets: mappedFacets,
+      priceRange,
       categoryTree,
       currentCategoryId: categoryId,
     }

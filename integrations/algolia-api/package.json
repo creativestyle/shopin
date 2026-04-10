@@ -1,0 +1,33 @@
+{
+  "name": "@integrations/algolia-api",
+  "description": "Algolia search integration: mappers and utilities for product search, facets, and price range",
+  "author": "creativestyle GmbH",
+  "private": true,
+  "exports": {
+    ".": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc --build",
+    "dev": "tsc --build --watch",
+    "build:all": "tsc --build tsconfig.json tsconfig.scripts.json",
+    "sync": "npm run build:all && dotenv -e ../../.env -- node dist/scripts/algolia-sync.js",
+    "lint": "eslint --fix ./src --max-warnings=0",
+    "format": "prettier --write ./src",
+    "format:check": "prettier --check --ignore-unknown ./src",
+    "check-types": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@config/constants": "*",
+    "@core/contracts": "*",
+    "@core/i18n": "*",
+    "algoliasearch": "^5.25.0"
+  },
+  "devDependencies": {
+    "@commercetools/platform-sdk": "^8.2.0",
+    "@core/eslint-config": "*",
+    "@core/prettier-config": "*",
+    "@core/typescript-config": "*",
+    "commander": "14.0.3",
+    "dotenv-cli": "^8.0.0"
+  }
+}

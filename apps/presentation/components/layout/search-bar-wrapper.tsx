@@ -1,17 +1,32 @@
 'use client'
 
-import { SearchBar } from '../ui/search-bar'
+import { useState } from 'react'
+import { useTranslations } from 'next-intl'
+import { SearchPopup } from './search-popup'
+import SearchIcon from '@/public/icons/search.svg'
 
 export function SearchBarWrapper() {
-  const handleSearch = (_query: string) => {
-    // Stub: search not implemented
-  }
+  const t = useTranslations('common')
+  const [isSearchOpen, setIsSearchOpen] = useState(false)
 
   return (
-    <SearchBar
-      placeholder='Suche...'
-      onSearch={handleSearch}
-      className='w-full'
-    />
+    <>
+      <button
+        type='button'
+        onClick={() => setIsSearchOpen(true)}
+        className='relative flex h-12 w-full cursor-pointer items-center gap-3 rounded-full bg-gray-100 px-4'
+      >
+        <div className='size-6 flex-shrink-0 text-gray-500'>
+          <SearchIcon />
+        </div>
+        <span className='text-sm leading-normal font-normal text-gray-500'>
+          {t('searchPlaceholder')}
+        </span>
+      </button>
+      <SearchPopup
+        open={isSearchOpen}
+        onOpenChange={setIsSearchOpen}
+      />
+    </>
   )
 }

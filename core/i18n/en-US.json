@@ -9,6 +9,12 @@
     "description": "Your e-commerce platform with a modern design system.",
     "homepage": "Home",
     "close": "Close",
+    "searchPlaceholder": "What are you looking for?",
+    "suggestions": "Suggestions",
+    "products": "Products",
+    "showAllResults": "Show all results",
+    "noSuggestions": "<bold>0</bold> Results",
+    "noSearchProducts": "Sorry - we couldn't find any results for <bold>\"{query}\"</bold>.",
     "scrollableDialogContent": "Scrollable dialog content",
     "scrollLeft": "Scroll left",
     "scrollRight": "Scroll right",
@@ -699,6 +705,20 @@
     },
     "video": {
       "unavailable": "Video unavailable"
+    }
+  },
+  "searchResults": {
+    "titlePrefix": "Your search results for:",
+    "breadcrumb": "Search",
+    "articles": "Articles",
+    "result": "result",
+    "results": "results",
+    "emptyTitle": "Your search for: \"{query}\" returned no results.",
+    "emptyMessage": "Unfortunately, no results were found for your search term. Please try a different term or browse our assortment for inspiration.",
+    "loading": "Loading...",
+    "errors": {
+      "queryMinLength": "Search query must be at least 3 characters",
+      "queryMaxLength": "Search query is too long"
     }
   },
   "wishlist": {

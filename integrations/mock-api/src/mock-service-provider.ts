@@ -3,6 +3,7 @@ import type { MockServiceProvider } from './interfaces'
 import {
   ProductService,
   ProductCollectionService,
+  ProductSearchService,
   NavigationService,
   CartService,
   CartPaymentService,
@@ -18,6 +19,7 @@ export class MockServiceProviderImpl implements MockServiceProvider {
   constructor(
     private readonly productService: ProductService,
     private readonly productCollectionService: ProductCollectionService,
+    private readonly productSearchService: ProductSearchService,
     private readonly navigationService: NavigationService,
     private readonly cartService: CartService,
     private readonly cartPaymentService: CartPaymentService,
@@ -32,6 +34,7 @@ export class MockServiceProviderImpl implements MockServiceProvider {
     return {
       productService: this.productService,
       productCollectionService: this.productCollectionService,
+      productSearchService: this.productSearchService,
       navigationService: this.navigationService,
       cartService: this.cartService,
       cartPaymentService: this.cartPaymentService,

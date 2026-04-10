@@ -1,0 +1,9 @@
+{
+  "extends": "@core/typescript-config/nestjs.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "rootDir": "."
+  },
+  "include": ["scripts"],
+  "exclude": ["dist", "node_modules"]
+}
