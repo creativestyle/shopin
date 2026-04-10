@@ -40,11 +40,7 @@
     }
   },
   "topBar": {
-    "freeReturns": "Free Returns",
-    "largestSelection": "Largest Shopin Selection Worldwide",
-    "securePayment": "Secure Payment",
-    "hugeSizeSelection": "Huge Size Selection",
-    "directFromManufacturer": "Direct from Manufacturer"
+    "ariaLabel": "Site announcement"
   },
   "userMenu": {
     "storeLocator": "Store Locator",
