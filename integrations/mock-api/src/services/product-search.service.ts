@@ -8,6 +8,7 @@ export class ProductSearchService {
     return {
       suggestions: [],
       products: [],
+      total: 0,
     }
   }
 }

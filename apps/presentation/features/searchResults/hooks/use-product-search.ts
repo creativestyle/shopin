@@ -24,45 +24,42 @@ export function useProductSearch(
   const [results, setResults] = useState<ProductSearchResponse | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const abortControllerRef = useRef<AbortController | null>(null)
-  const service = new ProductSearchBffService(bffFetch)
-
-  const search = async (searchQuery: string) => {
-    abortControllerRef.current?.abort()
-    const controller = new AbortController()
-    abortControllerRef.current = controller
-
-    setIsLoading(true)
-    try {
-      const data = await service.searchProducts({
-        query: searchQuery,
-        ...params,
-      })
-      if (!controller.signal.aborted) {
-        setResults(data)
-      }
-    } catch {
-      // Keep previous results visible on error
-    } finally {
-      if (!controller.signal.aborted) {
-        setIsLoading(false)
-      }
-    }
-  }
+  const serviceRef = useRef(new ProductSearchBffService(bffFetch))
 
   useEffect(() => {
     if (query.length < MIN_QUERY_LENGTH) {
       abortControllerRef.current?.abort()
-      setResults(null)
-      setIsLoading(false)
       return
     }
 
     const timeoutId = setTimeout(() => {
-      search(query)
+      abortControllerRef.current?.abort()
+      const controller = new AbortController()
+      abortControllerRef.current = controller
+
+      setIsLoading(true)
+      serviceRef.current
+        .searchProducts({
+          query,
+          ...params,
+        })
+        .then((data) => {
+          if (!controller.signal.aborted) {
+            setResults(data)
+          }
+        })
+        .catch(() => {
+          // Keep previous results visible on error
+        })
+        .finally(() => {
+          if (!controller.signal.aborted) {
+            setIsLoading(false)
+          }
+        })
     }, DEBOUNCE_MS)
 
     return () => clearTimeout(timeoutId)
-  }, [query, search])
+  }, [query, params])
 
   useEffect(() => {
     return () => {
@@ -70,5 +67,10 @@ export function useProductSearch(
     }
   }, [])
 
-  return { results, isLoading }
+  const shouldSearch = query.length >= MIN_QUERY_LENGTH
+
+  return {
+    results: shouldSearch ? results : null,
+    isLoading: shouldSearch ? isLoading : false,
+  }
 }
