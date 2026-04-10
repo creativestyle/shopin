@@ -16,6 +16,7 @@ const TEASERS = [
   'teaserRegular',
   'teaserAccordion',
   'teaserBrand',
+  'teaserVideo',
 ]
 
 /** All content types in dependency-safe order. Reset deletes entries then content types in this order. */

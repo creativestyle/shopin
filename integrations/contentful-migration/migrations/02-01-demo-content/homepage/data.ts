@@ -248,6 +248,26 @@ export const IMAGE_TEASER = (linkRef: EntryLinkRef) => ({
     link: linkRef,
   },
 })
+export const VIDEO_TEASER = (linkRef: EntryLinkRef) => ({
+  'en-US': {
+    title: 'New in',
+    caption: 'Discover the latest trends.',
+    link: linkRef,
+    autoplay: true,
+    controls: false,
+  },
+  'de-DE': {
+    title: 'Neu eingetroffen',
+    caption: 'Entdecke die neuesten Trends.',
+    link: linkRef,
+  },
+})
+
+export const VIDEO_URLS = [
+  'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
+  'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4',
+  'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
+]
 export const CAROUSEL_ITEMS = (
   linkNew: EntryLinkRef,
   linkC: EntryLinkRef,
