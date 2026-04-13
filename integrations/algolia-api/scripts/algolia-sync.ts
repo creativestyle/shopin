@@ -225,13 +225,16 @@ function mapToAlgoliaRecord(
     record.categoryIds = categories.map((c: CategoryReference) => c.id)
   }
 
-  // Map prices per country — skip locale if no country-specific price exists
+  // Map prices per locale — prefer country-specific price, fall back to currency match
   const prices: Price[] = masterVariant.prices ?? []
+  const CURRENCY_MAP: Record<string, string> = { 'en-US': 'USD', 'de-DE': 'EUR' }
   for (const lang of LANGUAGES) {
     const country = lang.split('-')[1]
+    const currency = CURRENCY_MAP[lang]
     const prefix = `price_${lang.replace('-', '_')}`
     const selectedPrice: Price | undefined =
-      prices.find((p: Price) => p.country === country)
+      prices.find((p: Price) => p.country === country) ??
+      prices.find((p: Price) => !p.country && p.value.currencyCode === currency)
 
     if (!selectedPrice) continue
 

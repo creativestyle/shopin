@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl'
 import { useSearchParams } from 'next/navigation'
 import { useProductSearch } from './hooks/use-product-search'
 import { ProductGrid } from '@/components/ui/product-grid'
+import { AddToCart } from '@/features/cart/cart-add-to-cart'
 import { PaginationWrapper } from '@/components/ui/pagination-wrapper'
 import { ProductCollectionToolbarWrapper } from '@/features/productCollection/product-collection-toolbar-wrapper'
 import { ActiveFilters } from '@/features/productCollection/active-filters'
@@ -105,6 +106,13 @@ export function SearchResultsContent({
           <ProductGrid
             products={results.products}
             locale={locale}
+            renderCardActions={(product) => (
+              <AddToCart
+                productId={product.id}
+                productSlug={product.slug}
+                productName={product.name}
+              />
+            )}
           />
           {totalPages > 1 && (
             <PaginationWrapper

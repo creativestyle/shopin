@@ -6,32 +6,36 @@ import { AlgoliaSearchService } from './algolia-search.service'
 import { CtSearchAdapter } from './ct-search.adapter'
 import { SEARCH_PROVIDER } from './search-provider.interface'
 import { DataSourceModule } from '../../data-source/data-source.module'
+import { DataSourceFactory } from '../../data-source/data-source.factory'
+
+function shouldUseAlgolia(configService: ConfigService): boolean {
+  const provider = configService.get<string>('SEARCH_PROVIDER')
+  if (provider === 'algolia') {
+    return true
+  }
+  if (provider === 'commercetools') {
+    return false
+  }
+  return !!configService.get<string>('ALGOLIA_APP_ID')
+}
 
 @Module({
   imports: [DataSourceModule, ConfigModule],
   providers: [
-    AlgoliaSearchService,
-    CtSearchAdapter,
     {
       provide: SEARCH_PROVIDER,
       useFactory: (
         configService: ConfigService,
-        algolia: AlgoliaSearchService,
-        ct: CtSearchAdapter
+        dataSourceFactory: DataSourceFactory
       ) => {
-        const provider = configService.get<string>('SEARCH_PROVIDER')
-        if (provider === 'commercetools') {
-          return ct
+        if (shouldUseAlgolia(configService)) {
+          const service = new AlgoliaSearchService(configService)
+          service.onModuleInit()
+          return service
         }
-        if (provider === 'algolia') {
-          return algolia
-        }
-
-        // Auto-detect: use Algolia if keys are present, otherwise CT
-        const algoliaAppId = configService.get<string>('ALGOLIA_APP_ID')
-        return algoliaAppId ? algolia : ct
+        return new CtSearchAdapter(dataSourceFactory)
       },
-      inject: [ConfigService, AlgoliaSearchService, CtSearchAdapter],
+      inject: [ConfigService, DataSourceFactory],
     },
     ProductSearchService,
   ],
