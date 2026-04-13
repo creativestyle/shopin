@@ -1,0 +1,34 @@
+{
+  "name": "@demo/demo-disclaimer",
+  "version": "1.0.0",
+  "description": "Demo-only modal dialog that warns visitors this is a sandbox environment with no real orders or payments.",
+  "author": "creativestyle GmbH",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "lint": "eslint --fix ./src --max-warnings=0",
+    "format": "prettier --write ./src",
+    "format:check": "prettier --check --ignore-unknown ./src",
+    "check-types": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@radix-ui/react-checkbox": "1.3.3",
+    "@radix-ui/react-dialog": "1.1.15",
+    "next-intl": "*",
+    "react": "19.2.4",
+    "react-dom": "19.2.4"
+  },
+  "devDependencies": {
+    "@core/typescript-config": "*",
+    "@core/eslint-config": "*",
+    "@core/prettier-config": "*",
+    "@types/react": "19.2.7",
+    "@types/react-dom": "19.2.3",
+    "eslint": "^9.20.1",
+    "typescript": "^5.7.3"
+  }
+}
