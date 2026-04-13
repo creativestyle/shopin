@@ -6,11 +6,8 @@ import type {
 } from './search-provider.interface'
 import { DataSourceFactory } from '../../data-source/data-source.factory'
 import { extractQuerySuggestions } from './suggestion-utils'
-import {
-  DEFAULT_SUGGESTION_LIMIT,
-  SUGGESTION_FETCH_SIZE,
-} from './search-provider.interface'
-import type { SortOption } from '@config/constants'
+import { SUGGESTION_FETCH_SIZE } from './search-provider.interface'
+import { DEFAULT_SUGGESTION_LIMIT, type SortOption } from '@config/constants'
 
 @Injectable()
 export class CtSearchAdapter implements SearchProvider {

@@ -28,29 +28,33 @@ import {
   PRODUCT_TYPES_FETCH_LIMIT,
   FACETABLE_TYPES,
   EXCLUDED_ATTR_NAMES,
+  LOCALIZED_ATTR_TYPES,
 } from '@config/constants'
+import type { FacetableFieldType } from '@config/constants'
 
 const BATCH_SIZE = 100
 
 const LANGUAGES = ['en-US', 'de-DE'] as const
-type Language = (typeof LANGUAGES)[number]
 
 interface FilterableAttribute {
   name: string
   label: LocalizedString
-  fieldType: 'ltext' | 'text' | 'enum' | 'lenum'
+  fieldType: FacetableFieldType
 }
 
 // ---- env validation ----
 function requireEnv(key: string): string {
   const val = process.env[key]
-  if (!val) throw new Error(`Missing env var: ${key}`)
+  if (!val) {
+    throw new Error(`Missing env var: ${key}`)
+  }
   return val
 }
 
 // ---- HTTP error checking ----
 async function fetchJson<T>(
   url: string,
+  // eslint-disable-next-line no-undef
   init?: RequestInit,
   description?: string
 ): Promise<T> {
@@ -82,7 +86,7 @@ async function authenticate(
     {
       method: 'POST',
       headers: {
-        Authorization: `Basic ${Buffer.from(`${clientId}:${clientSecret}`).toString('base64')}`,
+        'Authorization': `Basic ${Buffer.from(`${clientId}:${clientSecret}`).toString('base64')}`,
         'Content-Type': 'application/x-www-form-urlencoded',
       },
       body: 'grant_type=client_credentials',
@@ -100,7 +104,9 @@ async function getToken(
   clientId: string,
   clientSecret: string
 ): Promise<CtAuth> {
-  if (Date.now() < auth.expiresAt) return auth
+  if (Date.now() < auth.expiresAt) {
+    return auth
+  }
   console.log('  Token expired, refreshing...')
   return authenticate(authUrl, clientId, clientSecret)
 }
@@ -120,10 +126,18 @@ async function fetchFilterableAttributes(
   const seen = new Map<string, FilterableAttribute>()
   for (const pt of data.results as ProductType[]) {
     for (const attr of (pt.attributes ?? []) as AttributeDefinition[]) {
-      if (seen.has(attr.name)) continue
-      if (!attr.isSearchable) continue
-      if (!FACETABLE_TYPES.has(attr.type.name)) continue
-      if (EXCLUDED_ATTR_NAMES.has(attr.name)) continue
+      if (seen.has(attr.name)) {
+        continue
+      }
+      if (!attr.isSearchable) {
+        continue
+      }
+      if (!FACETABLE_TYPES.has(attr.type.name)) {
+        continue
+      }
+      if (EXCLUDED_ATTR_NAMES.has(attr.name)) {
+        continue
+      }
       seen.set(attr.name, {
         name: attr.name,
         label: attr.label,
@@ -142,7 +156,7 @@ function extractVariantAttributes(
 
   for (const attr of filterableAttributes) {
     const isEnum = attr.fieldType === 'enum' || attr.fieldType === 'lenum'
-    const isLocalizedText = attr.fieldType === 'ltext'
+    const isLocalizedText = LOCALIZED_ATTR_TYPES.has(attr.fieldType)
 
     if (isLocalizedText) {
       for (const lang of LANGUAGES) {
@@ -152,9 +166,13 @@ function extractVariantAttributes(
           const found: Attribute | undefined = variant.attributes?.find(
             (a: Attribute) => a.name === attr.name
           )
-          if (found?.value == null) continue
+          if (found?.value == null) {
+            continue
+          }
           const langVal = (found.value as LocalizedString)[lang]
-          if (langVal) values.add(String(langVal))
+          if (langVal) {
+            values.add(String(langVal))
+          }
         }
         if (values.size > 0) {
           result[`attr_${attr.name}_${langKey}`] = Array.from(values)
@@ -166,7 +184,9 @@ function extractVariantAttributes(
         const found: Attribute | undefined = variant.attributes?.find(
           (a: Attribute) => a.name === attr.name
         )
-        if (found?.value == null) continue
+        if (found?.value == null) {
+          continue
+        }
 
         if (isEnum) {
           const enumValue = found.value as { key?: string }
@@ -210,13 +230,17 @@ function mapToAlgoliaRecord(
 
   for (const lang of LANGUAGES) {
     const name = product.name[lang]
-    if (name) record[`name_${lang.replace('-', '_')}`] = name
+    if (name) {
+      record[`name_${lang.replace('-', '_')}`] = name
+    }
   }
 
   if (product.description) {
     for (const lang of LANGUAGES) {
       const desc = product.description[lang]
-      if (desc) record[`description_${lang.replace('-', '_')}`] = desc
+      if (desc) {
+        record[`description_${lang.replace('-', '_')}`] = desc
+      }
     }
   }
 
@@ -227,7 +251,10 @@ function mapToAlgoliaRecord(
 
   // Map prices per locale — prefer country-specific price, fall back to currency match
   const prices: Price[] = masterVariant.prices ?? []
-  const CURRENCY_MAP: Record<string, string> = { 'en-US': 'USD', 'de-DE': 'EUR' }
+  const CURRENCY_MAP: Record<string, string> = {
+    'en-US': 'USD',
+    'de-DE': 'EUR',
+  }
   for (const lang of LANGUAGES) {
     const country = lang.split('-')[1]
     const currency = CURRENCY_MAP[lang]
@@ -236,12 +263,13 @@ function mapToAlgoliaRecord(
       prices.find((p: Price) => p.country === country) ??
       prices.find((p: Price) => !p.country && p.value.currencyCode === currency)
 
-    if (!selectedPrice) continue
+    if (!selectedPrice) {
+      continue
+    }
 
     record[`${prefix}_centAmount`] = selectedPrice.value.centAmount
     record[`${prefix}_currency`] = selectedPrice.value.currencyCode
-    record[`${prefix}_fractionDigits`] =
-      selectedPrice.value.fractionDigits ?? 2
+    record[`${prefix}_fractionDigits`] = selectedPrice.value.fractionDigits ?? 2
 
     if (selectedPrice.discounted?.value?.centAmount != null) {
       record[`${prefix}_discountedCentAmount`] =
@@ -269,7 +297,7 @@ function buildFacetAttributes(
 ): string[] {
   const facetAttributes: string[] = []
   for (const a of filterableAttributes) {
-    if (a.fieldType === 'ltext') {
+    if (LOCALIZED_ATTR_TYPES.has(a.fieldType)) {
       for (const lang of LANGUAGES) {
         facetAttributes.push(`attr_${a.name}_${lang.replace('-', '_')}`)
       }

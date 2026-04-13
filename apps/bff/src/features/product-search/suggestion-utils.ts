@@ -23,21 +23,16 @@ export function extractQuerySuggestions(
 
   for (const name of names) {
     const lowerName = name.toLowerCase().trim()
-    const charIdx = lowerName.indexOf(lowerQuery)
-    if (charIdx < 0) {
-      continue
-    }
-
-    // Find which word index the match starts at
     const words = lowerName.split(/\s+/)
-    let charPos = 0
+
+    // Scan each word position to find where the query starts at a word boundary
     let matchWordIdx = -1
     for (let i = 0; i < words.length; i++) {
-      if (charPos === charIdx) {
+      const joined = words.slice(i).join(' ')
+      if (joined.startsWith(lowerQuery)) {
         matchWordIdx = i
         break
       }
-      charPos += words[i]!.length + 1 // +1 for the space
     }
     if (matchWordIdx < 0) {
       continue

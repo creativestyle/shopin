@@ -3,7 +3,6 @@ import type { Facet } from '@core/contracts/product-collection/facet'
 import type { PriceRange } from '@core/contracts/product-collection/product-collection'
 
 export const SEARCH_PROVIDER = Symbol('SEARCH_PROVIDER')
-export const DEFAULT_SUGGESTION_LIMIT = 10
 
 /**
  * Number of results to fetch before deduplication/extraction of query suggestions.

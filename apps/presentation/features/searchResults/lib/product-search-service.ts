@@ -19,19 +19,16 @@ export interface ProductSearchParams {
 import { SEARCH_POPUP_PRODUCT_LIMIT } from '@config/constants'
 
 export class ProductSearchBffService extends BaseService {
-  async searchProducts(
-    params: ProductSearchParams
-  ): Promise<ProductSearchResponse> {
-    const {
-      query,
-      limit = SEARCH_POPUP_PRODUCT_LIMIT,
-      page,
-      filters,
-      priceMin,
-      priceMax,
-      sort,
-      saleOnly,
-    } = params
+  async searchProducts({
+    query,
+    limit = SEARCH_POPUP_PRODUCT_LIMIT,
+    page,
+    filters,
+    priceMin,
+    priceMax,
+    sort,
+    saleOnly,
+  }: ProductSearchParams): Promise<ProductSearchResponse> {
     ProductSearchQuerySchema.parse(query)
 
     const queryParams: Record<

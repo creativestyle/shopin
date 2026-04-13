@@ -8,6 +8,7 @@ import Link from 'next/link'
 import { Logo } from '../ui/logo'
 import { Button } from '../ui/button'
 import { cn } from '@/lib/utils'
+import { MIN_SEARCH_QUERY_LENGTH } from '@config/constants'
 import { useProductSearch } from '@/features/searchResults/use-product-search'
 import { ProductCard } from '@/components/ui/product-card'
 import SearchIcon from '@/public/icons/search.svg'
@@ -57,6 +58,10 @@ function SuggestionItem({
   )
 }
 
+const boldRenderer = (chunks: React.ReactNode) => (
+  <span className='font-bold'>{chunks}</span>
+)
+
 export function SearchPopup({ open, onOpenChange }: SearchPopupProps) {
   const t = useTranslations('common')
   const locale = useLocale()
@@ -93,6 +98,9 @@ export function SearchPopup({ open, onOpenChange }: SearchPopupProps) {
             <DialogPrimitive.Title>
               {t('searchPlaceholder')}
             </DialogPrimitive.Title>
+            <DialogPrimitive.Description>
+              {t('searchPlaceholder')}
+            </DialogPrimitive.Description>
           </VisuallyHidden>
 
           {/* Top bar - 136px */}
@@ -135,94 +143,102 @@ export function SearchPopup({ open, onOpenChange }: SearchPopupProps) {
           </div>
 
           {/* Search Results */}
-          {query.length >= 3 && (
+          {query.length >= MIN_SEARCH_QUERY_LENGTH && (
             <div className='border-t border-gray-100 px-5 py-6 lg:px-[30px]'>
-              {isLoading && !results && (
-                <div className='flex justify-center py-8'>
+              {isLoading && !hasResults && (
+                <div className='flex min-h-[400px] items-center justify-center'>
                   <span className='text-sm text-gray-500'>{t('loading')}</span>
                 </div>
               )}
 
-              {results && !hasResults && (
-                <div className='mx-auto flex w-full max-w-[1640px] justify-center py-8'>
+              {!isLoading && results && !hasResults && (
+                <div className='mx-auto flex min-h-[400px] w-full max-w-[1640px] items-center justify-center'>
                   <p className='text-sm text-gray-500'>
                     {t.rich('noSearchProducts', {
                       query,
-                      bold: (chunks) => (
-                        <span className='font-bold'>{chunks}</span>
-                      ),
+                      bold: boldRenderer,
                     })}
                   </p>
                 </div>
               )}
 
               {hasResults && (
-                <div
-                  className={cn(
-                    'mx-auto flex w-full max-w-[1640px] flex-col gap-4 transition-opacity duration-150 lg:flex-row lg:justify-center lg:gap-12',
-                    isLoading && 'pointer-events-none opacity-50'
+                <div className='relative'>
+                  {isLoading && (
+                    <div className='absolute inset-0 z-10 flex items-center justify-center'>
+                      <span className='text-sm text-gray-500'>
+                        {t('loading')}
+                      </span>
+                    </div>
                   )}
-                >
-                  {/* Suggestions */}
-                  <div className='flex shrink-0 flex-col items-start gap-3 lg:w-[250px]'>
-                    <h3 className='text-xs font-bold tracking-wider text-gray-950 uppercase'>
-                      {t('suggestions')}
-                    </h3>
-                    {suggestions.length > 0 ? (
-                      <ul className='flex flex-col gap-2'>
-                        {suggestions.map((suggestion) => (
-                          <SuggestionItem
-                            key={suggestion}
-                            suggestion={suggestion}
-                            query={query}
-                            onClick={() => setQuery(suggestion)}
-                          />
-                        ))}
-                      </ul>
-                    ) : (
-                      <p className='text-sm text-gray-500'>
-                        {t.rich('noSuggestions', {
-                          bold: (chunks) => (
-                            <span className='font-bold'>{chunks}</span>
-                          ),
-                        })}
-                      </p>
+                  <div
+                    className={cn(
+                      'mx-auto flex w-full max-w-[1640px] flex-col gap-4 lg:flex-row lg:justify-center lg:gap-12',
+                      isLoading && 'pointer-events-none opacity-0'
                     )}
-                  </div>
+                  >
+                    {/* Suggestions */}
+                    <div className='flex shrink-0 flex-col items-start gap-3 lg:w-[250px]'>
+                      <h3 className='text-xs font-bold tracking-wider text-gray-950 uppercase'>
+                        {t('suggestions')}
+                      </h3>
+                      {suggestions.length > 0 ? (
+                        <ul className='flex flex-col gap-2'>
+                          {suggestions.map((suggestion) => (
+                            <SuggestionItem
+                              key={suggestion}
+                              suggestion={suggestion}
+                              query={query}
+                              onClick={() => setQuery(suggestion)}
+                            />
+                          ))}
+                        </ul>
+                      ) : (
+                        <p className='text-sm text-gray-500'>
+                          {t.rich('noSuggestions', {
+                            bold: boldRenderer,
+                          })}
+                        </p>
+                      )}
+                    </div>
 
-                  {/* Product cards grid */}
-                  <div className='flex max-w-[860px] min-w-0 flex-1 flex-col gap-4'>
-                    <h3 className='text-xs font-bold tracking-wider text-gray-950 uppercase'>
-                      {t('products')}
-                    </h3>
-                    {results.products.length > 0 ? (
-                      <div className='grid grid-cols-2 gap-[15px] lg:grid-cols-4 lg:gap-[30px]'>
-                        {results.products.map((product) => (
-                          <ProductCard
-                            key={product.id}
-                            data={product}
-                            locale={locale}
-                            imageClassName='lg:h-60 lg:min-h-0 lg:grow-0 lg:basis-auto'
-                            onClick={() => onOpenChange(false)}
-                          />
-                        ))}
-                      </div>
-                    ) : (
-                      <p className='text-sm text-gray-500'>
-                        {t.rich('noSearchProducts', {
-                          query,
-                          bold: (chunks) => (
-                            <span className='font-bold'>{chunks}</span>
-                          ),
-                        })}
-                      </p>
-                    )}
+                    {/* Product cards grid */}
+                    <div className='flex max-w-[860px] min-w-0 flex-1 flex-col gap-4'>
+                      <h3 className='text-xs font-bold tracking-wider text-gray-950 uppercase'>
+                        {t('products')}
+                      </h3>
+                      {results.products.length > 0 ? (
+                        <div className='grid grid-cols-2 gap-[15px] lg:grid-cols-4 lg:gap-[30px]'>
+                          {results.products.map((product) => (
+                            <ProductCard
+                              key={product.id}
+                              data={product}
+                              locale={locale}
+                              imageClassName='lg:h-60 lg:min-h-0 lg:grow-0 lg:basis-auto'
+                              onClick={() => onOpenChange(false)}
+                            />
+                          ))}
+                        </div>
+                      ) : (
+                        <p className='text-sm text-gray-500'>
+                          {t.rich('noSearchProducts', {
+                            query,
+                            bold: boldRenderer,
+                          })}
+                        </p>
+                      )}
+                    </div>
                   </div>
                 </div>
               )}
 
               {hasResults && (
-                <div className='mt-8 flex justify-center'>
+                <div
+                  className={cn(
+                    'mt-8 flex justify-center',
+                    isLoading && 'pointer-events-none opacity-0'
+                  )}
+                >
                   <Button
                     variant='secondary'
                     scheme='red'

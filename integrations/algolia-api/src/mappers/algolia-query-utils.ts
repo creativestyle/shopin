@@ -1,4 +1,6 @@
 import { LanguageTagUtils } from '@core/i18n'
+import { LOCALIZED_ATTR_TYPES } from '@config/constants'
+import type { FacetableFieldType } from '@config/constants'
 import type { AttributeMetadata } from './algolia-facets'
 
 export interface AlgoliaFieldNames {
@@ -18,12 +20,14 @@ export function buildAlgoliaFieldNames(language: string): AlgoliaFieldNames {
   }
 }
 
-function buildAlgoliaAttrKey(
+export function buildAlgoliaAttrKey(
   name: string,
-  fieldType: string,
+  fieldType: FacetableFieldType,
   langKey: string
 ): string {
-  return fieldType === 'ltext' ? `attr_${name}_${langKey}` : `attr_${name}`
+  return LOCALIZED_ATTR_TYPES.has(fieldType)
+    ? `attr_${name}_${langKey}`
+    : `attr_${name}`
 }
 
 export function buildFacetAttributeNames(
@@ -46,15 +50,15 @@ export function buildAlgoliaFacetFilters(
   }
 
   for (const [attrName, values] of Object.entries(filters)) {
-    if (values.length > 0) {
-      const meta = attributeMetadata.find((a) => a.name === attrName)
-      const algoliaKey = buildAlgoliaAttrKey(
-        attrName,
-        meta?.fieldType ?? '',
-        langKey
-      )
-      facetFilters.push(values.map((v) => `${algoliaKey}:${v}`))
+    if (values.length === 0) {
+      continue
     }
+    const meta = attributeMetadata.find((a) => a.name === attrName)
+    if (!meta) {
+      continue
+    }
+    const algoliaKey = buildAlgoliaAttrKey(attrName, meta.fieldType, langKey)
+    facetFilters.push(values.map((v) => `${algoliaKey}:${v}`))
   }
 
   return facetFilters

@@ -21,7 +21,8 @@ import {
   buildAttributeFilters,
 } from '../helpers/product-collection-filters'
 import { executeFacetedSearch } from '../helpers/faceted-search'
-import { mapSearchResultsToCards } from '../mappers/search-results'
+import { mapProjectionsToCards } from '../mappers/search-results'
+import { fetchProjectionsByIds } from '../helpers/fetch-projections'
 import { FilterableAttributesCacheService } from './filterable-attributes-cache.service'
 
 @Injectable()
@@ -65,21 +66,17 @@ export class ProductSearchService {
       : [textQuery]
   }
 
-  async searchProducts(
-    params: ProductSearchParams
-  ): Promise<ProductSearchResponse> {
-    const {
-      query,
-      faceted = false,
-      limit = SEARCH_POPUP_PRODUCT_LIMIT,
-      page = MIN_PAGE,
-      filters,
-      priceMin,
-      priceMax,
-      sort = DEFAULT_SORT_OPTION,
-      saleOnly = false,
-    } = params
-
+  async searchProducts({
+    query,
+    faceted = false,
+    limit = SEARCH_POPUP_PRODUCT_LIMIT,
+    page = MIN_PAGE,
+    filters,
+    priceMin,
+    priceMax,
+    sort = DEFAULT_SORT_OPTION,
+    saleOnly = false,
+  }: ProductSearchParams): Promise<ProductSearchResponse> {
     const currentLanguage = this.languageProvider.getCurrentLanguage()
     const currency = resolveCurrencyFromLanguage(currentLanguage)
     const country = resolveCountryFromLanguage(currentLanguage)
@@ -168,21 +165,26 @@ export class ProductSearchService {
       .post({
         body: {
           query: baseQuery,
-          productProjectionParameters: {
-            priceCurrency: currency,
-            priceCountry: country,
-            staged: false,
-          },
           limit,
           offset: 0,
         },
       })
       .execute()
 
-    const products = mapSearchResultsToCards(
-      searchResponse.body.results || [],
-      language
-    )
+    const results = searchResponse.body.results || []
+    const ids = results.map((r) => r.id)
+
+    const projections = ids.length
+      ? await fetchProjectionsByIds(
+          this.client,
+          ids,
+          language,
+          currency,
+          country
+        )
+      : []
+
+    const products = mapProjectionsToCards(ids, projections, language)
 
     return {
       products,

@@ -14,6 +14,7 @@ const PAIR_HEX_PATTERN = /[:=]\s*(#[0-9a-f]{3,8})$/i
 
 /** Matches a key:value separator followed by any color suffix (for stripping) */
 const PAIR_SEPARATOR_PATTERN = /^(.*?)\s*[:=]\s*(.+)$/
+
 const CSS_COLOR_KEYWORDS = new Set([
   'transparent',
   'currentcolor',
@@ -127,7 +128,10 @@ export function stripColorSuffix(label: string): string {
 export function inferDisplayType(
   terms: FacetTerm[]
 ): 'color' | 'size' | 'text' {
-  if (terms.length > 0 && terms.every((t) => isColorTerm(t.term))) {
+  if (terms.length === 0) {
+    return 'text'
+  }
+  if (terms.every((t) => isColorTerm(t.term))) {
     return 'color'
   }
   if (

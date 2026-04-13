@@ -7,9 +7,7 @@ import {
   type ProductSearchParams,
 } from '../lib/product-search-service'
 import type { ProductSearchResponse } from '@core/contracts/product-search/product-search'
-
-const DEBOUNCE_MS = 300
-const MIN_QUERY_LENGTH = 3
+import { MIN_SEARCH_QUERY_LENGTH, SEARCH_DEBOUNCE_MS } from '@config/constants'
 
 interface UseProductSearchResult {
   results: ProductSearchResponse | null
@@ -27,7 +25,7 @@ export function useProductSearch(
   const serviceRef = useRef(new ProductSearchBffService(bffFetch))
 
   useEffect(() => {
-    if (query.length < MIN_QUERY_LENGTH) {
+    if (query.length < MIN_SEARCH_QUERY_LENGTH) {
       abortControllerRef.current?.abort()
       return
     }
@@ -56,7 +54,7 @@ export function useProductSearch(
             setIsLoading(false)
           }
         })
-    }, DEBOUNCE_MS)
+    }, SEARCH_DEBOUNCE_MS)
 
     return () => clearTimeout(timeoutId)
   }, [query, params])
@@ -67,7 +65,7 @@ export function useProductSearch(
     }
   }, [])
 
-  const shouldSearch = query.length >= MIN_QUERY_LENGTH
+  const shouldSearch = query.length >= MIN_SEARCH_QUERY_LENGTH
 
   return {
     results: shouldSearch ? results : null,

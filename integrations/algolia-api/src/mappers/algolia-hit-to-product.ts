@@ -1,5 +1,5 @@
 import type { ProductCardResponse } from '@core/contracts/product-collection/product-card'
-import { buildAlgoliaFieldNames } from './algolia-filters'
+import { buildAlgoliaFieldNames } from './algolia-query-utils'
 
 const DEFAULT_PRODUCT_NAME = 'Unnamed Product'
 const DEFAULT_IMAGE_SRC = '/images/product-image.png'

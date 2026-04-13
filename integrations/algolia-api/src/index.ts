@@ -23,4 +23,4 @@ export {
   buildFacetAttributeNames,
   buildAlgoliaFacetFilters,
   buildAlgoliaNumericFilters,
-} from './mappers/algolia-filters'
+} from './mappers/algolia-query-utils'

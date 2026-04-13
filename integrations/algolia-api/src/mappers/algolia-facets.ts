@@ -1,15 +1,17 @@
 import type { Facet, FacetTerm } from '@core/contracts/product-collection/facet'
 import { getLocalizedString, LanguageTagUtils } from '@core/i18n'
+import type { FacetableFieldType } from '@config/constants'
 import {
   inferDisplayType,
   stripColorSuffix,
   extractColorHex,
 } from './algolia-facet-utils'
+import { buildAlgoliaAttrKey } from './algolia-query-utils'
 
 export interface AttributeMetadata {
   name: string
   label: Record<string, string>
-  fieldType: string
+  fieldType: FacetableFieldType
 }
 
 export function mapAlgoliaFacets(
@@ -24,10 +26,7 @@ export function mapAlgoliaFacets(
   const facets: Facet[] = []
   const langKey = LanguageTagUtils.toUnderscoreKey(language)
   for (const attr of attributeMetadata) {
-    const facetKey =
-      attr.fieldType === 'ltext'
-        ? `attr_${attr.name}_${langKey}`
-        : `attr_${attr.name}`
+    const facetKey = buildAlgoliaAttrKey(attr.name, attr.fieldType, langKey)
     const facetCounts = algoliaFacets[facetKey]
     if (!facetCounts || Object.keys(facetCounts).length === 0) {
       continue

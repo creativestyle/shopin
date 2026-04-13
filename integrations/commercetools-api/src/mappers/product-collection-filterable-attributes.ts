@@ -1,10 +1,11 @@
 import type { LocalizedString, ProductType } from '@commercetools/platform-sdk'
 import { FACETABLE_TYPES, EXCLUDED_ATTR_NAMES } from '@config/constants'
+import type { FacetableFieldType } from '@config/constants'
 
 export interface FilterableAttribute {
   name: string
   label: LocalizedString
-  fieldType: 'ltext' | 'text' | 'enum' | 'lenum'
+  fieldType: FacetableFieldType
 }
 
 export function mapFilterableAttributes(
@@ -20,7 +21,7 @@ export function mapFilterableAttributes(
         continue
       }
       const typeName = attr.type.name
-      if (!FACETABLE_TYPES.has(typeName)) {
+      if (!(FACETABLE_TYPES as Set<string>).has(typeName)) {
         continue
       }
       if (EXCLUDED_ATTR_NAMES.has(attr.name)) {

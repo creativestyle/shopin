@@ -13,7 +13,8 @@ import {
   mergeFacetCounts,
   type FilterableAttribute,
 } from '../mappers/product-collection'
-import { mapSearchResultsToCards } from '../mappers/search-results'
+import { mapProjectionsToCards } from '../mappers/search-results'
+import { fetchProjectionsByIds } from './fetch-projections'
 
 export interface FacetedSearchParams {
   client: Client
@@ -67,12 +68,6 @@ export async function executeFacetedSearch(
           postFilter:
             postFilters.length === 1 ? postFilters[0] : { and: postFilters },
         }),
-        productProjectionParameters: {
-          localeProjection: [language],
-          priceCurrency: currency,
-          priceCountry: country,
-          staged: false,
-        },
         facets,
         sort: sortExpressions,
         limit,
@@ -107,9 +102,14 @@ export async function executeFacetedSearch(
 
   const results = searchResponse.body.results || []
   const total = searchResponse.body.total ?? 0
+  const ids = results.map((r) => r.id)
+
+  const projections = ids.length
+    ? await fetchProjectionsByIds(client, ids, language, currency, country)
+    : []
 
   return {
-    products: mapSearchResultsToCards(results, language),
+    products: mapProjectionsToCards(ids, projections, language),
     facets: mapFacetsFromResponse(facetResults, filterableAttributes, language),
     priceRange: extractPriceRange(facetResults),
     total,
