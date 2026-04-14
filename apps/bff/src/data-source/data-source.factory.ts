@@ -12,11 +12,7 @@ import type { CommercetoolsServiceProvider } from '@integrations/commercetools-a
 import type { ContentfulServiceProvider } from '@integrations/contentful-api'
 import type { MockServiceProvider } from '@integrations/mock-api'
 import type { CommercetoolsAuthServiceProvider } from '@integrations/commercetools-auth'
-import {
-  createAlgoliaClient,
-  AlgoliaSearchService,
-  type AlgoliaClient,
-} from '@integrations/algolia-api'
+import type { AlgoliaServiceProvider } from '@integrations/algolia-api'
 import { CtSearchProvider } from '@integrations/commercetools-api'
 import type { SearchProvider } from '@core/contracts/product-search/search-provider'
 import { DATA_SOURCE } from './tokens'
@@ -54,6 +50,9 @@ export class DataSourceFactory {
     private readonly mockServiceProvider: MockServiceProvider,
     @Inject('COMMERCETOOLS_AUTH_SERVICE_PROVIDER')
     private readonly commercetoolsAuthServiceProvider: CommercetoolsAuthServiceProvider,
+    @Optional()
+    @Inject('ALGOLIA_SERVICE_PROVIDER')
+    private readonly algoliaServiceProvider: AlgoliaServiceProvider | null,
     @Inject(DATA_SOURCE) private readonly dataSource: DataSource,
     private readonly configService: ConfigService
   ) {
@@ -76,6 +75,7 @@ export class DataSourceFactory {
     }
     this.serviceProviderMap = new Map<DataSource, DataSourceServiceProvider>([
       ['commercetools-set', commercetoolsWithCMS],
+      ['commercetools-algolia-set', commercetoolsWithCMS],
       ['mock-set', this.mockServiceProvider],
     ])
   }
@@ -112,6 +112,9 @@ export class DataSourceFactory {
   }
 
   shouldUseExternalSearch(): boolean {
+    if (this.dataSource === 'commercetools-algolia-set') {
+      return true
+    }
     const provider = this.configService.get<string>('SEARCH_PROVIDER')
     if (provider === 'algolia') {
       return true
@@ -119,23 +122,20 @@ export class DataSourceFactory {
     if (provider === 'commercetools') {
       return false
     }
-    return !!this.configService.get<string>('ALGOLIA_APP_ID')
-  }
-
-  createAlgoliaClient(): { client: AlgoliaClient; indexName: string } {
-    return createAlgoliaClient({
-      appId: this.configService.getOrThrow<string>('ALGOLIA_APP_ID'),
-      searchApiKey: this.configService.getOrThrow<string>(
-        'ALGOLIA_SEARCH_API_KEY'
-      ),
-      indexName: this.configService.getOrThrow<string>('ALGOLIA_INDEX_NAME'),
-    })
+    return !!this.algoliaServiceProvider?.getServices().searchService
   }
 
   createSearchProvider(): SearchProvider {
     if (this.shouldUseExternalSearch()) {
-      const { client, indexName } = this.createAlgoliaClient()
-      return new AlgoliaSearchService(client, indexName)
+      const searchService =
+        this.algoliaServiceProvider?.getServices().searchService
+      if (!searchService) {
+        throw new Error(
+          'Algolia search is enabled but ALGOLIA_SERVICE_PROVIDER is not available. ' +
+            'Check that ALGOLIA_APP_ID, ALGOLIA_SEARCH_API_KEY, and ALGOLIA_INDEX_NAME env vars are set.'
+        )
+      }
+      return searchService
     }
     const { productSearchService } =
       this.commercetoolsServiceProvider.getServices()
