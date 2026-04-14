@@ -1,5 +1,6 @@
 @import 'tailwindcss';
 @source '../../../demo/data-source-selector/';
+@source '../../../demo/demo-disclaimer/';
 @tailwind utilities;
 @import 'tw-animate-css';
 

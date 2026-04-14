@@ -11,6 +11,8 @@ Demo functionality showcases multi–data-source switching and mocked payment; y
   - `DataSourceIndicator` — Visual indicator of the current data source (shown in the top bar)
   - `getDataSourceHeader` — Utility for sending the data-source header to the BFF
 
+- **demo-disclaimer** — React modal dialog shown on first visit; warns visitors this is a sandbox with no real orders or payments. Stores acknowledgment in a cookie for 30 days. Copy is hardcoded (EN/DE) — no i18n changes needed.
+
 - **data-source-header-reader** — NestJS middleware for the BFF that reads the `x-data-source` header and sets the active data source on the request. Required for the selector to actually switch backends.
 
 - **mocked-payment-service-provider** — React components for mocked payment (used by presentation and Storybook). The **mock integration** (`integrations/mock-api`) redirects checkout to the demo payment page at `/demo/mocked-payment-step/[paymentId]`; removing this package requires updating that integration to use a different payment link.
@@ -18,7 +20,8 @@ Demo functionality showcases multi–data-source switching and mocked payment; y
 
 ## Usage
 
-- **Presentation** and **Storybook** depend on `@demo/data-source-selector` and `@demo/mocked-payment-service-provider`.
+- **Presentation** depends on `@demo/data-source-selector`, `@demo/demo-disclaimer`, and `@demo/mocked-payment-service-provider`.
+- **Storybook** depends on `@demo/data-source-selector` and `@demo/mocked-payment-service-provider`.
 - **BFF** depends on `@demo/data-source-header-reader` so that the data-source selector can switch backends.
 
 ## Removing Demo Functionality
@@ -26,12 +29,13 @@ Demo functionality showcases multi–data-source switching and mocked payment; y
 If you don't need the demo functionality, you can remove this entire workspace:
 
 1. **Remove dependencies**
-   - From `apps/presentation/package.json`: remove `@demo/data-source-selector` and `@demo/mocked-payment-service-provider`
+   - From `apps/presentation/package.json`: remove `@demo/data-source-selector`, `@demo/demo-disclaimer`, and `@demo/mocked-payment-service-provider`
    - From `apps/bff/package.json`: remove `@demo/data-source-header-reader`
    - From `apps/storybook/package.json` (if you use it): remove `@demo/data-source-selector` and `@demo/mocked-payment-service-provider`
 
 2. **Remove usage in presentation**
    - `DataSourceIndicator` — `apps/presentation/components/layout/top-bar.tsx`
+   - `DemoDisclaimerModal` — remove from `apps/presentation/app/[locale]/layout.tsx` and remove `@source '../../../demo/demo-disclaimer/'` from `apps/presentation/app/globals.css`
    - `getDataSourceHeader` — `apps/presentation/lib/bff/core/bff-fetch.ts`
    - **Demo payment**: Remove `PaymentDemo` from `apps/presentation/app/[locale]/demo/mocked-payment-step/[paymentId]/page.tsx`, or delete the whole `app/[locale]/demo/` route. Then update **`integrations/mock-api`**: the mock payment service (`integrations/mock-api/src/services/payment.service.ts`) currently returns a payment link to `/demo/mocked-payment-step/${cartId}`. Change `getPaymentLink()` to return your real payment provider URL (or a placeholder), otherwise checkout with the mock data source will redirect to a broken link.
    - In `apps/presentation/app/globals.css`, remove the line: `@source '../../../demo/data-source-selector/';`

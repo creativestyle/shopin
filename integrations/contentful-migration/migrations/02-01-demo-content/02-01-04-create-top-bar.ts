@@ -11,11 +11,11 @@ import { ensureNoEntryOfType } from '../lib/page-teasers'
 const TOP_BAR_ENTRY = {
   'en-US': {
     topBarMessages:
-      'Free returns\nLargest selection\nSecure payment\nHuge size selection\nDirect from manufacturer',
+      'DEMO ONLY: SHOPin Accelerator presentation. All products are fictional — no real orders, payments, or shipping.',
   },
   'de-DE': {
     topBarMessages:
-      'Kostenlose Retoure\nGrößtes Sortiment\nSichere Zahlung\nRiesige Größenauswahl\nDirekt vom Hersteller',
+      'NUR DEMO: SHOPin Accelerator Präsentation. Alle Produkte sind fiktiv – keine echten Bestellungen, Zahlungen oder Lieferungen.',
   },
 }
 

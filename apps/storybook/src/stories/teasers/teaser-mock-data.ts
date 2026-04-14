@@ -23,6 +23,7 @@ import type {
   AccordionTeaser,
   AccordionItem,
 } from '@core/contracts/content/teaser-accordion'
+import type { VideoTeaser } from '@core/contracts/content/teaser-video'
 
 export const MOCK_IMAGES = {
   banner: 'https://placehold.co/1200x400/1e3a5f/94a3b8?text=Hero',
@@ -636,4 +637,16 @@ export const ACCORDION: AccordionTeaser = {
   type: 'accordion',
   title: 'FAQ',
   items: ACCORDION_ITEMS,
+}
+
+export const VIDEO: VideoTeaser = {
+  type: 'video',
+  title: 'New in',
+  videoUrl:
+    'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
+  thumbnailUrl: 'https://placehold.co/1280x720/1e3a5f/94a3b8?text=Video',
+  autoplay: false,
+  controls: true,
+  caption: 'Discover the latest trends.',
+  link: { label: 'Shop now', url: '/new' },
 }

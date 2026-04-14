@@ -1,4 +1,7 @@
 {
+  "legalBar": {
+    "copyright": "© 2026 SHOPin storefront accelerator."
+  },
   "common": {
     "welcomeMessage": "Welcome to our application!",
     "yes": "Yes",
@@ -43,11 +46,7 @@
     }
   },
   "topBar": {
-    "freeReturns": "Free Returns",
-    "largestSelection": "Largest Shopin Selection Worldwide",
-    "securePayment": "Secure Payment",
-    "hugeSizeSelection": "Huge Size Selection",
-    "directFromManufacturer": "Direct from Manufacturer"
+    "ariaLabel": "Site announcement"
   },
   "userMenu": {
     "storeLocator": "Store Locator",
@@ -117,8 +116,7 @@
       "imprint": "Imprint",
       "terms": "Terms & Conditions",
       "privacy": "Privacy Policy",
-      "privacySettings": "Privacy Settings",
-      "copyright": "© 2023 SHOPIN Store GmbH & Co. KG"
+      "privacySettings": "Privacy Settings"
     }
   },
   "product": {
@@ -689,10 +687,9 @@
       "edit": "Edit"
     },
     "footer": {
-      "company": "Company",
       "imprint": "Imprint",
-      "termsAndPrivacy": "Terms & Conditions, Privacy Policy & Right of Withdrawal",
-      "copyright": "© 2023 SHOPIN Store GmbH & Co. KG"
+      "terms": "Terms & Conditions",
+      "privacyPolicy": "Privacy Policy"
     }
   },
   "teaser": {
@@ -701,6 +698,9 @@
     },
     "richText": {
       "assetUnresolved": "Asset (unresolved)"
+    },
+    "video": {
+      "unavailable": "Video unavailable"
     }
   },
   "searchResults": {

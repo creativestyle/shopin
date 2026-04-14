@@ -16,25 +16,7 @@ import {
 
 type LinkByLocale = Record<string, Record<string, unknown>>
 
-const LEGAL_LINKS: LinkByLocale[] = [
-  {
-    'en-US': { label: 'Imprint', url: '/impressum' },
-    'de-DE': { label: 'Impressum', url: '/impressum' },
-  },
-  {
-    'en-US': { label: 'Terms', url: '/agb' },
-    'de-DE': { label: 'AGB', url: '/agb' },
-  },
-  {
-    'en-US': { label: 'Privacy', url: '/datenschutz' },
-    'de-DE': { label: 'Datenschutz', url: '/datenschutz' },
-  },
-  {
-    'en-US': { label: 'Privacy settings', url: '/privacy-settings' },
-    'de-DE': { label: 'Datenschutzeinstellungen', url: '/privacy-settings' },
-  },
-]
-
+/** Legal links are not seeded in Contentful; the storefront can merge defaults (e.g. demo package). */
 const COMPANY_LINK_WEBSITE: LinkByLocale = {
   'en-US': {
     label: 'Website',
@@ -258,7 +240,6 @@ async function createFooterEntry(
   client: PlainClientAPI,
   payload: {
     companyLinkIds: string[]
-    legalLinkIds: string[]
     serviceLinkIds: string[]
     socialLinkIds: string[]
   }
@@ -274,20 +255,19 @@ async function createFooterEntry(
     payload.serviceLinkIds
   )
   const footerLinksRefs = [section1Id, section2Id].map(toEntryRef)
-  const legalRefs = payload.legalLinkIds.map(toEntryRef)
   const socialRefs = payload.socialLinkIds.map(toEntryRef)
 
   await createEntryWithLocales(client, 'footer', {
     'en-US': {
       ...FOOTER_FIELDS['en-US'],
       footerLinks: footerLinksRefs,
-      legalLinks: legalRefs,
+      legalLinks: [],
       socialLinks: socialRefs,
     },
     'de-DE': {
       ...FOOTER_FIELDS['de-DE'],
       footerLinks: footerLinksRefs,
-      legalLinks: legalRefs,
+      legalLinks: [],
       socialLinks: socialRefs,
     },
   })
@@ -296,14 +276,12 @@ async function createFooterEntry(
 async function run(migration: unknown) {
   const client = getManagementClient(migration)
   await ensureNoEntryOfType(client, 'footer', 'Footer content already exists')
-  const legalLinkIds = await createLinkEntries(client, LEGAL_LINKS)
   const companyLinkIds = await createCompanyLinkIds(client)
   const serviceLinkIds = await createLinkEntries(client, SERVICE_LINKS)
   const socialLinkIds = await createLinkEntries(client, SOCIAL_LINKS)
 
   await createFooterEntry(client, {
     companyLinkIds,
-    legalLinkIds,
     serviceLinkIds,
     socialLinkIds,
   })

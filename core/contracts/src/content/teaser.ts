@@ -12,6 +12,7 @@ import { SectionTeaserSchema } from './teaser-section'
 import { RegularTeaserSchema } from './teaser-regular'
 import { AccordionTeaserSchema } from './teaser-accordion'
 import { BrandTeaserSchema } from './teaser-brand'
+import { VideoTeaserSchema } from './teaser-video'
 
 /** Discriminated union of all teaser/component types */
 export const TeaserResponseSchema = z.discriminatedUnion('type', [
@@ -28,6 +29,7 @@ export const TeaserResponseSchema = z.discriminatedUnion('type', [
   RegularTeaserSchema,
   AccordionTeaserSchema,
   BrandTeaserSchema,
+  VideoTeaserSchema,
 ])
 
 export type TeaserResponse = z.infer<typeof TeaserResponseSchema>

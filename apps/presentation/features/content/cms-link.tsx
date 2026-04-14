@@ -17,10 +17,14 @@ export interface CmsLinkProps {
   className?: string
   /** When provided, used as link content instead of link.label (e.g. for teaser cards). */
   children?: React.ReactNode
+  useLabelAsFallbackContent?: boolean
 }
 
 export const CmsLink = React.forwardRef<HTMLAnchorElement, CmsLinkProps>(
-  function CmsLink({ link, className, children }, ref) {
+  function CmsLink(
+    { link, className, children, useLabelAsFallbackContent = true },
+    ref
+  ) {
     return (
       <Link
         ref={ref}
@@ -28,7 +32,7 @@ export const CmsLink = React.forwardRef<HTMLAnchorElement, CmsLinkProps>(
         title={link.title ?? undefined}
         className={className}
       >
-        {children ?? link.label}
+        {children ?? (useLabelAsFallbackContent ? link.label : undefined)}
       </Link>
     )
   }

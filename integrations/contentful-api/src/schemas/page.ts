@@ -1,7 +1,6 @@
 import { z } from 'zod'
 import { I18N_CONFIG } from '@config/constants'
 import { ContentfulImageApiResponseSchema } from './image'
-import { TeaserEntryApiResponseSchema } from './teaser'
 
 /** GraphQL alias for locale slug: "en-US" -> "slug_en_US". */
 export function localeSlugKey(locale: string): string {
@@ -35,7 +34,7 @@ export const PageItemApiResponseSchema = z.object({
   noIndex: z.boolean().optional().nullable(),
   componentsCollection: z
     .object({
-      items: z.array(TeaserEntryApiResponseSchema).optional().nullable(),
+      items: z.array(z.unknown()).optional().nullable(),
     })
     .optional()
     .nullable(),
