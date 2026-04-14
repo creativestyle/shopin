@@ -7,6 +7,7 @@ import { StoreConfigProvider } from '@/features/store-config/store-config-provid
 import { getStoreConfig } from '@/features/store-config/get-store-config-server'
 import { TopBar } from '@/components/layout/top-bar'
 import { getHeaderLayout } from '@/features/content/get-layout'
+import { DemoDisclaimerModal } from '@demo/demo-disclaimer'
 
 export default async function LocaleLayout({
   children,
@@ -31,6 +32,7 @@ export default async function LocaleLayout({
           <TopBar messages={headerLayout?.topBarMessages ?? []} />
           <main>{children}</main>
           <Toaster position='bottom-right' />
+          <DemoDisclaimerModal />
         </AddToCartModalProvider>
       </StoreConfigProvider>
     </NextIntlClientProvider>

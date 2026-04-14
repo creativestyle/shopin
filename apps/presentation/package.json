@@ -21,6 +21,7 @@
     "@core/logger-config": "*",
     "@core/i18n": "*",
     "@demo/data-source-selector": "*",
+    "@demo/demo-disclaimer": "*",
     "@demo/mocked-payment-service-provider": "*",
     "@hookform/resolvers": "5.2.2",
     "@radix-ui/react-accordion": "1.2.12",
