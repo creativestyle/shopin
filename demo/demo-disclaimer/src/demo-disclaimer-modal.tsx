@@ -11,6 +11,11 @@ import {
 
 type SupportedLocale = 'en' | 'de'
 
+const LANGUAGE_TOGGLE_LOCALES = [
+  'en',
+  'de',
+] as const satisfies readonly SupportedLocale[]
+
 const TRANSLATIONS = {
   en: {
     title: 'Demo Store Notice',
@@ -110,49 +115,44 @@ export function DemoDisclaimerModal() {
     }
   }
 
+  const handleDialogOpenChange = (next: boolean) => {
+    // Prevent closing without acknowledgment
+    if (!next) {
+      return
+    }
+    setOpen(next)
+  }
+
   return (
     <DialogPrimitive.Root
       open={open}
-      onOpenChange={(next) => {
-        // Prevent closing without acknowledgment
-        if (!next) {
-          return
-        }
-        setOpen(next)
-      }}
+      onOpenChange={handleDialogOpenChange}
     >
       <DialogPrimitive.Portal>
-        <DialogPrimitive.Overlay className='fixed inset-0 z-(--z-modal) bg-black/50 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=closed]:animate-out data-[state=closed]:fade-out-0' />
+        <DialogPrimitive.Overlay className='fixed inset-0 z-(--z-modal) bg-gray-950/50 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=closed]:animate-out data-[state=closed]:fade-out-0' />
         <DialogPrimitive.Content
           onEscapeKeyDown={(e) => e.preventDefault()}
           onPointerDownOutside={(e) => e.preventDefault()}
           onInteractOutside={(e) => e.preventDefault()}
-          className='fixed top-1/2 left-1/2 z-(--z-modal) w-[calc(100%-2rem)] max-w-2xl -translate-x-1/2 -translate-y-1/2 rounded-lg bg-white shadow-lg data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95'
+          className='fixed top-1/2 left-1/2 z-(--z-modal) w-[calc(100%-2rem)] max-w-2xl -translate-x-1/2 -translate-y-1/2 rounded-lg bg-white shadow-card data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95'
         >
           {/* Language toggle */}
           <div className='flex justify-end gap-1 px-6 pt-4'>
-            <button
-              onClick={() => setLang('en')}
-              className={`rounded px-2 py-0.5 text-xs font-semibold transition-colors ${
-                lang === 'en'
-                  ? 'bg-gray-950 text-white'
-                  : 'text-gray-500 hover:text-gray-950'
-              }`}
-              aria-pressed={lang === 'en'}
-            >
-              EN
-            </button>
-            <button
-              onClick={() => setLang('de')}
-              className={`rounded px-2 py-0.5 text-xs font-semibold transition-colors ${
-                lang === 'de'
-                  ? 'bg-gray-950 text-white'
-                  : 'text-gray-500 hover:text-gray-950'
-              }`}
-              aria-pressed={lang === 'de'}
-            >
-              DE
-            </button>
+            {LANGUAGE_TOGGLE_LOCALES.map((code) => (
+              <button
+                key={code}
+                type='button'
+                onClick={() => setLang(code)}
+                className={`rounded px-2 py-0.5 text-xs font-semibold transition-colors ${
+                  lang === code
+                    ? 'bg-gray-950 text-white'
+                    : 'text-gray-500 hover:text-gray-950'
+                }`}
+                aria-pressed={lang === code}
+              >
+                {code.toUpperCase()}
+              </button>
+            ))}
           </div>
 
           {/* Header */}
@@ -222,7 +222,7 @@ export function DemoDisclaimerModal() {
                 onCheckedChange={(checked) =>
                   setDontShowAgain(checked === true)
                 }
-                className='size-5 shrink-0 cursor-pointer rounded border border-gray-300 bg-white outline-none transition-colors duration-150 hover:border-gray-900 focus-visible:ring-1 focus-visible:ring-black/20 data-[state=checked]:border-rose-700 data-[state=checked]:bg-rose-700'
+                className='size-5 shrink-0 cursor-pointer rounded border border-gray-300 bg-white outline-none transition-colors duration-150 hover:border-primary focus-visible:ring-1 focus-visible:ring-primary/30 data-[state=checked]:border-primary data-[state=checked]:bg-primary'
               >
                 <CheckboxPrimitive.Indicator className='flex items-center justify-center text-white'>
                   <svg
@@ -245,7 +245,7 @@ export function DemoDisclaimerModal() {
             </label>
             <button
               onClick={handleAccept}
-              className='inline-flex h-12 w-full cursor-pointer items-center justify-center rounded-full bg-rose-700 px-7 text-sm font-bold text-white transition-colors hover:bg-rose-600 active:bg-rose-600'
+              className='inline-flex h-12 w-full cursor-pointer items-center justify-center rounded-full bg-primary px-7 text-sm font-bold text-white transition-colors hover:bg-secondary active:bg-secondary'
             >
               {t.accept}
             </button>
