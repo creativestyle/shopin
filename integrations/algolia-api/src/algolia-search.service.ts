@@ -1,48 +1,45 @@
-import { Injectable, type OnModuleInit } from '@nestjs/common'
-import { ConfigService } from '@nestjs/config'
-import { algoliasearch, type SearchResponse } from 'algoliasearch'
-import { ITEMS_PER_PAGE, MIN_PAGE } from '@config/constants'
+import {
+  ITEMS_PER_PAGE,
+  MIN_PAGE,
+  DEFAULT_SUGGESTION_LIMIT,
+} from '@config/constants'
 import type { PriceRange } from '@core/contracts/product-collection/product-collection'
 import type {
   SearchProvider,
   SearchProductsOptions,
   SearchProductsResult,
-} from './search-provider.interface'
+} from '@core/contracts/product-search/search-provider'
+import { SUGGESTION_FETCH_SIZE } from '@core/contracts/product-search/search-provider'
+import { extractQuerySuggestions } from '@core/contracts/product-search/suggestion-utils'
+import type { AlgoliaClient } from './create-algolia-client'
+import type { SearchResponse } from './create-algolia-client'
 import {
   type AlgoliaProductHit,
   mapAlgoliaHitToProduct,
+} from './mappers/algolia-hit-to-product'
+import {
   type AttributeMetadata,
   mapAlgoliaFacets,
   mergeAlgoliaFacets,
-  mapAlgoliaPriceRange,
+} from './mappers/algolia-facets'
+import { mapAlgoliaPriceRange } from './mappers/algolia-price-range'
+import {
   buildAlgoliaFieldNames,
   buildFacetAttributeNames,
   buildAlgoliaFacetFilters,
   buildAlgoliaNumericFilters,
-} from '@integrations/algolia-api'
-import { extractQuerySuggestions } from './suggestion-utils'
-import { SUGGESTION_FETCH_SIZE } from './search-provider.interface'
-import { DEFAULT_SUGGESTION_LIMIT } from '@config/constants'
+} from './mappers/algolia-query-utils'
 
 const METADATA_CACHE_TTL_MS = 5 * 60 * 1000 // 5 minutes
 
-@Injectable()
-export class AlgoliaSearchService implements SearchProvider, OnModuleInit {
-  private client!: ReturnType<typeof algoliasearch>
-  private indexName = ''
+export class AlgoliaSearchService implements SearchProvider {
   private attributeMetadataCache: AttributeMetadata[] | null = null
   private attributeMetadataCachedAt = 0
 
-  constructor(private readonly configService: ConfigService) {}
-
-  onModuleInit(): void {
-    const appId = this.configService.getOrThrow<string>('ALGOLIA_APP_ID')
-    const searchApiKey = this.configService.getOrThrow<string>(
-      'ALGOLIA_SEARCH_API_KEY'
-    )
-    this.indexName = this.configService.getOrThrow<string>('ALGOLIA_INDEX_NAME')
-    this.client = algoliasearch(appId, searchApiKey)
-  }
+  constructor(
+    private readonly client: AlgoliaClient,
+    private readonly indexName: string
+  ) {}
 
   private async getAttributeMetadata(): Promise<AttributeMetadata[]> {
     if (
@@ -136,9 +133,6 @@ export class AlgoliaSearchService implements SearchProvider, OnModuleInit {
       },
     })
 
-    // When filters are active, run a second query WITHOUT filters to get all
-    // available facet options (mirroring CT's postFilter / dual-query pattern).
-    // The filtered query's counts are merged into the full option set.
     const unfilteredQuery = hasActiveFilters
       ? this.client.searchSingleIndex<AlgoliaProductHit>({
           indexName: this.indexName,

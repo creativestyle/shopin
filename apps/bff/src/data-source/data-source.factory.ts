@@ -1,4 +1,5 @@
 import { Injectable, Inject, Optional } from '@nestjs/common'
+import { ConfigService } from '@nestjs/config'
 import { ALLOWED_DATA_SOURCES } from '@config/constants'
 import type { DataSource } from '@config/constants'
 import type {
@@ -11,6 +12,13 @@ import type { CommercetoolsServiceProvider } from '@integrations/commercetools-a
 import type { ContentfulServiceProvider } from '@integrations/contentful-api'
 import type { MockServiceProvider } from '@integrations/mock-api'
 import type { CommercetoolsAuthServiceProvider } from '@integrations/commercetools-auth'
+import {
+  createAlgoliaClient,
+  AlgoliaSearchService,
+  type AlgoliaClient,
+} from '@integrations/algolia-api'
+import { CtSearchProvider } from '@integrations/commercetools-api'
+import type { SearchProvider } from '@core/contracts/product-search/search-provider'
 import { DATA_SOURCE } from './tokens'
 
 type CommercetoolsWithCMSServices = ReturnType<
@@ -46,7 +54,8 @@ export class DataSourceFactory {
     private readonly mockServiceProvider: MockServiceProvider,
     @Inject('COMMERCETOOLS_AUTH_SERVICE_PROVIDER')
     private readonly commercetoolsAuthServiceProvider: CommercetoolsAuthServiceProvider,
-    @Inject(DATA_SOURCE) private readonly dataSource: DataSource
+    @Inject(DATA_SOURCE) private readonly dataSource: DataSource,
+    private readonly configService: ConfigService
   ) {
     const commercetoolsWithCMS: MergedCommercetoolsCMSProvider = {
       getServices: (): CommercetoolsWithCMSServices => {
@@ -100,5 +109,36 @@ export class DataSourceFactory {
 
   getAuthServices(): AllAuthServices {
     return this.commercetoolsAuthServiceProvider.getAuthServices()
+  }
+
+  shouldUseExternalSearch(): boolean {
+    const provider = this.configService.get<string>('SEARCH_PROVIDER')
+    if (provider === 'algolia') {
+      return true
+    }
+    if (provider === 'commercetools') {
+      return false
+    }
+    return !!this.configService.get<string>('ALGOLIA_APP_ID')
+  }
+
+  createAlgoliaClient(): { client: AlgoliaClient; indexName: string } {
+    return createAlgoliaClient({
+      appId: this.configService.getOrThrow<string>('ALGOLIA_APP_ID'),
+      searchApiKey: this.configService.getOrThrow<string>(
+        'ALGOLIA_SEARCH_API_KEY'
+      ),
+      indexName: this.configService.getOrThrow<string>('ALGOLIA_INDEX_NAME'),
+    })
+  }
+
+  createSearchProvider(): SearchProvider {
+    if (this.shouldUseExternalSearch()) {
+      const { client, indexName } = this.createAlgoliaClient()
+      return new AlgoliaSearchService(client, indexName)
+    }
+    const { productSearchService } =
+      this.commercetoolsServiceProvider.getServices()
+    return new CtSearchProvider(productSearchService)
   }
 }

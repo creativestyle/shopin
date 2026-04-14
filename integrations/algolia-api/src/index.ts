@@ -1,4 +1,13 @@
 export {
+  type AlgoliaClientConfig,
+  type AlgoliaClient,
+  type SearchResponse,
+  createAlgoliaClient,
+} from './create-algolia-client'
+
+export { AlgoliaSearchService } from './algolia-search.service'
+
+export {
   type AlgoliaProductHit,
   mapAlgoliaHitToProduct,
 } from './mappers/algolia-hit-to-product'

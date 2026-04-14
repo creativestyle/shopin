@@ -6,7 +6,7 @@ import {
   SEARCH_PROVIDER,
   type SearchProvider,
   type SearchProductsOptions,
-} from './search-provider.interface'
+} from '@core/contracts/product-search/search-provider'
 
 export type SearchProductsParams = Omit<SearchProductsOptions, 'language'>
 

@@ -4,6 +4,7 @@ import * as React from 'react'
 import { useTranslations, useLocale } from 'next-intl'
 import * as DialogPrimitive from '@radix-ui/react-dialog'
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Logo } from '../ui/logo'
 import { Button } from '../ui/button'
@@ -65,6 +66,7 @@ const boldRenderer = (chunks: React.ReactNode) => (
 export function SearchPopup({ open, onOpenChange }: SearchPopupProps) {
   const t = useTranslations('common')
   const locale = useLocale()
+  const router = useRouter()
   const [query, setQuery] = React.useState('')
   const { results, isLoading } = useProductSearch(query)
 
@@ -122,7 +124,16 @@ export function SearchPopup({ open, onOpenChange }: SearchPopupProps) {
             </div>
 
             {/* Search Input */}
-            <div className='relative mx-auto flex h-12 w-full max-w-[920px] flex-1 items-center gap-3 rounded-full bg-gray-100 px-4 lg:mx-[70px]'>
+            <form
+              className='relative mx-auto flex h-12 w-full max-w-[920px] flex-1 items-center gap-3 rounded-full bg-gray-100 px-4 lg:mx-[70px]'
+              onSubmit={(e) => {
+                e.preventDefault()
+                if (query.trim().length >= MIN_SEARCH_QUERY_LENGTH) {
+                  onOpenChange(false)
+                  router.push(`/search?q=${encodeURIComponent(query.trim())}`)
+                }
+              }}
+            >
               <SearchIcon className='size-6 flex-shrink-0 text-gray-500' />
               <input
                 type='text'
@@ -133,7 +144,7 @@ export function SearchPopup({ open, onOpenChange }: SearchPopupProps) {
                 aria-label={t('searchPlaceholder')}
                 className='w-full border-none bg-transparent text-sm leading-normal font-normal text-gray-900 outline-none placeholder:text-gray-500'
               />
-            </div>
+            </form>
 
             {/* Close Button - Desktop only */}
             <DialogPrimitive.Close className='hidden flex-shrink-0 cursor-pointer items-center gap-2 text-base text-gray-950 underline transition-colors hover:text-gray-700 lg:flex'>
