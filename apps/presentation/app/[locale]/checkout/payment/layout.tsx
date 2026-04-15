@@ -1,6 +1,7 @@
 import React from 'react'
 import { CheckoutHeader } from '@/features/checkout/checkout-header'
 import { CheckoutFooter } from '@/features/checkout/checkout-footer'
+import { PageShell, PageContent } from '@/components/layout/page-shell'
 
 export default function PaymentLayout({
   children,
@@ -8,10 +9,10 @@ export default function PaymentLayout({
   children: React.ReactNode
 }) {
   return (
-    <div className='flex min-h-screen flex-col bg-gray-50'>
+    <PageShell className='bg-gray-50'>
       <CheckoutHeader />
-      <main className='flex flex-1 flex-col'>{children}</main>
+      <PageContent className='flex flex-col'>{children}</PageContent>
       <CheckoutFooter />
-    </div>
+    </PageShell>
   )
 }

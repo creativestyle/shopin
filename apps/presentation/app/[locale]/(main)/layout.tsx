@@ -1,6 +1,7 @@
 import React from 'react'
 import { Header } from '../../../components/layout/header'
 import { Footer } from '../../../components/layout/footer'
+import { PageShell, PageContent } from '../../../components/layout/page-shell'
 
 export default function MainLayout({
   children,
@@ -8,10 +9,10 @@ export default function MainLayout({
   children: React.ReactNode
 }) {
   return (
-    <>
+    <PageShell>
       <Header />
-      <main>{children}</main>
+      <PageContent>{children}</PageContent>
       <Footer />
-    </>
+    </PageShell>
   )
 }
