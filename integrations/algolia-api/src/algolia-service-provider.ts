@@ -20,6 +20,12 @@ export class AlgoliaServiceProviderImpl implements AlgoliaServiceProvider {
   }
 
   getServices() {
+    if (!this.searchService) {
+      throw new Error(
+        'Algolia search service is not available. ' +
+          'Check that ALGOLIA_APP_ID, ALGOLIA_SEARCH_API_KEY, and ALGOLIA_INDEX_NAME env vars are set.'
+      )
+    }
     return {
       searchService: this.searchService,
     }

@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { getLocale } from 'next-intl/server'
+import { DataSourceSelector } from '@demo/data-source-selector'
 import { ContentPage } from '@/features/content/content-page'
 import { buildContentPageMetadata } from '@/features/content/build-content-page-metadata'
 import { getContentPage } from '@/features/content/get-content-page'
@@ -40,5 +41,12 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function Home() {
   const localePrefix = (await getLocale()) ?? 'en'
   const slug = getHomepageSlugForLocale(localePrefix)
-  return <ContentPage slug={slug} />
+  return (
+    <>
+      <div className='p-8'>
+        <DataSourceSelector />
+      </div>
+      <ContentPage slug={slug} />
+    </>
+  )
 }

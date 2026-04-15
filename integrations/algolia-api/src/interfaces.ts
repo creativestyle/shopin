@@ -1,5 +1,5 @@
-import type { AlgoliaServiceProviderImpl } from './algolia-service-provider'
+import type { AlgoliaSearchService } from './algolia-search.service'
 
 export interface AlgoliaServiceProvider {
-  getServices(): ReturnType<AlgoliaServiceProviderImpl['getServices']>
+  getServices(): { searchService: AlgoliaSearchService }
 }

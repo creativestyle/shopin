@@ -2,18 +2,15 @@ import { Injectable, Inject } from '@nestjs/common'
 import { LANGUAGE_TOKEN } from '@core/i18n'
 import type { LanguageProvider } from '../../common/language/language.provider'
 import type { ProductSearchResponse } from '@core/contracts/product-search/product-search'
-import {
-  SEARCH_PROVIDER,
-  type SearchProvider,
-  type SearchProductsOptions,
-} from '@core/contracts/product-search/search-provider'
+import type { SearchProductsOptions } from '@core/contracts/product-search/search-provider'
+import { DataSourceFactory } from '../../data-source/data-source.factory'
 
 export type SearchProductsParams = Omit<SearchProductsOptions, 'language'>
 
 @Injectable()
 export class ProductSearchService {
   constructor(
-    @Inject(SEARCH_PROVIDER) private readonly searchProvider: SearchProvider,
+    private readonly dataSourceFactory: DataSourceFactory,
     @Inject(LANGUAGE_TOKEN) private readonly languageProvider: LanguageProvider
   ) {}
 
@@ -25,7 +22,7 @@ export class ProductSearchService {
       params
 
     const [searchResult, suggestions] = await Promise.all([
-      this.searchProvider.searchProducts({
+      this.dataSourceFactory.getServices().searchService.searchProducts({
         query,
         language,
         limit,
@@ -36,7 +33,9 @@ export class ProductSearchService {
         sort,
         saleOnly,
       }),
-      this.searchProvider.getSuggestions(query, language),
+      this.dataSourceFactory
+        .getServices()
+        .searchService.getSuggestions(query, language),
     ])
 
     return {

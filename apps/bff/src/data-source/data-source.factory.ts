@@ -1,5 +1,4 @@
 import { Injectable, Inject, Optional } from '@nestjs/common'
-import { ConfigService } from '@nestjs/config'
 import { ALLOWED_DATA_SOURCES } from '@config/constants'
 import type { DataSource } from '@config/constants'
 import type {
@@ -22,6 +21,7 @@ type CommercetoolsWithCMSServices = ReturnType<
 > & {
   pageService: PageService
   layoutService: LayoutService
+  searchService: SearchProvider
 }
 
 type MergedCommercetoolsCMSProvider = {
@@ -53,16 +53,19 @@ export class DataSourceFactory {
     @Optional()
     @Inject('ALGOLIA_SERVICE_PROVIDER')
     private readonly algoliaServiceProvider: AlgoliaServiceProvider | null,
-    @Inject(DATA_SOURCE) private readonly dataSource: DataSource,
-    private readonly configService: ConfigService
+    @Inject(DATA_SOURCE) private readonly dataSource: DataSource
   ) {
     const commercetoolsWithCMS: MergedCommercetoolsCMSProvider = {
       getServices: (): CommercetoolsWithCMSServices => {
         const commercetools = this.commercetoolsServiceProvider.getServices()
+        const ctSearchService = new CtSearchProvider(
+          commercetools.productSearchService
+        )
         if (this.contentfulServiceProvider) {
           return {
             ...commercetools,
             ...this.contentfulServiceProvider.getServices(),
+            searchService: ctSearchService,
           }
         }
         const mock = this.mockServiceProvider.getServices()
@@ -70,12 +73,25 @@ export class DataSourceFactory {
           ...commercetools,
           pageService: mock.pageService,
           layoutService: mock.layoutService,
+          searchService: ctSearchService,
         }
       },
     }
+
+    const commercetoolsWithCMSWithAlgolia: MergedCommercetoolsCMSProvider = {
+      getServices: (): CommercetoolsWithCMSServices => {
+        const base = commercetoolsWithCMS.getServices()
+        const { searchService } = this.algoliaServiceProvider!.getServices()
+        return {
+          ...base,
+          searchService,
+        }
+      },
+    }
+
     this.serviceProviderMap = new Map<DataSource, DataSourceServiceProvider>([
       ['commercetools-set', commercetoolsWithCMS],
-      ['commercetools-algolia-set', commercetoolsWithCMS],
+      ['commercetools-algolia-set', commercetoolsWithCMSWithAlgolia],
       ['mock-set', this.mockServiceProvider],
     ])
   }
@@ -97,6 +113,14 @@ export class DataSourceFactory {
     // Always use mock paymentService regardless of data source
     const { paymentService } = this.mockServiceProvider.getServices()
 
+    // For mock-set, wrap the CT productSearchService as a SearchProvider
+    const searchService: SearchProvider =
+      'searchService' in baseServices
+        ? (baseServices as CommercetoolsWithCMSServices).searchService
+        : new CtSearchProvider(
+            this.commercetoolsServiceProvider.getServices().productSearchService
+          )
+
     return {
       ...baseServices,
       customerService,
@@ -104,41 +128,11 @@ export class DataSourceFactory {
       cartPaymentService: baseServices.cartPaymentService,
       paymentService,
       orderService,
+      searchService,
     }
   }
 
   getAuthServices(): AllAuthServices {
     return this.commercetoolsAuthServiceProvider.getAuthServices()
-  }
-
-  shouldUseExternalSearch(): boolean {
-    if (this.dataSource === 'commercetools-algolia-set') {
-      return true
-    }
-    const provider = this.configService.get<string>('SEARCH_PROVIDER')
-    if (provider === 'algolia') {
-      return true
-    }
-    if (provider === 'commercetools') {
-      return false
-    }
-    return !!this.algoliaServiceProvider?.getServices().searchService
-  }
-
-  createSearchProvider(): SearchProvider {
-    if (this.shouldUseExternalSearch()) {
-      const searchService =
-        this.algoliaServiceProvider?.getServices().searchService
-      if (!searchService) {
-        throw new Error(
-          'Algolia search is enabled but ALGOLIA_SERVICE_PROVIDER is not available. ' +
-            'Check that ALGOLIA_APP_ID, ALGOLIA_SEARCH_API_KEY, and ALGOLIA_INDEX_NAME env vars are set.'
-        )
-      }
-      return searchService
-    }
-    const { productSearchService } =
-      this.commercetoolsServiceProvider.getServices()
-    return new CtSearchProvider(productSearchService)
   }
 }

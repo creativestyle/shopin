@@ -79,6 +79,7 @@ import type {
   FooterResponse,
 } from '@core/contracts/content/layout'
 import type { ProductSearchResponse } from '@core/contracts/product-search/product-search'
+import type { SearchProvider } from '@core/contracts/product-search/search-provider'
 
 // Define service interfaces for type safety
 export interface ProductService {
@@ -303,6 +304,7 @@ export interface AllServices {
   wishlistService: WishlistService
   pageService: PageService
   layoutService: LayoutService
+  searchService: SearchProvider
 }
 
 // All auth services record - add new auth services here and they'll be available to all providers
