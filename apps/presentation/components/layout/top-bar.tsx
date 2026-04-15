@@ -14,23 +14,42 @@ export async function TopBar({ className, messages }: TopBarProps) {
 
   const t = await getTranslations('topBar')
 
+  const content = (
+    <StandardContainer className='flex items-center justify-center'>
+      <ul className='flex flex-wrap items-center justify-center gap-x-6 gap-y-1 text-center text-xs font-normal text-white'>
+        {messages.map((msg, i) => (
+          <li
+            key={i}
+            className='leading-[1.6]'
+          >
+            {msg}
+          </li>
+        ))}
+      </ul>
+    </StandardContainer>
+  )
+
   return (
-    <aside
-      aria-label={t('ariaLabel')}
-      className={cn('sticky top-0 z-50 w-full bg-gray-950 py-1.5', className)}
-    >
-      <StandardContainer className='flex items-center justify-center'>
-        <div className='flex flex-wrap items-center justify-center gap-x-6 gap-y-1 text-center text-xs font-normal text-white'>
-          {messages.map((msg, i) => (
-            <span
-              key={i}
-              className='leading-[1.6]'
-            >
-              {msg}
-            </span>
-          ))}
-        </div>
-      </StandardContainer>
-    </aside>
+    <>
+      <aside
+        aria-label={t('ariaLabel')}
+        tabIndex={0}
+        className={cn(
+          'fixed top-0 z-50 w-full bg-gray-950 py-1.5',
+          'outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-inset',
+          className
+        )}
+      >
+        {content}
+      </aside>
+      {/* Invisible spacer — mirrors the bar's content so layout height matches
+          even when messages wrap to multiple lines */}
+      <div
+        aria-hidden
+        className='invisible w-full bg-transparent py-1.5 text-xs text-white'
+      >
+        {content}
+      </div>
+    </>
   )
 }
