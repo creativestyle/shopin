@@ -3,10 +3,7 @@ import { getFooterLayout } from '@/features/content/get-layout'
 import { NewsletterBlock } from './footer/newsletter-block'
 import { LinkSectionBlock } from './footer/link-section-block'
 import { CustomerServiceBlock } from './footer/customer-service-block'
-import { SocialBlock } from './footer/social-block'
-import { GiftVoucherBlock } from './footer/gift-voucher-block'
 import { PaymentMethodsBlock } from './footer/payment-methods-block'
-import { ShippingBlock } from './footer/shipping-block'
 import { LanguageBlock } from './footer/language-block'
 import { LegalBar } from './footer/legal-bar'
 
@@ -25,7 +22,7 @@ export async function Footer() {
       {layout.newsletter && <NewsletterBlock newsletter={layout.newsletter} />}
 
       <StandardContainer className='py-16'>
-        <div className='grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-4'>
+        <div className='grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-[repeat(auto-fit,minmax(12rem,1fr))] lg:items-start'>
           {layout.sections.map((section, i) => (
             <LinkSectionBlock
               key={i}
@@ -35,17 +32,9 @@ export async function Footer() {
           {layout.customerService && (
             <CustomerServiceBlock customerService={layout.customerService} />
           )}
-          {layout.social && <SocialBlock social={layout.social} />}
-          {layout.giftVoucher && (
-            <GiftVoucherBlock giftVoucher={layout.giftVoucher} />
-          )}
-        </div>
-
-        <div className='mt-16 grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-4'>
           {layout.paymentMethods && (
             <PaymentMethodsBlock paymentMethods={layout.paymentMethods} />
           )}
-          {layout.shipping && <ShippingBlock shipping={layout.shipping} />}
           {layout.language && <LanguageBlock language={layout.language} />}
         </div>
       </StandardContainer>

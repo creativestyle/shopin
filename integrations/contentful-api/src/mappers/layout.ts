@@ -104,17 +104,6 @@ export function mapFooterItemToFooterResponse(
       }
     : undefined
 
-  const shippingItemsList = optionalString(footer.shippingItemsList)
-  const shipping = shippingItemsList
-    ? {
-        title: optionalString(footer.shippingTitle) ?? 'Shipping',
-        items: shippingItemsList.split(/\r?\n/).map((line) => {
-          const [label, subLabel] = line.split('|').map((part) => part.trim())
-          return { label: label ?? '', subLabel: subLabel || undefined }
-        }),
-      }
-    : undefined
-
   const built = {
     sections,
     legalLinks,
@@ -135,31 +124,12 @@ export function mapFooterItemToFooterResponse(
           title: optionalString(footer.customerServiceTitle) ?? '',
           phone: optionalString(footer.customerServicePhone),
           hours: optionalString(footer.customerServiceHours),
-          contactUsLabel: optionalString(footer.customerServiceContactUsLabel),
+          contactUs: footer.customerServiceContactUs
+            ? toCmsLink(footer.customerServiceContactUs)
+            : undefined,
         }
       : undefined,
-    social:
-      optionalString(footer.socialTitle) &&
-      (footer.socialLinksCollection?.items?.length ?? 0) > 0
-        ? {
-            title: optionalString(footer.socialTitle) ?? '',
-            links: (footer.socialLinksCollection?.items ?? []).map(toCmsLink),
-          }
-        : undefined,
-    giftVoucher:
-      optionalString(footer.giftVoucherTitle) &&
-      optionalString(footer.giftVoucherLinkLabel) &&
-      optionalString(footer.giftVoucherLinkUrl)
-        ? {
-            title: optionalString(footer.giftVoucherTitle) ?? '',
-            link: {
-              label: optionalString(footer.giftVoucherLinkLabel) ?? '',
-              url: optionalString(footer.giftVoucherLinkUrl) ?? '#',
-            },
-          }
-        : undefined,
     paymentMethods,
-    shipping,
     language: optionalString(footer.languageTitle)
       ? { title: optionalString(footer.languageTitle) ?? '' }
       : undefined,

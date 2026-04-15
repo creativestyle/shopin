@@ -36,16 +36,8 @@ export const FooterItemApiResponseSchema = z.object({
     })
     .optional()
     .nullable(),
-  socialLinksCollection: z
-    .object({
-      items: z.array(FooterLinkApiResponseSchema).optional().nullable(),
-    })
-    .optional()
-    .nullable(),
   paymentMethodsList: z.string().optional().nullable(),
   paymentMethodsTitle: z.string().optional().nullable(),
-  shippingItemsList: z.string().optional().nullable(),
-  shippingTitle: z.string().optional().nullable(),
   languageTitle: z.string().optional().nullable(),
   newsletterTitle: z.string().optional().nullable(),
   newsletterDescription: z.string().optional().nullable(),
@@ -55,11 +47,7 @@ export const FooterItemApiResponseSchema = z.object({
   customerServiceTitle: z.string().optional().nullable(),
   customerServicePhone: z.string().optional().nullable(),
   customerServiceHours: z.string().optional().nullable(),
-  customerServiceContactUsLabel: z.string().optional().nullable(),
-  socialTitle: z.string().optional().nullable(),
-  giftVoucherTitle: z.string().optional().nullable(),
-  giftVoucherLinkLabel: z.string().optional().nullable(),
-  giftVoucherLinkUrl: z.string().optional().nullable(),
+  customerServiceContactUs: FooterLinkApiResponseSchema.optional().nullable(),
 })
 
 /** GraphQL response shape for layout footer query. */
