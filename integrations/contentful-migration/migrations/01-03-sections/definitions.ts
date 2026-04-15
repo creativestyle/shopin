@@ -127,41 +127,13 @@ export const FOOTER_EXTENDED_FIELD_DEFINITIONS: {
     spec: { type: 'Symbol', name: 'Customer service hours', localized: true },
   },
   {
-    id: 'customerServiceContactUsLabel',
+    id: 'customerServiceContactUs',
     spec: {
-      type: 'Symbol',
-      name: 'Customer service contact us label',
-      localized: true,
+      type: 'Link',
+      name: 'Customer service contact',
+      linkType: 'Entry',
+      validations: [{ linkContentType: ['link'] }],
     },
-  },
-  {
-    id: 'socialTitle',
-    spec: { type: 'Symbol', name: 'Social title', localized: true },
-  },
-  {
-    id: 'socialLinks',
-    spec: {
-      type: 'Array',
-      name: 'Social links',
-      localized: false,
-      items: {
-        type: 'Link',
-        linkType: 'Entry',
-        validations: [{ linkContentType: ['link'] }],
-      },
-    },
-  },
-  {
-    id: 'giftVoucherTitle',
-    spec: { type: 'Symbol', name: 'Gift voucher title', localized: true },
-  },
-  {
-    id: 'giftVoucherLinkLabel',
-    spec: { type: 'Symbol', name: 'Gift voucher link label', localized: true },
-  },
-  {
-    id: 'giftVoucherLinkUrl',
-    spec: { type: 'Symbol', name: 'Gift voucher link URL', localized: true },
   },
   {
     id: 'paymentMethodsTitle',
@@ -172,18 +144,6 @@ export const FOOTER_EXTENDED_FIELD_DEFINITIONS: {
     spec: {
       type: 'Text',
       name: 'Payment methods (one per line)',
-      localized: true,
-    },
-  },
-  {
-    id: 'shippingTitle',
-    spec: { type: 'Symbol', name: 'Shipping title', localized: true },
-  },
-  {
-    id: 'shippingItemsList',
-    spec: {
-      type: 'Text',
-      name: 'Shipping items (one per line, label|subLabel)',
       localized: true,
     },
   },

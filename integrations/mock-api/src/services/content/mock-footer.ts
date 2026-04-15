@@ -6,26 +6,13 @@ export function getMockFooter(): FooterResponse {
       {
         title: 'Company',
         links: [
-          { label: 'Website', url: '#' },
-          { label: 'Career', url: '#' },
-          { label: 'Sustainability', url: '#' },
-          { label: 'For retailers', url: '#' },
-          { label: 'Press', url: '#' },
-        ],
-      },
-      {
-        title: 'Service',
-        links: [
-          { label: 'Shopin Club', url: '#' },
-          { label: 'Store finder', url: '#' },
-          { label: 'Size finder', url: '#' },
-          { label: 'Returns', url: '#' },
-          { label: 'Help & FAQ', url: '#' },
+          { label: 'About us', url: '/about' },
+          { label: 'Support', url: '/support' },
         ],
       },
     ],
     legalLinks: [],
-    copyright: '© Shopin Store. All rights reserved.',
+    copyright: '© 2026 SHOPin frontend accelerator / creativestyle GmbH.',
     newsletter: {
       title: 'Subscribe to our newsletter',
       description: 'Get the latest news and',
@@ -35,38 +22,17 @@ export function getMockFooter(): FooterResponse {
     },
     customerService: {
       title: 'Customer service',
-      phone: '+49 123 456789',
+      phone: '+49 DEMO · SHOPin accelerator (please don’t call — it’s pretend)',
       hours: 'Mon–Fri 9:00–18:00',
-      contactUsLabel: 'Contact us',
-    },
-    social: {
-      title: 'Follow us',
-      links: [
-        { label: 'Facebook', url: '#' },
-        { label: 'Instagram', url: '#' },
-        { label: 'YouTube', url: '#' },
-      ],
-    },
-    giftVoucher: {
-      title: 'Gift voucher',
-      link: { label: 'Buy gift voucher', url: '#' },
+      contactUs: {
+        label: 'Contact us',
+        url: 'https://shopin.dev',
+        target: '_blank',
+      },
     },
     paymentMethods: {
       title: 'Payment methods',
-      methods: [
-        'Invoice',
-        'Prepayment',
-        'Apple Pay',
-        'PayPal',
-        'Amazon Pay',
-        'Visa',
-        'Mastercard',
-        'Amex',
-      ],
-    },
-    shipping: {
-      title: 'Shipping',
-      items: [{ label: 'DHL', subLabel: 'GoGreen' }, { label: 'DHL Express' }],
+      methods: ['Demo'],
     },
     language: {
       title: 'Language',

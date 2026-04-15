@@ -2,7 +2,7 @@ import { gql } from 'graphql-request'
 import { QUERY_LIMITS } from '../constants/query-limits'
 import { LinkEntryFragment } from './link-entry.fragment'
 
-/** Layout footer query. Uses Link fragment for footer/legal/social links. */
+/** Layout footer query. Uses Link fragment for footer and legal links. */
 export const LayoutFooterQuery = gql`
   ${LinkEntryFragment}
   query LayoutFooter($locale: String!, $preview: Boolean!) {
@@ -38,23 +38,16 @@ export const LayoutFooterQuery = gql`
         customerServiceTitle
         customerServicePhone
         customerServiceHours
-        customerServiceContactUsLabel
-        socialTitle
-        socialLinksCollection(limit: ${QUERY_LIMITS.FOOTER_SOCIAL_LINKS}) {
-          items {
+        customerServiceContactUs {
+          ... on Link {
             ...LinkEntryFragment
             linkedPage {
               slug
             }
           }
         }
-        giftVoucherTitle
-        giftVoucherLinkLabel
-        giftVoucherLinkUrl
         paymentMethodsTitle
         paymentMethodsList
-        shippingTitle
-        shippingItemsList
         languageTitle
       }
     }
