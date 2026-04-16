@@ -11,12 +11,11 @@ const config: StorybookConfig = {
   features: {
     experimentalRSC: true,
   },
-  previewHead: (head, options) => {
-    // Check if Storybook is being built for production
-    if (options.configType === 'PRODUCTION') {
-      return `${head} <base href="/storybook/" />`
+  previewHead: (head, { configType }) => {
+    if (configType === 'PRODUCTION') {
+      const basePath = process.env.STORYBOOK_PUBLIC_PATH || '/'
+      return `${head} <base href="${basePath}" />`
     }
-    // Otherwise, return the original head content
     return head
   },
   webpackFinal: async (config) => {

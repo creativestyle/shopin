@@ -16,10 +16,10 @@ type Story = StoryObj<typeof meta>
 export const Default: Story = {
   args: {
     images: [
-      { src: '/product-image.png', alt: 'Product image 1' },
-      { src: '/product-image.png', alt: 'Product image 2' },
-      { src: '/product-image.png', alt: 'Product image 3' },
-      { src: '/product-image.png', alt: 'Product image 4' },
+      { src: './product-image.png', alt: 'Product image 1' },
+      { src: './product-image.png', alt: 'Product image 2' },
+      { src: './product-image.png', alt: 'Product image 3' },
+      { src: './product-image.png', alt: 'Product image 4' },
     ],
     initialVisible: 2,
   },

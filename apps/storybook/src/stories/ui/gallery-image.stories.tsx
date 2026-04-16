@@ -15,7 +15,7 @@ type Story = StoryObj<typeof meta>
 
 export const Default: Story = {
   args: {
-    src: '/product-image.png',
+    src: './product-image.png',
     alt: 'Product image',
   },
   render: (args) => (

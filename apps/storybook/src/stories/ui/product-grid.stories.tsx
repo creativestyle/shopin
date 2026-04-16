@@ -13,7 +13,7 @@ const mockProducts = [
     name: 'Classic White T-Shirt',
     price: { regularPriceInCents: 2999, currency: 'EUR', fractionDigits: 2 },
     image: {
-      src: '/product-image.png',
+      src: './product-image.png',
       alt: 'White T-Shirt',
     },
   },
@@ -23,7 +23,7 @@ const mockProducts = [
     name: 'Denim Jeans',
     price: { regularPriceInCents: 8999, currency: 'EUR', fractionDigits: 2 },
     image: {
-      src: '/product-image.png',
+      src: './product-image.png',
       alt: 'Denim Jeans',
     },
   },
@@ -33,7 +33,7 @@ const mockProducts = [
     name: 'Leather Jacket',
     price: { regularPriceInCents: 19999, currency: 'EUR', fractionDigits: 2 },
     image: {
-      src: '/product-image.png',
+      src: './product-image.png',
       alt: 'Leather Jacket',
     },
   },
@@ -43,7 +43,7 @@ const mockProducts = [
     name: 'Summer Dress',
     price: { regularPriceInCents: 5999, currency: 'EUR', fractionDigits: 2 },
     image: {
-      src: '/product-image.png',
+      src: './product-image.png',
       alt: 'Summer Dress',
     },
   },
@@ -53,7 +53,7 @@ const mockProducts = [
     name: 'Sneakers',
     price: { regularPriceInCents: 7999, currency: 'EUR', fractionDigits: 2 },
     image: {
-      src: '/product-image.png',
+      src: './product-image.png',
       alt: 'Sneakers',
     },
   },
@@ -63,7 +63,7 @@ const mockProducts = [
     name: 'Winter Coat',
     price: { regularPriceInCents: 14999, currency: 'EUR', fractionDigits: 2 },
     image: {
-      src: '/product-image.png',
+      src: './product-image.png',
       alt: 'Winter Coat',
     },
   },

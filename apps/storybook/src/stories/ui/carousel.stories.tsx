@@ -10,7 +10,7 @@ const PRODUCTS = [
     name: 'Running Shoes',
     price: { regularPriceInCents: 2999, currency: 'EUR', fractionDigits: 2 },
     image: {
-      src: '/product-image.png',
+      src: './product-image.png',
       alt: 'Running Shoes',
     },
   },
@@ -20,7 +20,7 @@ const PRODUCTS = [
     name: 'Cotton Overshirt',
     price: { regularPriceInCents: 8999, currency: 'EUR', fractionDigits: 2 },
     image: {
-      src: '/product-image.png',
+      src: './product-image.png',
       alt: 'Cotton Overshirt',
     },
   },
@@ -30,7 +30,7 @@ const PRODUCTS = [
     name: 'Weekend Bag',
     price: { regularPriceInCents: 19999, currency: 'EUR', fractionDigits: 2 },
     image: {
-      src: '/product-image.png',
+      src: './product-image.png',
       alt: 'Weekend Bag',
     },
   },
@@ -40,7 +40,7 @@ const PRODUCTS = [
     name: 'Linen Shirt',
     price: { regularPriceInCents: 5999, currency: 'EUR', fractionDigits: 2 },
     image: {
-      src: '/product-image.png',
+      src: './product-image.png',
       alt: 'Linen Shirt',
     },
   },
@@ -50,7 +50,7 @@ const PRODUCTS = [
     name: 'Denim Jacket',
     price: { regularPriceInCents: 7999, currency: 'EUR', fractionDigits: 2 },
     image: {
-      src: '/product-image.png',
+      src: './product-image.png',
       alt: 'Denim Jacket',
     },
   },
@@ -60,7 +60,7 @@ const PRODUCTS = [
     name: 'Travel Backpack',
     price: { regularPriceInCents: 14999, currency: 'EUR', fractionDigits: 2 },
     image: {
-      src: '/product-image.png',
+      src: './product-image.png',
       alt: 'Travel Backpack',
     },
   },
