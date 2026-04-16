@@ -17,7 +17,7 @@ export function LegalBar({ legalLinks, copyright }: LegalBarProps) {
   return (
     <div className='bg-gray-950 py-6 text-white'>
       <StandardContainer>
-        <div className='flex flex-col items-start justify-between space-y-4 md:flex-row md:items-center md:space-y-0'>
+        <div className='flex flex-col-reverse items-start justify-between gap-4 md:flex-row md:items-center md:gap-0'>
           <div className='flex w-full flex-col items-start space-y-2.5 text-sm text-gray-300 md:w-auto md:flex-row md:items-center md:space-y-0 md:space-x-6'>
             {legalLinks.map((link, i) => (
               <CmsLink
@@ -27,11 +27,7 @@ export function LegalBar({ legalLinks, copyright }: LegalBarProps) {
               />
             ))}
           </div>
-          {text && (
-            <div className='w-full text-center text-sm font-bold text-white md:w-auto md:text-left'>
-              {text}
-            </div>
-          )}
+          {text && <div className='text-sm font-bold text-white'>{text}</div>}
         </div>
       </StandardContainer>
     </div>

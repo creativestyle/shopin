@@ -29,8 +29,10 @@ export default async function LocaleLayout({
     >
       <StoreConfigProvider storeConfig={storeConfig}>
         <AddToCartModalProvider>
-          <TopBar messages={headerLayout?.topBarMessages ?? []} />
-          <main>{children}</main>
+          <div className='flex min-h-screen flex-col'>
+            <TopBar messages={headerLayout?.topBarMessages ?? []} />
+            {children}
+          </div>
           <Toaster position='bottom-right' />
           <DemoDisclaimerModalWrapper />
         </AddToCartModalProvider>

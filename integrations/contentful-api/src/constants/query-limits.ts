@@ -31,10 +31,8 @@ export const QUERY_LIMITS = {
   LAYOUT_COLLECTION: 1,
   /** Footer: footer link groups. */
   FOOTER_LINKS_GROUPS: 10,
-  /** Footer: links per group (footer links, legal, social). */
+  /** Footer: links per group (footer column links, legal). */
   FOOTER_LINKS_PER_GROUP: 20,
-  /** Footer: social links (often fewer). */
-  FOOTER_SOCIAL_LINKS: 10,
 } as const
 
 export type QueryLimits = typeof QUERY_LIMITS
