@@ -156,7 +156,7 @@ export function SearchPopup({ open, onOpenChange }: SearchPopupProps) {
           {/* Search Results */}
           {query.length >= MIN_SEARCH_QUERY_LENGTH && (
             <div className='border-t border-gray-100 px-5 py-6 lg:px-[30px]'>
-              {isLoading && !hasResults && (
+              {isLoading && (
                 <div className='flex min-h-[400px] items-center justify-center'>
                   <span className='text-sm text-gray-500'>{t('loading')}</span>
                 </div>
@@ -173,21 +173,9 @@ export function SearchPopup({ open, onOpenChange }: SearchPopupProps) {
                 </div>
               )}
 
-              {hasResults && (
+              {!isLoading && hasResults && (
                 <div className='relative'>
-                  {isLoading && (
-                    <div className='absolute inset-0 z-10 flex items-center justify-center'>
-                      <span className='text-sm text-gray-500'>
-                        {t('loading')}
-                      </span>
-                    </div>
-                  )}
-                  <div
-                    className={cn(
-                      'mx-auto flex w-full max-w-[1640px] flex-col gap-4 lg:flex-row lg:justify-center lg:gap-12',
-                      isLoading && 'pointer-events-none opacity-0'
-                    )}
-                  >
+                  <div className='mx-auto flex w-full max-w-[1640px] flex-col gap-4 lg:flex-row lg:justify-center lg:gap-12'>
                     {/* Suggestions */}
                     <div className='flex shrink-0 flex-col items-start gap-3 lg:w-[250px]'>
                       <h3 className='text-xs font-bold tracking-wider text-gray-950 uppercase'>
@@ -243,13 +231,8 @@ export function SearchPopup({ open, onOpenChange }: SearchPopupProps) {
                 </div>
               )}
 
-              {hasResults && (
-                <div
-                  className={cn(
-                    'mt-8 flex justify-center',
-                    isLoading && 'pointer-events-none opacity-0'
-                  )}
-                >
+              {!isLoading && hasResults && (
+                <div className='mt-8 flex justify-center'>
                   <Button
                     variant='secondary'
                     scheme='red'

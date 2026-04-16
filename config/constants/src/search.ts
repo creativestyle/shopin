@@ -7,9 +7,6 @@ export const SEARCH_POPUP_PRODUCT_LIMIT = 4
 /** Minimum number of characters required for a search query. */
 export const MIN_SEARCH_QUERY_LENGTH = 3
 
-/** Debounce delay (ms) for search input on the frontend. */
-export const SEARCH_DEBOUNCE_MS = 300
-
 /** Default number of autocomplete suggestions returned by the search provider. */
 export const DEFAULT_SUGGESTION_LIMIT = 10
 

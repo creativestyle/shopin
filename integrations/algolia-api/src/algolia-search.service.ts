@@ -28,6 +28,7 @@ import {
   buildFacetAttributeNames,
   buildAlgoliaFacetFilters,
   buildAlgoliaNumericFilters,
+  resolveAlgoliaSortIndex,
 } from './mappers/algolia-query-utils'
 
 const METADATA_CACHE_TTL_MS = 5 * 60 * 1000 // 5 minutes
@@ -49,13 +50,20 @@ export class AlgoliaSearchService implements SearchProvider {
       return this.attributeMetadataCache
     }
 
-    const settings = await this.client.getSettings({
-      indexName: this.indexName,
-    })
-    const userData = settings.userData as
-      | { filterableAttributes?: AttributeMetadata[] }
-      | undefined
-    this.attributeMetadataCache = userData?.filterableAttributes ?? []
+    try {
+      const settings = await this.client.getSettings({
+        indexName: this.indexName,
+      })
+      const userData = settings.userData as
+        | { filterableAttributes?: AttributeMetadata[] }
+        | undefined
+      this.attributeMetadataCache = userData?.filterableAttributes ?? []
+    } catch {
+      // getSettings requires the `settings` ACL which search-only API keys
+      // do not have. Fall back to empty metadata — search still works, but
+      // facet labels won't be enriched with display names.
+      this.attributeMetadataCache = []
+    }
     this.attributeMetadataCachedAt = Date.now()
     return this.attributeMetadataCache
   }
@@ -95,10 +103,17 @@ export class AlgoliaSearchService implements SearchProvider {
     filters,
     priceMin,
     priceMax,
+    sort,
     saleOnly,
   }: SearchProductsOptions): Promise<SearchProductsResult> {
     const { langKey, nameAttr, priceField, discountedPriceField } =
       buildAlgoliaFieldNames(language)
+
+    const sortIndexName = resolveAlgoliaSortIndex(
+      this.indexName,
+      sort,
+      language
+    )
 
     const attributeMetadata = await this.getAttributeMetadata()
     const facetAttrNames = buildFacetAttributeNames(attributeMetadata, langKey)
@@ -120,7 +135,7 @@ export class AlgoliaSearchService implements SearchProvider {
       facetFilters.length > 0 || numericFilters.length > 0
 
     const mainQuery = this.client.searchSingleIndex<AlgoliaProductHit>({
-      indexName: this.indexName,
+      indexName: sortIndexName,
       searchParams: {
         query,
         hitsPerPage: limit,

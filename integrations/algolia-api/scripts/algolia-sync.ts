@@ -157,6 +157,7 @@ function extractVariantAttributes(
   for (const attr of filterableAttributes) {
     const isEnum = attr.fieldType === 'enum' || attr.fieldType === 'lenum'
     const isLocalizedText = LOCALIZED_ATTR_TYPES.has(attr.fieldType)
+    const isLocalizedEnum = attr.fieldType === 'lenum'
 
     if (isLocalizedText) {
       for (const lang of LANGUAGES) {
@@ -169,7 +170,10 @@ function extractVariantAttributes(
           if (found?.value == null) {
             continue
           }
-          const langVal = (found.value as LocalizedString)[lang]
+          const localized = isLocalizedEnum
+            ? (found.value as { label: LocalizedString }).label
+            : (found.value as LocalizedString)
+          const langVal = localized?.[lang]
           if (langVal) {
             values.add(String(langVal))
           }
@@ -226,6 +230,9 @@ function mapToAlgoliaRecord(
     variantCount,
     imageUrl: image?.url || '/images/product-image.png',
     imageAlt: image?.label || 'Product image',
+    createdAt: product.createdAt
+      ? new Date(product.createdAt).getTime()
+      : undefined,
   }
 
   for (const lang of LANGUAGES) {
@@ -396,6 +403,19 @@ program
       fieldType: a.fieldType,
     }))
 
+    // Build virtual replica names for sorting
+    const replicas: string[] = []
+    for (const lang of LANGUAGES) {
+      const langKey = lang.replace('-', '_')
+      replicas.push(
+        `virtual(${algoliaIndexName}_price_${langKey}_asc)`,
+        `virtual(${algoliaIndexName}_price_${langKey}_desc)`,
+        `virtual(${algoliaIndexName}_name_${langKey}_asc)`,
+        `virtual(${algoliaIndexName}_name_${langKey}_desc)`
+      )
+    }
+    replicas.push(`virtual(${algoliaIndexName}_newest)`)
+
     console.log('\nConfiguring index settings...')
     await algoliaClient.setSettings({
       indexName: algoliaIndexName,
@@ -404,10 +424,55 @@ program
         typoTolerance: false,
         attributesForFaceting: facetAttributes,
         userData: { filterableAttributes: attributeMetadata },
+        replicas,
       },
     })
     console.log('Index settings updated.')
     console.log('  attributesForFaceting:', facetAttributes.join(', '))
+    console.log('  replicas:', replicas.join(', '))
+
+    // Configure each virtual replica with its custom ranking
+    for (const lang of LANGUAGES) {
+      const langKey = lang.replace('-', '_')
+      const priceField = `price_${langKey}_centAmount`
+      const nameField = `name_${langKey}`
+
+      const replicaSettings: Array<{
+        indexName: string
+        ranking: string[]
+      }> = [
+        {
+          indexName: `${algoliaIndexName}_price_${langKey}_asc`,
+          ranking: [`asc(${priceField})`],
+        },
+        {
+          indexName: `${algoliaIndexName}_price_${langKey}_desc`,
+          ranking: [`desc(${priceField})`],
+        },
+        {
+          indexName: `${algoliaIndexName}_name_${langKey}_asc`,
+          ranking: [`asc(${nameField})`],
+        },
+        {
+          indexName: `${algoliaIndexName}_name_${langKey}_desc`,
+          ranking: [`desc(${nameField})`],
+        },
+      ]
+
+      for (const { indexName, ranking } of replicaSettings) {
+        await algoliaClient.setSettings({
+          indexName,
+          indexSettings: { customRanking: ranking },
+        })
+        console.log(`  Configured replica: ${indexName}`)
+      }
+    }
+
+    await algoliaClient.setSettings({
+      indexName: `${algoliaIndexName}_newest`,
+      indexSettings: { customRanking: ['desc(createdAt)'] },
+    })
+    console.log(`  Configured replica: ${algoliaIndexName}_newest`)
   })
 
 program.parse()

@@ -1,5 +1,5 @@
 import { LanguageTagUtils } from '@core/i18n'
-import { LOCALIZED_ATTR_TYPES } from '@config/constants'
+import { LOCALIZED_ATTR_TYPES, SORT_OPTIONS } from '@config/constants'
 import type { FacetableFieldType } from '@config/constants'
 import type { AttributeMetadata } from './algolia-facets'
 
@@ -82,4 +82,32 @@ export function buildAlgoliaNumericFilters(
     numericFilters.push(`${discountedPriceField} > 0`)
   }
   return numericFilters
+}
+
+/**
+ * Algolia uses virtual-replica indices for sorting.
+ * Returns the replica index name for the given sort option,
+ * or the primary index when no replica is needed.
+ */
+export function resolveAlgoliaSortIndex(
+  primaryIndex: string,
+  sort: string | undefined,
+  language: string
+): string {
+  const langKey = LanguageTagUtils.toUnderscoreKey(language)
+
+  switch (sort) {
+    case SORT_OPTIONS.PRICE_ASC:
+      return `${primaryIndex}_price_${langKey}_asc`
+    case SORT_OPTIONS.PRICE_DESC:
+      return `${primaryIndex}_price_${langKey}_desc`
+    case SORT_OPTIONS.NAME_ASC:
+      return `${primaryIndex}_name_${langKey}_asc`
+    case SORT_OPTIONS.NAME_DESC:
+      return `${primaryIndex}_name_${langKey}_desc`
+    case SORT_OPTIONS.NEWEST:
+      return `${primaryIndex}_newest`
+    default:
+      return primaryIndex
+  }
 }

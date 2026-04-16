@@ -14,6 +14,6 @@ export function mapProjectionsToCards(
   const byId = new Map(projections.map((p) => [p.id, p]))
   return orderedIds
     .map((id) => byId.get(id))
-    .filter((p): p is ProductProjectionApiResponse => p !== undefined)
+    .filter((p) => p !== undefined)
     .map((p) => mapProductToCard(p, language))
 }

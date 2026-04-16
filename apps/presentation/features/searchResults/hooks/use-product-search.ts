@@ -7,7 +7,9 @@ import {
   type ProductSearchParams,
 } from '../lib/product-search-service'
 import type { ProductSearchResponse } from '@core/contracts/product-search/product-search'
-import { MIN_SEARCH_QUERY_LENGTH, SEARCH_DEBOUNCE_MS } from '@config/constants'
+import { MIN_SEARCH_QUERY_LENGTH } from '@config/constants'
+
+const SEARCH_DEBOUNCE_MS = 300
 
 interface UseProductSearchResult {
   results: ProductSearchResponse | null
