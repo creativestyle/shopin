@@ -1,6 +1,12 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import {
+  type MouseEvent,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from 'react'
 import { useLocale } from 'next-intl'
 import * as CheckboxPrimitive from '@radix-ui/react-checkbox'
 import * as DialogPrimitive from '@radix-ui/react-dialog'
@@ -89,12 +95,33 @@ function resolveLocale(locale: string): SupportedLocale {
   return locale.startsWith('de') ? 'de' : 'en'
 }
 
-export function DemoDisclaimerModal() {
+export function DemoDisclaimerModal({
+  onNavigate,
+}: {
+  onNavigate?: (href: string) => void
+}) {
   const appLocale = useLocale()
   const [open, setOpen] = useState(false)
   const [lang, setLang] = useState<SupportedLocale>(resolveLocale(appLocale))
   const [dontShowAgain, setDontShowAgain] = useState(false)
+  const [showScrollHint, setShowScrollHint] = useState(false)
+  const bodyRef = useRef<HTMLDivElement>(null)
   const t = TRANSLATIONS[lang]
+
+  const updateScrollHint = () => {
+    const el = bodyRef.current
+    if (!el) {
+      return
+    }
+    const atBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 1
+    setShowScrollHint(!atBottom)
+  }
+
+  useLayoutEffect(() => {
+    if (open) {
+      updateScrollHint()
+    }
+  }, [open, lang])
 
   useEffect(() => {
     if (!hasAcknowledgedDemoDisclaimer()) {
@@ -109,10 +136,16 @@ export function DemoDisclaimerModal() {
     setOpen(false)
   }
 
-  const handleLegalLinkClick = () => {
+  const handleLegalLinkClick = (
+    e: MouseEvent<HTMLAnchorElement>,
+    href: string
+  ) => {
+    e.preventDefault()
     if (dontShowAgain) {
       acknowledgeDemoDisclaimer()
     }
+    setOpen(false)
+    onNavigate?.(href)
   }
 
   const handleDialogOpenChange = (next: boolean) => {
@@ -134,88 +167,110 @@ export function DemoDisclaimerModal() {
           onEscapeKeyDown={(e) => e.preventDefault()}
           onPointerDownOutside={(e) => e.preventDefault()}
           onInteractOutside={(e) => e.preventDefault()}
-          className='fixed top-1/2 left-1/2 z-(--z-modal) w-[calc(100%-2rem)] max-w-2xl -translate-x-1/2 -translate-y-1/2 rounded-lg bg-white shadow-card data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95'
+          className='fixed top-1/2 left-1/2 z-(--z-modal) flex max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] max-w-2xl -translate-x-1/2 -translate-y-1/2 flex-col rounded-lg bg-white shadow-card data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95'
         >
-          {/* Language toggle */}
-          <div className='flex justify-end gap-1 px-6 pt-4'>
-            {LANGUAGE_TOGGLE_LOCALES.map((code) => (
-              <button
-                key={code}
-                type='button'
-                onClick={() => setLang(code)}
-                className={`rounded px-2 py-0.5 text-xs font-semibold transition-colors ${
-                  lang === code
-                    ? 'bg-gray-950 text-white'
-                    : 'text-gray-500 hover:text-gray-950'
-                }`}
-                aria-pressed={lang === code}
-              >
-                {code.toUpperCase()}
-              </button>
-            ))}
-          </div>
-
-          {/* Header */}
-          <div className='px-6 pb-4 pt-2'>
+          {/* Header + Language toggle */}
+          <div className='flex shrink-0 items-center justify-between gap-3 px-6 py-4'>
             <DialogPrimitive.Title className='text-lg font-semibold text-gray-950'>
               {t.title}
             </DialogPrimitive.Title>
+            <div className='flex gap-1'>
+              {LANGUAGE_TOGGLE_LOCALES.map((code) => (
+                <button
+                  key={code}
+                  type='button'
+                  onClick={() => setLang(code)}
+                  className={`rounded px-2 py-0.5 text-xs font-semibold transition-colors ${
+                    lang === code
+                      ? 'bg-gray-950 text-white'
+                      : 'text-gray-500 hover:text-gray-950'
+                  }`}
+                  aria-pressed={lang === code}
+                >
+                  {code.toUpperCase()}
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* Body */}
-          <DialogPrimitive.Description asChild>
-            <div className='space-y-3 overflow-y-auto px-6 text-sm text-gray-600'>
-              <p>{t.intro}</p>
-              <ul className='space-y-2'>
-                {t.sections.map(({ label, text }) => (
-                  <li key={label}>
-                    <span className='font-semibold text-gray-950'>
-                      {label}:{' '}
-                    </span>
-                    {text ?? (
-                      <>
-                        {t.liabilityPrefix}{' '}
-                        <a
-                          href='https://shopin.dev'
-                          target='_blank'
-                          rel='noopener noreferrer'
-                          className='underline hover:no-underline'
-                        >
-                          shopin.dev
-                        </a>{' '}
-                        {t.liabilitySuffix}
-                      </>
-                    )}
-                  </li>
-                ))}
-              </ul>
-              <p>
-                {t.furtherDetails}{' '}
-                <a
-                  href='/privacy'
-                  className='underline hover:no-underline'
-                  onClick={handleLegalLinkClick}
+          <div className='relative flex min-h-0 flex-col'>
+            <DialogPrimitive.Description asChild>
+              <div
+                ref={bodyRef}
+                onScroll={updateScrollHint}
+                className='min-h-0 space-y-3 overflow-y-auto px-6 text-sm text-gray-600'
+              >
+                <p>{t.intro}</p>
+                <ul className='space-y-2'>
+                  {t.sections.map(({ label, text }) => (
+                    <li key={label}>
+                      <span className='font-semibold text-gray-950'>
+                        {label}:{' '}
+                      </span>
+                      {text ?? (
+                        <>
+                          {t.liabilityPrefix}{' '}
+                          <a
+                            href='https://shopin.dev'
+                            target='_blank'
+                            rel='noopener noreferrer'
+                            className='underline hover:no-underline'
+                          >
+                            shopin.dev
+                          </a>{' '}
+                          {t.liabilitySuffix}
+                        </>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+                <p>
+                  {t.furtherDetails}{' '}
+                  <a
+                    href='/privacy'
+                    className='underline hover:no-underline'
+                    onClick={(e) => handleLegalLinkClick(e, '/privacy')}
+                  >
+                    {t.privacy}
+                  </a>{' '}
+                  {t.and}{' '}
+                  <a
+                    href='/imprint'
+                    className='underline hover:no-underline'
+                    onClick={(e) => handleLegalLinkClick(e, '/imprint')}
+                  >
+                    {t.legal}
+                  </a>
+                  .
+                </p>
+                <p className='text-xs italic text-gray-400'>
+                  {t.acknowledgement}
+                </p>
+              </div>
+            </DialogPrimitive.Description>
+            {showScrollHint && (
+              <div className='pointer-events-none absolute right-0 bottom-0 left-0 flex h-14 items-end justify-center bg-gradient-to-t from-white to-transparent pb-1'>
+                <svg
+                  viewBox='0 0 24 24'
+                  fill='none'
+                  className='size-5 animate-bounce text-red-500'
+                  aria-hidden='true'
                 >
-                  {t.privacy}
-                </a>{' '}
-                {t.and}{' '}
-                <a
-                  href='/imprint'
-                  className='underline hover:no-underline'
-                  onClick={handleLegalLinkClick}
-                >
-                  {t.legal}
-                </a>
-                .
-              </p>
-              <p className='text-xs italic text-gray-400'>
-                {t.acknowledgement}
-              </p>
-            </div>
-          </DialogPrimitive.Description>
+                  <path
+                    d='M6 9l6 6 6-6'
+                    stroke='currentColor'
+                    strokeWidth='2'
+                    strokeLinecap='round'
+                    strokeLinejoin='round'
+                  />
+                </svg>
+              </div>
+            )}
+          </div>
 
           {/* Footer */}
-          <div className='space-y-4 px-6 pb-6 pt-6'>
+          <div className='shrink-0 space-y-4 px-6 pb-6 pt-6'>
             <label className='flex cursor-pointer items-center gap-3 text-sm text-gray-600'>
               <CheckboxPrimitive.Root
                 checked={dontShowAgain}
