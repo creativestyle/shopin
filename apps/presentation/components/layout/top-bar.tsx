@@ -35,7 +35,7 @@ export async function TopBar({ className, messages }: TopBarProps) {
         aria-label={t('ariaLabel')}
         tabIndex={0}
         className={cn(
-          'fixed top-0 z-50 w-full bg-gray-950 py-1.5',
+          'container-type-inline-size fixed top-0 z-50 w-full bg-gray-950 py-1.5',
           'outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-inset',
           className
         )}
@@ -46,7 +46,7 @@ export async function TopBar({ className, messages }: TopBarProps) {
           even when messages wrap to multiple lines */}
       <div
         aria-hidden
-        className='invisible w-full bg-transparent py-1.5 text-xs text-white'
+        className='container-type-inline-size invisible w-full bg-transparent py-1.5 text-xs text-white'
       >
         {content}
       </div>
