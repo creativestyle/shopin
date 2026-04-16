@@ -113,8 +113,8 @@ export function DemoDisclaimerModal({
     if (!el) {
       return
     }
-    const atBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 1
-    setShowScrollHint(!atBottom)
+    const next = el.scrollTop + el.clientHeight < el.scrollHeight - 1
+    setShowScrollHint((prev) => (prev === next ? prev : next))
   }
 
   useLayoutEffect(() => {
@@ -129,7 +129,7 @@ export function DemoDisclaimerModal({
     }
   }, [])
 
-  const handleAccept = () => {
+  const dismiss = () => {
     if (dontShowAgain) {
       acknowledgeDemoDisclaimer()
     }
@@ -141,10 +141,7 @@ export function DemoDisclaimerModal({
     href: string
   ) => {
     e.preventDefault()
-    if (dontShowAgain) {
-      acknowledgeDemoDisclaimer()
-    }
-    setOpen(false)
+    dismiss()
     onNavigate?.(href)
   }
 
@@ -299,7 +296,8 @@ export function DemoDisclaimerModal({
               {t.dontShowAgain}
             </label>
             <button
-              onClick={handleAccept}
+              type='button'
+              onClick={dismiss}
               className='inline-flex h-12 w-full cursor-pointer items-center justify-center rounded-full bg-primary px-7 text-sm font-bold text-white transition-colors hover:bg-secondary active:bg-secondary'
             >
               {t.accept}
