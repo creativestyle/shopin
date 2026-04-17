@@ -71,8 +71,6 @@
 
 @layer base {
   html {
-    /* this trick gives us possibility to use container query units. CW units makes sure scrollbar width is excluded */
-    container-type: inline-size;
     line-height: 1.5;
   }
 
@@ -174,6 +172,11 @@
 
 @utility lord-of-the-focus-ring {
   @apply rounded-md outline-none focus-visible:ring-1 focus-visible:ring-black/20;
+}
+
+@utility container-type-inline-size {
+  /* this trick gives us possibility to use container query units. CW units makes sure scrollbar width is excluded */
+  container-type: inline-size;
 }
 
 @variant touchscreen {

@@ -127,9 +127,6 @@ export const Carousel = ({
       style={
         {
           ...cssConfig,
-          // Override --_fullbleed to use viewport units instead of container query units (for grid placement)
-          '--_fullbleed':
-            'max(var(--_container-padding), 50dvw - var(--_container-width) / 2)',
           ...style,
         } as React.CSSProperties
       }
