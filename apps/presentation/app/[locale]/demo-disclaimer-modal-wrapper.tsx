@@ -1,9 +1,15 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
+import { usePathname } from 'next/navigation'
 import { DemoDisclaimerModal } from '@demo/demo-disclaimer'
 
+const LEGAL_PATHS = new Set(['/privacy', '/imprint', '/terms'])
+
 export function DemoDisclaimerModalWrapper() {
-  const router = useRouter()
-  return <DemoDisclaimerModal onNavigate={(href) => router.push(href)} />
+  const pathname = usePathname()
+  const segment = '/' + (pathname.split('/').pop() ?? '')
+  if (LEGAL_PATHS.has(segment)) {
+    return null
+  }
+  return <DemoDisclaimerModal />
 }
