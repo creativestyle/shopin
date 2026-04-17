@@ -16,14 +16,14 @@ export function CustomerServiceBlock({
       <div className='space-y-2.5'>
         {customerService.phone && (
           <div className='flex items-center gap-2.5'>
-            <PhoneIcon className='size-6 text-gray-500' />
-            <span className='text-base leading-normal font-bold text-gray-500'>
+            <PhoneIcon className='size-6 text-gray-600' />
+            <span className='text-base leading-normal font-bold text-gray-600'>
               {customerService.phone}
             </span>
           </div>
         )}
         {customerService.hours && (
-          <p className='text-sm leading-normal font-normal text-gray-500'>
+          <p className='text-sm leading-normal font-normal text-gray-600'>
             {customerService.hours}
           </p>
         )}
