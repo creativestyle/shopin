@@ -1,12 +1,6 @@
 'use client'
 
-import {
-  type MouseEvent,
-  useEffect,
-  useLayoutEffect,
-  useRef,
-  useState,
-} from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { useLocale } from 'next-intl'
 import * as CheckboxPrimitive from '@radix-ui/react-checkbox'
 import * as DialogPrimitive from '@radix-ui/react-dialog'
@@ -52,7 +46,7 @@ const TRANSLATIONS = {
     and: 'and',
     legal: 'Legal Notice',
     acknowledgement:
-      'By clicking "Acknowledge & Enter Demo" or following the legal links above, you acknowledge the non-commercial, fictional nature of this store and its content.',
+      'By clicking "Acknowledge & Enter Demo", you acknowledge the non-commercial, fictional nature of this store and its content.',
     dontShowAgain: "Don't show this notice again for 30 days",
     accept: 'Acknowledge & Enter Demo',
   },
@@ -79,13 +73,13 @@ const TRANSLATIONS = {
       },
     ],
     liabilityPrefix: 'Diese Demo wird von',
-    liabilitySuffix: 'ohne Gewährleistung bereitgestellt.',
+    liabilitySuffix: ' ohne Gewährleistung bereitgestellt.',
     furtherDetails: 'Weitere Informationen finden Sie unter',
     privacy: 'Datenschutz',
     and: 'und',
     legal: 'Impressum',
     acknowledgement:
-      'Durch Klicken auf „Bestätigen & Demo starten" oder durch Aufrufen der oben genannten rechtlichen Links bestätigen Sie, dass Sie über den nicht-kommerziellen, fiktiven Charakter dieses Shops und seiner Inhalte informiert wurden.',
+      'Mit Klick auf „Bestätigen & Demo starten" bestätigen Sie den nicht-kommerziellen, fiktiven Charakter dieses Shops und seiner Inhalte.',
     dontShowAgain: 'Diesen Hinweis 30 Tage lang nicht mehr anzeigen',
     accept: 'Bestätigen & Demo starten',
   },
@@ -95,11 +89,7 @@ function resolveLocale(locale: string): SupportedLocale {
   return locale.startsWith('de') ? 'de' : 'en'
 }
 
-export function DemoDisclaimerModal({
-  onNavigate,
-}: {
-  onNavigate?: (href: string) => void
-}) {
+export function DemoDisclaimerModal() {
   const appLocale = useLocale()
   const [open, setOpen] = useState(false)
   const [lang, setLang] = useState<SupportedLocale>(resolveLocale(appLocale))
@@ -134,15 +124,6 @@ export function DemoDisclaimerModal({
       acknowledgeDemoDisclaimer()
     }
     setOpen(false)
-  }
-
-  const handleLegalLinkClick = (
-    e: MouseEvent<HTMLAnchorElement>,
-    href: string
-  ) => {
-    e.preventDefault()
-    dismiss()
-    onNavigate?.(href)
   }
 
   const handleDialogOpenChange = (next: boolean) => {
@@ -215,7 +196,7 @@ export function DemoDisclaimerModal({
                             className='underline hover:no-underline'
                           >
                             shopin.dev
-                          </a>{' '}
+                          </a>
                           {t.liabilitySuffix}
                         </>
                       )}
@@ -227,7 +208,6 @@ export function DemoDisclaimerModal({
                   <a
                     href='/privacy'
                     className='underline hover:no-underline'
-                    onClick={(e) => handleLegalLinkClick(e, '/privacy')}
                   >
                     {t.privacy}
                   </a>{' '}
@@ -235,7 +215,6 @@ export function DemoDisclaimerModal({
                   <a
                     href='/imprint'
                     className='underline hover:no-underline'
-                    onClick={(e) => handleLegalLinkClick(e, '/imprint')}
                   >
                     {t.legal}
                   </a>
