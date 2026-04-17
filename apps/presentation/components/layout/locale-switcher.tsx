@@ -138,11 +138,6 @@ export function LocaleSwitcher() {
               <Link
                 key={loc.code}
                 href={`/${loc.code}`}
-                onClick={(e) => {
-                  e.preventDefault()
-                  setIsOpen(false)
-                  router.push(`/${loc.code}`)
-                }}
                 role='option'
                 aria-selected={loc.code === locale}
                 tabIndex={-1}
