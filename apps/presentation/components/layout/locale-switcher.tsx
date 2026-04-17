@@ -12,6 +12,16 @@ import {
   URL_PREFIXES,
   SupportedLanguage,
 } from '@config/constants'
+import FlagDE from '../../public/icons/flag-de.svg'
+import FlagUS from '../../public/icons/flag-us.svg'
+
+const FLAG_COMPONENTS: Record<
+  string,
+  React.ComponentType<{ className?: string }>
+> = {
+  en: FlagUS,
+  de: FlagDE,
+}
 
 const locales = Object.entries(URL_PREFIXES).map(([rfcCode, urlPrefix]) => ({
   code: urlPrefix,
@@ -79,6 +89,7 @@ export function LocaleSwitcher() {
   }
 
   const currentLocale = locales.find((l) => l.code === locale)
+  const CurrentFlag = currentLocale ? FLAG_COMPONENTS[currentLocale.code] : null
 
   return (
     <div className='relative'>
@@ -94,7 +105,7 @@ export function LocaleSwitcher() {
         aria-label={`Select language. Current language: ${currentLocale?.name}`}
         className='flex items-center gap-2 lord-of-the-focus-ring rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100 hover:text-gray-900'
       >
-        <span>{currentLocale?.flag}</span>
+        {CurrentFlag && <CurrentFlag className='h-4 w-5' />}
         <span>{currentLocale?.name}</span>
         <svg
           className={cn('size-4 transition-transform', {
@@ -121,30 +132,28 @@ export function LocaleSwitcher() {
           aria-label='Language options'
           className='absolute top-full left-0 z-50 mt-1 w-48 rounded-md border border-gray-200 bg-white shadow-lg'
         >
-          {locales.map((loc, index) => (
-            <Link
-              key={loc.code}
-              href={`/${loc.code}`}
-              onClick={(e) => {
-                e.preventDefault()
-                setIsOpen(false)
-                router.push(`/${loc.code}`)
-              }}
-              role='option'
-              aria-selected={loc.code === locale}
-              tabIndex={-1}
-              className={cn(
-                'flex w-full items-center gap-2 px-3 py-2 text-left text-sm transition-colors first:rounded-t-md last:rounded-b-md hover:bg-gray-100 focus:bg-blue-50 focus:text-blue-700',
-                {
-                  'bg-gray-50 font-medium': loc.code === locale,
-                  'bg-blue-50 text-blue-700': index === focusedIndex,
-                }
-              )}
-            >
-              <span>{loc.flag}</span>
-              <span>{loc.name}</span>
-            </Link>
-          ))}
+          {locales.map((loc, index) => {
+            const LocaleFlag = FLAG_COMPONENTS[loc.code]
+            return (
+              <Link
+                key={loc.code}
+                href={`/${loc.code}`}
+                role='option'
+                aria-selected={loc.code === locale}
+                tabIndex={-1}
+                className={cn(
+                  'flex w-full items-center gap-2 px-3 py-2 text-left text-sm transition-colors first:rounded-t-md last:rounded-b-md hover:bg-gray-100 focus:bg-blue-50 focus:text-blue-700',
+                  {
+                    'bg-gray-50 font-medium': loc.code === locale,
+                    'bg-blue-50 text-blue-700': index === focusedIndex,
+                  }
+                )}
+              >
+                {LocaleFlag && <LocaleFlag className='h-4 w-5' />}
+                <span>{loc.name}</span>
+              </Link>
+            )
+          })}
         </div>
       )}
     </div>

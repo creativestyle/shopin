@@ -9,7 +9,6 @@ export type SupportedLanguage = 'en-US' | 'de-DE'
 export interface LanguageInfo {
   name: string
   nativeName: string
-  flag: string
   country: string
 }
 
@@ -37,13 +36,11 @@ export const LANGUAGE_CONFIG: Record<SupportedLanguage, LanguageInfo> = {
   'en-US': {
     name: 'English',
     nativeName: 'English',
-    flag: '🇺🇸',
     country: 'United States',
   },
   'de-DE': {
     name: 'German',
     nativeName: 'Deutsch',
-    flag: '🇩🇪',
     country: 'Germany',
   },
 } as const
