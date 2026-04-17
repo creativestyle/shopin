@@ -2,8 +2,6 @@ import type { ProductCardResponse } from '../product-collection/product-card'
 import type { Facet } from '../product-collection/facet'
 import type { PriceRange } from '../product-collection/product-collection'
 
-export const SEARCH_PROVIDER = Symbol('SEARCH_PROVIDER')
-
 /**
  * Number of results to fetch before deduplication/extraction of query suggestions.
  * Must be larger than DEFAULT_SUGGESTION_LIMIT so the extraction step has enough
