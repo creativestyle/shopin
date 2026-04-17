@@ -114,6 +114,22 @@ export function DemoDisclaimerModal() {
   }, [open, lang])
 
   useEffect(() => {
+    if (!open) {
+      return
+    }
+    let timer: ReturnType<typeof setTimeout>
+    const onResize = () => {
+      clearTimeout(timer)
+      timer = setTimeout(updateScrollHint, 150)
+    }
+    window.addEventListener('resize', onResize)
+    return () => {
+      window.removeEventListener('resize', onResize)
+      clearTimeout(timer)
+    }
+  }, [open])
+
+  useEffect(() => {
     if (!hasAcknowledgedDemoDisclaimer()) {
       setOpen(true)
     }
@@ -145,6 +161,7 @@ export function DemoDisclaimerModal() {
           onEscapeKeyDown={(e) => e.preventDefault()}
           onPointerDownOutside={(e) => e.preventDefault()}
           onInteractOutside={(e) => e.preventDefault()}
+          onAnimationEnd={updateScrollHint}
           className='fixed top-[50dvh] left-[50vw] z-(--z-modal) flex max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] max-w-2xl -translate-x-1/2 -translate-y-1/2 flex-col rounded-lg bg-white shadow-card data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95'
         >
           {/* Header + Language toggle */}
