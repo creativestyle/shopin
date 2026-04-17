@@ -10,7 +10,7 @@ interface SearchBarProps {
 }
 
 export const SearchBar: React.FC<SearchBarProps> = ({
-  placeholder = 'Suche...',
+  placeholder,
   onSearch,
   className,
 }) => {
@@ -20,7 +20,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
     onSearch?.(searchQuery)
   }
 
-  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       handleSearch()
     }
@@ -41,7 +41,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
         placeholder={placeholder}
         value={searchQuery}
         onChange={(e) => setSearchQuery(e.target.value)}
-        onKeyPress={handleKeyPress}
+        onKeyDown={handleKeyDown}
         aria-label='Search'
         className='w-full cursor-text border-none bg-transparent text-sm leading-normal font-normal text-gray-500 outline-none placeholder:text-gray-500'
       />

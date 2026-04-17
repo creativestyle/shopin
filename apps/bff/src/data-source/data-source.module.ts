@@ -10,6 +10,7 @@ import { MockApiModule } from '@integrations/mock-api'
 import { CommercetoolsApiModule } from '@integrations/commercetools-api'
 import { CommercetoolsAuthModule } from '@integrations/commercetools-auth'
 import { ContentfulApiModule } from '@integrations/contentful-api'
+import { AlgoliaApiModule } from '@integrations/algolia-api'
 import { DataSourceFactory } from './data-source.factory'
 import { DATA_SOURCE } from './tokens'
 import type { DataSource } from '@config/constants'
@@ -26,6 +27,7 @@ import {
     CommercetoolsApiModule,
     CommercetoolsAuthModule,
     ContentfulApiModule,
+    AlgoliaApiModule,
   ],
   providers: [
     {

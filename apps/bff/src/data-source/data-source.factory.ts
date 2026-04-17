@@ -11,6 +11,9 @@ import type { CommercetoolsServiceProvider } from '@integrations/commercetools-a
 import type { ContentfulServiceProvider } from '@integrations/contentful-api'
 import type { MockServiceProvider } from '@integrations/mock-api'
 import type { CommercetoolsAuthServiceProvider } from '@integrations/commercetools-auth'
+import type { AlgoliaServiceProvider } from '@integrations/algolia-api'
+import { CtSearchProvider } from '@integrations/commercetools-api'
+import type { SearchProvider } from '@core/contracts/product-search/search-provider'
 import { DATA_SOURCE } from './tokens'
 
 type CommercetoolsWithCMSServices = ReturnType<
@@ -18,6 +21,7 @@ type CommercetoolsWithCMSServices = ReturnType<
 > & {
   pageService: PageService
   layoutService: LayoutService
+  searchService: SearchProvider
 }
 
 type MergedCommercetoolsCMSProvider = {
@@ -46,15 +50,22 @@ export class DataSourceFactory {
     private readonly mockServiceProvider: MockServiceProvider,
     @Inject('COMMERCETOOLS_AUTH_SERVICE_PROVIDER')
     private readonly commercetoolsAuthServiceProvider: CommercetoolsAuthServiceProvider,
+    @Optional()
+    @Inject('ALGOLIA_SERVICE_PROVIDER')
+    private readonly algoliaServiceProvider: AlgoliaServiceProvider | null,
     @Inject(DATA_SOURCE) private readonly dataSource: DataSource
   ) {
     const commercetoolsWithCMS: MergedCommercetoolsCMSProvider = {
       getServices: (): CommercetoolsWithCMSServices => {
         const commercetools = this.commercetoolsServiceProvider.getServices()
+        const ctSearchService = new CtSearchProvider(
+          commercetools.productSearchService
+        )
         if (this.contentfulServiceProvider) {
           return {
             ...commercetools,
             ...this.contentfulServiceProvider.getServices(),
+            searchService: ctSearchService,
           }
         }
         const mock = this.mockServiceProvider.getServices()
@@ -62,11 +73,25 @@ export class DataSourceFactory {
           ...commercetools,
           pageService: mock.pageService,
           layoutService: mock.layoutService,
+          searchService: ctSearchService,
         }
       },
     }
+
+    const commercetoolsWithCMSWithAlgolia: MergedCommercetoolsCMSProvider = {
+      getServices: (): CommercetoolsWithCMSServices => {
+        const base = commercetoolsWithCMS.getServices()
+        const { searchService } = this.algoliaServiceProvider!.getServices()
+        return {
+          ...base,
+          searchService,
+        }
+      },
+    }
+
     this.serviceProviderMap = new Map<DataSource, DataSourceServiceProvider>([
       ['commercetools-set', commercetoolsWithCMS],
+      ['commercetools-algolia-set', commercetoolsWithCMSWithAlgolia],
       ['mock-set', this.mockServiceProvider],
     ])
   }
@@ -88,6 +113,14 @@ export class DataSourceFactory {
     // Always use mock paymentService regardless of data source
     const { paymentService } = this.mockServiceProvider.getServices()
 
+    // For mock-set, wrap the CT productSearchService as a SearchProvider
+    const searchService: SearchProvider =
+      'searchService' in baseServices
+        ? (baseServices as CommercetoolsWithCMSServices).searchService
+        : new CtSearchProvider(
+            this.commercetoolsServiceProvider.getServices().productSearchService
+          )
+
     return {
       ...baseServices,
       customerService,
@@ -95,6 +128,7 @@ export class DataSourceFactory {
       cartPaymentService: baseServices.cartPaymentService,
       paymentService,
       orderService,
+      searchService,
     }
   }
 

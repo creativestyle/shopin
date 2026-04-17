@@ -8,6 +8,7 @@ import {
   SEARCH_PARAM_SALE_ONLY,
   SEARCH_PARAM_PRICE_MIN,
 } from '@config/constants'
+import { parseFilters } from './use-filter-params'
 
 export interface ActiveFilterChip {
   id: string
@@ -34,26 +35,21 @@ export function useActiveFilterChips({
 
   const chips: ActiveFilterChip[] = []
 
-  const filtersParam = searchParams?.get(SEARCH_PARAM_FILTERS)
-  if (filtersParam) {
-    try {
-      const parsed = JSON.parse(filtersParam) as Record<string, string[]>
-      for (const [attr, values] of Object.entries(parsed)) {
-        const facet = facets?.find((f) => f.name === attr)
-        const facetLabel = facet?.label ?? attr
-        for (const value of values) {
-          const termLabel =
-            facet?.terms.find((t) => t.term === value)?.label ?? value
-          chips.push({
-            id: `${attr}:${value}`,
-            label: `${facetLabel}: ${termLabel}`,
-            filterKey: attr,
-            filterValue: value,
-          })
-        }
+  const parsed = parseFilters(searchParams?.get(SEARCH_PARAM_FILTERS))
+  if (parsed) {
+    for (const [attr, values] of Object.entries(parsed)) {
+      const facet = facets?.find((f) => f.name === attr)
+      const facetLabel = facet?.label ?? attr
+      for (const value of values) {
+        const termLabel =
+          facet?.terms.find((t) => t.term === value)?.label ?? value
+        chips.push({
+          id: `${attr}:${value}`,
+          label: `${facetLabel}: ${termLabel}`,
+          filterKey: attr,
+          filterValue: value,
+        })
       }
-    } catch {
-      // Ignore invalid JSON
     }
   }
 

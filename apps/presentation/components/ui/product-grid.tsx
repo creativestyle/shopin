@@ -8,7 +8,7 @@ interface ProductGridProps {
   products: ProductCardResponse[]
   className?: string
   locale: string
-  renderCardActions: (product: ProductCardResponse) => React.ReactNode
+  renderCardActions?: (product: ProductCardResponse) => React.ReactNode
 }
 
 export const ProductGrid: React.FC<ProductGridProps> = ({
@@ -39,7 +39,7 @@ export const ProductGrid: React.FC<ProductGridProps> = ({
           key={getProductVariantKey(product.id, product.variantId)}
           data={product}
           locale={locale}
-          actions={renderCardActions(product)}
+          actions={renderCardActions?.(product)}
         />
       ))}
     </div>

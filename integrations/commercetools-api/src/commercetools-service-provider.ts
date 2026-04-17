@@ -3,6 +3,7 @@ import { CommercetoolsServiceProvider } from './interfaces'
 import {
   ProductService,
   ProductCollectionService,
+  ProductSearchService,
   NavigationService,
   CommercetoolsCustomerService,
   CommercetoolsCustomerAddressService,
@@ -18,6 +19,7 @@ export class CommercetoolsServiceProviderImpl implements CommercetoolsServicePro
   constructor(
     private readonly productService: ProductService,
     private readonly productCollectionService: ProductCollectionService,
+    private readonly productSearchService: ProductSearchService,
     private readonly navigationService: NavigationService,
     private readonly customerService: CommercetoolsCustomerService,
     private readonly customerAddressService: CommercetoolsCustomerAddressService,
@@ -32,6 +34,7 @@ export class CommercetoolsServiceProviderImpl implements CommercetoolsServicePro
     return {
       productService: this.productService,
       productCollectionService: this.productCollectionService,
+      productSearchService: this.productSearchService,
       navigationService: this.navigationService,
       customerService: this.customerService,
       customerAddressService: this.customerAddressService,

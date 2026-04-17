@@ -1,6 +1,6 @@
 import { Injectable, Inject } from '@nestjs/common'
 import { COMMERCETOOLS_CLIENT, Client } from '../client/client.module'
-import { LANGUAGE_TOKEN } from '@core/i18n'
+import { LANGUAGE_TOKEN, LanguageTagUtils } from '@core/i18n'
 import type { LanguageProvider } from '@apps/bff/src/common/language/language.provider'
 import type { MainNavigationResponse } from '@core/contracts/navigation/main-navigation'
 import { I18N_CONFIG } from '@config/constants'
@@ -17,7 +17,7 @@ export class NavigationService {
   async getNavigation(): Promise<MainNavigationResponse> {
     const currentLanguage = this.languageProvider.getCurrentLanguage()
     // Commercetools uses underscores for query parameters (en_US) but hyphens for data keys (en-US)
-    const queryLocale = currentLanguage.replace('-', '_')
+    const queryLocale = LanguageTagUtils.toUnderscoreKey(currentLanguage)
     const dataLocale = currentLanguage
     const fallbackLocale = I18N_CONFIG.fallbackLanguage
 
