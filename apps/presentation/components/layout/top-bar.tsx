@@ -15,7 +15,7 @@ export async function TopBar({ className, messages }: TopBarProps) {
   const t = await getTranslations('topBar')
 
   const content = (
-    <StandardContainer className='flex items-center justify-center'>
+    <StandardContainer className='flex items-center justify-center will-change-transform'>
       <ul className='flex flex-wrap items-center justify-center gap-x-6 gap-y-1 text-center text-xs font-normal text-white'>
         {messages.map((msg, i) => (
           <li
