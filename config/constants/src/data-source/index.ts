@@ -4,7 +4,7 @@ export type DataSource =
   | 'commercetools-algolia-set'
 
 export const ALLOWED_DATA_SOURCES: readonly DataSource[] = [
-  'mock-set',
+  // 'mock-set',
   'commercetools-set',
   'commercetools-algolia-set',
 ] as const
