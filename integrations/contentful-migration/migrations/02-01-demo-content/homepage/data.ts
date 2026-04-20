@@ -263,11 +263,7 @@ export const VIDEO_TEASER = (linkRef: EntryLinkRef) => ({
   },
 })
 
-export const VIDEO_URLS = [
-  'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
-  'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4',
-  'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
-]
+export const VIDEO_URLS = ['https://media.w3.org/2010/05/sintel/trailer_hd.mp4']
 export const CAROUSEL_ITEMS = (
   linkNew: EntryLinkRef,
   linkC: EntryLinkRef,
