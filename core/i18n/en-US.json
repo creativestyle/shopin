@@ -663,5 +663,8 @@
     "removeSuccess": "Removed from wishlist",
     "addError": "Failed to add to wishlist",
     "removeError": "Failed to remove from wishlist"
+  },
+  "productCard": {
+    "linkAriaLabel": "View details for {name}"
   }
 }
