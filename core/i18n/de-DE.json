@@ -662,5 +662,8 @@
     "removeSuccess": "Von der Wunschliste entfernt",
     "addError": "Hinzufügen zur Wunschliste fehlgeschlagen",
     "removeError": "Entfernen aus der Wunschliste fehlgeschlagen"
+  },
+  "productCard": {
+    "linkAriaLabel": "{name} ansehen"
   }
 }

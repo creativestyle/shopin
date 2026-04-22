@@ -7,6 +7,7 @@ import type { ProductCardResponse } from '@core/contracts/product-collection/pro
 import { PriceBox } from '@/components/ui/price/price-box'
 import { ProductCardWishlistButton } from '@/features/wishlist/product-card-wishlist-button'
 import { getProductHref } from '@/lib/product-utils'
+import { useTranslations } from 'next-intl'
 
 interface ProductCardProps extends Omit<LinkProps, 'href' | 'className'> {
   data: ProductCardResponse
@@ -27,18 +28,19 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   ...props
 }) => {
   const href = getProductHref(data.slug, data.variantId)
-
+  const t = useTranslations('productCard')
   return (
     <div
       className={cn(
         'group relative mx-auto flex w-full flex-col border-2 border-transparent bg-white transition-colors',
-        'has-[:focus-visible]:border-gray-300 has-[:hover]:border-gray-300',
+        'has-hover:border-gray-300 has-focus-visible:border-gray-300',
         className
       )}
     >
       <Link
         href={href}
         className='absolute inset-0 z-1 lord-of-the-focus-ring'
+        aria-label={t('linkAriaLabel', { name: data.name })}
         {...props}
       />
 
@@ -70,7 +72,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
       <div className='pointer-events-none relative flex w-full shrink-0 flex-col items-center gap-2 bg-white px-4 py-3 lg:gap-4 lg:p-4'>
         <div className='relative flex w-full shrink-0 flex-col items-center gap-2'>
           <div className='relative flex w-full shrink-0 flex-col items-center gap-1'>
-            <p className='w-[min-content] min-w-full text-center text-sm/[1.1] font-bold text-gray-700'>
+            <p className='w-min min-w-full text-center text-sm/[1.1] font-bold text-gray-700'>
               {data.name}
             </p>
           </div>
