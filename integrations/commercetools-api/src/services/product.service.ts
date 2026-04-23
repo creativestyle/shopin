@@ -33,7 +33,11 @@ export class ProductService {
           where: `slug(${currentLanguage}="${productSlug}")`,
           staged: false,
           localeProjection: currentLanguage,
-          expand: ['productType'],
+          expand: [
+            'productType',
+            'categories[*]',
+            'categories[*].ancestors[*]',
+          ],
           limit: 1,
         },
       })
@@ -120,30 +124,27 @@ export class ProductService {
         variants: shopinVariants,
       },
       breadcrumb: [
-        ...(await this.resolveCategoryBreadcrumb(
-          product.categories?.[0]?.id,
+        ...this.resolveCategoryBreadcrumb(
+          (
+            product.categories?.[0] as
+              | { id: string; obj?: Category }
+              | undefined
+          )?.obj,
           currentLanguage
-        )),
+        ),
         { label: name, path: `/p/${slug}` },
       ],
     }
   }
 
-  private async resolveCategoryBreadcrumb(
-    categoryId: string | undefined,
+  private resolveCategoryBreadcrumb(
+    category: Category | undefined,
     language: string
-  ): Promise<{ label: string; path: string }[]> {
-    if (!categoryId) {
+  ): { label: string; path: string }[] {
+    if (!category) {
       return []
     }
 
-    const categoryResponse = await this.client
-      .categories()
-      .withId({ ID: categoryId })
-      .get({ queryArgs: { expand: ['ancestors[*]'] } })
-      .execute()
-
-    const category = categoryResponse.body as Category
     const ancestors = (category.ancestors ?? []) as Array<{
       id: string
       obj?: Category
