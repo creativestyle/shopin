@@ -568,6 +568,7 @@ export const REGULAR: RegularTeaser = {
 const ACCORDION_ITEMS: AccordionItem[] = [
   {
     title: 'Shipping & delivery',
+    expanded: false,
     body: {
       nodeType: 'document',
       data: {},
@@ -590,6 +591,7 @@ const ACCORDION_ITEMS: AccordionItem[] = [
   },
   {
     title: 'Returns',
+    expanded: false,
     body: {
       nodeType: 'document',
       data: {},
@@ -612,6 +614,7 @@ const ACCORDION_ITEMS: AccordionItem[] = [
   },
   {
     title: 'Payment methods',
+    expanded: false,
     body: {
       nodeType: 'document',
       data: {},
@@ -635,6 +638,7 @@ const ACCORDION_ITEMS: AccordionItem[] = [
 
 export const ACCORDION: AccordionTeaser = {
   type: 'accordion',
+  mode: 'single',
   title: 'FAQ',
   items: ACCORDION_ITEMS,
 }

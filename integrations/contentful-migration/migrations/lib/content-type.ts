@@ -7,7 +7,12 @@ import type { IFieldOptions } from 'contentful-migration'
 export type FieldSpec = Required<Pick<IFieldOptions, 'name' | 'type'>> &
   Pick<
     IFieldOptions,
-    'required' | 'linkType' | 'items' | 'validations' | 'localized'
+    | 'required'
+    | 'linkType'
+    | 'items'
+    | 'validations'
+    | 'localized'
+    | 'defaultValue'
   >
 
 export interface ContentTypeDefinition {
@@ -52,6 +57,9 @@ export function applyContentTypeFromDefinition(
     }
     if (spec.validations?.length && f.validations) {
       f.validations(spec.validations)
+    }
+    if (spec.defaultValue != null && f.defaultValue) {
+      f.defaultValue(spec.defaultValue)
     }
   }
 }

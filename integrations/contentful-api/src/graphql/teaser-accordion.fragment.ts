@@ -6,9 +6,11 @@ export const TeaserAccordionFragment = gql`
     title
     accordion {
       title
+      mode
       itemsCollection(limit: ${QUERY_LIMITS.ACCORDION_ITEMS}) {
         items {
           title
+          expanded
           body {
             json
           }
