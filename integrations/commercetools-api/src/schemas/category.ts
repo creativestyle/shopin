@@ -1,17 +1,28 @@
 import { z } from 'zod'
 import { LocalizedStringApiResponseSchema } from './localized-string'
 
-// Reference to a parent category
-export const CategoryReferenceSchema = z.object({
+const BaseCategoryReferenceSchema = z.object({
   typeId: z.literal('category'),
   id: z.string(),
 })
 
-export const CategoryApiResponseSchema = z.object({
+const BaseCategorySchema = z.object({
   id: z.string(),
   name: LocalizedStringApiResponseSchema,
   slug: LocalizedStringApiResponseSchema,
-  parent: CategoryReferenceSchema.optional(),
+  parent: BaseCategoryReferenceSchema.optional(),
+})
+
+const AncestorReferenceSchema = BaseCategoryReferenceSchema.extend({
+  obj: BaseCategorySchema.optional(),
+})
+
+export const CategoryApiResponseSchema = BaseCategorySchema.extend({
+  ancestors: z.array(AncestorReferenceSchema).optional(),
+})
+
+export const CategoryReferenceSchema = BaseCategoryReferenceSchema.extend({
+  obj: CategoryApiResponseSchema.optional(),
 })
 
 export const CategoryPagedQueryApiResponseSchema = z.object({
