@@ -63,10 +63,14 @@ export class OAuthTokenService {
 
     if (!response.ok) {
       const errorBody = await response.json().catch(() => ({}))
-      throw {
-        statusCode: response.status,
-        body: errorBody,
-      }
+      const code = errorBody?.error ?? response.statusText
+      const description = errorBody?.error_description || errorBody?.message
+      const err = new Error(
+        `${response.status} CT OAuth error at ${endpoint}: ${code}${description ? ` — ${description}` : ''}`
+      ) as Error & { statusCode: number; body: { error: string } }
+      err.statusCode = response.status
+      err.body = { error: code }
+      throw err
     }
 
     const data = await response.json()

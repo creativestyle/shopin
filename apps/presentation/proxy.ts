@@ -1,12 +1,12 @@
 import createMiddleware from 'next-intl/middleware'
 import { NextRequest, NextResponse } from 'next/server'
-import { I18N_CONFIG, URL_PREFIXES } from '@config/constants'
+import { I18N_CONFIG, listLocales, getLocale } from '@config/constants'
+import { AcceptLanguageUtils } from '@core/i18n'
 import { DRAFT_COOKIE_NAME, isDraftCookieValid } from '@/lib/draft-mode'
 
 const intlMiddleware = createMiddleware({
-  // Use the URL prefixes as locales
-  locales: Object.values(URL_PREFIXES),
-  defaultLocale: URL_PREFIXES[I18N_CONFIG.defaultLanguage],
+  locales: listLocales().map((l) => l.urlPrefix),
+  defaultLocale: getLocale(I18N_CONFIG.defaultLocale).urlPrefix,
   localePrefix: 'as-needed',
   localeDetection: true,
 })
@@ -14,15 +14,19 @@ const intlMiddleware = createMiddleware({
 export default function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
 
-  // With localePrefix 'as-needed', next-intl returns NextResponse.next()
-  // for the root path with the default locale, but the [locale] dynamic
-  // segment has no value → 404.
-  // Explicitly rewrite / → /defaultLocale so the route matches.
+  // intlMiddleware returns NextResponse.next() for the default locale at '/',
+  // leaving the [locale] dynamic segment without a value → 404.
+  // Rewrite internally to /en so the route matches; non-default locales (e.g. /de)
+  // are handled by intlMiddleware's localeDetection redirect.
   if (pathname === '/' || pathname === '') {
-    const defaultLocale = URL_PREFIXES[I18N_CONFIG.defaultLanguage]
-    const url = request.nextUrl.clone()
-    url.pathname = `/${defaultLocale}`
-    return NextResponse.rewrite(url)
+    const language = AcceptLanguageUtils.getBestSupportedLanguage(
+      request.headers.get('accept-language') ?? ''
+    )
+    if (language === I18N_CONFIG.defaultLocale) {
+      const url = request.nextUrl.clone()
+      url.pathname = `/${getLocale(language).urlPrefix}`
+      return NextResponse.rewrite(url)
+    }
   }
 
   const response = intlMiddleware(request)

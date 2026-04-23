@@ -1,4 +1,5 @@
 import type { ProductCardResponse } from '@core/contracts/product-collection/product-card'
+import { resolveCurrencyFromLanguage } from '@core/i18n'
 import { buildAlgoliaFieldNames } from './algolia-query-utils'
 
 const DEFAULT_PRODUCT_NAME = 'Unnamed Product'
@@ -37,9 +38,9 @@ export function mapAlgoliaHitToProduct(
     },
     price: {
       regularPriceInCents: (hit[`${pricePrefix}_centAmount`] as number) || 0,
-      ...(hit[`${pricePrefix}_currency`] != null && {
-        currency: hit[`${pricePrefix}_currency`] as string,
-      }),
+      currency:
+        (hit[`${pricePrefix}_currency`] as string | null | undefined) ??
+        resolveCurrencyFromLanguage(language),
       fractionDigits:
         (hit[`${pricePrefix}_fractionDigits`] as number) ??
         DEFAULT_FRACTION_DIGITS,

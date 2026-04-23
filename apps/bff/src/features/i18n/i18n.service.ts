@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common'
 import { PinoLogger } from 'nestjs-pino'
-import { I18N_CONFIG, SupportedLanguage } from '@config/constants'
+import { I18N_CONFIG, SupportedLocale } from '@config/constants'
 import { Translations } from '@core/i18n'
 
 // Import JSON files directly
@@ -12,8 +12,8 @@ export class I18nService {
   constructor(private readonly logger: PinoLogger) {
     this.logger.setContext(I18nService.name)
   }
-  private readonly defaultLanguage = I18N_CONFIG.defaultLanguage
-  private readonly supportedLanguages = I18N_CONFIG.supportedLanguages
+  private readonly defaultLocale = I18N_CONFIG.defaultLocale
+  private readonly supportedLocales = I18N_CONFIG.supportedLocales
 
   // Map of translations from imported JSON files
   private readonly translations = {
@@ -23,9 +23,9 @@ export class I18nService {
 
   async getTranslations(lang: string): Promise<Translations> {
     // Validate language against predefined list for security
-    if (!this.supportedLanguages.includes(lang as SupportedLanguage)) {
+    if (!this.supportedLocales.includes(lang as SupportedLocale)) {
       this.logger.warn(
-        { requested: lang, fallback: this.defaultLanguage },
+        { requested: lang, fallback: this.defaultLocale },
         'Unsupported language requested, using fallback'
       )
       return this.getDefaultTranslations()
@@ -33,17 +33,17 @@ export class I18nService {
 
     // Return translations directly from imported JSON files
     return (
-      this.translations[lang as SupportedLanguage] ||
+      this.translations[lang as SupportedLocale] ||
       this.getDefaultTranslations()
     )
   }
 
   private getDefaultTranslations(): Translations {
-    return this.translations[this.defaultLanguage]
+    return this.translations[this.defaultLocale]
   }
 
   async getAvailableLanguages(): Promise<string[]> {
     // Return predefined list for security - no directory scanning
-    return [...this.supportedLanguages]
+    return [...this.supportedLocales]
   }
 }

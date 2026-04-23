@@ -46,7 +46,6 @@ export const CustomerAddresses: FC = () => {
     isUpdateAddressPending,
   } = useCustomerAddressOperations()
   const { customer } = useCustomer()
-
   const [open, setOpen] = useState(false)
   const [editingAddress, setEditingAddress] = useState<
     AddressResponse | undefined

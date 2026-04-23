@@ -2,8 +2,8 @@ import { Injectable, Inject, NotFoundException } from '@nestjs/common'
 import { COMMERCETOOLS_CLIENT, Client } from '../client/client.module'
 import {
   LANGUAGE_TOKEN,
+  LanguageTagUtils,
   resolveCurrencyFromLanguage,
-  resolveCountryFromLanguage,
 } from '@core/i18n'
 import type { LanguageProvider } from '@apps/bff/src/common/language/language.provider'
 import type { ProductCollectionResponse } from '@core/contracts/product-collection/product-collection'
@@ -42,6 +42,7 @@ export class ProductCollectionService {
     category: Category
     categoryId: string
     categoryTree: ReturnType<typeof mapCategoryTree>
+    slugByLocale: Record<string, string>
   }> {
     const categoryResponse = await this.client
       .categories()
@@ -77,7 +78,14 @@ export class ProductCollectionService {
       language
     )
 
-    return { category, categoryId: category.id, categoryTree }
+    const categorySlugMap = (category.slug ?? {}) as LocalizedString
+    const slugByLocale = Object.fromEntries(
+      Object.entries(categorySlugMap).filter(
+        ([, value]) => typeof value === 'string' && value.length > 0
+      )
+    ) as Record<string, string>
+
+    return { category, categoryId: category.id, categoryTree, slugByLocale }
   }
 
   async getProductCollection(
@@ -93,13 +101,15 @@ export class ProductCollectionService {
     const currentLanguage = this.languageProvider.getCurrentLanguage()
     const offset = (page - 1) * limit
     const currency = resolveCurrencyFromLanguage(currentLanguage)
-    const country = resolveCountryFromLanguage(currentLanguage)
+    const country = LanguageTagUtils.getCountry(currentLanguage) ?? ''
 
-    const [filterableAttributes, { category, categoryId, categoryTree }] =
-      await Promise.all([
-        this.filterableAttributesCache.getFilterableAttributes(),
-        this.resolveCategory(productCollectionSlug, currentLanguage),
-      ])
+    const [
+      filterableAttributes,
+      { category, categoryId, categoryTree, slugByLocale },
+    ] = await Promise.all([
+      this.filterableAttributesCache.getFilterableAttributes(),
+      this.resolveCategory(productCollectionSlug, currentLanguage),
+    ])
 
     const queryFilters = buildQueryFilters(categoryId, saleOnly)
     const attributeFilters = buildAttributeFilters(
@@ -169,6 +179,7 @@ export class ProductCollectionService {
       priceRange,
       categoryTree,
       currentCategoryId: categoryId,
+      slugByLocale,
     }
   }
 }

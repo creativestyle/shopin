@@ -1,6 +1,6 @@
 import type { ProductDetailsResponse } from '@core/contracts/product/product-details'
 import type { ReactNode } from 'react'
-import { getProductPage } from './lib/get-product-page'
+import { getProductPage } from './get-product-page'
 import { Breadcrumbs } from '@/components/ui/breadcrumbs'
 import { ProductGallery } from '@/components/ui/product-gallery'
 import { BuyBox } from './components/buy-box'
@@ -12,9 +12,11 @@ import {
 } from '@/components/ui/accordion'
 import { SEOTextSection } from '@/components/ui/seo-text-section'
 import { StandardContainer } from '@/components/ui/standard-container'
+import { notFound } from 'next/navigation'
 import { getTranslations } from 'next-intl/server'
 import { getCommonErrorMessage } from '@/lib/error-translation-keys'
 import { ErrorDisplay } from '@/components/ui/error-display'
+import { HttpError } from '@/lib/error-utils'
 
 interface ProductPageProps {
   slug: string
@@ -40,6 +42,9 @@ export async function ProductPage({
   try {
     productData = await getProductPage(slug, variantId)
   } catch (err) {
+    if (HttpError.hasStatusCode(err, 404)) {
+      notFound()
+    }
     error = await getCommonErrorMessage(err, () => getTranslations('common'))
   }
 
@@ -52,11 +57,7 @@ export async function ProductPage({
   }
 
   if (!productData) {
-    return (
-      <StandardContainer className='p-4'>
-        <div className='text-center'>{t('noDataFound')}</div>
-      </StandardContainer>
-    )
+    notFound()
   }
 
   return (

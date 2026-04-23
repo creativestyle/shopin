@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common'
-import { ByProjectKeyRequestBuilder } from '@commercetools/platform-sdk'
+import type { ByProjectKeyRequestBuilder } from '@commercetools/platform-sdk'
 import { ServerClientService } from './server-client.service'
 import { UserClientService } from './user-client.service'
 

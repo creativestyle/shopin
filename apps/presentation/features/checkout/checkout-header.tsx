@@ -1,15 +1,21 @@
-import { getTranslations } from 'next-intl/server'
+import { getLocale, getTranslations } from 'next-intl/server'
 import { Logo } from '@/components/ui/logo'
 import { CheckoutBackLink } from './components/checkout-back-link'
 import { StandardContainer } from '@/components/ui/standard-container'
+import { rfcToUrlPrefix } from '@config/constants'
 
 export async function CheckoutHeader() {
-  const t = await getTranslations('checkout')
+  const [t, locale] = await Promise.all([
+    getTranslations('checkout'),
+    getLocale(),
+  ])
+  const homeHref = `/${rfcToUrlPrefix(locale)}`
 
   const logo = (
     <div className='relative h-12 w-40'>
       <Logo
         src='/logo.svg'
+        href={homeHref}
         alt='SHOPin'
         className='size-full'
       />
