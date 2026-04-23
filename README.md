@@ -74,6 +74,39 @@ A modular storefront accelerator with a NestJS Backend for Frontend (BFF), Next.
 
 **Contentful migrations** — Run from the package: `npm run migrate -w @integrations/contentful-migration --` (from root) or `npm run migrate --` from [integrations/contentful-migration](integrations/contentful-migration/README.md). See that README for subcommands.
 
+## Adding a new locale
+
+`LOCALE_CONFIG` in [`config/constants/src/i18n.ts`](config/constants/src/i18n.ts) is the single source of truth. Adding an entry there enables it across routing, language switcher, BFF header parsing, currency formatting, and hreflang alternates.
+
+```ts
+// config/constants/src/i18n.ts
+export type SupportedLocale = "en-US" | "de-DE"; // 1. add RFC 5646 tag to the union
+
+export const LOCALE_CONFIG: Record<SupportedLocale, Locale> = {
+  "en-US": {
+    language: "en-US",
+    urlPrefix: "en",
+    nativeName: "English",
+    ctStoreKey: "us-store",
+    currency: "USD",
+  },
+  "de-DE": {
+    language: "de-DE",
+    urlPrefix: "de",
+    nativeName: "Deutsch",
+    ctStoreKey: "eu-store",
+    currency: "EUR",
+  },
+  // 2. add an entry — urlPrefix must be unique across all locales
+};
+```
+
+After updating `LOCALE_CONFIG`, also:
+
+1. **commercetools** — create or designate a Store in the Merchant Center with the correct languages and countries. Add the store key to `COMMERCETOOLS_STORE_KEYS` in `.env` (e.g. `fr-FR:fr-store`). See [`integrations/commercetools-api/README.md`](integrations/commercetools-api/README.md).
+2. **Translations** — add `apps/presentation/messages/{locale}.json`.
+3. **Contentful** _(if used)_ — ensure CMS content is translated for the new locale.
+
 ## How integrations work
 
 The architecture aims to keep **core, BFF, and presentation as platform-agnostic as possible**. Only the **integrations** (in `integrations/`) hold platform-specific logic and data; they talk to a given e-commerce API, CMS, or mock, and **map** that data into the shared, agnostic types from [core/contracts](core/contracts/README.md). Each integration implements the same contract interfaces: it fetches or writes in the backend’s format, then returns or accepts the shared types (Zod schemas and TypeScript types). The BFF chooses which integration to use per request (data source) and exposes a **single API** to the frontend. The **presentation** app only talks to the BFF and stays agnostic of the backend. To add a new backend: implement an integration that fulfils the contract, register it in the BFF’s data-source layer ([apps/bff/README.md](apps/bff/README.md)), and extend contracts only if the domain requires it.
@@ -88,8 +121,9 @@ The architecture aims to keep **core, BFF, and presentation as platform-agnostic
 
 Brought to life by<br/>
 <a href="https://creativestyle.de">
-    <picture>
-      <source media="(prefers-color-scheme: dark)" srcset="./images/cs_logo_dark.png">
-      <img src="./images/cs_logo_light.png" width="211px">
-    </picture>
+<picture>
+
+<source media="(prefers-color-scheme: dark)" srcset="./images/cs_logo_dark.png">
+<img src="./images/cs_logo_light.png" width="211px">
+</picture>
 </a>

@@ -1,5 +1,10 @@
 import getI18nRequestConfig from '../request'
-import { URL_PREFIXES, I18N_CONFIG, urlPrefixToRfc } from '@config/constants'
+import {
+  I18N_CONFIG,
+  listLocales,
+  getDefaultLocale,
+  urlPrefixToRfc,
+} from '@config/constants'
 
 // Avoid importing ESM next-intl modules in Jest by mocking the server entry
 jest.mock('next-intl/server', () => ({
@@ -36,7 +41,7 @@ describe('i18n/request getRequestConfig', () => {
 
   it('fetches default translations and returns default prefix for invalid locale', async () => {
     const messages = { fallback: true }
-    const defaultPrefix = URL_PREFIXES[I18N_CONFIG.defaultLanguage]
+    const defaultPrefix = getDefaultLocale().urlPrefix
     mockGetTranslations.mockResolvedValueOnce({
       locale: defaultPrefix,
       messages,
@@ -49,13 +54,13 @@ describe('i18n/request getRequestConfig', () => {
     expect(cfg.locale).toBe(defaultPrefix)
     expect(cfg.messages).toStrictEqual(messages)
     expect(mockGetTranslations).toHaveBeenCalledWith(
-      I18N_CONFIG.defaultLanguage,
+      I18N_CONFIG.defaultLocale,
       defaultPrefix
     )
   })
 
   it('fetches translations for a valid locale prefix and returns messages', async () => {
-    const validPrefix = Object.values(URL_PREFIXES)[0]
+    const validPrefix = listLocales()[0].urlPrefix
     const expectedRfc = urlPrefixToRfc(validPrefix)
     const messages = { hello: 'world' }
     mockGetTranslations.mockResolvedValue({
@@ -73,7 +78,7 @@ describe('i18n/request getRequestConfig', () => {
   })
 
   it('returns empty messages when BFF responds non-ok', async () => {
-    const validPrefix = Object.values(URL_PREFIXES)[0]
+    const validPrefix = listLocales()[0].urlPrefix
     const expectedRfc = urlPrefixToRfc(validPrefix)
     mockGetTranslations.mockResolvedValue({
       locale: validPrefix,

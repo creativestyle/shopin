@@ -3,14 +3,19 @@ import { NavigationDesktop } from '@/features/navigation/navigation-desktop'
 import { SearchBarWrapper } from './search-bar-wrapper'
 import { UserMenuWrapper } from './user-menu-wrapper'
 import { MobileAccountLink } from './mobile-account-link'
-import { getTranslations } from 'next-intl/server'
+import { getLocale, getTranslations } from 'next-intl/server'
 import { Logo } from '../ui/logo'
 import { HeaderSearchButton } from './header-search-button'
 import { HeaderCartButton } from './header-cart-button'
 import { StandardContainer } from '../ui/standard-container'
+import { rfcToUrlPrefix } from '@config/constants'
 
 export async function Header() {
-  const t = await getTranslations('userMenu')
+  const [t, locale] = await Promise.all([
+    getTranslations('userMenu'),
+    getLocale(),
+  ])
+  const homeHref = `/${rfcToUrlPrefix(locale)}`
   return (
     <header className='relative shadow-card'>
       {/* Mobile Header */}
@@ -32,6 +37,7 @@ export async function Header() {
                 className='h-10 w-32 flex-shrink-0'
                 src='/logo.svg'
                 preload
+                href={homeHref}
               />
             </div>
 
@@ -55,6 +61,7 @@ export async function Header() {
                 className='h-12 w-40 flex-shrink-0'
                 src='/logo.svg'
                 preload
+                href={homeHref}
               />
             </div>
 

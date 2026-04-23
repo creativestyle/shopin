@@ -19,12 +19,8 @@ export function StoreConfigProvider({
   children: React.ReactNode
   storeConfig: StoreConfigResponse
 }) {
-  const value = {
-    storeConfig,
-  }
-
   return (
-    <StoreConfigContext.Provider value={value}>
+    <StoreConfigContext.Provider value={{ storeConfig }}>
       {children}
     </StoreConfigContext.Provider>
   )

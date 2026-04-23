@@ -4,8 +4,8 @@ import { NewsletterBlock } from './footer/newsletter-block'
 import { LinkSectionBlock } from './footer/link-section-block'
 import { CustomerServiceBlock } from './footer/customer-service-block'
 import { PaymentMethodsBlock } from './footer/payment-methods-block'
-import { LanguageBlock } from './footer/language-block'
 import { LegalBar } from './footer/legal-bar'
+import { CountryBlock } from './footer/country-block'
 
 export async function Footer() {
   const layout = await getFooterLayout()
@@ -35,7 +35,7 @@ export async function Footer() {
           {layout.paymentMethods && (
             <PaymentMethodsBlock paymentMethods={layout.paymentMethods} />
           )}
-          {layout.language && <LanguageBlock language={layout.language} />}
+          <CountryBlock />
         </div>
       </StandardContainer>
 

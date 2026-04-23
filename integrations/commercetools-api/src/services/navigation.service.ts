@@ -19,7 +19,7 @@ export class NavigationService {
     // Commercetools uses underscores for query parameters (en_US) but hyphens for data keys (en-US)
     const queryLocale = LanguageTagUtils.toUnderscoreKey(currentLanguage)
     const dataLocale = currentLanguage
-    const fallbackLocale = I18N_CONFIG.fallbackLanguage
+    const fallbackLocale = I18N_CONFIG.defaultLocale
 
     // Fetch all categories (including children) - up to 500 for navigation
     const response = await this.client

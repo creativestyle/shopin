@@ -3,7 +3,7 @@
  * Following RFC 7231 standards
  */
 
-import { I18N_CONFIG, SupportedLanguage } from '@config/constants'
+import { I18N_CONFIG, SupportedLocale } from '@config/constants'
 
 export class AcceptLanguageUtils {
   /**
@@ -34,19 +34,17 @@ export class AcceptLanguageUtils {
    * @param acceptLanguage - Accept-Language header value
    * @returns Best supported language or default language
    */
-  static getBestSupportedLanguage(acceptLanguage: string): SupportedLanguage {
+  static getBestSupportedLanguage(acceptLanguage: string): SupportedLocale {
     const preferences = this.parseAcceptLanguageHeader(acceptLanguage)
 
     // Find the first supported language
     for (const { language } of preferences) {
-      if (
-        I18N_CONFIG.supportedLanguages.includes(language as SupportedLanguage)
-      ) {
-        return language as SupportedLanguage
+      if (I18N_CONFIG.supportedLocales.includes(language as SupportedLocale)) {
+        return language as SupportedLocale
       }
     }
 
-    return I18N_CONFIG.defaultLanguage
+    return I18N_CONFIG.defaultLocale
   }
 
   /**
@@ -55,16 +53,16 @@ export class AcceptLanguageUtils {
    * @returns Accept-Language header value
    */
   static buildClientAcceptLanguageHeader(
-    currentLocale: SupportedLanguage
+    currentLocale: SupportedLocale
   ): string {
     const languages: Array<
-      SupportedLanguage | { language: SupportedLanguage; quality: number }
+      SupportedLocale | { language: SupportedLocale; quality: number }
     > = [
       currentLocale, // Highest priority
     ]
 
     // Add other supported languages with lower quality
-    const otherLanguages = I18N_CONFIG.supportedLanguages.filter(
+    const otherLanguages = I18N_CONFIG.supportedLocales.filter(
       (lang) => lang !== currentLocale
     )
     otherLanguages.forEach((lang) => {

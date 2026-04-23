@@ -96,7 +96,9 @@ export class CustomerService extends BaseService {
    * Delete an address
    */
   async deleteAddress(addressId: string): Promise<void> {
-    await this.delete(`/customer/me/addresses/${addressId}`)
+    await this.delete(`/customer/me/addresses/${addressId}`, undefined, {
+      allowEmpty: true,
+    })
   }
 
   /**
