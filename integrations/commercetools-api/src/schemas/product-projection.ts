@@ -2,6 +2,7 @@ import { z } from 'zod'
 import { LocalizedStringApiResponseSchema } from './localized-string'
 import { ProductVariantApiResponseSchema } from './product-variant'
 import { ProductTypeReferenceApiResponseSchema } from './product-type'
+import { CategoryReferenceSchema } from './category'
 
 export const ProductProjectionApiResponseSchema = z.object({
   id: z.string(),
@@ -13,6 +14,7 @@ export const ProductProjectionApiResponseSchema = z.object({
   metaDescription: LocalizedStringApiResponseSchema.optional(),
   masterVariant: ProductVariantApiResponseSchema,
   variants: z.array(ProductVariantApiResponseSchema).optional(),
+  categories: z.array(CategoryReferenceSchema).optional(),
 })
 
 export const ProductProjectionPagedQueryApiResponseSchema = z.object({
