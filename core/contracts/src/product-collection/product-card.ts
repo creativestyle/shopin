@@ -1,11 +1,13 @@
 import { z } from 'zod'
 import { BaseEntityResponseSchema } from '../core/base-entity'
 import { BasicPriceResponseSchema } from '../core/basic-price'
+import { BadgeResponseSchema } from '../core/badge'
 import { ProductImageResponseSchema } from '../product/product-image'
 
 export const ProductCardResponseSchema = BaseEntityResponseSchema.extend({
   image: ProductImageResponseSchema,
   price: BasicPriceResponseSchema,
+  badges: z.array(BadgeResponseSchema).optional(),
   variantId: z.string().optional(),
   variantCount: z.number().optional(),
 })
