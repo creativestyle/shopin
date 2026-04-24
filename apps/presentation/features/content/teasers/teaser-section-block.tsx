@@ -25,7 +25,7 @@ export function TeaserSectionBlock({
         {/* Left column: text content */}
         <div className='flex flex-col justify-center px-4 py-8 sm:px-6 md:py-12 lg:py-16'>
           {categoryLabel && (
-            <span className='text-xs font-medium tracking-wider text-gray-500 uppercase'>
+            <span className='text-xs font-medium tracking-wider text-gray-700 uppercase'>
               {categoryLabel}
             </span>
           )}
@@ -40,10 +40,7 @@ export function TeaserSectionBlock({
             </p>
           )}
           {subcategoryLinks && subcategoryLinks.length > 0 && (
-            <ul
-              className='mt-6 flex flex-col gap-1.5'
-              role='list'
-            >
+            <ul className="mt-6 flex list-[''] flex-col gap-1.5">
               {subcategoryLinks.map((link, i) => (
                 <li key={i}>
                   <CmsLink link={link} />
