@@ -2,6 +2,8 @@ import { Injectable, Inject, NotFoundException } from '@nestjs/common'
 import { COMMERCETOOLS_CLIENT, Client } from '../client/client.module'
 import { LANGUAGE_TOKEN } from '@core/i18n'
 import type { LanguageProvider } from '@apps/bff/src/common/language/language.provider'
+import { resolveCurrencyFromLanguage } from '@core/i18n/currency-utils'
+import { resolveCountryFromLanguage } from '@core/i18n/language-tag-utils'
 import type { ProductResponse } from '@core/contracts/product/product'
 import type { LocalizedStringApiResponse } from '../schemas/localized-string'
 import { getLocalizedString as mapLocalized } from '../helpers/get-localized-string'
@@ -24,6 +26,8 @@ export class ProductService {
     variantId?: string
   ): Promise<ProductResponse> {
     const currentLanguage = this.languageProvider.getCurrentLanguage()
+    const currency = resolveCurrencyFromLanguage(currentLanguage)
+    const country = resolveCountryFromLanguage(currentLanguage)
 
     const response = await this.client
       .productProjections()
@@ -31,9 +35,10 @@ export class ProductService {
         queryArgs: {
           where: `slug(${currentLanguage}="${productSlug}")`,
           staged: false,
-          localeProjection: currentLanguage,
           expand: ['productType'],
           limit: 1,
+          priceCurrency: currency,
+          priceCountry: country,
         },
       })
       .execute()
@@ -57,11 +62,13 @@ export class ProductService {
         product.name as LocalizedStringApiResponse | undefined,
         currentLanguage
       ) || 'Unnamed Product'
-    const slug =
-      mapLocalized(
-        product.slug as LocalizedStringApiResponse | undefined,
-        currentLanguage
-      ) || product.id
+    const slugMap = (product.slug ?? {}) as LocalizedStringApiResponse
+    const slug = mapLocalized(slugMap, currentLanguage) || product.id
+    const slugByLocale = Object.fromEntries(
+      Object.entries(slugMap).filter(
+        ([, value]) => typeof value === 'string' && value.length > 0
+      )
+    ) as Record<string, string>
     // Price mapping with discount if available (minor units)
     const firstPrice = selectedVariant.prices?.[0]
     const regularPriceCents = firstPrice?.value.centAmount
@@ -100,6 +107,7 @@ export class ProductService {
         id: product.id,
         name,
         slug,
+        slugByLocale,
         variantId: String(selectedVariant.id),
         description:
           mapLocalized(

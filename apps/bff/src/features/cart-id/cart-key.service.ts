@@ -1,11 +1,12 @@
 import { Injectable, Inject, Scope } from '@nestjs/common'
-import { LANGUAGE_TOKEN, resolveCurrencyFromLanguage } from '@core/i18n'
+import { LANGUAGE_TOKEN } from '@core/i18n'
+import { resolveCurrencyFromLanguage } from '@core/i18n/currency-utils'
 import type { LanguageProvider } from '../../common/language/language.provider'
 import { getCartKey } from './cart.utils'
 
 /**
  * Service for generating cart keys based on currency and user type.
- * Handles key generation logic and currency resolution.
+ * Carts are scoped per currency; stores sharing a currency share a guest cart.
  */
 @Injectable({
   scope: Scope.REQUEST,
@@ -15,19 +16,12 @@ export class CartKeyService {
     @Inject(LANGUAGE_TOKEN) private readonly languageProvider: LanguageProvider
   ) {}
 
-  /**
-   * Gets the current currency based on the current language
-   * @returns Currency code (e.g., 'USD', 'EUR')
-   */
   getCurrentCurrency(): string {
-    const currentLanguage = this.languageProvider.getCurrentLanguage()
-    return resolveCurrencyFromLanguage(currentLanguage)
+    return resolveCurrencyFromLanguage(
+      this.languageProvider.getCurrentLanguage()
+    )
   }
 
-  /**
-   * Gets both logged-in and guest cart keys for the current currency
-   * @returns Object with loggedInCartKey and guestCartKey
-   */
   getCartKeys(): { loggedInCartKey: string; guestCartKey: string } {
     const currency = this.getCurrentCurrency()
     return {
@@ -36,31 +30,15 @@ export class CartKeyService {
     }
   }
 
-  /**
-   * Gets cart key for logged-in user
-   * @returns Cart key for logged-in user
-   */
   getLoggedInCartKey(): string {
-    const currency = this.getCurrentCurrency()
-    return getCartKey(currency, false)
+    return getCartKey(this.getCurrentCurrency(), false)
   }
 
-  /**
-   * Gets cart key for guest user
-   * @returns Cart key for guest user
-   */
   getGuestCartKey(): string {
-    const currency = this.getCurrentCurrency()
-    return getCartKey(currency, true)
+    return getCartKey(this.getCurrentCurrency(), true)
   }
 
-  /**
-   * Gets cart key based on user type
-   * @param isGuest - Whether the user is a guest
-   * @returns Cart key for the specified user type
-   */
   getCartKey(isGuest: boolean): string {
-    const currency = this.getCurrentCurrency()
-    return getCartKey(currency, isGuest)
+    return getCartKey(this.getCurrentCurrency(), isGuest)
   }
 }

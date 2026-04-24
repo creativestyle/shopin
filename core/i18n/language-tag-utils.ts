@@ -2,7 +2,12 @@
  * RFC 5646 Language Tag utilities
  */
 
-import { I18N_CONFIG, SupportedLanguage } from '@config/constants'
+import {
+  I18N_CONFIG,
+  SupportedLocale,
+  getDefaultLocale,
+  getLocale,
+} from '@config/constants'
 
 export class LanguageTagUtils {
   /**
@@ -48,8 +53,8 @@ export class LanguageTagUtils {
   /**
    * Check if language tag is supported
    */
-  static isSupported(tag: string): tag is SupportedLanguage {
-    return I18N_CONFIG.supportedLanguages.includes(tag as SupportedLanguage)
+  static isSupported(tag: string): tag is SupportedLocale {
+    return I18N_CONFIG.supportedLocales.includes(tag as SupportedLocale)
   }
 
   /**
@@ -59,4 +64,13 @@ export class LanguageTagUtils {
   static toUnderscoreKey(tag: string): string {
     return tag.replace('-', '_')
   }
+}
+
+/** Resolves the ISO 3166-1 alpha-2 country code for a given RFC 5646 language tag. */
+export function resolveCountryFromLanguage(language: string): string {
+  return (
+    LanguageTagUtils.getCountry(getLocale(language).language) ??
+    LanguageTagUtils.getCountry(getDefaultLocale().language) ??
+    getDefaultLocale().language.split('-')[1]!
+  )
 }

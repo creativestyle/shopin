@@ -18,7 +18,7 @@ export default async function RootLayout({
   children: React.ReactNode
 }) {
   const prefix = await getLocale()
-  const lang = prefix ? urlPrefixToRfc(prefix) : I18N_CONFIG.defaultLanguage
+  const lang = prefix ? urlPrefixToRfc(prefix) : I18N_CONFIG.defaultLocale
   return (
     <html
       lang={lang}

@@ -7,11 +7,12 @@ import Link from 'next/link'
 import AccountIcon from '../../public/icons/account.svg'
 import HeartIcon from '../../public/icons/heart.svg'
 import CartIcon from '../../public/icons/cart.svg'
-import PinIcon from '../../public/icons/pin.svg'
+// import PinIcon from '../../public/icons/pin.svg'
 import { AccountIconBadge } from './account-icon-badge'
 import { useAccountHref } from '@/features/account/use-account-href'
 import { CartBadge } from '@/features/cart/cart-badge'
 import { WishlistBadge } from '@/features/wishlist/wishlist-badge'
+import { LanguageSwitcher } from './language-switcher'
 
 interface UserMenuWrapperProps {
   className?: string
@@ -23,15 +24,18 @@ export function UserMenuWrapper({ className }: UserMenuWrapperProps) {
 
   return (
     <div className={cn('flex items-center gap-2 lg:gap-3', className)}>
+      {/* Language Switcher */}
+      <LanguageSwitcher />
+
       {/* Store Locator */}
-      <Button
+      {/* <Button
         variant='tertiary'
         scheme='black'
         className='h-6 min-w-6'
       >
         <PinIcon className='size-6' />
         <span className='sr-only'>{t('storeLocator')}</span>
-      </Button>
+      </Button> */}
 
       {/* Account */}
       <Button

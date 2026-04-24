@@ -1,9 +1,9 @@
 import { z } from 'zod'
 
-export const StoreConfigApiResponseSchema = z.object({
-  countries: z.array(z.string()),
+export const CommercetoolsStoreApiResponseSchema = z.object({
+  countries: z.array(z.object({ code: z.string().length(2) })).optional(),
 })
 
-export type StoreConfigApiResponse = z.infer<
-  typeof StoreConfigApiResponseSchema
+export type CommercetoolsStoreApiResponse = z.infer<
+  typeof CommercetoolsStoreApiResponseSchema
 >

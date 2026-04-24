@@ -3,7 +3,7 @@ import { z } from 'zod'
 export const BasicPriceResponseSchema = z.object({
   regularPriceInCents: z.number(),
   discountedPriceInCents: z.number().optional(),
-  currency: z.string().optional(),
+  currency: z.string(),
   fractionDigits: z.number().optional(),
   recommendedRetailPriceInCents: z.number().optional(),
   omnibusPriceInCents: z.number().optional(),

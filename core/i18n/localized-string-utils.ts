@@ -14,7 +14,7 @@ export function getLocalizedString(
 
   return (
     localizedValue[currentLanguage] ??
-    localizedValue[I18N_CONFIG.fallbackLanguage] ??
+    localizedValue[I18N_CONFIG.defaultLocale] ??
     Object.values(localizedValue)[0]
   )
 }

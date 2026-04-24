@@ -9,7 +9,7 @@ import Link from 'next/link'
 import { Logo } from '../ui/logo'
 import { Button } from '../ui/button'
 import { cn } from '@/lib/utils'
-import { MIN_SEARCH_QUERY_LENGTH } from '@config/constants'
+import { MIN_SEARCH_QUERY_LENGTH, rfcToUrlPrefix } from '@config/constants'
 import { useProductSearch } from '@/features/searchResults/use-product-search'
 import { ProductCard } from '@/components/ui/product-card'
 import SearchIcon from '@/public/icons/search.svg'
@@ -66,6 +66,7 @@ const boldRenderer = (chunks: React.ReactNode) => (
 export function SearchPopup({ open, onOpenChange }: SearchPopupProps) {
   const t = useTranslations('common')
   const locale = useLocale()
+  const homeHref = `/${rfcToUrlPrefix(locale)}`
   const router = useRouter()
   const [query, setQuery] = React.useState('')
   const { results, isLoading } = useProductSearch(query)
@@ -112,6 +113,7 @@ export function SearchPopup({ open, onOpenChange }: SearchPopupProps) {
               <div className='hidden lg:block'>
                 <Logo
                   src='/logo.svg'
+                  href={homeHref}
                   className='h-12 w-40'
                   width={156}
                   height={48}
