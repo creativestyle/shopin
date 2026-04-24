@@ -113,7 +113,7 @@ function SliderHeroSlideContent({
             preload={preload}
           />
           <div
-            className='absolute inset-0 bg-black/40'
+            className='absolute inset-0 bg-black/55'
             aria-hidden
           />
         </div>

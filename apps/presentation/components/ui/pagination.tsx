@@ -37,7 +37,6 @@ export function Pagination({
   return (
     <nav
       className={cn('flex items-center justify-center gap-10', className)}
-      role='navigation'
       aria-label={t('ariaLabel')}
     >
       <button

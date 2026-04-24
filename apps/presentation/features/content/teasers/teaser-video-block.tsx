@@ -9,11 +9,14 @@ interface TeaserVideoProps {
 
 export function TeaserVideoBlock({ teaser, imagePreload }: TeaserVideoProps) {
   const { videoUrl, thumbnailUrl, autoplay, controls, link } = teaser
+  const overlayLink = link
+    ? { ...link, ariaLabel: link.ariaLabel ?? link.label }
+    : undefined
   return (
     <div className='relative'>
-      {link && !controls && (
+      {overlayLink && !controls && (
         <CmsLink
-          link={link}
+          link={overlayLink}
           className='absolute inset-0 z-10'
           useLabelAsFallbackContent={false}
         />
