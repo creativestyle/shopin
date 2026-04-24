@@ -9,7 +9,6 @@ import {
 import { useHasMounted } from '@/hooks/use-has-mounted'
 import type { AccordionTeaser } from '@core/contracts/content/teaser-accordion'
 import { TeaserRichTextBlock } from './teaser-rich-text-block'
-import { useMemo } from 'react'
 
 /**
  * Renders a static placeholder with the same layout as the accordion (closed state).
@@ -51,7 +50,7 @@ export function TeaserAccordionBlock({
   const { title, items } = teaser
   const mounted = useHasMounted()
 
-  const accordionProps = useMemo<AccordionRootProps>(() => {
+  function getAccordionProps(): AccordionRootProps {
     const defaultValue = teaser.items.flatMap((item, i) =>
       item.expanded ? [`item-${i}`] : []
     )
@@ -60,7 +59,9 @@ export function TeaserAccordionBlock({
       return { type: 'multiple', defaultValue }
     }
     return { type: 'single', collapsible: true, defaultValue: defaultValue[0] }
-  }, [teaser.items, teaser.mode])
+  }
+
+  const accordionProps = getAccordionProps()
 
   if (!items?.length) {
     return null
