@@ -182,17 +182,21 @@ function getHomepageComponents(
     {
       type: 'accordion',
       title: 'FAQ',
+      mode: 'single',
       items: [
         {
           title: 'Shipping',
+          expanded: false,
           body: docParagraph('We ship within 2–5 business days.'),
         },
         {
           title: 'Returns',
+          expanded: false,
           body: docParagraph('30-day free returns and exchanges.'),
         },
         {
           title: 'Contact',
+          expanded: false,
           body: docParagraph('Reach us at support@example.com.'),
         },
       ],

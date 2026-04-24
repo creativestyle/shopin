@@ -32,9 +32,9 @@ function AccordionItem({
       className={cn(
         'border-b border-gray-200 last:border-b-0',
         {
-          'md:max-lg:[&_[data-slot=accordion-trigger]]:pointer-events-none md:max-lg:[&_[data-slot=accordion-trigger]>svg]:hidden md:max-lg:[&>div]:!animate-none md:max-lg:data-[state=closed]:[&>div]:!block':
+          'md:max-lg:**:data-[slot=accordion-trigger]:pointer-events-none md:max-lg:[&_[data-slot=accordion-trigger]>svg]:hidden md:max-lg:[&>div]:animate-none! md:max-lg:data-[state=closed]:[&>div]:block!':
             disabledMd,
-          'lg:[&_[data-slot=accordion-trigger]]:pointer-events-none lg:[&_[data-slot=accordion-trigger]>svg]:hidden lg:[&>div]:!animate-none lg:data-[state=closed]:[&>div]:!block':
+          'lg:**:data-[slot=accordion-trigger]:pointer-events-none lg:[&_[data-slot=accordion-trigger]>svg]:hidden lg:[&>div]:animate-none! lg:data-[state=closed]:[&>div]:block!':
             disabledLg,
         },
         className

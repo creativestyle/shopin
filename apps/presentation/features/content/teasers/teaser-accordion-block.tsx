@@ -13,6 +13,7 @@ import { TeaserRichTextBlock } from './teaser-rich-text-block'
 /**
  * Renders a static placeholder with the same layout as the accordion (closed state).
  * Used during SSR to avoid hydration mismatch (Radix generates different IDs on server vs client).
+ * Always renders all items closed — items with expanded=true will appear open only after hydration.
  */
 function AccordionPlaceholder({ items }: { items: AccordionTeaser['items'] }) {
   return (
@@ -35,6 +36,10 @@ function AccordionPlaceholder({ items }: { items: AccordionTeaser['items'] }) {
   )
 }
 
+type AccordionRootProps =
+  | { type: 'single'; collapsible: true; defaultValue: string | undefined }
+  | { type: 'multiple'; defaultValue: string[] }
+
 export function TeaserAccordionBlock({
   teaser,
   imagePreload,
@@ -44,6 +49,19 @@ export function TeaserAccordionBlock({
 }) {
   const { title, items } = teaser
   const mounted = useHasMounted()
+
+  function getAccordionProps(): AccordionRootProps {
+    const defaultValue = teaser.items.flatMap((item, i) =>
+      item.expanded ? [`item-${i}`] : []
+    )
+
+    if (teaser.mode === 'multiple') {
+      return { type: 'multiple', defaultValue }
+    }
+    return { type: 'single', collapsible: true, defaultValue: defaultValue[0] }
+  }
+
+  const accordionProps = getAccordionProps()
 
   if (!items?.length) {
     return null
@@ -58,8 +76,7 @@ export function TeaserAccordionBlock({
       )}
       {mounted ? (
         <Accordion
-          type='single'
-          collapsible
+          {...accordionProps}
           className='w-full'
         >
           {items.map((item, i) => (

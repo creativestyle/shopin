@@ -1,5 +1,5 @@
 /**
- * Accordion item – one item (title + body). Referenced by Accordion.
+ * Accordion item – one item (title + expanded + body). Referenced by Accordion.
  * Body is Rich Text so editors can use formatting, links, lists, etc.
  */
 import type Migration from 'contentful-migration'
@@ -13,12 +13,22 @@ import { RICH_TEXT_VALIDATIONS } from '../lib/rich-text-validations'
 const definition: ContentTypeDefinition = {
   id: 'accordionItem',
   name: 'Accordion item',
-  description: 'Single accordion item: title and rich text body.',
+  description:
+    'Single accordion item: title, expanded flag and rich text body.',
   displayField: 'title',
   fields: [
     {
       id: 'title',
       spec: { type: 'Symbol', name: 'Title', required: true, localized: true },
+    },
+    {
+      id: 'expanded',
+      spec: {
+        type: 'Boolean',
+        name: 'Expanded',
+        localized: false,
+        defaultValue: { 'en-US': false, 'de-DE': false },
+      },
     },
     {
       id: 'body',

@@ -41,12 +41,14 @@ export function mapTeaserAccordion(
       }
       return {
         title: accordionItem.title ?? '',
+        expanded: accordionItem.expanded ?? false,
         body,
       }
     }
   )
   return {
     type: 'accordion',
+    mode: accordion?.mode ?? 'single',
     title: entry.title ?? accordion?.title ?? undefined,
     items,
   }

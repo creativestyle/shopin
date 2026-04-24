@@ -8,6 +8,7 @@ export const AccordionItemBodySchema = z.union([
 
 const AccordionItemEntryApiResponseSchema = z.object({
   title: z.string().optional().nullable(),
+  expanded: z.boolean().optional().nullable(),
   body: AccordionItemBodySchema.optional().nullable(),
 })
 
@@ -17,6 +18,7 @@ export const TeaserAccordionApiResponseSchema = z.object({
   accordion: z
     .object({
       title: z.string().optional().nullable(),
+      mode: z.enum(['single', 'multiple']).optional().nullable(),
       itemsCollection: z
         .object({
           items: z.array(AccordionItemEntryApiResponseSchema),
