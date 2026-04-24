@@ -8,6 +8,7 @@ import { PriceBox } from '@/components/ui/price/price-box'
 import { ProductCardWishlistButton } from '@/features/wishlist/product-card-wishlist-button'
 import { getProductHref } from '@/lib/product-utils'
 import { useTranslations } from 'next-intl'
+import { Badges } from './badge/badges'
 
 interface ProductCardProps extends Omit<LinkProps, 'href' | 'className'> {
   data: ProductCardResponse
@@ -50,6 +51,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           imageClassName
         )}
       >
+        {data?.badges && data.badges.length > 0 && (
+          <div className='pointer-events-auto absolute top-2 left-2 z-10 flex flex-col items-start gap-1'>
+            <Badges badges={data.badges} />
+          </div>
+        )}
         <Image
           src={data.image.src}
           alt={data.image.alt || data.name}
