@@ -31,15 +31,15 @@ export const ColorSelector: React.FC<ColorSelectorProps> = ({
             disabled={opt.disabled}
             onClick={() => onChange?.(opt.label)}
             className={cn(
-              'size-7 cursor-pointer lord-of-the-focus-ring rounded-full border transition-all',
+              'size-7 cursor-pointer lord-of-the-focus-ring rounded-full border transition-all focus-visible:ring-black focus-visible:ring-offset-2',
               isSelected
-                ? 'border-2 border-gray-950'
+                ? 'border-transparent ring-2 ring-gray-700 ring-offset-2'
                 : 'border-gray-300 hover:scale-105 hover:border-gray-950 hover:shadow-sm',
               {
                 'cursor-not-allowed opacity-40': opt.disabled,
               }
             )}
-            aria-pressed={isSelected}
+            aria-selected={isSelected}
             aria-label={opt.label}
             title={opt.label}
             style={{ backgroundColor: opt.swatch }}
