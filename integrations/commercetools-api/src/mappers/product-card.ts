@@ -2,14 +2,15 @@ import type { ProductProjectionApiResponse } from '../schemas/product-projection
 import type { ProductCardResponse } from '@core/contracts/product-collection/product-card'
 import { getLocalizedString as mapLocalized } from '../helpers/get-localized-string'
 import { mapVariantPriceToShopin } from './price'
+import { mapBadges } from './badges'
 
 export function mapProductToCard(
   product: ProductProjectionApiResponse,
   currentLanguage: string
 ): ProductCardResponse {
   const masterVariant = product.masterVariant
-  // Total variant count: master variant (not included in variants array) + additional variants
   const variantCount = 1 + (product.variants?.length || 0)
+  const price = mapVariantPriceToShopin(masterVariant, currentLanguage)
 
   return {
     id: product.id,
@@ -19,7 +20,12 @@ export function mapProductToCard(
       src: masterVariant.images?.[0]?.url || '/images/product-image.png',
       alt: masterVariant.images?.[0]?.label || 'Product image',
     },
-    price: mapVariantPriceToShopin(masterVariant, currentLanguage),
+    price,
+    badges: mapBadges(
+      price.regularPriceInCents,
+      price.discountedPriceInCents,
+      product.createdAt
+    ),
     variantId: String(masterVariant.id),
     variantCount,
   }
