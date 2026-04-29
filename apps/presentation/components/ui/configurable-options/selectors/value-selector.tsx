@@ -48,7 +48,7 @@ export const ValueSelector: React.FC<ValueSelectorProps> = ({
                 opt.disabled &&
                   'cursor-not-allowed border-gray-100 bg-gray-100 text-gray-500'
               )}
-              aria-pressed={isSelected}
+              aria-selected={isSelected}
             >
               {opt.label}
             </button>
