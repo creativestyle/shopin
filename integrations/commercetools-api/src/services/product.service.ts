@@ -11,6 +11,7 @@ import { mapConfigurableOptions } from '../mappers/configurable-options'
 import { mapVariantToGallery } from '../mappers/gallery'
 import { mapVariantsToShopin } from '../mappers/variants'
 import { ProductProjectionPagedQueryApiResponseSchema } from '../schemas/product-projection'
+import type { Category, LocalizedString } from '@commercetools/platform-sdk'
 
 @Injectable()
 export class ProductService {
@@ -32,7 +33,11 @@ export class ProductService {
           where: `slug(${currentLanguage}="${productSlug}")`,
           staged: false,
           localeProjection: currentLanguage,
-          expand: ['productType'],
+          expand: [
+            'productType',
+            'categories[*]',
+            'categories[*].ancestors[*]',
+          ],
           limit: 1,
         },
       })
@@ -118,7 +123,47 @@ export class ProductService {
         configurableOptions,
         variants: shopinVariants,
       },
-      breadcrumb: [{ label: name, path: `/p/${slug}` }],
+      breadcrumb: [
+        ...this.resolveCategoryBreadcrumb(
+          (
+            product.categories?.[0] as
+              | { id: string; obj?: Category }
+              | undefined
+          )?.obj,
+          currentLanguage
+        ),
+        { label: name, path: `/p/${slug}` },
+      ],
     }
+  }
+
+  private resolveCategoryBreadcrumb(
+    category: Category | undefined,
+    language: string
+  ): { label: string; path: string }[] {
+    if (!category) {
+      return []
+    }
+
+    const ancestors = (category.ancestors ?? []) as Array<{
+      id: string
+      obj?: Category
+    }>
+
+    return [
+      ...ancestors.flatMap((ref) => (ref.obj ? [ref.obj] : [])),
+      category,
+    ].flatMap((cat) => {
+      const slug = mapLocalized(cat.slug as LocalizedString, language)
+      if (!slug) {
+        return []
+      }
+      return [
+        {
+          label: mapLocalized(cat.name as LocalizedString, language) || slug,
+          path: `/c/${slug}`,
+        },
+      ]
+    })
   }
 }
