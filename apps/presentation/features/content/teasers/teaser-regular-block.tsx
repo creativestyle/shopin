@@ -37,7 +37,7 @@ export function TeaserRegularBlock({
         <div className='relative flex min-h-0 flex-col justify-center p-6 sm:p-8 md:max-w-md md:p-10 lg:max-w-lg lg:p-12'>
           <div className='rounded-lg bg-white/95 px-5 py-6 shadow-sm backdrop-blur-sm sm:px-6 sm:py-8 md:px-8 md:py-10'>
             {categoryLabel && (
-              <span className='text-xs font-medium tracking-wider text-gray-500 uppercase'>
+              <span className='text-xs font-medium tracking-wider text-gray-700 uppercase'>
                 {categoryLabel}
               </span>
             )}

@@ -34,7 +34,7 @@ export function TeaserHeroBlock({
             sizes='(min-width: 1920px) 1920px, 100vw'
           />
           <div
-            className='absolute inset-0 bg-black/40'
+            className='absolute inset-0 bg-black/55'
             aria-hidden
           />
         </div>
