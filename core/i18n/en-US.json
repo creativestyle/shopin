@@ -34,7 +34,13 @@
       "DE": "Germany",
       "FR": "France",
       "GB": "United Kingdom",
-      "US": "United States"
+      "US": "United States",
+      "CA": "Canada",
+      "AT": "Austria",
+      "CH": "Switzerland",
+      "NL": "Netherlands",
+      "BE": "Belgium",
+      "LU": "Luxembourg"
     },
     "loading": "Loading...",
     "loadingAriaLabel": "Loading...",
@@ -45,8 +51,20 @@
       "validationFailed": "Please check your input."
     }
   },
+  "notFound": {
+    "title": "Page not found",
+    "description": "The page you are looking for doesn't exist or has been moved.",
+    "backHome": "Back to home"
+  },
   "topBar": {
     "ariaLabel": "Site announcement"
+  },
+  "languageSwitcher": {
+    "ariaLabel": "Select language",
+    "current": "Current language: {language}",
+    "change": "Change language",
+    "shipTo": "Ship to",
+    "footerTitle": "Region & Language"
   },
   "userMenu": {
     "storeLocator": "Store Locator",
@@ -547,6 +565,7 @@
       "saving": "Saving...",
       "noAddress": "No shipping address set",
       "sameAsBilling": "The delivery address matches the billing address",
+      "sameAsBillingCountryError": "The billing address country is not available for shipping with this store. Please enter a shipping address manually.",
       "saveError": "Failed to save shipping address. Please try again."
     },
     "deliveryMethod": {

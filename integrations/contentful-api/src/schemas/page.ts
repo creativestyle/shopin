@@ -8,7 +8,7 @@ export function localeSlugKey(locale: string): string {
 }
 
 const localeSlugFields = Object.fromEntries(
-  I18N_CONFIG.supportedLanguages.map((locale) => [
+  I18N_CONFIG.supportedLocales.map((locale) => [
     localeSlugKey(locale),
     z.string().optional().nullable(),
   ])

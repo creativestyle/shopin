@@ -34,14 +34,11 @@ export class CommercetoolsErrorMatcher {
     // OAuth endpoints may also return 400 with invalid credentials errors
     if (error.statusCode === 400) {
       // Check for OAuth error format - invalid_grant or invalid_customer_account_credentials
-      if (
+      return (
         error.body?.error === 'invalid_grant' ||
         error.body?.error === 'invalid_customer_account_credentials'
-      ) {
-        return true
-      }
+      )
     }
-
     return false
   }
 

@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useCustomer } from '@/features/customer/customer-use-customer'
 import { useCustomerAddresses } from '@/features/customer/customer-use-customer-addresses'
+import { useStoreConfig } from '@/features/store-config/store-config-provider'
 import { AddressStepBook } from './address-step-book'
 import { AddressStepForm } from './address-step-form'
 import { AddressStepSameAsBilling } from './address-step-same-as-billing'
@@ -32,11 +33,20 @@ export function AddressStepActive({
   const { isLoggedIn } = useCustomer()
   const [isSameAsBillingChecked, setIsSameAsBillingChecked] = useState(false)
   const {
-    addresses,
+    addresses: allAddresses,
     defaultBillingAddressId,
     isLoading: isAddressesLoading,
     defaultShippingAddressId,
   } = useCustomerAddresses(isLoggedIn)
+  const { storeConfig } = useStoreConfig()
+  const addresses =
+    addressType === 'shipping'
+      ? allAddresses.filter(
+          (addr) =>
+            !addr.country ||
+            storeConfig.shippingCountries.includes(addr.country)
+        )
+      : allAddresses
 
   // For shipping address
   const isShippingAddress = addressType === 'shipping'

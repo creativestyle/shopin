@@ -98,9 +98,7 @@ export async function bffFetch(
   const cookieInput = cookies ?? rawCookieString ?? ''
 
   // Convert URL prefix back to RFC format for BFF
-  const rfcLocale = locale
-    ? urlPrefixToRfc(locale)
-    : I18N_CONFIG.defaultLanguage
+  const rfcLocale = locale ? urlPrefixToRfc(locale) : I18N_CONFIG.defaultLocale
   // Build Accept-Language header using the utility
   const acceptLanguageHeader =
     AcceptLanguageUtils.buildClientAcceptLanguageHeader(rfcLocale)

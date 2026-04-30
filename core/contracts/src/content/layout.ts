@@ -35,10 +35,10 @@ export const FooterPaymentMethodsSchema = z.object({
 })
 export type FooterPaymentMethods = z.infer<typeof FooterPaymentMethodsSchema>
 
-export const FooterLanguageSchema = z.object({
+export const FooterCountrySchema = z.object({
   title: z.string(),
 })
-export type FooterLanguage = z.infer<typeof FooterLanguageSchema>
+export type FooterCountry = z.infer<typeof FooterCountrySchema>
 
 export const FooterResponseSchema = z.object({
   sections: z.array(FooterSectionResponseSchema),
@@ -47,6 +47,6 @@ export const FooterResponseSchema = z.object({
   newsletter: FooterNewsletterSchema.optional(),
   customerService: FooterCustomerServiceSchema.optional(),
   paymentMethods: FooterPaymentMethodsSchema.optional(),
-  language: FooterLanguageSchema.optional(),
+  country: FooterCountrySchema.optional(),
 })
 export type FooterResponse = z.infer<typeof FooterResponseSchema>

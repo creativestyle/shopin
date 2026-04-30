@@ -6,6 +6,7 @@ describe('DecoratedPrice', () => {
     render(
       <DecoratedPrice
         price={1250}
+        currency='EUR'
         locale='de'
       />
     )
@@ -17,6 +18,7 @@ describe('DecoratedPrice', () => {
     render(
       <DecoratedPrice
         price={1250}
+        currency='EUR'
         className='custom-class'
         locale='de'
       />
@@ -30,6 +32,7 @@ describe('DecoratedPrice', () => {
     render(
       <DecoratedPrice
         price={1250}
+        currency='EUR'
         locale='de'
       />
     )

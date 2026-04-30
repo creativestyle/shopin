@@ -5,6 +5,7 @@ import { cn } from '@/lib/utils'
 
 interface LogoProps {
   src: string
+  href?: string
   className?: string
   alt?: string
   width?: number
@@ -13,6 +14,7 @@ interface LogoProps {
 
 export const Logo: React.FC<LogoProps> = ({
   src,
+  href = '/',
   className,
   alt,
   width,
@@ -25,7 +27,7 @@ export const Logo: React.FC<LogoProps> = ({
       {...props}
     >
       <Link
-        href='/'
+        href={href}
         className='relative flex h-full w-full items-center justify-center transition-opacity outline-none hover:opacity-80 focus-visible:inset-ring-1 focus-visible:inset-ring-black/20'
       >
         <Image

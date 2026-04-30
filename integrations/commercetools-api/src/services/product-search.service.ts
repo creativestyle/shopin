@@ -3,8 +3,8 @@ import type { _SearchQuery } from '@commercetools/platform-sdk'
 import { COMMERCETOOLS_CLIENT, Client } from '../client/client.module'
 import {
   LANGUAGE_TOKEN,
+  LanguageTagUtils,
   resolveCurrencyFromLanguage,
-  resolveCountryFromLanguage,
 } from '@core/i18n'
 import type { LanguageProvider } from '@apps/bff/src/common/language/language.provider'
 import type { ProductSearchResponse } from '@core/contracts/product-search/product-search'
@@ -79,7 +79,7 @@ export class ProductSearchService {
   }: ProductSearchParams): Promise<ProductSearchResponse> {
     const currentLanguage = this.languageProvider.getCurrentLanguage()
     const currency = resolveCurrencyFromLanguage(currentLanguage)
-    const country = resolveCountryFromLanguage(currentLanguage)
+    const country = LanguageTagUtils.getCountry(currentLanguage) ?? ''
     const offset = (page - 1) * limit
 
     if (!faceted && !saleOnly) {

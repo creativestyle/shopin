@@ -4,6 +4,7 @@ import { useTranslations } from 'next-intl'
 import { AddressForm } from '@/features/address/address-form'
 import { AddressBase } from '@core/contracts/address/address-base'
 import { useCustomer } from '@/features/customer/customer-use-customer'
+import { useStoreConfig } from '@/features/store-config/store-config-provider'
 import { useCustomerAddressOperations } from '@/features/customer/customer-use-customer-address-operations'
 import {
   cleanAddressData,
@@ -33,6 +34,7 @@ export function AddressStepForm({
   getDefaultFlag,
 }: AddressStepFormProps) {
   const { isLoggedIn, customer } = useCustomer()
+  const { storeConfig } = useStoreConfig()
   const { cart } = useCart()
   const { handleAddAddress, isAddAddressPending } =
     useCustomerAddressOperations()
@@ -79,6 +81,9 @@ export function AddressStepForm({
         formId={formId}
         defaultValues={formDefaultValues}
         onSubmit={handleFormSubmit}
+        countries={
+          addressType === 'shipping' ? storeConfig.shippingCountries : undefined
+        }
       />
 
       <AddressStepContinueButton

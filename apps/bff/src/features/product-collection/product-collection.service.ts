@@ -40,6 +40,7 @@ export class ProductCollectionService {
       priceRange: response.priceRange,
       categoryTree: response.categoryTree,
       currentCategoryId: response.currentCategoryId,
+      slugByLocale: response.slugByLocale,
     }
   }
 }

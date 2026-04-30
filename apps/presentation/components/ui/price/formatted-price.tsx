@@ -2,7 +2,7 @@ import { cn } from '@/lib/utils'
 import { formatPriceWithPrefix } from '@/lib/price-formatter'
 
 type BaseProps = {
-  currency?: string
+  currency: string
   fractionDigits?: number
   className?: string
   locale: string

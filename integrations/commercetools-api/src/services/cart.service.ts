@@ -1,9 +1,7 @@
 import { Injectable, Inject, Scope } from '@nestjs/common'
 import { LANGUAGE_TOKEN } from '@core/i18n'
-import {
-  resolveCurrencyFromLanguage,
-  resolveCountryFromLanguage,
-} from '@core/i18n/currency-utils'
+import { resolveCurrencyFromLanguage } from '@core/i18n/currency-utils'
+import { resolveCountryFromLanguage } from '@core/i18n/language-tag-utils'
 import type { LanguageProvider } from '@apps/bff/src/common/language/language.provider'
 import type {
   CartResponse,
@@ -280,6 +278,7 @@ export class CartService {
    */
   async getActiveCart(): Promise<CartResponse | null> {
     const currentLanguage = await this.getCurrentLanguage()
+    const currency = resolveCurrencyFromLanguage(currentLanguage)
     const client = await this.getClient()
 
     try {
@@ -290,7 +289,7 @@ export class CartService {
           queryArgs: {
             limit: 1,
             sort: 'lastModifiedAt desc',
-            where: 'cartState="Active"',
+            where: `cartState="Active" and totalPrice(currencyCode="${currency}")`,
             expand: CartService.CART_EXPAND,
           },
         })

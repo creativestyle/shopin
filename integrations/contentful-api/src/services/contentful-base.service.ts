@@ -11,7 +11,7 @@ export abstract class ContentfulBaseService {
 
   /** Resolves locale for Contentful; empty/falsy values fall back to default language. */
   protected resolveLocale(locale: string): string {
-    return locale || I18N_CONFIG.defaultLanguage
+    return locale || I18N_CONFIG.defaultLocale
   }
 
   /**

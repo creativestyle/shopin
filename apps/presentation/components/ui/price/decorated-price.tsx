@@ -36,7 +36,7 @@ function DecoratedPrice({
 }: React.ComponentProps<'div'> &
   VariantProps<typeof variants> & {
     price: number
-    currency?: string
+    currency: string
     fractionDigits?: number
     originalPrice?: number
     taxNote?: string

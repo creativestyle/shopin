@@ -6,6 +6,7 @@ describe('FormattedPrice', () => {
     render(
       <FormattedPrice
         regularUnitPrice={1250}
+        currency='EUR'
         locale='de'
       />
     )
@@ -29,6 +30,7 @@ describe('FormattedPrice', () => {
     render(
       <FormattedPrice
         regularUnitPrice={1250}
+        currency='EUR'
         fractionDigits={3}
         locale='de'
       />
@@ -41,6 +43,7 @@ describe('FormattedPrice', () => {
     render(
       <FormattedPrice
         regularUnitPrice={1250}
+        currency='EUR'
         unit='kg'
         locale='de'
       />
@@ -53,6 +56,7 @@ describe('FormattedPrice', () => {
     render(
       <FormattedPrice
         regularUnitPrice={1250}
+        currency='EUR'
         className='custom-class'
         locale='de'
       />
