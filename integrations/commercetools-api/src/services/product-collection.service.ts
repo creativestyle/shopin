@@ -14,8 +14,7 @@ import {
   DEFAULT_SORT_OPTION,
   type SortOption,
 } from '@config/constants'
-import type { LocalizedString, Category } from '@commercetools/platform-sdk'
-import { getLocalizedString as mapLocalized } from '../helpers/get-localized-string'
+import type { Category } from '@commercetools/platform-sdk'
 import {
   buildQueryFilters,
   buildPostFilters,
@@ -25,6 +24,7 @@ import {
 } from '../helpers/product-collection-filters'
 import { executeFacetedSearch } from '../helpers/faceted-search'
 import { mapCategoryTree } from '../mappers/product-collection'
+import { buildCategoryBreadcrumb } from '../mappers/category-breadcrumb'
 import { FilterableAttributesCacheService } from './filterable-attributes-cache.service'
 
 @Injectable()
@@ -42,6 +42,7 @@ export class ProductCollectionService {
     category: Category
     categoryId: string
     categoryTree: ReturnType<typeof mapCategoryTree>
+    allCategories: Category[]
   }> {
     const categoryResponse = await this.client
       .categories()
@@ -77,7 +78,12 @@ export class ProductCollectionService {
       language
     )
 
-    return { category, categoryId: category.id, categoryTree }
+    return {
+      category,
+      categoryId: category.id,
+      categoryTree,
+      allCategories: allCategoriesResponse.body.results,
+    }
   }
 
   async getProductCollection(
@@ -95,11 +101,13 @@ export class ProductCollectionService {
     const currency = resolveCurrencyFromLanguage(currentLanguage)
     const country = resolveCountryFromLanguage(currentLanguage)
 
-    const [filterableAttributes, { category, categoryId, categoryTree }] =
-      await Promise.all([
-        this.filterableAttributesCache.getFilterableAttributes(),
-        this.resolveCategory(productCollectionSlug, currentLanguage),
-      ])
+    const [
+      filterableAttributes,
+      { category, categoryId, categoryTree, allCategories },
+    ] = await Promise.all([
+      this.filterableAttributesCache.getFilterableAttributes(),
+      this.resolveCategory(productCollectionSlug, currentLanguage),
+    ])
 
     const queryFilters = buildQueryFilters(categoryId, saleOnly)
     const attributeFilters = buildAttributeFilters(
@@ -153,17 +161,15 @@ export class ProductCollectionService {
       filterableAttributes,
     })
 
-    const categoryName =
-      mapLocalized(
-        (category?.name || {}) as LocalizedString,
-        currentLanguage
-      ) || productCollectionSlug
+    const breadcrumb = buildCategoryBreadcrumb(
+      allCategories,
+      category,
+      currentLanguage
+    )
 
     return {
       productList: products,
-      breadcrumb: [
-        { label: categoryName, path: `/c/${productCollectionSlug}` },
-      ],
+      breadcrumb,
       total,
       facets: mappedFacets,
       priceRange,
