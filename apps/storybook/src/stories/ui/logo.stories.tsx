@@ -23,6 +23,7 @@ export const Default: Story = {
   args: {
     src: logoUrl,
     alt: 'SHOPIN Logo',
+    linkAriaLabel: 'SHOPIN - Home',
   },
   render: (args) => (
     <div style={{ width: '200px', height: '80px' }}>

@@ -8,6 +8,8 @@
     "no": "Nein",
     "description": "Ihre E-Commerce-Plattform mit einem modernen Design-System.",
     "homepage": "Startseite",
+    "logoAlt": "SHOPIN",
+    "logoHomeLink": "SHOPIN - Startseite",
     "close": "Schließen",
     "searchPlaceholder": "Wonach suchen Sie?",
     "suggestions": "Vorschläge",
