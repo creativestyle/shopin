@@ -103,8 +103,10 @@ export function AddressStepBook({
         </RadioGroup>
 
         {hasMore && (
-          <button
-            type='button'
+          <Button
+            scheme='black'
+            variant='tertiary'
+            size='none'
             onClick={toggleShowAll}
             className='mt-4 flex items-center gap-2 text-sm text-gray-700 underline hover:text-gray-900'
           >
@@ -119,7 +121,7 @@ export function AddressStepBook({
                 {t('addresses.showMore')}
               </>
             )}
-          </button>
+          </Button>
         )}
       </Card>
 

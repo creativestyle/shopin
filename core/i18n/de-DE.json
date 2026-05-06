@@ -25,6 +25,7 @@
     "viewAll": "Alle anzeigen",
     "navigation": "Navigation",
     "mobileNavigationMenu": "Mobile Navigation Menü",
+    "toggleMobileMenu": "Mobile Menü umschalten",
     "wishlist": "Wunschliste",
     "stores": "Stores",
     "shopinclub": "SHOPINCLUB",
@@ -62,7 +63,8 @@
     "gallery": {
       "loadMore": "Mehr Fotos laden",
       "dialogTitle": "Bildergalerie",
-      "dialogDescription": "Durch Produktbilder blättern"
+      "dialogDescription": "Durch Produktbilder blättern",
+      "closeButtonAria": "Galerie schließen"
     },
     "buyBox": {
       "size": "Größe",
@@ -128,6 +130,7 @@
       "specification-brakes": "Bremsen",
       "appliedFilters": "Angewandte Filter",
       "clearAll": "Alle Filter löschen",
+      "removeChipAria": "Filter {name} entfernen",
       "noResultsTitle": "Keine Produkte gefunden",
       "noResultsMessage": "Versuche, deine Filter anzupassen oder zurückzusetzen, um das Gesuchte zu finden.",
       "sizeShowMore": "+{count} mehr",
@@ -453,7 +456,7 @@
         "country": "Land",
         "email": "E-Mail"
       },
-      "additionalAddressLine": "+ Zusätzliche Adresszeile",
+      "additionalAddressLine": "Zusätzliche Adresszeile",
       "defaultShipping": "Standard Versand",
       "defaultBilling": "Standard Rechnung",
       "salutationOptions": {

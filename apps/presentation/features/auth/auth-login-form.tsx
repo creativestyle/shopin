@@ -112,6 +112,7 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
                 <Button
                   type='button'
                   variant='tertiary'
+                  size='none'
                   className='h-auto justify-start p-0 text-sm underline'
                   disabled={resendVerificationEmailMutation.isPending}
                   onClick={onResendVerificationEmail}
@@ -196,6 +197,7 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
         <Button
           type='submit'
           disabled={form.formState.isSubmitting || loginMutation.isPending}
+          aria-busy={form.formState.isSubmitting || loginMutation.isPending}
           className='w-full uppercase'
         >
           {form.formState.isSubmitting || loginMutation.isPending

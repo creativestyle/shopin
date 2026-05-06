@@ -68,12 +68,17 @@ export const AccountNavigation: FC<AccountNavigationProps> = ({
             <Button
               variant='tertiary'
               scheme='black'
+              size='none'
+              className='h-12'
+              asChild
             >
-              <ChevronLeftIcon
-                className='size-6'
-                aria-hidden='true'
-              />
-              <Link href='/account'>{t('backButtonLabel')}</Link>
+              <Link href='/account'>
+                <ChevronLeftIcon
+                  className='size-6'
+                  aria-hidden='true'
+                />
+                {t('backButtonLabel')}
+              </Link>
             </Button>
           </li>
         </ul>

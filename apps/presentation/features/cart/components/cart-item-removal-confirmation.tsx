@@ -3,6 +3,7 @@
 import { useRef, useEffect } from 'react'
 import { useTranslations } from 'next-intl'
 import type { LineItemResponse } from '@core/contracts/cart/cart'
+import { Button } from '@/components/ui/button'
 
 interface CartItemRemovalConfirmationProps {
   item: LineItemResponse
@@ -47,27 +48,28 @@ export function CartItemRemovalConfirmation({
         {t('item.removeConfirmation.message', { name: item.name })}
       </p>
       <div className='flex gap-3'>
-        <button
+        <Button
+          variant='secondary'
           onClick={onCancel}
           disabled={isRemoving}
-          className='flex items-center justify-center rounded border border-black bg-white px-6 py-2 text-sm/[1.6] font-normal text-black transition-opacity hover:opacity-90 focus:ring-2 focus:ring-black focus:ring-offset-2 focus:ring-offset-white focus:outline-none disabled:cursor-not-allowed disabled:opacity-50'
           aria-label={t('item.removeConfirmation.cancel')}
+          aria-busy={isRemoving}
         >
           <span>{t('item.removeConfirmation.cancel')}</span>
-        </button>
-        <button
+        </Button>
+        <Button
           ref={confirmButtonRef}
           onClick={onConfirm}
           disabled={isRemoving}
-          className='flex items-center justify-center rounded border border-black bg-white px-6 py-2 text-sm/[1.6] font-normal text-black transition-opacity hover:opacity-90 focus:ring-2 focus:ring-black focus:ring-offset-2 focus:ring-offset-white focus:outline-none disabled:cursor-not-allowed disabled:opacity-50'
           aria-label={t('item.removeConfirmation.confirm')}
+          aria-busy={isRemoving}
         >
           <span>
             {isRemoving
               ? t('item.removeConfirmation.removing')
               : t('item.removeConfirmation.confirm')}
           </span>
-        </button>
+        </Button>
       </div>
       <p
         id='removal-confirmation-description'

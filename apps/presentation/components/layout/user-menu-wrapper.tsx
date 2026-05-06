@@ -27,7 +27,9 @@ export function UserMenuWrapper({ className }: UserMenuWrapperProps) {
       <Button
         variant='tertiary'
         scheme='black'
+        size='none'
         className='h-6 min-w-6'
+        aria-label={t('storeLocator')}
       >
         <PinIcon className='size-6' />
         <span className='sr-only'>{t('storeLocator')}</span>
@@ -38,6 +40,7 @@ export function UserMenuWrapper({ className }: UserMenuWrapperProps) {
         variant='tertiary'
         scheme='black'
         className='relative h-6 min-w-6'
+        size='none'
         asChild
       >
         <Link href={accountHref}>
@@ -53,6 +56,7 @@ export function UserMenuWrapper({ className }: UserMenuWrapperProps) {
         variant='tertiary'
         scheme='black'
         className='relative h-6 min-w-6'
+        size='none'
         asChild
       >
         <Link href='/wishlist'>
@@ -68,6 +72,7 @@ export function UserMenuWrapper({ className }: UserMenuWrapperProps) {
         variant='tertiary'
         scheme='black'
         className='relative h-6 min-w-6'
+        size='none'
         asChild
       >
         <Link href='/cart'>

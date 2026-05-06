@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl'
 import { FC } from 'react'
 import LogoutIcon from '@/public/icons/logout.svg'
 import { cn } from '@/lib/utils'
+import { Button } from '@/components/ui/button'
 
 interface LogoutButtonProps {
   className?: string
@@ -20,15 +21,18 @@ export const LogoutButton: FC<LogoutButtonProps> = ({
   const { handleLogout, isLoggingOut } = useLogout({ onSuccess: onAfterLogout })
 
   return (
-    <button
+    <Button
       type='button'
+      variant='tertiary'
+      scheme='black'
+      size='none'
       onClick={async () => {
         await handleLogout()
       }}
       disabled={isLoggingOut}
       aria-busy={isLoggingOut}
       className={cn(
-        'flex cursor-pointer gap-3 disabled:cursor-not-allowed',
+        'flex justify-start gap-3 disabled:cursor-not-allowed',
         className
       )}
     >
@@ -37,6 +41,6 @@ export const LogoutButton: FC<LogoutButtonProps> = ({
         aria-hidden='true'
       />
       <span>{t('logout')}</span>
-    </button>
+    </Button>
   )
 }

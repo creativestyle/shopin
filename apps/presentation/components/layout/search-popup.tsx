@@ -37,6 +37,7 @@ function SuggestionItem({
   return (
     <li>
       <button
+        type='button'
         onClick={onClick}
         className='flex cursor-pointer items-center gap-2 text-left text-sm text-gray-700 hover:text-gray-950'
       >
