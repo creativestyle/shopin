@@ -8,6 +8,8 @@
     "no": "No",
     "description": "Your e-commerce platform with a modern design system.",
     "homepage": "Home",
+    "logoAlt": "SHOPIN",
+    "logoHomeLink": "SHOPIN - Home",
     "close": "Close",
     "searchPlaceholder": "What are you looking for?",
     "suggestions": "Suggestions",
