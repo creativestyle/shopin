@@ -111,7 +111,7 @@ export const ProductGallery: React.FC<ProductGalleryProps> = ({
                     variant='tertiary'
                     scheme='black'
                     data-testid='load-more-photos'
-                    onClick={() => setVisibleCount((v) => v + 4)}
+                    onClick={() => setVisibleCount(images.length)}
                   >
                     <PlusIcon
                       className='size-4'
