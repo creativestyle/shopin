@@ -85,7 +85,7 @@ export async function ProductPage({
             defaultValue='details'
           >
             <AccordionItem value='details'>
-              <AccordionTrigger>{t('details')}</AccordionTrigger>
+              <AccordionTrigger level={2}>{t('details')}</AccordionTrigger>
               <AccordionContent>
                 {productData.product.description}
               </AccordionContent>

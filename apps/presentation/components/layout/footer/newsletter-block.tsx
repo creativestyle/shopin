@@ -23,7 +23,7 @@ export function NewsletterBlock({
             <h2 className='mb-4 text-center text-2xl leading-tight font-normal text-gray-900'>
               {newsletter.title}
             </h2>
-            <p className='mb-6 text-center text-sm leading-normal font-normal text-gray-500'>
+            <p className='mb-6 text-center text-sm leading-normal font-normal text-gray-700'>
               {newsletter.description}{' '}
               {newsletter.voucherText && (
                 <span className='font-bold text-gray-900'>
