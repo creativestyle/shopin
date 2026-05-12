@@ -22,7 +22,7 @@ async function Breadcrumbs({
 
   return (
     <nav className={cn('relative overflow-x-clip', className)}>
-      <ul className='-mx-4 no-scrollbar flex snap-x snap-proximity scroll-px-4 list-none items-center gap-1 overflow-x-auto overflow-y-hidden px-4 py-0 whitespace-nowrap'>
+      <ul className='-mx-4 no-scrollbar flex snap-x snap-proximity scroll-px-4 list-none items-center gap-1 overflow-x-auto overflow-y-hidden px-4 py-1 whitespace-nowrap'>
         {allCrumbs.map((crumb, index) => {
           const isLast = index === allCrumbs.length - 1
 
@@ -42,7 +42,9 @@ async function Breadcrumbs({
           return (
             <li
               key={crumb.path}
-              className='inline-flex items-center transition-colors'
+              className={cn('inline-flex items-center transition-colors', {
+                'ml-[3px]': index === 0,
+              })}
             >
               {isLast ? (
                 <span
@@ -54,7 +56,7 @@ async function Breadcrumbs({
               ) : (
                 <Link
                   href={crumb.path}
-                  className='text-xs text-gray-700 underline hover:text-gray-900 focus-visible:text-gray-900 focus-visible:outline-none'
+                  className='rounded px-0.5 text-xs text-gray-700 underline hover:text-gray-900 focus-visible:text-gray-900 focus-visible:outline-offset-2'
                 >
                   {content}
                 </Link>
