@@ -23,6 +23,7 @@
     "hidePassword": "Passwort ausblenden",
     "showPassword": "Passwort anzeigen",
     "viewAll": "Alle anzeigen",
+    "logoAlt": "Shopin Logo",
     "navigation": "Navigation",
     "mobileNavigationMenu": "Mobile Navigation Menü",
     "toggleMobileMenu": "Mobile Menü umschalten",
@@ -545,6 +546,7 @@
     "currentPageAriaLabel": "Seite {currentPage} von {totalPages}"
   },
   "checkout": {
+    "logoAlt": "Shopin Logo",
     "breadcrumb": "Kasse",
     "title": "Kasse",
     "accountSelectionTitle": "Kontoauswahl",

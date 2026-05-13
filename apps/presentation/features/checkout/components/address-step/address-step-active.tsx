@@ -22,6 +22,19 @@ interface AddressStepActiveProps {
   getDefaultFlag: (data: AddressBase) => AddressBase
 }
 
+function getFilteredAddresses(
+  addresses: AddressBase[],
+  addressType: AddressType,
+  shippingCountries: string[]
+): AddressBase[] {
+  if (addressType !== 'shipping') {
+    return addresses
+  }
+  return addresses.filter(
+    (addr) => !addr.country || shippingCountries.includes(addr.country)
+  )
+}
+
 export function AddressStepActive({
   stepId,
   addressType,
@@ -39,14 +52,11 @@ export function AddressStepActive({
     defaultShippingAddressId,
   } = useCustomerAddresses(isLoggedIn)
   const { storeConfig } = useStoreConfig()
-  const addresses =
-    addressType === 'shipping'
-      ? allAddresses.filter(
-          (addr) =>
-            !addr.country ||
-            storeConfig.shippingCountries.includes(addr.country)
-        )
-      : allAddresses
+  const addresses = getFilteredAddresses(
+    allAddresses,
+    addressType,
+    storeConfig.shippingCountries
+  )
 
   // For shipping address
   const isShippingAddress = addressType === 'shipping'

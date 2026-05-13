@@ -24,6 +24,7 @@
     "showPassword": "Show password",
 
     "viewAll": "View all",
+    "logoAlt": "Shopin logo",
     "navigation": "Navigation",
     "mobileNavigationMenu": "Mobile navigation menu",
     "toggleMobileMenu": "Toggle mobile menu",
@@ -546,6 +547,7 @@
     "currentPageAriaLabel": "Page {currentPage} of {totalPages}"
   },
   "checkout": {
+    "logoAlt": "Shopin logo",
     "breadcrumb": "Checkout",
     "title": "Checkout",
     "accountSelectionTitle": "Account Selection",

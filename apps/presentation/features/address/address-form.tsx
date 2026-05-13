@@ -18,6 +18,7 @@ import {
 import PlusIcon from '@/public/icons/plus.svg'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Button } from '@/components/ui/button'
+import { getCountryOptions } from '@/features/address/address-utils'
 
 export interface AddressFormState {
   isDirty: boolean
@@ -66,11 +67,10 @@ export function AddressForm({
   const { storeConfig } = useStoreConfig()
   const rfcLocale = urlPrefixToRfc(locale)
 
-  const codes = countries ?? storeConfig.projectCountries
-  const displayNames = new Intl.DisplayNames([rfcLocale], { type: 'region' })
-  const countryOptions = codes
-    .map((code) => ({ value: code, label: displayNames.of(code) ?? code }))
-    .sort((a, b) => a.label.localeCompare(b.label, locale))
+  const countryOptions = getCountryOptions(
+    countries ?? storeConfig.projectCountries,
+    rfcLocale
+  )
 
   const [showAdditionalStreetInfo, setShowAdditionalStreetInfo] = useState(
     () => !!defaultValues?.additionalStreetInfo

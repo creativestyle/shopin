@@ -111,7 +111,7 @@ export function MobileNavigation({
             <Logo
               src='/logo.svg'
               href={homeHref}
-              alt='Logo'
+              alt={t('logoAlt')}
               className='h-10 w-32'
             />
           ) : currentLevel === 2 ? (

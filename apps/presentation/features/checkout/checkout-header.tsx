@@ -16,7 +16,7 @@ export async function CheckoutHeader() {
       <Logo
         src='/logo.svg'
         href={homeHref}
-        alt='SHOPin'
+        alt={t('logoAlt')}
         className='size-full'
       />
     </div>
