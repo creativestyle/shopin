@@ -74,8 +74,9 @@ export const ProductGallery: React.FC<ProductGalleryProps> = ({
           gridConfig={{
             base: 1.2,
             sm: 1.5,
-            md: 2,
+            md: 3.2,
           }}
+          style={{ '--carousel-gap': '8px' } as React.CSSProperties}
           navigation={images.length > 1}
           scrollbar={images.length > 1}
         >
