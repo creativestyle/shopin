@@ -18,7 +18,7 @@ const meta = {
     },
     size: {
       control: { type: 'select' },
-      options: ['sm', 'default', 'lg', 'icon-sm', 'icon', 'icon-lg', 'none'],
+      options: ['sm', 'default', 'lg', 'icon-sm', 'icon', 'icon-lg', 'auto'],
     },
     scheme: {
       control: { type: 'select' },
@@ -114,6 +114,12 @@ export const Sizes: Story = {
         size='lg'
       >
         Large
+      </Button>
+      <Button
+        {...args}
+        size='auto'
+      >
+        Auto
       </Button>
     </div>
   ),

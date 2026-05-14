@@ -68,7 +68,7 @@ export const AccountNavigation: FC<AccountNavigationProps> = ({
             <Button
               variant='tertiary'
               scheme='black'
-              size='none'
+              size='auto'
               className='h-12'
               asChild
             >

@@ -25,7 +25,7 @@ export const LogoutButton: FC<LogoutButtonProps> = ({
       type='button'
       variant='tertiary'
       scheme='black'
-      size='none'
+      size='auto'
       onClick={async () => {
         await handleLogout()
       }}

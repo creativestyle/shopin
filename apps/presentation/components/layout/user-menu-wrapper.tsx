@@ -27,7 +27,7 @@ export function UserMenuWrapper({ className }: UserMenuWrapperProps) {
       <Button
         variant='tertiary'
         scheme='black'
-        size='none'
+        size='auto'
         className='h-6 min-w-6'
         aria-label={t('storeLocator')}
       >
@@ -40,7 +40,7 @@ export function UserMenuWrapper({ className }: UserMenuWrapperProps) {
         variant='tertiary'
         scheme='black'
         className='relative h-6 min-w-6'
-        size='none'
+        size='auto'
         asChild
       >
         <Link href={accountHref}>
@@ -56,7 +56,7 @@ export function UserMenuWrapper({ className }: UserMenuWrapperProps) {
         variant='tertiary'
         scheme='black'
         className='relative h-6 min-w-6'
-        size='none'
+        size='auto'
         asChild
       >
         <Link href='/wishlist'>
@@ -72,7 +72,7 @@ export function UserMenuWrapper({ className }: UserMenuWrapperProps) {
         variant='tertiary'
         scheme='black'
         className='relative h-6 min-w-6'
-        size='none'
+        size='auto'
         asChild
       >
         <Link href='/cart'>

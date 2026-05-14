@@ -61,7 +61,7 @@ export const OrderHistoryItem: FC<OrderHistoryItemProps> = ({ order }) => {
       <Button
         variant='tertiary'
         scheme='black'
-        size='none'
+        size='auto'
         className='h-auto w-auto lg:order-6 lg:col-span-5 lg:justify-self-end xl:col-span-1'
         asChild
       >

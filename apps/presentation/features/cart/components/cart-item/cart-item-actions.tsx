@@ -28,7 +28,7 @@ export function CartItemActions({
   const buttons = (
     <>
       <Button
-        size={showText ? 'none' : 'icon-sm'}
+        size={showText ? 'auto' : 'icon-sm'}
         scheme='black'
         variant='tertiary'
         onClick={() => onRemoveClick?.()}

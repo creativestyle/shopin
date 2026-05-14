@@ -106,7 +106,7 @@ export function AddressStepBook({
           <Button
             scheme='black'
             variant='tertiary'
-            size='none'
+            size='auto'
             onClick={toggleShowAll}
             className='mt-4 flex items-center gap-2 text-sm text-gray-700 underline hover:text-gray-900'
           >

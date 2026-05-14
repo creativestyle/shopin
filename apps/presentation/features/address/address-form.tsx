@@ -216,7 +216,7 @@ export function AddressForm({
         <Button
           type='button'
           scheme='black'
-          size='none'
+          size='auto'
           variant='tertiary'
           onClick={() => setShowAdditionalStreetInfo(true)}
         >

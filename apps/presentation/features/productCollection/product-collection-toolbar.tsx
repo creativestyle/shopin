@@ -84,7 +84,7 @@ export function ProductCollectionToolbar({
               <Button
                 variant='tertiary'
                 scheme='black'
-                size='none'
+                size='auto'
                 onClick={onToggleCategories}
               >
                 {showCategories ? (

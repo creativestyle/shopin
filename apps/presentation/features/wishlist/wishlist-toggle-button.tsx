@@ -69,7 +69,7 @@ export function WishlistToggleButton({
   if (variant === 'product-card') {
     return (
       <Button
-        size={showText ? 'none' : 'icon'}
+        size={showText ? 'auto' : 'icon'}
         scheme='white'
         className={cn(
           'absolute top-1 right-1 z-2 flex size-8 cursor-pointer border border-gray-100',
@@ -93,7 +93,7 @@ export function WishlistToggleButton({
 
   return (
     <Button
-      size={showText ? 'none' : 'icon-sm'}
+      size={showText ? 'auto' : 'icon-sm'}
       scheme='black'
       variant='tertiary'
       onClick={() => handleClick()}

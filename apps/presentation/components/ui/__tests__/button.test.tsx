@@ -138,7 +138,7 @@ describe('Button', () => {
       ['icon-sm', 'size-8'],
       ['icon', 'size-12'],
       ['icon-lg', 'size-14'],
-      ['none', 'gap-1.5'],
+      ['auto', 'gap-1.5'],
     ] as const)(
       'applies correct classes for size "%s"',
       (size, expectedClass) => {

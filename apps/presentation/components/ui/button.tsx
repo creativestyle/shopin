@@ -20,7 +20,7 @@ const buttonVariants = cva(
         'icon-sm': 'size-8 p-0',
         'icon': 'size-12 p-0',
         'icon-lg': 'size-14 p-0',
-        'none': 'gap-1.5 text-sm',
+        'auto': 'gap-1.5 text-sm',
       },
       scheme: {
         red: 'bg-rose-700 hover:bg-rose-600 active:bg-rose-600',

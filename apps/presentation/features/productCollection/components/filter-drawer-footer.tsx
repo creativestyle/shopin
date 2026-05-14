@@ -21,7 +21,7 @@ export function FilterDrawerFooter({
         type='button'
         variant='tertiary'
         scheme='black'
-        size='none'
+        size='auto'
         onClick={onResetAll}
         className='gap-2 font-normal underline'
       >

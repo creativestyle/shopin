@@ -92,7 +92,7 @@ export function MobileNavigation({
             <Button
               variant='tertiary'
               scheme='black'
-              size='none'
+              size='auto'
               onClick={goBackOneLevel}
               className='absolute left-4 flex size-6 shrink-0 items-center justify-center lord-of-the-focus-ring rounded'
               aria-label='Go back'
@@ -127,7 +127,7 @@ export function MobileNavigation({
           <Button
             variant='tertiary'
             scheme='black'
-            size='none'
+            size='auto'
             onClick={closeMobileNavigation}
             className='absolute right-4 flex size-6 shrink-0 items-center justify-center lord-of-the-focus-ring rounded'
             aria-label={t('close')}

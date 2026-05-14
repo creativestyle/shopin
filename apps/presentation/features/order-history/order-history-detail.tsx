@@ -66,7 +66,7 @@ export const OrderHistoryDetail: FC<OrderHistoryDetailProps> = ({
           <Button
             variant='tertiary'
             scheme='black'
-            size='none'
+            size='auto'
             className='h-12'
             aria-label={t('backToOrders')}
             asChild

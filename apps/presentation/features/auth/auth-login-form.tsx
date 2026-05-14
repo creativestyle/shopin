@@ -112,7 +112,7 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
                 <Button
                   type='button'
                   variant='tertiary'
-                  size='none'
+                  size='auto'
                   className='h-auto justify-start p-0 text-sm underline'
                   disabled={resendVerificationEmailMutation.isPending}
                   onClick={onResendVerificationEmail}

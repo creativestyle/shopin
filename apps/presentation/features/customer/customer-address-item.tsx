@@ -126,7 +126,7 @@ export const CustomerAddressItem: FC<CustomerAddressItemProps> = ({
           <Button
             variant='tertiary'
             scheme='black'
-            size='none'
+            size='auto'
             className='h-auto py-1 text-xs'
             onClick={onSetDefaultShipping}
             disabled={isSetDefaultShippingPending}
@@ -142,7 +142,7 @@ export const CustomerAddressItem: FC<CustomerAddressItemProps> = ({
           <Button
             variant='tertiary'
             scheme='black'
-            size='none'
+            size='auto'
             className='h-auto py-1 text-xs'
             onClick={onSetDefaultBilling}
             disabled={isSetDefaultBillingPending}
