@@ -13,6 +13,7 @@ import type { Facet } from '@core/contracts/product-collection/facet'
 import type { Filters } from '@core/contracts/product-collection/product-collection-page'
 import type { PriceRange } from '@core/contracts/product-collection/product-collection'
 import { cn } from '@/lib/utils'
+import { Button } from '@/components/ui/button'
 import OpenMenuIcon from '@/public/icons/open-menu.svg'
 import HideMenuIcon from '@/public/icons/hide-menu.svg'
 import { useFilterParams } from './hooks/use-filter-params'
@@ -65,6 +66,7 @@ export function ProductCollectionToolbar({
     sortOptions.find((opt) => opt.value === currentSort)?.label ?? ''
 
   const visibleFacets = facets.slice(0, VISIBLE_FACETS_COUNT)
+  const filterDrawerId = 'product-collection-filter-drawer'
 
   return (
     <>
@@ -79,9 +81,11 @@ export function ProductCollectionToolbar({
         <div className='flex shrink-0 items-center'>
           {showCategoriesButton && (
             <div className='hidden items-center gap-[30px] lg:flex'>
-              <button
+              <Button
+                variant='tertiary'
+                scheme='black'
+                size='auto'
                 onClick={onToggleCategories}
-                className='flex cursor-pointer items-center gap-[5px] text-sm font-bold'
               >
                 {showCategories ? (
                   <HideMenuIcon className='h-4 w-4' />
@@ -91,7 +95,7 @@ export function ProductCollectionToolbar({
                 {showCategories
                   ? t('topbar.hideCategories')
                   : t('topbar.showCategories')}
-              </button>
+              </Button>
               <div className='h-16 w-px bg-gray-100' />
             </div>
           )}
@@ -114,7 +118,11 @@ export function ProductCollectionToolbar({
 
             {(facets.length > 0 || priceRange) && (
               <button
+                type='button'
                 onClick={() => setIsFilterDrawerOpen(true)}
+                aria-haspopup='dialog'
+                aria-expanded={isFilterDrawerOpen}
+                aria-controls={filterDrawerId}
                 className='flex h-10 cursor-pointer items-center gap-1 rounded-3xl bg-gray-100 px-4 text-sm font-bold'
               >
                 {t('topbar.allFilters')}
@@ -147,6 +155,7 @@ export function ProductCollectionToolbar({
       </div>
 
       <FilterDrawer
+        id={filterDrawerId}
         open={isFilterDrawerOpen}
         onOpenChange={setIsFilterDrawerOpen}
         currentSort={currentSort}

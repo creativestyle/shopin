@@ -3,6 +3,7 @@
 import { useRef, useEffect, FC } from 'react'
 import { useTranslations } from 'next-intl'
 import type { AddressResponse } from '@core/contracts/customer/address'
+import { Button } from '@/components/ui/button'
 
 interface CustomerAddressRemovalConfirmationProps {
   address: AddressResponse
@@ -49,25 +50,24 @@ export const CustomerAddressRemovalConfirmation: FC<
         {t('addresses.deleteConfirmation', { addressLabel })}
       </p>
       <div className='flex gap-3'>
-        <button
+        <Button
+          variant='secondary'
           onClick={onCancel}
           disabled={isDeleting}
-          className='flex items-center justify-center rounded border border-black bg-white px-6 py-2 text-sm/[1.6] font-normal text-black transition-opacity hover:opacity-90 focus:ring-2 focus:ring-black focus:ring-offset-2 focus:ring-offset-white focus:outline-none disabled:cursor-not-allowed disabled:opacity-50'
           aria-label={t('cancel')}
         >
           <span>{t('cancel')}</span>
-        </button>
-        <button
+        </Button>
+        <Button
           ref={confirmButtonRef}
           onClick={onConfirm}
           disabled={isDeleting}
-          className='flex items-center justify-center rounded border border-black bg-white px-6 py-2 text-sm/[1.6] font-normal text-black transition-opacity hover:opacity-90 focus:ring-2 focus:ring-black focus:ring-offset-2 focus:ring-offset-white focus:outline-none disabled:cursor-not-allowed disabled:opacity-50'
           aria-label={t('addresses.delete')}
         >
           <span>
             {isDeleting ? t('addresses.deleting') : t('addresses.delete')}
           </span>
-        </button>
+        </Button>
       </div>
       <p
         id='removal-confirmation-description'

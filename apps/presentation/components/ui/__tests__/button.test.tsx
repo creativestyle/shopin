@@ -116,6 +116,52 @@ describe('Button', () => {
     })
   })
 
+  describe('variant prop', () => {
+    it.each([
+      ['primary', 'text-white'],
+      ['secondary', 'border-2'],
+      ['tertiary', 'bg-transparent'],
+    ] as const)(
+      'applies correct classes for variant "%s"',
+      (variant, expectedClass) => {
+        render(<Button variant={variant}>Button</Button>)
+        expect(screen.getByRole('button')).toHaveClass(expectedClass)
+      }
+    )
+  })
+
+  describe('size prop', () => {
+    it.each([
+      ['sm', 'h-8'],
+      ['default', 'h-12'],
+      ['lg', 'h-14'],
+      ['icon-sm', 'size-8'],
+      ['icon', 'size-12'],
+      ['icon-lg', 'size-14'],
+      ['auto', 'gap-1.5'],
+    ] as const)(
+      'applies correct classes for size "%s"',
+      (size, expectedClass) => {
+        render(<Button size={size}>Button</Button>)
+        expect(screen.getByRole('button')).toHaveClass(expectedClass)
+      }
+    )
+  })
+
+  describe('scheme prop', () => {
+    it.each([
+      ['red', 'bg-rose-700'],
+      ['white', 'bg-white'],
+      ['black', 'bg-gray-950'],
+    ] as const)(
+      'applies correct classes for scheme "%s"',
+      (scheme, expectedClass) => {
+        render(<Button scheme={scheme}>Button</Button>)
+        expect(screen.getByRole('button')).toHaveClass(expectedClass)
+      }
+    )
+  })
+
   describe('Edge cases', () => {
     it('handles complex nested content', () => {
       render(

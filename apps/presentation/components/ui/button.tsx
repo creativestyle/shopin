@@ -4,14 +4,23 @@ import { cva, type VariantProps } from 'class-variance-authority'
 import { cn } from '@/lib/utils'
 
 const buttonVariants = cva(
-  'inline-flex h-12 min-w-12 shrink-0 cursor-pointer items-center justify-center gap-2 rounded-full text-sm leading-tight font-bold transition-all duration-200 outline-none focus-visible:ring-2 focus-visible:ring-current focus-visible:ring-offset-0 disabled:pointer-events-none disabled:cursor-default [&_svg]:pointer-events-none [&_svg]:shrink-0',
+  'inline-flex shrink-0 cursor-pointer items-center justify-center rounded-full text-sm leading-tight font-bold transition-all duration-200 outline-none focus-visible:ring-2 focus-visible:ring-current focus-visible:ring-offset-0 disabled:pointer-events-none disabled:cursor-default [&_svg]:pointer-events-none [&_svg]:shrink-0',
   {
     variants: {
       variant: {
-        primary: 'px-7 text-white disabled:bg-gray-50 disabled:text-gray-300',
+        primary: 'text-white disabled:bg-gray-50 disabled:text-gray-400',
         secondary:
-          'border-2 px-7 disabled:border-gray-300 disabled:bg-transparent disabled:text-gray-300',
-        tertiary: 'bg-transparent px-0 disabled:text-gray-300',
+          'border-2 disabled:border-gray-300 disabled:bg-transparent disabled:text-gray-400',
+        tertiary: 'bg-transparent disabled:text-gray-400',
+      },
+      size: {
+        'sm': 'h-8 min-w-8 gap-1.5 px-4 text-xs',
+        'default': 'h-12 min-w-12 gap-2 px-7 text-sm',
+        'lg': 'h-14 min-w-14 gap-2 px-8 text-base',
+        'icon-sm': 'size-8 p-0',
+        'icon': 'size-12 p-0',
+        'icon-lg': 'size-14 p-0',
+        'auto': 'gap-1.5 text-sm',
       },
       scheme: {
         red: 'bg-rose-700 hover:bg-rose-600 active:bg-rose-600',
@@ -30,7 +39,7 @@ const buttonVariants = cva(
         variant: 'secondary',
         scheme: 'white',
         class:
-          'border-white bg-transparent text-white hover:border-gray-100 hover:bg-transparent hover:text-gray-100 active:border-gray-100 active:text-gray-100',
+          'border-white bg-white text-gray-950 hover:border-gray-100 hover:bg-gray-100 hover:text-gray-800 active:border-gray-100 active:text-gray-800',
       },
       {
         variant: 'secondary',
@@ -69,6 +78,7 @@ const buttonVariants = cva(
     ],
     defaultVariants: {
       variant: 'primary',
+      size: 'default',
       scheme: 'red',
     },
   }
@@ -77,6 +87,7 @@ const buttonVariants = cva(
 function Button({
   className,
   variant,
+  size,
   scheme,
   asChild = false,
   ...props
@@ -88,7 +99,7 @@ function Button({
     return (
       <Slot
         data-slot='button'
-        className={cn(buttonVariants({ variant, scheme, className }))}
+        className={cn(buttonVariants({ variant, size, scheme, className }))}
         {...(props as any)}
       />
     )
@@ -97,7 +108,7 @@ function Button({
   return (
     <button
       data-slot='button'
-      className={cn(buttonVariants({ variant, scheme, className }))}
+      className={cn(buttonVariants({ variant, size, scheme, className }))}
       {...props}
     />
   )
@@ -105,6 +116,9 @@ function Button({
 
 export type ButtonVariant = NonNullable<
   VariantProps<typeof buttonVariants>['variant']
+>
+export type ButtonSize = NonNullable<
+  VariantProps<typeof buttonVariants>['size']
 >
 export type ButtonScheme = NonNullable<
   VariantProps<typeof buttonVariants>['scheme']

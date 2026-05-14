@@ -1,9 +1,11 @@
 'use client'
 
 import { useTranslations } from 'next-intl'
-import Image from 'next/image'
+import ArrowLeftIcon from '@/public/icons/arrow-left.svg'
+import ArrowRightIcon from '@/public/icons/arrow-right.svg'
 import { cn } from '@/lib/utils'
 import { MIN_PAGE } from '@config/constants'
+import { Button } from './button'
 
 interface PaginationProps {
   currentPage: number
@@ -39,57 +41,38 @@ export function Pagination({
       className={cn('flex items-center justify-center gap-10', className)}
       aria-label={t('ariaLabel')}
     >
-      <button
+      <Button
+        size='icon'
         onClick={() => goToPage(currentPage - 1)}
         disabled={!canGoPrevious}
-        className={cn(
-          'flex h-[50px] w-[50px] items-center justify-center rounded-full transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)]',
-          canGoPrevious
-            ? 'cursor-pointer bg-[var(--color-primary)] hover:opacity-90'
-            : 'cursor-not-allowed bg-[var(--color-gray-100)]'
-        )}
         aria-label={t('previousPage')}
       >
-        <Image
-          src='/icons/arrow-left.svg'
-          alt=''
-          width={24}
-          height={24}
+        <ArrowLeftIcon
           aria-hidden='true'
-          className={
-            canGoPrevious ? 'brightness-0 invert' : 'opacity-40 grayscale'
-          }
+          className='size-6'
         />
-      </button>
+      </Button>
 
       <span
         className='text-base font-medium'
+        aria-current='page'
         aria-live='polite'
         aria-atomic='true'
       >
         {t('pageOf', { currentPage, totalPages })}
       </span>
 
-      <button
+      <Button
+        size='icon'
         onClick={() => goToPage(currentPage + 1)}
         disabled={!canGoNext}
-        className={cn(
-          'flex h-[50px] w-[50px] items-center justify-center rounded-full transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)]',
-          canGoNext
-            ? 'cursor-pointer bg-[var(--color-primary)] hover:opacity-90'
-            : 'cursor-not-allowed bg-[var(--color-gray-100)]'
-        )}
         aria-label={t('nextPage')}
       >
-        <Image
-          src='/icons/arrow-right.svg'
-          alt=''
-          width={24}
-          height={24}
+        <ArrowRightIcon
           aria-hidden='true'
-          className={canGoNext ? 'brightness-0 invert' : 'opacity-40 grayscale'}
+          className={cn('size-6', canGoNext ? 'text-white' : 'text-gray-400')}
         />
-      </button>
+      </Button>
     </nav>
   )
 }

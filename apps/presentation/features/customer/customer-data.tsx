@@ -92,6 +92,7 @@ export const CustomerData: FC = () => {
           <Button
             variant='primary'
             scheme='black'
+            size='sm'
             className='h-auto py-2'
             aria-label={t('customerData.edit')}
             onClick={() => setOpen(true)}

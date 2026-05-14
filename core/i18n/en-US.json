@@ -26,6 +26,7 @@
     "viewAll": "View all",
     "navigation": "Navigation",
     "mobileNavigationMenu": "Mobile navigation menu",
+    "toggleMobileMenu": "Toggle mobile menu",
     "wishlist": "Wishlist",
     "stores": "Stores",
     "shopinclub": "SHOPINCLUB",
@@ -63,7 +64,8 @@
     "gallery": {
       "loadMore": "Load more photos",
       "dialogTitle": "Image Gallery",
-      "dialogDescription": "Browse through product images"
+      "dialogDescription": "Browse through product images",
+      "closeButtonAria": "Close gallery"
     },
     "buyBox": {
       "size": "Size",
@@ -129,6 +131,7 @@
       "specification-brakes": "Brakes",
       "appliedFilters": "Applied filters",
       "clearAll": "Clear all filters",
+      "removeChipAria": "Remove {name} filter",
       "noResultsTitle": "No products found",
       "noResultsMessage": "Try adjusting or clearing your filters to find what you're looking for.",
       "sizeShowMore": "+{count} more",
@@ -454,7 +457,7 @@
         "country": "Country",
         "email": "Email"
       },
-      "additionalAddressLine": "+ Additional Address Line",
+      "additionalAddressLine": "Additional Address Line",
       "defaultShipping": "Default Shipping",
       "defaultBilling": "Default Billing",
       "salutationOptions": {

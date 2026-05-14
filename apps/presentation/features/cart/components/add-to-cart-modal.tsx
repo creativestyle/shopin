@@ -15,6 +15,7 @@ import { CartSummary } from './cart-summary'
 import { CartActions } from './cart-actions'
 import { ShowMoreProducts } from './show-more-products'
 import CloseIcon from '@/public/icons/close.svg'
+import { Button } from '@/components/ui/button'
 
 interface AddToCartModalProps {
   open: boolean
@@ -58,13 +59,15 @@ export function AddToCartModal({ open, onOpenChange }: AddToCartModalProps) {
               {`${t('title')} (${cart.itemCount})`}
             </p>
           </DialogTitle>
-          <button
+          <Button
+            size='icon-sm'
+            scheme='black'
+            variant='tertiary'
             onClick={() => onOpenChange(false)}
-            className='relative flex h-6 w-6 shrink-0 cursor-pointer items-center justify-center'
             aria-label={tCommon('close')}
           >
             <CloseIcon className='h-6 w-6 shrink-0 text-gray-700' />
-          </button>
+          </Button>
         </DialogHeader>
 
         {/* Scrollable Content Area - positioned at left-6 top-14 with width 409px */}

@@ -10,7 +10,6 @@ describe('ScrollButton', () => {
       <ScrollButton
         side='left'
         visible={true}
-        scheme='white'
         ariaLabel='Scroll left'
         onClick={onClick}
       />
@@ -30,7 +29,6 @@ describe('ScrollButton', () => {
       <ScrollButton
         side='right'
         visible={true}
-        scheme='white'
         ariaLabel='Scroll right'
         onClick={onClick}
       />
@@ -50,7 +48,6 @@ describe('ScrollButton', () => {
       <ScrollButton
         side='left'
         visible={false}
-        scheme='white'
         ariaLabel='Hidden left'
         onClick={onClick}
       />
@@ -71,7 +68,6 @@ describe('ScrollButton', () => {
       <ScrollButton
         side='right'
         visible={true}
-        scheme='white'
         ariaLabel='Click me'
         onClick={onClick}
       />

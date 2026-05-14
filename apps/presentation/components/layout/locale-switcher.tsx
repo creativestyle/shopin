@@ -95,6 +95,7 @@ export function LocaleSwitcher() {
     <div className='relative'>
       <button
         ref={buttonRef}
+        type='button'
         onClick={(e) => {
           e.stopPropagation()
           setIsOpen(!isOpen)

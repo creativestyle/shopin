@@ -4,6 +4,7 @@ import TrashBinIcon from '@/public/icons/trash-bin.svg'
 import { useTranslations } from 'next-intl'
 import { cn } from '@/lib/utils'
 import { WishlistToggleButton } from '@/features/wishlist/wishlist-toggle-button'
+import { Button } from '@/components/ui/button'
 
 interface CartItemActionsProps {
   variant?: 'icon-only' | 'with-text'
@@ -26,12 +27,13 @@ export function CartItemActions({
 
   const buttons = (
     <>
-      <button
-        type='button'
+      <Button
+        size={showText ? 'auto' : 'icon-sm'}
+        scheme='black'
+        variant='tertiary'
         onClick={() => onRemoveClick?.()}
         disabled={isRemoving}
         className={cn(
-          'flex cursor-pointer items-center',
           {
             'shrink-0 gap-2': showText,
             'justify-center': !showText,
@@ -40,7 +42,7 @@ export function CartItemActions({
         )}
         aria-label={removeLabel}
       >
-        <TrashBinIcon className='h-6 w-6 shrink-0 text-gray-700' />
+        <TrashBinIcon className='size-6 shrink-0 text-gray-700' />
         {showText && (
           <span
             className={cn(
@@ -51,7 +53,7 @@ export function CartItemActions({
             {removeLabel}
           </span>
         )}
-      </button>
+      </Button>
       {!showText && <div className='h-8 w-px bg-gray-300' />}
       <WishlistToggleButton
         productId={productId}

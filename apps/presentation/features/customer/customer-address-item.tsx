@@ -98,7 +98,7 @@ export const CustomerAddressItem: FC<CustomerAddressItemProps> = ({
           <Button
             variant='primary'
             scheme='black'
-            className='h-auto py-2'
+            size='sm'
             onClick={() => onEdit(address)}
             aria-label={t('addresses.edit')}
           >
@@ -108,7 +108,7 @@ export const CustomerAddressItem: FC<CustomerAddressItemProps> = ({
           <Button
             variant='secondary'
             scheme='black'
-            className='h-auto py-2'
+            size='sm'
             onClick={handleDeleteClick}
             aria-label={t('addresses.delete')}
             disabled={isDeleteAddressPending || showDeleteConfirmation}
@@ -126,6 +126,7 @@ export const CustomerAddressItem: FC<CustomerAddressItemProps> = ({
           <Button
             variant='tertiary'
             scheme='black'
+            size='auto'
             className='h-auto py-1 text-xs'
             onClick={onSetDefaultShipping}
             disabled={isSetDefaultShippingPending}
@@ -141,6 +142,7 @@ export const CustomerAddressItem: FC<CustomerAddressItemProps> = ({
           <Button
             variant='tertiary'
             scheme='black'
+            size='auto'
             className='h-auto py-1 text-xs'
             onClick={onSetDefaultBilling}
             disabled={isSetDefaultBillingPending}

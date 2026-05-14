@@ -131,6 +131,7 @@ export function AddressStepManageAddressesModal({
             <Button
               variant='tertiary'
               scheme='black'
+              size='auto'
               onClick={() => setFormMode(undefined)}
               className='flex items-center gap-2'
             >
