@@ -95,6 +95,9 @@ export const AsInternalLink: Story = {
 }
 
 export const Sizes: Story = {
+  argTypes: {
+    size: { table: { disable: true }, control: false },
+  },
   render: (args) => (
     <div className='flex items-center gap-4'>
       <Button
@@ -126,6 +129,9 @@ export const Sizes: Story = {
 }
 
 export const IconOnly: Story = {
+  argTypes: {
+    size: { table: { disable: true }, control: false },
+  },
   render: (args) => (
     <div className='flex items-center gap-4'>
       <Button
