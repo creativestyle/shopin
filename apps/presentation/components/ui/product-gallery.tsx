@@ -21,7 +21,7 @@ export interface ProductGalleryProps extends ProductGalleryResponse {
 export const ProductGallery: React.FC<ProductGalleryProps> = ({
   images,
   className,
-  initialVisible = 2,
+  initialVisible = 6,
   // hasVideo and video are intentionally ignored for now
 }) => {
   const t = useTranslations('product.gallery')
@@ -72,7 +72,7 @@ export const ProductGallery: React.FC<ProductGalleryProps> = ({
       <div className='lg:hidden'>
         <Carousel
           gridConfig={{
-            base: 1,
+            base: 1.2,
             sm: 1.5,
             md: 2,
           }}
