@@ -82,33 +82,12 @@ function AccordionTrigger({
 function AccordionContent({
   className,
   children,
-  forceMount = true,
   ...props
-}: Omit<
-  React.ComponentProps<typeof AccordionPrimitive.Content>,
-  'forceMount'
-> & {
-  forceMount?: boolean
-}) {
-  function handleAnimationStart(e: React.AnimationEvent<HTMLDivElement>) {
-    ;(e.target as HTMLDivElement).classList.remove('data-[state=closed]:hidden')
-  }
-
-  function handleAnimationEnd(e: React.AnimationEvent<HTMLDivElement>) {
-    const el = e.target as HTMLDivElement
-
-    if (el.getAttribute('data-state') === 'closed') {
-      el.classList.add('data-[state=closed]:hidden')
-    }
-  }
-
+}: React.ComponentProps<typeof AccordionPrimitive.Content>) {
   return (
     <AccordionPrimitive.Content
       data-slot='accordion-content'
-      className='overflow-hidden data-[state=closed]:hidden data-[state=closed]:animate-out data-[state=closed]:fade-out data-[state=closed]:slide-out-to-top-6 data-[state=open]:animate-in data-[state=open]:fade-in data-[state=open]:slide-in-from-top-6'
-      onAnimationStart={handleAnimationStart}
-      onAnimationEnd={handleAnimationEnd}
-      {...(forceMount && { forceMount: true })}
+      className='overflow-hidden data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down'
       {...props}
     >
       <div className={cn('pb-6', className)}>{children}</div>
