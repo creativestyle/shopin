@@ -108,7 +108,7 @@ function SelectTrigger({
       aria-invalid={effectiveInvalid || undefined}
       aria-describedby={effectiveAriaDescribedBy || undefined}
       className={cn(
-        "group relative grid h-14 w-fit grid-cols-[minmax(0,1fr)_auto] grid-rows-[5_auto] items-center justify-between gap-x-4 rounded-lg border border-gray-400 bg-white px-4 py-2 whitespace-nowrap transition-all outline-none hover:border-gray-500 focus-visible:border focus-visible:border-gray-500 focus-visible:ring-1 focus-visible:ring-gray-100 disabled:cursor-not-allowed disabled:border-gray-100 disabled:bg-gray-100 has-[[data-slot=select-value]:empty]:grid-rows-[1fr_0fr] aria-invalid:border-red-600 aria-invalid:ring-red-600/20 data-[placeholder]:text-gray-500 *:data-[slot=select-value]:line-clamp-1 *:data-[slot=select-value]:flex *:data-[slot=select-value]:items-center *:data-[slot=select-value]:gap-2 data-[state=open]:border-gray-500 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 [&_svg:not([class*='text-'])]:text-gray-500",
+        "group relative grid h-14 w-fit grid-cols-[minmax(0,1fr)_auto] grid-rows-[5_auto] items-center justify-between gap-x-4 rounded-lg border border-gray-300 bg-gray-50 px-4 py-2 whitespace-nowrap transition-all outline-none hover:border-gray-500 hover:bg-white focus-visible:border focus-visible:border-gray-500 focus-visible:ring-1 focus-visible:ring-gray-100 disabled:cursor-not-allowed disabled:border-gray-100 disabled:bg-gray-100 has-[[data-slot=select-value]:empty]:grid-rows-[1fr_0fr] aria-invalid:border-red-600 aria-invalid:ring-red-600/20 data-[placeholder]:text-gray-500 *:data-[slot=select-value]:line-clamp-1 *:data-[slot=select-value]:flex *:data-[slot=select-value]:items-center *:data-[slot=select-value]:gap-2 data-[state=open]:border-gray-500 data-[state=open]:bg-white [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 [&_svg:not([class*='text-'])]:text-gray-500",
         !label && 'grid-rows-1',
         effectiveInvalid &&
           'border-red-600 hover:border-red-600 focus-visible:border-red-600',
@@ -117,7 +117,7 @@ function SelectTrigger({
       {...props}
     >
       {label && (
-        <span className="col-start-1 row-start-1 origin-top-left scale-[0.8125] text-left text-base/[1.5] text-gray-500 transition-all group-hover:text-gray-950 group-disabled:!text-gray-500 group-has-[[data-slot=select-value]:empty]:row-span-full group-has-[[data-slot=select-value]:empty]:scale-100 group-has-[[data-slot=select-value]:empty]:text-gray-950 group-aria-required:after:content-['*']">
+        <span className="col-start-1 row-start-1 origin-top-left scale-[0.8125] text-left text-base/[1.5] text-gray-500 transition-all group-disabled:!text-gray-500 group-has-[[data-slot=select-value]:empty]:row-span-full group-has-[[data-slot=select-value]:empty]:scale-100 group-aria-required:after:content-['*']">
           {label}
         </span>
       )}
