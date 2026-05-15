@@ -33,7 +33,7 @@ export function TeaserBannerBlock({
       )}
       <div
         className={cn('flex flex-col items-center justify-end', {
-          'sm:ui-container absolute inset-0 px-4 pb-8 sm:px-6': hasOverlay,
+          'ui-container absolute inset-0 px-4 pb-8 sm:px-6': hasOverlay,
           'p-8': !hasOverlay,
         })}
       >

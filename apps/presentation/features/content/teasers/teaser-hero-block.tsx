@@ -38,7 +38,7 @@ export function TeaserHeroBlock({
       )}
       <div
         className={cn('flex flex-col items-center justify-end', {
-          'sm:ui-container absolute inset-0 px-4 pb-8 sm:px-6': hasBg,
+          'ui-container absolute inset-0 px-4 pb-8 sm:px-6': hasBg,
           'relative min-h-[200px] px-4 py-12 sm:px-6': !hasBg,
         })}
       >

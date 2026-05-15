@@ -116,7 +116,7 @@ function SliderHeroSlideContent({
       )}
       <div
         className={cn('z-10 flex flex-col items-center justify-end', {
-          'sm:ui-container absolute inset-0 px-4 pb-8 sm:px-6': imageUrl,
+          'ui-container absolute inset-0 px-4 pb-8 sm:px-6': imageUrl,
           'relative min-h-[480px] py-12 sm:min-h-[400px] md:min-h-[400px]':
             !imageUrl,
         })}
