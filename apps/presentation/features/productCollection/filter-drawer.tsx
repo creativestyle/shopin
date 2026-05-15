@@ -24,12 +24,14 @@ import {
 import type { Facet } from '@core/contracts/product-collection/facet'
 import type { Filters } from '@core/contracts/product-collection/product-collection-page'
 import type { PriceRange } from '@core/contracts/product-collection/product-collection'
+import { Button } from '@/components/ui/button'
 import CloseIcon from '@/public/icons/close.svg'
 import { FacetAccordionItem } from './components/facet-accordion-item'
 import { PriceRangeAccordion } from './components/price-range-accordion'
 import { FilterDrawerFooter } from './components/filter-drawer-footer'
 
 interface FilterDrawerProps {
+  id?: string
   open: boolean
   onOpenChange: (open: boolean) => void
   currentSort: SortOption
@@ -51,6 +53,7 @@ interface FilterDrawerProps {
 }
 
 export function FilterDrawer({
+  id,
   open,
   onOpenChange,
   currentSort,
@@ -97,21 +100,25 @@ export function FilterDrawer({
       onOpenChange={onOpenChange}
     >
       <DialogContent
+        id={id}
         className='!inset-y-0 !top-0 !right-0 !left-auto flex h-full !max-h-full w-full max-w-full !translate-x-0 !translate-y-0 flex-col p-0 md:!inset-y-0 md:!top-0 md:!max-h-full md:w-96 md:max-w-96 md:!translate-y-0'
         showCloseButton={false}
       >
         <DialogHeader className='relative flex h-14 w-full items-center justify-between bg-white !px-4 py-4'>
-          <div className='relative h-6 w-6 shrink-0 opacity-0' />
+          <div className='relative size-8 shrink-0 opacity-0' />
           <DialogTitle className='text-base font-bold text-gray-950'>
             {t('filters.drawerTitle')}
           </DialogTitle>
-          <button
+          <Button
+            type='button'
+            variant='tertiary'
+            scheme='black'
+            size='icon-sm'
             onClick={() => onOpenChange(false)}
-            className='relative flex h-6 w-6 shrink-0 cursor-pointer items-center justify-center'
             aria-label={tCommon('close')}
           >
             <CloseIcon className='h-6 w-6 shrink-0 text-gray-700' />
-          </button>
+          </Button>
         </DialogHeader>
 
         <div className='flex-1 overflow-y-auto px-4 pb-24'>

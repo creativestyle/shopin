@@ -118,6 +118,7 @@ export function ActiveFilters({
             key={chip.id}
             type='button'
             onClick={() => handleRemoveChip(chip)}
+            aria-label={t('filters.removeChipAria', { name: chip.label })}
             className='flex shrink-0 cursor-pointer items-center gap-1 rounded-full bg-gray-100 px-3 py-0.5 text-sm'
           >
             {chip.label}
@@ -133,8 +134,9 @@ export function ActiveFilters({
         className='shrink-0 cursor-pointer text-sm underline'
         type='button'
         onClick={handleClearAll}
+        aria-label={t('filters.clearAll')}
       >
-        {t('filters.clearAll' as Parameters<typeof t>[0])}
+        {t('filters.clearAll')}
       </button>
     </div>
   )

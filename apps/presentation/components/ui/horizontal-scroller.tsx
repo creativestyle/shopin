@@ -106,7 +106,6 @@ export function HorizontalScroller({
       <ScrollButton
         side='left'
         visible={canScrollLeft}
-        scheme={scheme}
         ariaLabel={t('scrollLeft')}
         onClick={() => scroll('left')}
       />
@@ -124,7 +123,6 @@ export function HorizontalScroller({
       <ScrollButton
         side='right'
         visible={canScrollRight}
-        scheme={scheme}
         ariaLabel={t('scrollRight')}
         onClick={() => scroll('right')}
       />

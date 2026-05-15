@@ -16,6 +16,10 @@ const meta = {
       control: { type: 'select' },
       options: ['primary', 'secondary', 'tertiary'],
     },
+    size: {
+      control: { type: 'select' },
+      options: ['sm', 'default', 'lg', 'icon-sm', 'icon', 'icon-lg', 'auto'],
+    },
     scheme: {
       control: { type: 'select' },
       options: ['red', 'white', 'black'],
@@ -30,6 +34,7 @@ const meta = {
   args: {
     children: 'Add to cart',
     variant: 'primary',
+    size: 'default',
     scheme: 'red',
     disabled: false,
     onClick: action('click'),
@@ -86,6 +91,71 @@ export const AsInternalLink: Story = {
     <Button {...args}>
       <Link href='/products/lightweight-rain-jacket'>{args.children}</Link>
     </Button>
+  ),
+}
+
+export const Sizes: Story = {
+  argTypes: {
+    size: { table: { disable: true }, control: false },
+  },
+  render: (args) => (
+    <div className='flex items-center gap-4'>
+      <Button
+        {...args}
+        size='sm'
+      >
+        Small
+      </Button>
+      <Button
+        {...args}
+        size='default'
+      >
+        Default
+      </Button>
+      <Button
+        {...args}
+        size='lg'
+      >
+        Large
+      </Button>
+      <Button
+        {...args}
+        size='auto'
+      >
+        Auto
+      </Button>
+    </div>
+  ),
+}
+
+export const IconOnly: Story = {
+  argTypes: {
+    size: { table: { disable: true }, control: false },
+  },
+  render: (args) => (
+    <div className='flex items-center gap-4'>
+      <Button
+        {...args}
+        size='icon-sm'
+        aria-label='Add to cart'
+      >
+        <CartIcon className='size-4' />
+      </Button>
+      <Button
+        {...args}
+        size='icon'
+        aria-label='Add to cart'
+      >
+        <CartIcon className='size-6' />
+      </Button>
+      <Button
+        {...args}
+        size='icon-lg'
+        aria-label='Add to cart'
+      >
+        <CartIcon className='size-7' />
+      </Button>
+    </div>
   ),
 }
 

@@ -81,7 +81,7 @@ describe('ProductGallery', () => {
     // lightbox dialog should open
     expect(screen.getByRole('dialog')).toBeInTheDocument()
     // close by clicking close button in GalleryDialog
-    await user.click(screen.getByRole('button', { name: /close lightbox/i }))
+    await user.click(screen.getByRole('button', { name: /closeButtonAria/i }))
     expect(screen.queryByRole('dialog')).toBeNull()
   })
 })

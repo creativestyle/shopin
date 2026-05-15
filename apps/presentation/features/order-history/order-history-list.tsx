@@ -108,9 +108,9 @@ export const OrderHistoryList: FC = () => {
             <Button
               variant='secondary'
               scheme='black'
+              size='sm'
               onClick={() => navigateToPage(currentPage - 1)}
               disabled={!hasPrevious}
-              className='h-9 min-w-9 gap-1 px-3 text-sm'
             >
               <ChevronLeftIcon className='h-4 w-4' />
               {t('previous')}
@@ -121,9 +121,9 @@ export const OrderHistoryList: FC = () => {
             <Button
               variant='secondary'
               scheme='black'
+              size='sm'
               onClick={() => navigateToPage(currentPage + 1)}
               disabled={!hasNext}
-              className='h-9 min-w-9 gap-1 px-3 text-sm'
             >
               {t('next')}
               <ChevronRightIcon className='h-4 w-4' />

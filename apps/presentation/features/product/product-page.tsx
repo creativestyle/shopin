@@ -65,11 +65,11 @@ export async function ProductPage({
         <Breadcrumbs crumbs={productData.breadcrumb} />
       </StandardContainer>
 
-      <StandardContainer className='grid grid-cols-1 gap-6 md:[grid-template-columns:minmax(0,1fr)_minmax(0,30rem)]'>
+      <StandardContainer className='grid grid-cols-1 gap-6 lg:[grid-template-columns:minmax(0,1fr)_minmax(0,30rem)]'>
         <div className='min-w-0'>
           <ProductGallery images={productData.product.gallery.images} />
         </div>
-        <div className='h-fit w-full min-w-0 md:sticky md:top-4'>
+        <div className='h-fit w-full min-w-0 lg:sticky lg:top-4'>
           <BuyBox
             product={productData.product}
             locale={locale}
@@ -78,14 +78,14 @@ export async function ProductPage({
         </div>
 
         {/* Left column content below gallery and buy box */}
-        <div className='md:col-start-1 md:col-end-2'>
+        <div className='lg:col-start-1 lg:col-end-2'>
           <Accordion
             type='single'
             collapsible
             defaultValue='details'
           >
             <AccordionItem value='details'>
-              <AccordionTrigger>{t('details')}</AccordionTrigger>
+              <AccordionTrigger level={2}>{t('details')}</AccordionTrigger>
               <AccordionContent>
                 {productData.product.description}
               </AccordionContent>

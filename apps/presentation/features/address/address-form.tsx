@@ -17,6 +17,7 @@ import {
 } from '@core/contracts/address/address-base'
 import PlusIcon from '@/public/icons/plus.svg'
 import { Checkbox } from '@/components/ui/checkbox'
+import { Button } from '@/components/ui/button'
 
 export interface AddressFormState {
   isDirty: boolean
@@ -212,14 +213,16 @@ export function AddressForm({
 
       {/* Additional Street Info - Expandable */}
       {!showAdditionalStreetInfo ? (
-        <button
+        <Button
           type='button'
+          scheme='black'
+          size='auto'
+          variant='tertiary'
           onClick={() => setShowAdditionalStreetInfo(true)}
-          className='flex items-center gap-2 text-sm text-gray-700 hover:text-gray-900'
         >
           <PlusIcon className='size-4' />
           {t('additionalAddressLine')}
-        </button>
+        </Button>
       ) : (
         <Field>
           <Controller

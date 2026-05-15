@@ -12,6 +12,7 @@ export function HeaderSearchButton() {
   return (
     <>
       <button
+        type='button'
         onClick={() => setIsSearchOpen(true)}
         className='p-1 text-gray-900 hover:bg-gray-100 hover:text-primary'
       >

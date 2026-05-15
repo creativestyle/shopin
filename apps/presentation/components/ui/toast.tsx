@@ -141,6 +141,7 @@ function Toast({
         <Button
           variant='tertiary'
           scheme='black'
+          size='icon-sm'
           className='focus-visible:ring-current/20'
           aria-label={t('close')}
           onClick={() => sonnerToast.dismiss(id)}

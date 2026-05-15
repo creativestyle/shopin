@@ -21,7 +21,7 @@ export async function Header() {
             <div className='flex items-center gap-2'>
               <NavigationMobileMenu />
               <MobileAccountLink
-                className='p-1 text-gray-900 hover:bg-gray-100 hover:text-primary'
+                className='inline-flex items-center p-1 text-gray-900 hover:bg-gray-100 hover:text-primary'
                 aria-label={t('account')}
               />
             </div>
@@ -55,7 +55,7 @@ export async function Header() {
               <Logo
                 className='h-12 w-40 flex-shrink-0'
                 src='/logo.svg'
-                width={156}
+                width={150}
                 height={48}
               />
             </div>

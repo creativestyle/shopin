@@ -41,6 +41,7 @@ pnpm-debug.log*
 .DS_Store
 *.pem
 .cursor
+.claude
 .eslintcache
 .cache
 

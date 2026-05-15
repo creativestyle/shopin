@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils'
 import { useWishlistOperations } from './hooks/use-wishlist-operations'
 import { useWishlistProductIds } from './hooks/use-wishlist-product-ids'
 import { getWishlistItemKey } from './lib/get-wishlist-item-key'
+import { Button } from '@/components/ui/button'
 
 type WishlistToggleVariant = 'product-card' | 'cart'
 
@@ -67,14 +68,16 @@ export function WishlistToggleButton({
 
   if (variant === 'product-card') {
     return (
-      <button
-        type='button'
+      <Button
+        size={showText ? 'auto' : 'icon'}
+        scheme='white'
         className={cn(
-          'absolute top-1 right-1 z-2 flex size-8 cursor-pointer items-center justify-center rounded-full border border-gray-100 bg-white disabled:opacity-50 lg:top-2 lg:right-2',
+          'absolute top-1 right-1 z-2 flex size-8 cursor-pointer border border-gray-100',
           className
         )}
         onClick={handleClick}
         disabled={isPending}
+        aria-pressed={isInWishlist}
         aria-label={
           isInWishlist ? t('wishlistRemoveAria') : t('wishlistSaveAria')
         }
@@ -84,21 +87,19 @@ export function WishlistToggleButton({
         ) : (
           <HeartIcon className='size-4 text-gray-700' />
         )}
-      </button>
+      </Button>
     )
   }
 
   return (
-    <button
-      type='button'
+    <Button
+      size={showText ? 'auto' : 'icon-sm'}
+      scheme='black'
+      variant='tertiary'
       onClick={() => handleClick()}
       disabled={isPending}
-      className={cn(
-        'flex cursor-pointer items-center',
-        showText ? 'shrink-0 gap-2' : 'justify-center',
-        'disabled:cursor-not-allowed disabled:opacity-50',
-        className
-      )}
+      className={className}
+      aria-pressed={isInWishlist}
       aria-label={
         isInWishlist ? t('wishlistRemoveAria') : t('wishlistSaveAria')
       }
@@ -118,6 +119,6 @@ export function WishlistToggleButton({
           {labelText}
         </span>
       )}
-    </button>
+    </Button>
   )
 }

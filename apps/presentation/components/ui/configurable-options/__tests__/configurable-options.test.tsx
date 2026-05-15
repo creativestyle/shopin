@@ -183,12 +183,12 @@ describe('ConfigurableOptions', () => {
     const sizeLabel = screen.getByText('Size')
     expect(sizeLabel.closest('div')?.textContent).toBe('Size: M')
 
-    // Check that the color button is selected (aria-pressed="true")
+    // Check that the color button is selected (aria-selected="true")
     const blackButton = screen.getByTitle('Black')
-    expect(blackButton).toHaveAttribute('aria-pressed', 'true')
+    expect(blackButton).toHaveAttribute('aria-selected', 'true')
 
-    // Check that the size button is selected (aria-pressed="true")
+    // Check that the size button is selected (aria-selected="true")
     const sizeMButton = screen.getByRole('button', { name: 'M' })
-    expect(sizeMButton).toHaveAttribute('aria-pressed', 'true')
+    expect(sizeMButton).toHaveAttribute('aria-selected', 'true')
   })
 })

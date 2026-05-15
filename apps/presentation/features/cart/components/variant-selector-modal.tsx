@@ -113,17 +113,19 @@ export function VariantSelectorModal({
       >
         {/* Header */}
         <DialogHeader className='relative flex h-14 w-full items-center justify-between bg-white !px-4 py-4 md:w-112'>
-          <div className='relative h-6 w-6 shrink-0 opacity-0' />
+          <div className='relative size-8 shrink-0 opacity-0' />
           <DialogTitle className='relative flex shrink-0 flex-col justify-center text-center text-base leading-none font-normal text-nowrap text-gray-950'>
             <p className='leading-[1.1] whitespace-pre'>{productName}</p>
           </DialogTitle>
-          <button
+          <Button
+            variant='tertiary'
+            scheme='black'
+            size='icon-sm'
             onClick={() => onOpenChange(false)}
-            className='relative flex h-6 w-6 shrink-0 cursor-pointer items-center justify-center'
             aria-label={tCommon('close')}
           >
             <CloseIcon className='h-6 w-6 shrink-0 text-gray-700' />
-          </button>
+          </Button>
         </DialogHeader>
 
         {/* Content */}
@@ -159,6 +161,7 @@ export function VariantSelectorModal({
             onClick={handleAddToBasket}
             disabled={isAddDisabled}
             className='w-full'
+            aria-busy={isAdding}
           >
             {isAdding ? (
               <>

@@ -13,10 +13,6 @@ const meta = {
       control: { type: 'radio' },
       options: ['left', 'right'],
     },
-    scheme: {
-      control: { type: 'radio' },
-      options: ['white', 'dark'],
-    },
     visible: {
       control: { type: 'boolean' },
     },
@@ -30,7 +26,6 @@ export const LeftVisible: Story = {
   args: {
     side: 'left',
     visible: true,
-    scheme: 'white',
     ariaLabel: 'Scroll left',
     onClick: () => {},
   },
@@ -40,7 +35,6 @@ export const RightVisible: Story = {
   args: {
     side: 'right',
     visible: true,
-    scheme: 'white',
     ariaLabel: 'Scroll right',
     onClick: () => {},
   },

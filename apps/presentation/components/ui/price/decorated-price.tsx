@@ -3,7 +3,7 @@ import { cva, type VariantProps } from 'class-variance-authority'
 import { cn } from '@/lib/utils'
 import { formatPriceWithPrefix } from '@/lib/price-formatter'
 
-const variants = cva('flex items-baseline font-normal', {
+const variants = cva('inline-flex items-baseline font-normal', {
   variants: {
     variant: {
       regular: 'text-gray-900',
@@ -33,7 +33,7 @@ function DecoratedPrice({
   taxNote,
   locale,
   ...props
-}: React.ComponentProps<'div'> &
+}: React.ComponentProps<'span'> &
   VariantProps<typeof variants> & {
     price: number
     currency?: string
@@ -57,7 +57,7 @@ function DecoratedPrice({
           })}
         </span>
       )}
-      <div
+      <span
         className={cn(
           variants({ variant, size, className }),
           'order-1 text-right'
@@ -66,7 +66,7 @@ function DecoratedPrice({
         {...props}
       >
         <span>{formattedPrice}</span>
-      </div>
+      </span>
       {taxNote && (
         <span className='text-sm/[1.6] text-gray-500'>{taxNote}</span>
       )}

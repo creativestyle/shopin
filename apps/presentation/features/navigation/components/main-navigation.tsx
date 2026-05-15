@@ -100,10 +100,12 @@ export const MainNavigation: React.FC<MainNavigationProps> = ({
     >
       <HorizontalScroller className='h-full min-w-0 flex-1 [&>div]:h-full'>
         <nav className='flex h-full flex-row items-stretch justify-start gap-8 lg:gap-6'>
-          {items.map((item) => (
+          {items.map((item, index) => (
             <div
               key={item.href}
-              className='relative flex h-full items-center'
+              className={cn('relative flex h-full items-center', {
+                'ml-[3px]': index === 0,
+              })}
               onMouseEnter={() => handleMouseEnter(item)}
             >
               {/* Navigation text */}

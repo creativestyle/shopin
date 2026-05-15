@@ -18,6 +18,7 @@ import { Logo } from '@/components/ui/logo'
 import { NavigationList } from './navigation-list'
 import { NavigationAccordion } from './navigation-accordion'
 import { useNavigationState } from '../../hooks/use-navigation-state'
+import { Button } from '@/components/ui/button'
 
 interface MobileNavigationProps {
   open: boolean
@@ -88,7 +89,10 @@ export function MobileNavigation({
         <div className='relative flex h-14 shrink-0 items-center justify-center px-4 shadow-down'>
           {/* Back button - show on level 2 and 3 */}
           {currentLevel > 1 && (
-            <button
+            <Button
+              variant='tertiary'
+              scheme='black'
+              size='auto'
               onClick={goBackOneLevel}
               className='absolute left-4 flex size-6 shrink-0 items-center justify-center lord-of-the-focus-ring rounded'
               aria-label='Go back'
@@ -97,7 +101,7 @@ export function MobileNavigation({
                 className='size-6 rotate-180'
                 aria-hidden='true'
               />
-            </button>
+            </Button>
           )}
 
           {currentLevel === 1 ? (
@@ -120,16 +124,19 @@ export function MobileNavigation({
           )}
 
           {/* Close button */}
-          <button
+          <Button
+            variant='tertiary'
+            scheme='black'
+            size='auto'
             onClick={closeMobileNavigation}
-            className='absolute right-4 flex size-6 shrink-0 cursor-pointer items-center justify-center lord-of-the-focus-ring rounded'
+            className='absolute right-4 flex size-6 shrink-0 items-center justify-center lord-of-the-focus-ring rounded'
             aria-label={t('close')}
           >
             <CloseIcon
               className='size-6'
               aria-hidden='true'
             />
-          </button>
+          </Button>
         </div>
 
         <SheetBody className='relative flex-row overflow-hidden p-0'>

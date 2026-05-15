@@ -12,6 +12,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog'
+import { Button } from './button'
 
 export interface GalleryImage {
   src: string
@@ -112,14 +113,16 @@ export const GalleryDialog: React.FC<GalleryDialogProps> = ({
         <DialogDescription className='sr-only'>
           {t('dialogDescription')}
         </DialogDescription>
-        <button
-          type='button'
-          className='absolute top-4 right-4 z-10 rounded-full bg-white/90 p-2 shadow-sm hover:bg-white'
+        <Button
+          size='icon-sm'
+          variant='secondary'
+          scheme='white'
+          className='absolute top-4 right-4 z-10 p-2 shadow-sm'
           onClick={onClose}
-          aria-label='Close lightbox'
+          aria-label={t('closeButtonAria')}
         >
           <CloseIcon className='size-5' />
-        </button>
+        </Button>
         <div className='flex h-full w-full flex-1 [&_[data-role=carousel]]:h-full [&_[data-role=carousel]_[role=group]]:h-full [&_[data-role=carousel]_div[role=group]]:h-full [&_[data-role=carousel]>div]:h-full [&_button[type=button]]:opacity-100'>
           <Carousel
             ref={carouselRef}

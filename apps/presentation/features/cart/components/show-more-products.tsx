@@ -3,6 +3,7 @@
 import * as React from 'react'
 import { useTranslations } from 'next-intl'
 import ChevronDownIcon from '@/public/icons/chevron-down.svg'
+import { Button } from '@/components/ui/button'
 
 interface ShowMoreProductsProps {
   scrollRef: React.RefObject<HTMLDivElement | null>
@@ -76,9 +77,12 @@ export function ShowMoreProducts({
 
   return (
     <div className='flex w-full shrink-0 flex-col items-start gap-2.5 p-2'>
-      <div className='flex w-full shrink-0 flex-col items-center gap-2 rounded-lg bg-gray-50 px-0 py-3'>
-        <button
+      <div className='flex w-full shrink-0 flex-col items-center'>
+        <Button
           type='button'
+          size='default'
+          scheme='black'
+          variant='tertiary'
           onClick={() => {
             setShowMoreProducts(!showMoreProducts)
             if (scrollRef.current) {
@@ -88,14 +92,12 @@ export function ShowMoreProducts({
               })
             }
           }}
-          className='flex cursor-pointer items-center gap-2 p-0'
+          // className='flex cursor-pointer items-center gap-2 p-0'
           aria-expanded={showMoreProducts}
         >
-          <span className='text-sm/[1.6] font-normal whitespace-pre text-gray-700 underline decoration-solid'>
-            {t('addToCartModal.moreProducts')}
-          </span>
+          {t('addToCartModal.moreProducts')}
           <ChevronDownIcon className='h-6 w-6 shrink-0 text-gray-700' />
-        </button>
+        </Button>
       </div>
     </div>
   )

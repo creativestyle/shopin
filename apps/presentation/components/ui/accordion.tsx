@@ -48,28 +48,33 @@ function AccordionTrigger({
   className,
   children,
   withArrow = true,
+  level = 3,
   ...props
 }: React.ComponentProps<typeof AccordionPrimitive.Trigger> & {
   withArrow?: boolean
+  level?: 2 | 3 | 4 | 5 | 6
 }) {
+  const HeadingTag = `h${level}` as const
   return (
-    <AccordionPrimitive.Header className='flex gap-4'>
-      <AccordionPrimitive.Trigger
-        data-slot='accordion-trigger'
-        className={cn(
-          'flex flex-1 cursor-pointer items-start gap-4 lord-of-the-focus-ring rounded-md py-6 text-left text-lg/[1.5] font-medium text-gray-950 uppercase transition-all focus-visible:border-neutral-950 disabled:pointer-events-none disabled:opacity-50 [&[data-state=open]>svg]:rotate-180',
-          className
-        )}
-        {...props}
-      >
-        {children}
-        {withArrow && (
-          <ChevronDownIcon
-            className='pointer-events-none ml-auto size-6 shrink-0 transition-transform duration-200'
-            aria-hidden='true'
-          />
-        )}
-      </AccordionPrimitive.Trigger>
+    <AccordionPrimitive.Header asChild>
+      <HeadingTag className='flex gap-4'>
+        <AccordionPrimitive.Trigger
+          data-slot='accordion-trigger'
+          className={cn(
+            'flex flex-1 cursor-pointer items-start gap-4 lord-of-the-focus-ring rounded-md py-6 text-left text-lg/[1.5] font-medium text-gray-950 uppercase transition-all focus-visible:border-neutral-950 disabled:pointer-events-none disabled:opacity-50 [&[data-state=open]>svg]:rotate-180',
+            className
+          )}
+          {...props}
+        >
+          {children}
+          {withArrow && (
+            <ChevronDownIcon
+              className='pointer-events-none ml-auto size-6 shrink-0 transition-transform duration-200'
+              aria-hidden='true'
+            />
+          )}
+        </AccordionPrimitive.Trigger>
+      </HeadingTag>
     </AccordionPrimitive.Header>
   )
 }
