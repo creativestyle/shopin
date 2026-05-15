@@ -21,7 +21,7 @@ export function TeaserBannerBlock({
   return (
     <div className='relative overflow-hidden rounded-lg'>
       {backgroundImage && (
-        <div className='relative aspect-[3/1] min-h-[280px] w-full sm:min-h-[320px]'>
+        <div className='relative aspect-[3/1] min-h-[380px] w-full sm:min-h-[320px]'>
           <ContentImage
             image={backgroundImage}
             fill
@@ -29,34 +29,38 @@ export function TeaserBannerBlock({
             preload={imagePreload}
             sizes='(min-width: 1920px) 1920px, 100vw'
           />
-          <div className='absolute inset-0 bg-black/40' />
         </div>
       )}
       <div
-        className={cn('flex flex-col items-center justify-center text-center', {
-          'absolute inset-0 p-6 text-white': hasOverlay,
+        className={cn('flex flex-col items-center justify-end', {
+          'sm:ui-container absolute inset-0 px-4 pb-8 sm:px-6': hasOverlay,
           'p-8': !hasOverlay,
         })}
       >
-        {headline && (
-          <h2 className='text-2xl font-bold md:text-3xl'>{headline}</h2>
-        )}
-        {body && (
-          <p
-            className={cn('mt-2 max-w-xl', {
-              'opacity-90': hasOverlay,
-              'text-gray-700': !hasOverlay,
-            })}
-          >
-            {body}
-          </p>
-        )}
-        {cta?.link?.url && (
-          <CmsButton
-            cta={cta}
-            className='mt-4'
-          />
-        )}
+        <div
+          className={cn({
+            'glass-filter px-12 py-6 text-center text-white': hasOverlay,
+          })}
+        >
+          {headline && (
+            <h2 className='text-2xl font-bold md:text-3xl'>{headline}</h2>
+          )}
+          {body && (
+            <p
+              className={cn('mt-2 max-w-xl', {
+                'text-gray-700': !hasOverlay,
+              })}
+            >
+              {body}
+            </p>
+          )}
+          {cta?.link?.url && (
+            <CmsButton
+              cta={cta}
+              className='mt-4'
+            />
+          )}
+        </div>
       </div>
     </div>
   )
