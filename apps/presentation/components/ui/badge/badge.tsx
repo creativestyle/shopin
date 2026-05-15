@@ -13,7 +13,7 @@ const badgeVariants = cva(
         orange: 'bg-orange-500 text-white focus-visible:ring-orange-500/80',
         red: 'bg-red-400 text-white',
         gray: 'bg-gray-200 text-gray-700 focus-visible:ring-gray-200/80',
-        yellow: 'bg-yellow-500 text-white focus-visible:ring-yellow-500/80',
+        yellow: 'bg-yellow-500 text-gray-900 focus-visible:ring-yellow-500/80',
       },
       size: {
         small: 'px-1',

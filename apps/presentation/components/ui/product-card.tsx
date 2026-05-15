@@ -40,7 +40,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
     >
       <Link
         href={href}
-        className='absolute inset-0 z-1 lord-of-the-focus-ring'
+        className='absolute inset-0 z-2 lord-of-the-focus-ring'
         aria-label={t('linkAriaLabel', { name: data.name })}
         {...props}
       />
@@ -52,7 +52,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         )}
       >
         {data?.badges && data.badges.length > 0 && (
-          <div className='pointer-events-auto absolute top-2 left-2 z-10 flex flex-col items-start gap-1'>
+          <div className='pointer-events-auto absolute top-2 left-2 z-1 flex flex-col items-start gap-1'>
             <Badges badges={data.badges} />
           </div>
         )}
