@@ -184,6 +184,14 @@
   container-type: inline-size;
 }
 
+@utility glass-filter {
+  background: rgba(15, 15, 15, 0.5);
+  backdrop-filter: blur(15px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
 @variant touchscreen {
   @media (pointer: coarse) or (hover: none) {
     @slot;

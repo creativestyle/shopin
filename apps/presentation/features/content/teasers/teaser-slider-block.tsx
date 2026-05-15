@@ -98,7 +98,7 @@ function SliderHeroSlideContent({
   return (
     <section
       className={cn(
-        'relative h-full min-h-[320px] w-full overflow-hidden sm:min-h-[360px] md:min-h-[400px]',
+        'relative h-full min-h-[480px] w-full overflow-hidden sm:min-h-[400px] md:min-h-[400px]',
         { 'md:aspect-[1920/523]': imageUrl }
       )}
       aria-label={item.headline}
@@ -112,47 +112,45 @@ function SliderHeroSlideContent({
             sizes='(min-width: 1920px) 1920px, 100vw'
             preload={preload}
           />
-          <div
-            className='absolute inset-0 bg-black/55'
-            aria-hidden
-          />
         </div>
       )}
       <div
-        className={cn(
-          'z-10 flex flex-col items-center justify-center px-4 text-center sm:px-6',
-          {
-            'absolute inset-0 py-6 text-white sm:py-8': imageUrl,
-            'relative min-h-[320px] py-12 sm:min-h-[360px] md:min-h-[400px]':
-              !imageUrl,
-          }
-        )}
+        className={cn('z-10 flex flex-col items-center justify-end', {
+          'ui-container absolute inset-0 px-4 pb-8 sm:px-6': imageUrl,
+          'relative min-h-[480px] py-12 sm:min-h-[400px] md:min-h-[400px]':
+            !imageUrl,
+        })}
       >
-        {item.headline && (
-          <h2 className='text-2xl font-bold tracking-tight drop-shadow-sm sm:text-3xl md:text-4xl'>
-            {item.headline}
-          </h2>
-        )}
-        {item.body && (
-          <p
-            className={cn({
-              'mt-2 max-w-xl text-base opacity-95 drop-shadow-sm sm:mt-3 sm:text-lg':
-                imageUrl,
-              'mt-3 max-w-2xl text-lg text-gray-700': !imageUrl,
-            })}
-          >
-            {item.body}
-          </p>
-        )}
-        {item.cta?.link?.url && (
-          <CmsButton
-            cta={item.cta}
-            className={cn({
-              'mt-4 sm:mt-5': imageUrl,
-              'mt-5': !imageUrl,
-            })}
-          />
-        )}
+        <div
+          className={cn({
+            'glass-filter px-12 py-6 text-center text-white': imageUrl,
+          })}
+        >
+          {item.headline && (
+            <h2 className='text-2xl font-bold tracking-tight sm:text-3xl md:text-4xl'>
+              {item.headline}
+            </h2>
+          )}
+          {item.body && (
+            <p
+              className={cn({
+                'mt-2 max-w-xl text-base sm:mt-3 sm:text-lg': imageUrl,
+                'mt-3 max-w-2xl text-lg text-gray-700': !imageUrl,
+              })}
+            >
+              {item.body}
+            </p>
+          )}
+          {item.cta?.link?.url && (
+            <CmsButton
+              cta={item.cta}
+              className={cn({
+                'mt-4 sm:mt-5': imageUrl,
+                'mt-5': !imageUrl,
+              })}
+            />
+          )}
+        </div>
       </div>
     </section>
   )
