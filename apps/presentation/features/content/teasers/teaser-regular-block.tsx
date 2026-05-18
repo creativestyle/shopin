@@ -17,37 +17,36 @@ export function TeaserRegularBlock({
 
   return (
     <section
-      className='relative flex min-h-[320px] w-full overflow-hidden sm:min-h-[400px] md:min-h-[480px]'
+      className='relative w-full overflow-hidden sm:min-h-[320px] md:min-h-[480px]'
       aria-label={headline ?? categoryLabel}
     >
       {image && (
-        <div className='absolute inset-0'>
+        <div className='relative w-full overflow-hidden max-sm:rounded-lg sm:absolute sm:inset-0'>
           <ContentImage
             image={image}
-            fill
-            className='object-cover'
+            fill={false}
+            className='block h-auto w-full sm:absolute sm:inset-0 sm:h-full sm:w-full sm:object-cover'
             sizes='(min-width: 1920px) 1920px, 100vw'
             preload={imagePreload}
           />
         </div>
       )}
 
-      {/* Text panel with background */}
       {hasRightContent && (
-        <div className='relative flex min-h-0 flex-col justify-center p-6 sm:p-8 md:max-w-md md:p-10 lg:max-w-lg lg:p-12'>
-          <div className='rounded-lg bg-white/95 px-5 py-6 shadow-sm backdrop-blur-sm sm:px-6 sm:py-8 md:px-8 md:py-10'>
+        <div className='flex flex-col sm:absolute sm:inset-0 sm:items-start sm:justify-end sm:px-6 sm:pb-8 md:justify-center md:px-10'>
+          <div className='glass-filter px-4 py-4 text-white max-sm:mx-4 max-sm:-mt-12 max-sm:self-stretch max-sm:!shadow-none sm:w-auto sm:px-8 sm:py-8 md:max-w-md md:px-8 md:py-10 lg:max-w-lg'>
             {categoryLabel && (
-              <span className='text-xs font-medium tracking-wider text-gray-700 uppercase'>
+              <span className='text-xs font-medium tracking-wider text-white/80 uppercase'>
                 {categoryLabel}
               </span>
             )}
             {headline && (
-              <h2 className='mt-2 text-2xl font-bold tracking-tight text-gray-900 sm:text-3xl lg:text-4xl'>
+              <h2 className='mt-2 text-2xl font-bold tracking-tight text-white sm:text-3xl lg:text-4xl'>
                 {headline}
               </h2>
             )}
             {body && (
-              <p className='mt-3 max-w-xl text-base text-gray-600 sm:mt-4 sm:text-lg'>
+              <p className='mt-3 max-w-xl text-base text-white/90 sm:mt-4 sm:text-lg'>
                 {body}
               </p>
             )}
