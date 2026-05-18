@@ -43,6 +43,8 @@ const thumbSchemes = cva(
 function Switch({
   className,
   scheme,
+  disabled,
+  'aria-disabled': ariaDisabled,
   ...props
 }: React.ComponentProps<typeof SwitchPrimitive.Root> &
   VariantProps<typeof switchSchemes>) {
@@ -50,6 +52,8 @@ function Switch({
     <SwitchPrimitive.Root
       data-slot='switch'
       className={cn(switchSchemes({ scheme }), className)}
+      disabled={disabled}
+      aria-disabled={disabled ? true : ariaDisabled}
       {...props}
     >
       <SwitchPrimitive.Thumb
