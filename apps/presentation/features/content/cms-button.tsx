@@ -1,6 +1,7 @@
 import {
   Button,
   type ButtonScheme,
+  type ButtonSize,
   type ButtonVariant,
 } from '@/components/ui/button'
 import { CmsLink } from '@/features/content/cms-link'
@@ -16,13 +17,14 @@ export interface CmsButtonProps {
  * Renders a CMS CTA as the design-system Button around CmsLink. Contract: CmsButtonResponse.
  */
 export function CmsButton({ cta, className }: CmsButtonProps) {
-  const { link, variant, style } = cta
+  const { link, variant, style, size } = cta
 
   return (
     <Button
       asChild
       variant={(variant ?? 'primary') as ButtonVariant}
       scheme={(style ?? 'red') as ButtonScheme}
+      size={(size ?? 'default') as ButtonSize}
       className={className}
     >
       <CmsLink link={link} />
