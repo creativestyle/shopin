@@ -45,7 +45,10 @@ type LabeledSwitchStateItem = React.ComponentProps<typeof Switch> & {
 }
 
 export const Showcase: Story = {
-  render: () => {
+  args: {
+    scheme: 'primary',
+  },
+  render: ({ scheme = 'primary' }: React.ComponentProps<typeof Switch>) => {
     const items = [
       {
         id: 'switch-state-off',
@@ -92,7 +95,7 @@ export const Showcase: Story = {
                 key={id}
                 id={id}
                 aria-label={ariaLabel}
-                scheme='gray'
+                scheme={scheme}
                 {...switchProps}
               />
             ))}
@@ -108,16 +111,11 @@ export const Showcase: Story = {
             >
               <Switch
                 id={id}
-                scheme='gray'
+                scheme={scheme}
                 disabled={disabled}
                 {...switchProps}
               />
-              <Label
-                htmlFor={id}
-                className='text-gray-700'
-              >
-                {label}
-              </Label>
+              <Label htmlFor={id}>{label}</Label>
             </div>
           ))}
         </div>

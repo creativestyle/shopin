@@ -6,34 +6,26 @@ import { cva, type VariantProps } from 'class-variance-authority'
 
 import { cn } from '@/lib/utils'
 
-const switchRootClasses = {
-  base: 'peer -mt-px inline-flex h-6 w-11 shrink-0 items-center rounded-full border-2 p-1 transition-all outline-none focus-visible:ring-1',
-  disabled: 'cursor-not-allowed border-gray-100 bg-gray-100',
-}
-
-const switchRootSchemes = cva('cursor-pointer', {
-  variants: {
-    scheme: {
-      primary:
-        'focus-visible:ring-primary/30 data-[state=checked]:border-primary data-[state=checked]:bg-primary data-[state=unchecked]:border-gray-500 data-[state=unchecked]:hover:enabled:border-primary [&:hover:enabled>span[data-state=unchecked]]:bg-primary',
-      accent:
-        'focus-visible:ring-accent/30 data-[state=checked]:border-accent data-[state=checked]:bg-accent data-[state=unchecked]:border-gray-500 data-[state=unchecked]:hover:enabled:border-accent [&:hover:enabled>span[data-state=unchecked]]:bg-accent',
-      gray: 'focus-visible:ring-gray-700/30 data-[state=checked]:border-gray-700 data-[state=checked]:bg-gray-700 data-[state=unchecked]:border-gray-300 data-[state=unchecked]:!bg-gray-50 data-[state=unchecked]:hover:enabled:border-gray-700 [&:hover:enabled>span[data-state=unchecked]]:bg-gray-700',
+const switchSchemes = cva(
+  'peer -mt-px inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border-2 p-1 transition-all outline-none focus-visible:ring-1 disabled:cursor-not-allowed data-[state=unchecked]:bg-white',
+  {
+    variants: {
+      scheme: {
+        primary:
+          'focus-visible:ring-primary/30 disabled:!border-gray-400 disabled:!bg-gray-400 data-[state=checked]:border-primary data-[state=checked]:bg-primary data-[state=unchecked]:border-gray-500 data-[state=unchecked]:hover:enabled:border-primary [&:hover:enabled>span[data-state=unchecked]]:bg-primary disabled:[&>span]:!bg-gray-200 disabled:[&>span[data-state=checked]]:!bg-white',
+        accent:
+          'focus-visible:ring-accent/30 disabled:!border-gray-400 disabled:!bg-gray-400 data-[state=checked]:border-accent data-[state=checked]:bg-accent data-[state=unchecked]:border-gray-500 data-[state=unchecked]:hover:enabled:border-accent [&:hover:enabled>span[data-state=unchecked]]:bg-accent disabled:[&>span]:!bg-gray-200 disabled:[&>span[data-state=checked]]:!bg-white',
+        gray: 'focus-visible:ring-gray-700/30 data-[state=checked]:border-gray-700 data-[state=checked]:bg-gray-700 disabled:data-[state=checked]:!border-gray-100 disabled:data-[state=checked]:!bg-gray-100 data-[state=unchecked]:border-gray-300 data-[state=unchecked]:!bg-gray-50 data-[state=unchecked]:hover:enabled:border-gray-700 disabled:data-[state=unchecked]:!border-gray-100 disabled:data-[state=unchecked]:!bg-gray-100 [&:hover:enabled>span[data-state=unchecked]]:bg-gray-700 disabled:[&>span]:!bg-gray-300 disabled:[&>span[data-state=checked]]:!bg-gray-300',
+      },
     },
-  },
-  defaultVariants: {
-    scheme: 'gray',
-  },
-})
+    defaultVariants: {
+      scheme: 'gray',
+    },
+  }
+)
 
-const switchThumbClasses = {
-  base: 'pointer-events-none block size-4 rounded-full ring-0 transition',
-  disabled:
-    'bg-gray-300 data-[state=checked]:translate-x-4.5 data-[state=unchecked]:translate-x-0',
-}
-
-const switchThumbSchemes = cva(
-  'data-[state=checked]:translate-x-4.5 data-[state=checked]:bg-white data-[state=unchecked]:translate-x-0',
+const thumbSchemes = cva(
+  'pointer-events-none block size-4 rounded-full bg-white ring-0 transition data-[state=checked]:translate-x-4.5 data-[state=checked]:bg-white data-[state=unchecked]:translate-x-0',
   {
     variants: {
       scheme: {
@@ -48,38 +40,21 @@ const switchThumbSchemes = cva(
   }
 )
 
-type SwitchProps = React.ComponentProps<typeof SwitchPrimitive.Root> &
-  VariantProps<typeof switchRootSchemes>
-
 function Switch({
   className,
   scheme,
-  disabled,
-  'aria-disabled': ariaDisabled,
   ...props
-}: SwitchProps) {
-  const rootClassName = cn(
-    switchRootClasses.base,
-    disabled ? switchRootClasses.disabled : switchRootSchemes({ scheme }),
-    className
-  )
-
-  const thumbClassName = cn(
-    switchThumbClasses.base,
-    disabled ? switchThumbClasses.disabled : switchThumbSchemes({ scheme })
-  )
-
+}: React.ComponentProps<typeof SwitchPrimitive.Root> &
+  VariantProps<typeof switchSchemes>) {
   return (
     <SwitchPrimitive.Root
       data-slot='switch'
-      className={rootClassName}
-      disabled={disabled}
-      aria-disabled={disabled ? true : ariaDisabled}
+      className={cn(switchSchemes({ scheme }), className)}
       {...props}
     >
       <SwitchPrimitive.Thumb
         data-slot='switch-thumb'
-        className={thumbClassName}
+        className={cn(thumbSchemes({ scheme }))}
       />
     </SwitchPrimitive.Root>
   )
