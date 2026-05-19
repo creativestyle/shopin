@@ -21,9 +21,9 @@ export function TeaserSectionBlock({
       className='flex w-full flex-col bg-white'
       aria-label={headline ?? categoryLabel}
     >
-      <div className='grid grid-cols-1 gap-8 md:grid-cols-[minmax(0,0.45fr)_minmax(0,0.55fr)] md:gap-12 lg:gap-16'>
+      <div className='grid grid-cols-1 gap-3 md:grid-cols-[minmax(0,0.45fr)_minmax(0,0.55fr)] md:gap-12 lg:gap-16'>
         {/* Left column: text content */}
-        <div className='flex flex-col justify-center px-4 py-8 sm:px-6 md:py-12 lg:py-16'>
+        <div className='flex flex-col justify-center px-4 py-4 sm:px-6 md:py-12 lg:py-16'>
           {categoryLabel && (
             <span className='text-xs font-medium tracking-wider text-gray-700 uppercase'>
               {categoryLabel}
@@ -51,12 +51,12 @@ export function TeaserSectionBlock({
         </div>
 
         {/* Right column: image */}
-        <div className='relative aspect-[4/3] min-h-[200px] w-full min-w-0 overflow-hidden rounded-lg bg-gray-100 sm:min-h-[240px] md:aspect-[5/4] md:max-h-full'>
+        <div className='relative w-full min-w-0 overflow-hidden rounded-lg bg-gray-100 sm:aspect-[4/3] sm:min-h-[240px] md:aspect-[5/4] md:max-h-full'>
           {image && (
             <ContentImage
               image={image}
-              fill
-              className='object-cover'
+              fill={false}
+              className='block h-auto w-full sm:absolute sm:inset-0 sm:h-full sm:w-full sm:object-cover'
               preload={imagePreload}
               sizes='(min-width: 768px) 55vw, 100vw'
             />

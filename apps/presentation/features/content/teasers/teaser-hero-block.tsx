@@ -19,32 +19,33 @@ export function TeaserHeroBlock({
 
   return (
     <section
-      className={cn('relative w-full overflow-hidden', {
-        'min-h-[480px] sm:min-h-[400px] md:aspect-[1920/523] md:min-h-[320px]':
-          hasBg,
+      className={cn('relative w-full', {
+        'sm:min-h-[400px] md:aspect-[1920/523] md:min-h-[320px]': hasBg,
       })}
       aria-label={headline}
     >
       {backgroundImage && (
-        <div className='absolute inset-0'>
+        <div className='relative w-full sm:absolute sm:inset-0'>
           <ContentImage
             image={backgroundImage}
-            fill
-            className='object-cover'
+            fill={false}
+            className='block h-auto w-full sm:absolute sm:inset-0 sm:h-full sm:w-full sm:object-cover'
             preload={imagePreload}
             sizes='(min-width: 1920px) 1920px, 100vw'
           />
         </div>
       )}
       <div
-        className={cn('flex flex-col items-center justify-end', {
-          'ui-container absolute inset-0 px-4 pb-8 sm:px-6': hasBg,
+        className={cn('flex flex-col items-center', {
+          'ui-container max-sm:mx-0 sm:absolute sm:inset-0 sm:justify-end sm:px-6':
+            hasBg,
           'relative min-h-[200px] px-4 py-12 sm:px-6': !hasBg,
         })}
       >
         <div
           className={cn({
-            'glass-filter px-12 py-6 text-center text-white': hasBg,
+            '-mb-4 glass-filter px-6 py-4 text-center text-white max-sm:mx-4 max-sm:-mt-12 max-sm:mb-0 max-sm:self-stretch max-sm:!shadow-none sm:w-auto sm:px-12 sm:py-6':
+              hasBg,
           })}
         >
           {headline && (
