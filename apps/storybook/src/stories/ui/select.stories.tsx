@@ -12,6 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { Field, FieldError } from '@/components/ui/field'
 
 type Option = { value: string; label: string }
 type Group = { label: string; items: Option[] }
@@ -276,4 +277,65 @@ export const DisabledSelectWithValue: SelectRootStory = {
       label: 'Disabled select',
       items: priorityOptions,
     }),
+}
+
+export const RequiredSelect: SelectRootStory = {
+  argTypes: {
+    invalid: { control: { type: 'boolean' } },
+    ariaRequired: { control: { type: 'boolean' } },
+  },
+  args: {
+    disabled: false,
+    ariaRequired: true,
+    invalid: false,
+  },
+  render: (args) =>
+    renderSelectRoot(args, {
+      label: 'Required select',
+      items: countryOptions,
+    }),
+}
+
+function InvalidSelectComponent() {
+  const [value, setValue] = useState('')
+  const isInvalid = !value
+
+  return (
+    <Field data-invalid={isInvalid}>
+      <SelectRoot
+        value={value}
+        onValueChange={setValue}
+        ariaRequired
+        invalid={isInvalid}
+      >
+        <SelectTrigger
+          label='Select country'
+          className={triggerClassName}
+        >
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {countryOptions.map((item) => (
+            <SelectItem
+              key={item.value}
+              value={item.value}
+            >
+              {item.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </SelectRoot>
+      {isInvalid && (
+        <FieldError error={{ message: 'address.errors.countryRequired' }} />
+      )}
+    </Field>
+  )
+}
+
+export const InvalidSelect: Story = {
+  args: {
+    label: 'Select country',
+    options: countryOptions,
+  },
+  render: () => <InvalidSelectComponent />,
 }
