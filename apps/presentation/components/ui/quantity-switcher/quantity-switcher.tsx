@@ -53,8 +53,9 @@ export function QuantitySwitcher({
     <div
       className={cn(
         'relative w-25 rounded-full border border-solid border-gray-300 transition-colors',
-        disabled ? 'bg-gray-100' : 'bg-gray-50 hover:border-gray-700',
         {
+          'bg-gray-100': disabled,
+          'bg-gray-50 hover:border-gray-700': !disabled,
           'h-12': !className?.includes('h-'),
         },
         className
@@ -91,7 +92,10 @@ export function QuantitySwitcher({
           'text-center text-base font-normal',
           'leading-6',
           'rounded focus-visible:ring-2 focus-visible:ring-gray-950 focus-visible:ring-offset-2 focus-visible:outline-none',
-          disabled ? 'cursor-not-allowed text-gray-500' : 'text-gray-700'
+          {
+            'cursor-not-allowed text-gray-500': disabled,
+            'text-gray-700': !disabled,
+          }
         )}
         aria-label={`${ariaLabel}: current value is ${value}`}
         aria-valuemin={min}
