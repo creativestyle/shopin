@@ -1,6 +1,5 @@
 import * as React from 'react'
 import type { Meta, StoryObj } from '@storybook/react'
-import { action } from 'storybook/actions'
 import { Switch } from '@/components/ui/switch'
 import { Label } from '@/components/ui/label'
 
@@ -36,105 +35,92 @@ const meta: Meta<typeof Switch> = {
 
 export default meta
 type Story = StoryObj<typeof meta>
-
-export const Default: Story = {
-  args: {
-    scheme: 'primary',
-  },
-  render: (args: React.ComponentProps<typeof Switch>) => {
-    return (
-      <Switch
-        id='airplane-mode'
-        {...args}
-        onCheckedChange={(checked: boolean) => {
-          action(`State changed: ${checked}`)(checked)
-        }}
-      />
-    )
-  },
+type UnlabeledSwitchStateItem = React.ComponentProps<typeof Switch> & {
+  id: string
+  ariaLabel: string
+}
+type LabeledSwitchStateItem = React.ComponentProps<typeof Switch> & {
+  id: string
+  label: string
 }
 
-export const WithLabel: Story = {
-  args: {
-    scheme: 'primary',
-  },
-  render: (args: React.ComponentProps<typeof Switch>) => {
-    return (
-      <>
-        <div className='flex items-center'>
-          <Switch
-            id='airplane-mode-2'
-            {...args}
-            onCheckedChange={(checked: boolean) => {
-              action(`State changed: ${checked}`)(checked)
-            }}
-          />
-          <Label
-            htmlFor='airplane-mode-2'
-            className='pl-2'
-          >
-            Email notifications
-          </Label>
-        </div>
-      </>
-    )
-  },
-}
-
-export const States: Story = {
+export const Showcase: Story = {
   render: () => {
     const items = [
       {
         id: 'switch-state-off',
-        label: 'Off',
-        description: 'Unchecked and interactive.',
+        ariaLabel: 'Off',
       },
       {
         id: 'switch-state-on',
-        label: 'On',
-        description: 'Checked and interactive.',
+        ariaLabel: 'On',
         defaultChecked: true,
       },
       {
         id: 'switch-state-disabled-off',
-        label: 'Disabled off',
-        description: 'Disabled switches do not accept focus or input.',
+        ariaLabel: 'Disabled off',
         disabled: true,
       },
       {
         id: 'switch-state-disabled-on',
-        label: 'Disabled on',
-        description: 'Disabled state remains visible when checked.',
+        ariaLabel: 'Disabled on',
         defaultChecked: true,
         disabled: true,
       },
-    ] satisfies Array<
-      React.ComponentProps<typeof Switch> & {
-        id: string
-        label: string
-        description: string
-      }
-    >
+    ] satisfies Array<UnlabeledSwitchStateItem>
+
+    const labeledItems = [
+      {
+        id: 'switch-state-labeled-working',
+        label: 'Order updates',
+      },
+      {
+        id: 'switch-state-labeled-disabled',
+        label: 'SMS alerts',
+        defaultChecked: true,
+        disabled: true,
+      },
+    ] satisfies Array<LabeledSwitchStateItem>
 
     return (
       <div className='grid min-w-80 gap-3'>
-        {items.map(({ id, label, description, ...switchProps }) => (
-          <div
-            key={id}
-            className='flex items-center justify-between gap-4 rounded-md border border-gray-200 bg-white px-4 py-3'
-          >
-            <div className='space-y-1'>
-              <Label htmlFor={id}>{label}</Label>
-              <p className='text-sm text-gray-600'>{description}</p>
-            </div>
-            <Switch
-              id={id}
-              aria-label={label}
-              scheme='primary'
-              {...switchProps}
-            />
+        <div className='space-y-3 rounded-md border border-gray-200 bg-white px-4 py-3'>
+          <p className='text-sm font-medium text-gray-900'>Without labels</p>
+          <div className='flex flex-wrap items-center gap-8'>
+            {items.map(({ id, ariaLabel, ...switchProps }) => (
+              <Switch
+                key={id}
+                id={id}
+                aria-label={ariaLabel}
+                scheme='gray'
+                {...switchProps}
+              />
+            ))}
           </div>
-        ))}
+        </div>
+
+        <div className='space-y-3 rounded-md border border-gray-200 bg-white px-4 py-3'>
+          <p className='text-sm font-medium text-gray-900'>With labels</p>
+          {labeledItems.map(({ id, label, disabled, ...switchProps }) => (
+            <div
+              key={id}
+              className='flex items-center gap-3'
+            >
+              <Switch
+                id={id}
+                scheme='gray'
+                disabled={disabled}
+                {...switchProps}
+              />
+              <Label
+                htmlFor={id}
+                className='text-gray-700'
+              >
+                {label}
+              </Label>
+            </div>
+          ))}
+        </div>
       </div>
     )
   },
