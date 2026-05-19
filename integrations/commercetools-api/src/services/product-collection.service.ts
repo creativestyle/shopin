@@ -1,4 +1,4 @@
-import { Injectable, Inject, NotFoundException } from '@nestjs/common'
+import { Injectable, Inject, NotFoundException, Scope } from '@nestjs/common'
 import { COMMERCETOOLS_CLIENT, Client } from '../client/client.module'
 import {
   LANGUAGE_TOKEN,
@@ -28,7 +28,7 @@ import { mapCategoryTree } from '../mappers/product-collection'
 import { buildCategoryBreadcrumb } from '../mappers/category-breadcrumb'
 import { FilterableAttributesCacheService } from './filterable-attributes-cache.service'
 
-@Injectable()
+@Injectable({ scope: Scope.REQUEST })
 export class ProductCollectionService {
   constructor(
     @Inject(COMMERCETOOLS_CLIENT) private readonly client: Client,

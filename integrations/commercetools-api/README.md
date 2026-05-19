@@ -30,7 +30,7 @@ When this var is unset, every language falls back to the `ctStoreKey` defined in
 2. Under **Countries**, add every ISO 3166-1 alpha-2 code you want to ship to (e.g. `DE`, `AT`, `CH`).
 3. Save. No code deployment needed — the storefront reads this list on each request.
 
-If a store has **no countries configured**, the storefront logs a warning and falls back to the store's home country only (e.g. `DE` for the EU store), so checkout remains functional.
+If a Store has **no countries configured** or the Store fetch fails, the storefront logs a warning and `shippingCountries` is `[]` — the shipping country dropdown in checkout will be empty. Likewise, if the commercetools project fetch fails or returns no countries, `projectCountries` is `[]` and billing address forms and customer account address management will render with an empty country dropdown. A sensible fallback varies per project; callers that need a guaranteed non-empty list should pass an explicit `countries` prop to `AddressForm`.
 
 ## Service Provider
 

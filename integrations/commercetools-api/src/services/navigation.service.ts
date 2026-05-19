@@ -1,4 +1,4 @@
-import { Injectable, Inject } from '@nestjs/common'
+import { Injectable, Inject, Scope } from '@nestjs/common'
 import { COMMERCETOOLS_CLIENT, Client } from '../client/client.module'
 import { LANGUAGE_TOKEN, LanguageTagUtils } from '@core/i18n'
 import type { LanguageProvider } from '@apps/bff/src/common/language/language.provider'
@@ -7,7 +7,7 @@ import { I18N_CONFIG } from '@config/constants'
 import { CategoryPagedQueryApiResponseSchema } from '../schemas/category'
 import { buildCategoryTree, mapCategoryToLink } from '../mappers/navigation'
 
-@Injectable()
+@Injectable({ scope: Scope.REQUEST })
 export class NavigationService {
   constructor(
     @Inject(COMMERCETOOLS_CLIENT) private readonly client: Client,

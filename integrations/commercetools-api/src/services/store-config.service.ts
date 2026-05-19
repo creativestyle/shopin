@@ -1,4 +1,4 @@
-import { Injectable, Inject, Logger } from '@nestjs/common'
+import { Injectable, Inject, Logger, Scope } from '@nestjs/common'
 import { LANGUAGE_TOKEN } from '@core/i18n'
 import type { LanguageProvider } from '@apps/bff/src/common/language/language.provider'
 import { ServerClientService } from '../client/server-client.service'
@@ -6,7 +6,7 @@ import type { StoreConfigResponse } from '@core/contracts/store-config/store-con
 import { CommercetoolsStoreApiResponseSchema } from '../schemas/store-config'
 import { getCtStoreKeyForLanguage } from '../config/stores'
 
-@Injectable()
+@Injectable({ scope: Scope.REQUEST })
 export class StoreConfigService {
   private readonly logger = new Logger(StoreConfigService.name)
 

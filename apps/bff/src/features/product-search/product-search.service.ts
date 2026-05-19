@@ -1,4 +1,4 @@
-import { Injectable, Inject } from '@nestjs/common'
+import { Injectable, Inject, Scope } from '@nestjs/common'
 import { LANGUAGE_TOKEN } from '@core/i18n'
 import type { LanguageProvider } from '../../common/language/language.provider'
 import type { ProductSearchResponse } from '@core/contracts/product-search/product-search'
@@ -7,7 +7,7 @@ import { DataSourceFactory } from '../../data-source/data-source.factory'
 
 export type SearchProductsParams = Omit<SearchProductsOptions, 'language'>
 
-@Injectable()
+@Injectable({ scope: Scope.REQUEST })
 export class ProductSearchService {
   constructor(
     private readonly dataSourceFactory: DataSourceFactory,

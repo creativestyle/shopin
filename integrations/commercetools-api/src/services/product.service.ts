@@ -1,4 +1,4 @@
-import { Injectable, Inject, NotFoundException } from '@nestjs/common'
+import { Injectable, Inject, NotFoundException, Scope } from '@nestjs/common'
 import { COMMERCETOOLS_CLIENT, Client } from '../client/client.module'
 import { LANGUAGE_TOKEN } from '@core/i18n'
 import type { LanguageProvider } from '@apps/bff/src/common/language/language.provider'
@@ -15,7 +15,7 @@ import { mapVariantsToShopin } from '../mappers/variants'
 import { ProductProjectionPagedQueryApiResponseSchema } from '../schemas/product-projection'
 import type { Category, LocalizedString } from '@commercetools/platform-sdk'
 
-@Injectable()
+@Injectable({ scope: Scope.REQUEST })
 export class ProductService {
   constructor(
     @Inject(COMMERCETOOLS_CLIENT) private readonly client: Client,

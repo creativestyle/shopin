@@ -1,4 +1,4 @@
-import { Injectable, Inject } from '@nestjs/common'
+import { Injectable, Inject, Scope } from '@nestjs/common'
 import type { _SearchQuery } from '@commercetools/platform-sdk'
 import { COMMERCETOOLS_CLIENT, Client } from '../client/client.module'
 import {
@@ -25,7 +25,7 @@ import { mapProjectionsToCards } from '../mappers/search-results'
 import { fetchProjectionsByIds } from '../helpers/fetch-projections'
 import { FilterableAttributesCacheService } from './filterable-attributes-cache.service'
 
-@Injectable()
+@Injectable({ scope: Scope.REQUEST })
 export class ProductSearchService {
   constructor(
     @Inject(COMMERCETOOLS_CLIENT) private readonly client: Client,
