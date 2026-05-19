@@ -33,6 +33,7 @@ export function useLanguageSwitcher() {
   )
 
   const currentLanguage = languages.find((l) => l.urlPrefix === locale)
+  const currentIndex = languages.findIndex((l) => l.urlPrefix === locale)
   const activeOptionId =
     isOpen && focusedIndex >= 0
       ? `${listboxId}-option-${focusedIndex}`
@@ -52,7 +53,7 @@ export function useLanguageSwitcher() {
 
   const open = () => {
     setIsOpen(true)
-    setFocusedIndex(0)
+    setFocusedIndex(currentIndex >= 0 ? currentIndex : 0)
     requestAnimationFrame(() => listRef.current?.focus())
   }
 
