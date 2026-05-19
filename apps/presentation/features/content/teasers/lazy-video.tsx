@@ -97,10 +97,10 @@ export function LazyVideo({
               className
             )}
           />
-          {poster && !playing && (
+          {poster && !autoPlay && !playing && (
             <button
               type='button'
-              className='absolute inset-0 w-full cursor-pointer'
+              className='absolute inset-0 cursor-pointer'
               onClick={handlePosterClick}
               aria-label={t('video.play')}
             >
