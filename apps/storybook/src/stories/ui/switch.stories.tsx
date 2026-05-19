@@ -1,5 +1,6 @@
 import * as React from 'react'
 import type { Meta, StoryObj } from '@storybook/react'
+import { action } from 'storybook/actions'
 import { Switch } from '@/components/ui/switch'
 import { Label } from '@/components/ui/label'
 
@@ -49,6 +50,10 @@ export const Showcase: Story = {
     scheme: 'primary',
   },
   render: ({ scheme = 'primary' }: React.ComponentProps<typeof Switch>) => {
+    const createOnCheckedChange = (name: string) => (checked: boolean) => {
+      action(`${name}: ${checked}`)(checked)
+    }
+
     const items = [
       {
         id: 'switch-state-off',
@@ -90,12 +95,16 @@ export const Showcase: Story = {
         <div className='space-y-3 rounded-md border border-gray-200 bg-white px-4 py-3'>
           <p className='text-sm font-medium text-gray-900'>Without labels</p>
           <div className='flex flex-wrap items-center gap-8'>
-            {items.map(({ id, ariaLabel, ...switchProps }) => (
+            {items.map(({ id, ariaLabel, disabled, ...switchProps }) => (
               <Switch
                 key={id}
                 id={id}
                 aria-label={ariaLabel}
                 scheme={scheme}
+                disabled={disabled}
+                onCheckedChange={
+                  disabled ? undefined : createOnCheckedChange(ariaLabel)
+                }
                 {...switchProps}
               />
             ))}
@@ -113,6 +122,9 @@ export const Showcase: Story = {
                 id={id}
                 scheme={scheme}
                 disabled={disabled}
+                onCheckedChange={
+                  disabled ? undefined : createOnCheckedChange(label)
+                }
                 {...switchProps}
               />
               <Label htmlFor={id}>{label}</Label>
