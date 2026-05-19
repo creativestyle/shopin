@@ -640,7 +640,8 @@
       "assetUnresolved": "Asset (nicht aufgelöst)"
     },
     "video": {
-      "unavailable": "Video nicht verfügbar"
+      "unavailable": "Video nicht verfügbar",
+      "play": "Video abspielen"
     }
   },
   "searchResults": {

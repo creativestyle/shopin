@@ -55,7 +55,7 @@ export function TeaserSliderBlock({
           <CarouselSlide key={index}>
             <div
               className={cn(
-                'flex h-full min-h-[320px] w-full flex-col overflow-hidden rounded-lg bg-gray-100 sm:min-h-[360px] md:min-h-[400px]'
+                'flex h-full w-full flex-col rounded-lg sm:min-h-[360px] sm:pb-4 md:min-h-[400px]'
               )}
             >
               {isHero ? (
@@ -97,33 +97,33 @@ function SliderHeroSlideContent({
   const imageUrl = item.image?.url
   return (
     <section
-      className={cn(
-        'relative h-full min-h-[480px] w-full overflow-hidden sm:min-h-[400px] md:min-h-[400px]',
-        { 'md:aspect-[1920/523]': imageUrl }
-      )}
+      className={cn('relative w-full', {
+        'sm:min-h-[400px] md:aspect-[1920/523] md:min-h-[400px]': imageUrl,
+      })}
       aria-label={item.headline}
     >
       {item.image && (
-        <div className='absolute inset-0'>
+        <div className='relative w-full overflow-hidden rounded-lg bg-gray-100 sm:absolute sm:inset-0'>
           <ContentImage
             image={item.image}
-            fill
-            className='object-cover'
+            fill={false}
+            className='block h-auto w-full sm:absolute sm:inset-0 sm:h-full sm:w-full sm:object-cover'
             sizes='(min-width: 1920px) 1920px, 100vw'
             preload={preload}
           />
         </div>
       )}
       <div
-        className={cn('z-10 flex flex-col items-center justify-end', {
-          'ui-container absolute inset-0 px-4 pb-8 sm:px-6': imageUrl,
-          'relative min-h-[480px] py-12 sm:min-h-[400px] md:min-h-[400px]':
+        className={cn('z-10 flex flex-col items-center', {
+          'sm:absolute sm:inset-0 sm:justify-end sm:px-6': imageUrl,
+          'relative min-h-[400px] py-12 sm:min-h-[400px] md:min-h-[400px]':
             !imageUrl,
         })}
       >
         <div
           className={cn({
-            'glass-filter px-12 py-6 text-center text-white': imageUrl,
+            '-mb-4 glass-filter px-6 py-4 text-center text-white !shadow-none max-sm:mx-4 max-sm:-mt-12 max-sm:mb-0 max-sm:self-stretch sm:w-auto sm:px-12 sm:py-6':
+              imageUrl,
           })}
         >
           {item.headline && (
@@ -134,7 +134,7 @@ function SliderHeroSlideContent({
           {item.body && (
             <p
               className={cn({
-                'mt-2 max-w-xl text-base sm:mt-3 sm:text-lg': imageUrl,
+                'mx-auto mt-2 max-w-xl text-base sm:mt-3 sm:text-lg': imageUrl,
                 'mt-3 max-w-2xl text-lg text-gray-700': !imageUrl,
               })}
             >

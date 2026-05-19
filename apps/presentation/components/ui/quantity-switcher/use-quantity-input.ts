@@ -35,21 +35,25 @@ export function useQuantityInput({
     setInputValue(value.toString())
   }, [value])
 
-  const applyInputValue = useCallback(() => {
-    const numValue = parseInt(inputValue, 10)
-    const validatedValue = validateQuantity(numValue, min, max)
+  const setValidatedInputValue = useCallback(
+    (nextValue: number) => {
+      const validatedValue = validateQuantity(nextValue, min, max)
 
-    // Update input display to match validated value
-    setInputValue(validatedValue.toString())
+      // Keep the displayed value aligned with the validated quantity.
+      setInputValue(validatedValue.toString())
 
-    // Only trigger onChange if value actually changed
-    if (onChange && validatedValue !== value) {
-      onChange(validatedValue)
-    } else if (validatedValue === value) {
-      // Sync with prop value if no change needed
-      setInputValue(value.toString())
-    }
-  }, [inputValue, min, max, onChange, value])
+      // Only notify consumers when validation resolves to a different value.
+      if (validatedValue !== value) {
+        onChange?.(validatedValue)
+      }
+    },
+    [min, max, onChange, value]
+  )
+
+  const handleInputBlur = useCallback(() => {
+    // On blur, commit the typed value through the validation path.
+    setValidatedInputValue(parseInt(inputValue, 10))
+  }, [inputValue, setValidatedInputValue])
 
   const handleInputChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
     // Only update local state - don't trigger onChange callback
@@ -57,13 +61,25 @@ export function useQuantityInput({
     setInputValue(e.target.value)
   }, [])
 
-  const handleInputBlur = useCallback(() => {
-    // On blur, apply the input value
-    applyInputValue()
-  }, [applyInputValue])
+  const stepInputValue = useCallback(
+    (delta: number) => {
+      const numValue = parseInt(inputValue, 10)
+      // Step from the live input value, falling back to min when invalid.
+      setValidatedInputValue(Number.isNaN(numValue) ? min : numValue + delta)
+    },
+    [inputValue, min, setValidatedInputValue]
+  )
 
   const handleInputKeyDown = useCallback(
     (e: KeyboardEvent<HTMLInputElement>): boolean => {
+      const delta = e.key === 'ArrowUp' ? 1 : e.key === 'ArrowDown' ? -1 : null
+
+      if (delta !== null) {
+        e.preventDefault()
+        stepInputValue(delta)
+        return true
+      }
+
       // Handle Enter key - apply the value
       if (e.key === 'Enter') {
         e.preventDefault()
@@ -82,7 +98,7 @@ export function useQuantityInput({
       // Let numeric validation handle other keys
       return false
     },
-    [value]
+    [stepInputValue, value]
   )
 
   return {

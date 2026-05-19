@@ -19,27 +19,28 @@ export function TeaserBannerBlock({
   const hasOverlay = Boolean(backgroundImage?.url)
 
   return (
-    <div className='relative overflow-hidden rounded-lg'>
+    <div className='relative rounded-lg'>
       {backgroundImage && (
-        <div className='relative aspect-[3/1] min-h-[380px] w-full sm:min-h-[320px]'>
+        <div className='relative w-full overflow-hidden rounded-lg sm:aspect-[3/1] sm:min-h-[320px]'>
           <ContentImage
             image={backgroundImage}
-            fill
-            className='object-cover'
+            fill={false}
+            className='block h-auto w-full sm:absolute sm:inset-0 sm:h-full sm:w-full sm:object-cover'
             preload={imagePreload}
             sizes='(min-width: 1920px) 1920px, 100vw'
           />
         </div>
       )}
       <div
-        className={cn('flex flex-col items-center justify-end', {
-          'ui-container absolute inset-0 px-4 pb-8 sm:px-6': hasOverlay,
+        className={cn('flex flex-col items-center', {
+          'sm:absolute sm:inset-0 sm:justify-end sm:px-6': hasOverlay,
           'p-8': !hasOverlay,
         })}
       >
         <div
           className={cn({
-            'glass-filter px-12 py-6 text-center text-white': hasOverlay,
+            '-mb-4 glass-filter px-6 py-4 text-center text-white max-sm:mx-4 max-sm:-mt-12 max-sm:mb-0 max-sm:self-stretch max-sm:!shadow-none sm:w-auto sm:px-12 sm:py-6':
+              hasOverlay,
           })}
         >
           {headline && (
@@ -47,7 +48,7 @@ export function TeaserBannerBlock({
           )}
           {body && (
             <p
-              className={cn('mt-2 max-w-xl', {
+              className={cn('mx-auto mt-2 max-w-xl', {
                 'text-gray-700': !hasOverlay,
               })}
             >
