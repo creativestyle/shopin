@@ -20,6 +20,7 @@ export const ProductCollectionPageResponseSchema = PageResponseSchema.extend({
   priceRange: PriceRangeSchema.optional(),
   categoryTree: z.array(CategoryTreeNodeSchema).optional(),
   currentCategoryId: z.string().optional(),
+  categoryName: z.string().optional(),
 })
 
 export type ProductCollectionPageResponse = z.infer<

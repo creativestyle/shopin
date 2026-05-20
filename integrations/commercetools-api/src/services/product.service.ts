@@ -117,7 +117,7 @@ export class ProductService {
             currentLanguage
           ) || undefined,
         price: mapVariantPriceToShopin(selectedVariant, currentLanguage),
-        gallery: mapVariantToGallery(selectedVariant),
+        gallery: mapVariantToGallery(selectedVariant, name),
         badges,
         // deliveryEstimate is not available from commercetools by default
         configurableOptions,
