@@ -64,6 +64,7 @@ export async function ProductCollectionPage({
   }
 
   const totalPages = Math.ceil(productCollectionData.total / ITEMS_PER_PAGE)
+  const pageTitle = productCollectionData.categoryName ?? slug
 
   return (
     <StandardContainer className='py-4'>
@@ -71,6 +72,7 @@ export async function ProductCollectionPage({
         crumbs={productCollectionData.breadcrumb}
         className='pb-4'
       />
+      <h1 className='sr-only'>{pageTitle}</h1>
       <ProductCollectionContent
         products={productCollectionData.productList}
         facets={productCollectionData.facets}

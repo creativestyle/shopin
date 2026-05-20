@@ -237,7 +237,7 @@ export function DemoDisclaimerModal() {
                   </a>
                   .
                 </p>
-                <p className='text-xs italic text-gray-400'>
+                <p className='text-xs italic text-gray-500'>
                   {t.acknowledgement}
                 </p>
               </div>
