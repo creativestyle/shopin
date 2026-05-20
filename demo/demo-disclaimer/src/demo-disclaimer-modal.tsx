@@ -264,8 +264,12 @@ export function DemoDisclaimerModal() {
 
           {/* Footer */}
           <div className='shrink-0 space-y-4 px-6 pb-6 pt-6'>
-            <label className='flex cursor-pointer items-center gap-3 text-sm text-gray-600'>
+            <label
+              htmlFor='dont-show-again-demo-disclaimer-modal'
+              className='flex cursor-pointer items-center gap-3 text-sm text-gray-600'
+            >
               <CheckboxPrimitive.Root
+                id='dont-show-again-demo-disclaimer-modal'
                 checked={dontShowAgain}
                 onCheckedChange={(checked) =>
                   setDontShowAgain(checked === true)
