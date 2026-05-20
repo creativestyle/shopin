@@ -9,7 +9,7 @@ interface LogoProps {
   className?: string
   alt?: string
   linkAriaLabel?: string
-  priority?: boolean
+  preload?: boolean
 }
 
 export const Logo: React.FC<LogoProps> = ({
@@ -17,7 +17,7 @@ export const Logo: React.FC<LogoProps> = ({
   className,
   alt,
   linkAriaLabel,
-  priority,
+  preload,
 }) => {
   const t = useTranslations('common')
   const resolvedAlt = alt || t('logoAlt')
@@ -36,7 +36,9 @@ export const Logo: React.FC<LogoProps> = ({
           fill
           sizes='200px'
           className='object-contain'
-          priority={priority}
+          {...(preload
+            ? { preload: true, fetchPriority: 'high' as const }
+            : {})}
         />
       </Link>
     </div>
