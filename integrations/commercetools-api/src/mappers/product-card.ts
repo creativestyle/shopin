@@ -18,7 +18,10 @@ export function mapProductToCard(
     slug: mapLocalized(product.slug, currentLanguage) || product.id,
     image: {
       src: masterVariant.images?.[0]?.url || '/images/product-image.png',
-      alt: masterVariant.images?.[0]?.label || 'Product image',
+      alt:
+        masterVariant.images?.[0]?.label ||
+        mapLocalized(product.name, currentLanguage) ||
+        'Product image',
     },
     price,
     badges: mapBadges(

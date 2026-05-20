@@ -62,7 +62,6 @@ function DecoratedPrice({
           variants({ variant, size, className }),
           'order-2 text-right'
         )}
-        aria-label={formattedPrice}
         {...props}
       >
         <span>{formattedPrice}</span>
