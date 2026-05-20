@@ -31,8 +31,7 @@ export async function Header() {
               <Logo
                 className='h-10 w-32 flex-shrink-0'
                 src='/logo.svg'
-                width={130}
-                height={40}
+                priority
               />
             </div>
 
@@ -55,8 +54,7 @@ export async function Header() {
               <Logo
                 className='h-12 w-40 flex-shrink-0'
                 src='/logo.svg'
-                width={150}
-                height={48}
+                priority
               />
             </div>
 

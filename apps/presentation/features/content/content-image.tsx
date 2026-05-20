@@ -36,24 +36,20 @@ export function ContentImage({
   const width = image.width
   const height = image.height
   const useFill = fill || width == null || height == null
+  const eagerProps = preload && {
+    loading: 'eager' as const,
+    fetchPriority: 'high' as const,
+  }
 
   return (
     <Image
       loader={contentImageLoader}
       src={url}
       alt={image.alt}
+      sizes={sizes}
       className={cn({ 'object-cover': useFill }, className)}
-      {...(useFill
-        ? {
-            fill: true,
-            sizes,
-            ...(preload && {
-              preload: true,
-              loading: 'eager',
-              fetchPriority: 'high',
-            }),
-          }
-        : { width: width!, height: height! })}
+      {...(useFill ? { fill: true } : { width: width!, height: height! })}
+      {...eagerProps}
     />
   )
 }
