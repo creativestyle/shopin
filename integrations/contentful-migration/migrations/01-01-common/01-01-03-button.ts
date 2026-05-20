@@ -53,6 +53,15 @@ const definition: ContentTypeDefinition = {
         localized: false,
       },
     },
+    {
+      id: 'size',
+      spec: {
+        type: 'Symbol',
+        name: 'Size',
+        validations: [{ in: ['sm', 'default', 'lg'] }],
+        localized: false,
+      },
+    },
   ],
 }
 
