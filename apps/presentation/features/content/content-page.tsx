@@ -90,8 +90,8 @@ export async function ContentPage({ slug }: ContentPageProps) {
             key={i}
             className={
               i === firstNonHeroIndex
-                ? 'flex flex-col gap-8 pb-4'
-                : 'flex flex-col gap-8 py-4'
+                ? 'flex flex-col gap-8 pb-2 sm:pb-4'
+                : 'flex flex-col gap-8 py-2 sm:py-4'
             }
           >
             <TeaserBlock

@@ -641,7 +641,8 @@
       "assetUnresolved": "Asset (unresolved)"
     },
     "video": {
-      "unavailable": "Video unavailable"
+      "unavailable": "Video unavailable",
+      "play": "Play video"
     }
   },
   "searchResults": {

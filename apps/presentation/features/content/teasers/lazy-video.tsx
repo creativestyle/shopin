@@ -1,6 +1,8 @@
 'use client'
 
 import { useRef, useState, useEffect } from 'react'
+import Image from 'next/image'
+import PlayIcon from '@/public/icons/play.svg'
 import { cn } from '@/lib/utils'
 import { useTranslations } from 'next-intl'
 
@@ -29,7 +31,13 @@ export function LazyVideo({
   const [inView, setInView] = useState(eager)
   const [loaded, setLoaded] = useState(false)
   const [error, setError] = useState(false)
+  const [playing, setPlaying] = useState(false)
   const t = useTranslations('teaser')
+
+  const handlePosterClick = () => {
+    setInView(true)
+    setPlaying(true)
+  }
 
   useEffect(() => {
     if (inView) {
@@ -52,6 +60,12 @@ export function LazyVideo({
     return () => observer.disconnect()
   }, [inView])
 
+  useEffect(() => {
+    if (playing && inView) {
+      ref.current?.play().catch(() => {})
+    }
+  }, [playing, inView])
+
   return (
     <div
       className='relative w-full overflow-hidden rounded-lg'
@@ -66,23 +80,50 @@ export function LazyVideo({
         </div>
       )}
       {!error && (
-        <video
-          ref={ref}
-          src={inView ? src : undefined}
-          poster={poster}
-          autoPlay={autoPlay}
-          muted={muted}
-          loop={autoPlay}
-          controls={controls}
-          preload='none'
-          playsInline={autoPlay && muted}
-          onCanPlay={() => setLoaded(true)}
-          onError={() => setError(true)}
-          className={cn(
-            'absolute inset-0 h-full w-full object-cover',
-            className
+        <>
+          <video
+            ref={ref}
+            src={inView ? src : undefined}
+            autoPlay={autoPlay}
+            muted={muted}
+            loop={autoPlay}
+            controls={controls}
+            preload='none'
+            playsInline={autoPlay && muted}
+            onCanPlay={() => setLoaded(true)}
+            onError={() => setError(true)}
+            className={cn(
+              'absolute inset-0 h-full w-full object-cover',
+              className
+            )}
+          />
+          {poster && !autoPlay && !playing && (
+            <button
+              type='button'
+              className='absolute inset-0 cursor-pointer'
+              onClick={handlePosterClick}
+              aria-label={t('video.play')}
+            >
+              <Image
+                src={poster}
+                alt=''
+                fill
+                className='object-cover'
+                sizes='(min-width: 1920px) 1920px, 100vw'
+                priority={eager}
+                fetchPriority={eager ? 'high' : 'low'}
+              />
+              <span className='absolute inset-0 flex items-center justify-center'>
+                <span className='flex h-16 w-16 items-center justify-center rounded-full bg-black/50 text-white backdrop-blur-sm'>
+                  <PlayIcon
+                    className='h-7 w-7'
+                    aria-hidden='true'
+                  />
+                </span>
+              </span>
+            </button>
           )}
-        />
+        </>
       )}
     </div>
   )

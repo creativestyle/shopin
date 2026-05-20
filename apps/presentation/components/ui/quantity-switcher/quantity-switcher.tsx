@@ -52,8 +52,10 @@ export function QuantitySwitcher({
   return (
     <div
       className={cn(
-        'relative w-25 rounded-full border border-solid border-gray-300 bg-gray-50',
+        'relative w-25 rounded-full border border-solid border-gray-300 transition-colors',
         {
+          'bg-gray-100': disabled,
+          'bg-gray-50 hover:border-gray-700': !disabled,
           'h-12': !className?.includes('h-'),
         },
         className
@@ -67,10 +69,12 @@ export function QuantitySwitcher({
         ariaLabel={`${ariaLabel}: decrease to ${decreaseValue}`}
         position='left'
       >
-        <MinusIcon
-          className='h-full w-full text-gray-700'
-          aria-hidden='true'
-        />
+        {!disabled && (
+          <MinusIcon
+            className='h-full w-full text-gray-700'
+            aria-hidden='true'
+          />
+        )}
       </QuantityButton>
 
       <input
@@ -85,10 +89,13 @@ export function QuantitySwitcher({
         className={cn(
           'absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2',
           'w-8 border-0 bg-transparent outline-none',
-          'text-center text-base font-normal text-gray-700',
+          'text-center text-base font-normal',
           'leading-6',
-          'disabled:cursor-not-allowed disabled:opacity-50',
-          'rounded focus-visible:ring-2 focus-visible:ring-gray-950 focus-visible:ring-offset-2 focus-visible:outline-none'
+          'rounded focus-visible:ring-2 focus-visible:ring-gray-950 focus-visible:ring-offset-2 focus-visible:outline-none',
+          {
+            'cursor-not-allowed text-gray-500': disabled,
+            'text-gray-700': !disabled,
+          }
         )}
         aria-label={`${ariaLabel}: current value is ${value}`}
         aria-valuemin={min}
@@ -105,10 +112,12 @@ export function QuantitySwitcher({
         ariaLabel={`${ariaLabel}: increase to ${increaseValue}`}
         position='right'
       >
-        <PlusIcon
-          className='h-full w-full text-gray-700'
-          aria-hidden='true'
-        />
+        {!disabled && (
+          <PlusIcon
+            className='h-full w-full text-gray-700'
+            aria-hidden='true'
+          />
+        )}
       </QuantityButton>
     </div>
   )

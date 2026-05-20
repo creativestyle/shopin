@@ -19,44 +19,49 @@ export function TeaserBannerBlock({
   const hasOverlay = Boolean(backgroundImage?.url)
 
   return (
-    <div className='relative overflow-hidden rounded-lg'>
+    <div className='relative rounded-lg'>
       {backgroundImage && (
-        <div className='relative aspect-[3/1] min-h-[280px] w-full sm:min-h-[320px]'>
+        <div className='relative w-full overflow-hidden rounded-lg sm:aspect-[3/1] sm:min-h-[320px]'>
           <ContentImage
             image={backgroundImage}
-            fill
-            className='object-cover'
+            fill={false}
+            className='block h-auto w-full sm:absolute sm:inset-0 sm:h-full sm:w-full sm:object-cover'
             preload={imagePreload}
             sizes='(min-width: 1920px) 1920px, 100vw'
           />
-          <div className='absolute inset-0 bg-black/40' />
         </div>
       )}
       <div
-        className={cn('flex flex-col items-center justify-center text-center', {
-          'absolute inset-0 p-6 text-white': hasOverlay,
+        className={cn('flex flex-col items-center', {
+          'sm:absolute sm:inset-0 sm:justify-end sm:px-6': hasOverlay,
           'p-8': !hasOverlay,
         })}
       >
-        {headline && (
-          <h2 className='text-2xl font-bold md:text-3xl'>{headline}</h2>
-        )}
-        {body && (
-          <p
-            className={cn('mt-2 max-w-xl', {
-              'opacity-90': hasOverlay,
-              'text-gray-700': !hasOverlay,
-            })}
-          >
-            {body}
-          </p>
-        )}
-        {cta?.link?.url && (
-          <CmsButton
-            cta={cta}
-            className='mt-4'
-          />
-        )}
+        <div
+          className={cn({
+            '-mb-4 glass-filter px-6 py-4 text-center text-white max-sm:mx-4 max-sm:-mt-12 max-sm:mb-0 max-sm:self-stretch max-sm:!shadow-none sm:w-auto sm:px-12 sm:py-6':
+              hasOverlay,
+          })}
+        >
+          {headline && (
+            <h2 className='text-2xl font-bold md:text-3xl'>{headline}</h2>
+          )}
+          {body && (
+            <p
+              className={cn('mx-auto mt-2 max-w-xl', {
+                'text-gray-700': !hasOverlay,
+              })}
+            >
+              {body}
+            </p>
+          )}
+          {cta?.link?.url && (
+            <CmsButton
+              cta={cta}
+              className='mt-4'
+            />
+          )}
+        </div>
       </div>
     </div>
   )
