@@ -9,6 +9,8 @@ interface FieldContextValue {
   errorId?: string
   descriptionId?: string
   isInvalid?: boolean
+  hasDescription?: boolean
+  hasError?: boolean
 }
 
 const FieldContext = createContext<FieldContextValue | null>(null)
@@ -36,14 +38,14 @@ function useFieldValidation(options?: {
 
   let describedBy = options?.ariaDescribedBy
   if (!describedBy) {
-    const ids: (string | undefined)[] = []
-    if (context?.isInvalid && context.errorId) {
+    const ids: string[] = []
+    if (context?.isInvalid && context.hasError && context.errorId) {
       ids.push(context.errorId)
     }
-    if (context?.descriptionId) {
+    if (context?.hasDescription && context.descriptionId) {
       ids.push(context.descriptionId)
     }
-    describedBy = ids.filter(Boolean).join(' ')
+    describedBy = ids.join(' ') || undefined
   }
 
   return { isInvalid, describedBy }
@@ -110,6 +112,15 @@ const fieldVariants = cva(
   }
 )
 
+function hasChildOfType(
+  children: React.ReactNode,
+  Component: React.ElementType
+): boolean {
+  return React.Children.toArray(children).some(
+    (child) => React.isValidElement(child) && child.type === Component
+  )
+}
+
 function Field({
   className,
   orientation = 'vertical',
@@ -123,10 +134,18 @@ function Field({
   const errorId = `field-error-${baseId}`
   const descriptionId = `field-description-${baseId}`
   const isInvalid = props['data-invalid'] === true
-
+  const hasDescription = hasChildOfType(props.children, FieldDescription)
+  const hasError = hasChildOfType(props.children, FieldError)
   const contextValue = useMemo(
-    () => ({ inputId, errorId, descriptionId, isInvalid }),
-    [inputId, errorId, descriptionId, isInvalid]
+    () => ({
+      inputId,
+      errorId,
+      descriptionId,
+      isInvalid,
+      hasDescription,
+      hasError,
+    }),
+    [inputId, errorId, descriptionId, isInvalid, hasDescription, hasError]
   )
   return (
     <FieldContext.Provider value={contextValue}>

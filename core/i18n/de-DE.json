@@ -129,6 +129,7 @@
     },
     "filters": {
       "drawerTitle": "Filtern",
+      "dialogDescription": "Produktliste nach Sortierung, Filtern, Preisbereich und Sale-Status verfeinern.",
       "saleOnly": "Nur Sale %",
       "searchByName": "Nach Name suchen",
       "priceRange": "Preis",
@@ -199,6 +200,7 @@
     },
     "addToCartModal": {
       "toastMessage": "Gute Wahl. Artikel wurde zum Warenkorb hinzugefügt.",
+      "dialogDescription": "Warenkorbinhalt nach dem Hinzufügen eines Artikels überprüfen.",
       "moreProducts": "Mehr Produkte",
       "goToCart": "Zum Warenkorb"
     },

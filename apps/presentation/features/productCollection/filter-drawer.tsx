@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl'
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
@@ -109,6 +110,9 @@ export function FilterDrawer({
           <DialogTitle className='text-base font-bold text-gray-950'>
             {t('filters.drawerTitle')}
           </DialogTitle>
+          <DialogDescription className='sr-only'>
+            {t('filters.dialogDescription' as Parameters<typeof t>[0])}
+          </DialogDescription>
           <Button
             type='button'
             variant='tertiary'
@@ -149,14 +153,17 @@ export function FilterDrawer({
                     return (
                       <label
                         key={option.value}
-                        htmlFor={radioId}
                         className='flex cursor-pointer items-center gap-3'
                       >
                         <RadioGroupItem
                           id={radioId}
                           value={option.value}
+                          aria-labelledby={`${radioId}-label`}
                         />
-                        <span className='text-sm text-gray-700'>
+                        <span
+                          id={`${radioId}-label`}
+                          className='text-sm text-gray-700'
+                        >
                           {option.label}
                         </span>
                       </label>
@@ -185,8 +192,9 @@ export function FilterDrawer({
             )}
           </Accordion>
 
-          <div className='flex items-center justify-between border-t border-gray-200 pt-4'>
+          <label className='flex cursor-pointer items-center justify-between border-t border-gray-200 pt-4'>
             <span
+              id='filter-drawer-sale-only-label'
               className={`text-sm ${saleOnly ? 'font-bold' : 'font-normal'} text-gray-950`}
             >
               {t('filters.saleOnly' as Parameters<typeof t>[0])}
@@ -195,8 +203,9 @@ export function FilterDrawer({
               checked={saleOnly}
               onCheckedChange={onSaleOnlyToggle}
               scheme='gray'
+              aria-labelledby='filter-drawer-sale-only-label'
             />
-          </div>
+          </label>
         </div>
 
         <FilterDrawerFooter

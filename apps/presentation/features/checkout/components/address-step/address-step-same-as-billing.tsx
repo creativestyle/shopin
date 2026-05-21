@@ -76,22 +76,23 @@ export function AddressStepSameAsBilling({
 
   return (
     <>
-      <div className='mb-6 flex items-start gap-3'>
+      <label className='mb-6 flex cursor-pointer items-start gap-3'>
         <Checkbox
           id='same-as-billing-shipping'
+          aria-labelledby='same-as-billing-shipping-label'
           checked={sameAsBilling}
           onCheckedChange={(checked) =>
             handleSameAsBillingChange(checked === true)
           }
           className='shrink-0'
         />
-        <label
-          htmlFor='same-as-billing-shipping'
-          className='cursor-pointer text-sm/[1.6] text-gray-700'
+        <span
+          id='same-as-billing-shipping-label'
+          className='text-sm/[1.6] text-gray-700'
         >
           {tCheckout('shipping.sameAsBilling')}
-        </label>
-      </div>
+        </span>
+      </label>
 
       {sameAsBilling && (
         <AddressStepContinueButton

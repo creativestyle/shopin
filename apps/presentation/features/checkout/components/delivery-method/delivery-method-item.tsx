@@ -28,14 +28,15 @@ export function DeliveryMethodItem({
       )}
     >
       <div className='flex items-center justify-between gap-3'>
-        <div className='flex flex-1 items-center gap-3'>
+        <label className='flex flex-1 cursor-pointer items-center gap-3'>
           <RadioGroupItem
             value={method.id}
             id={`shipping-method-${method.id}`}
+            aria-labelledby={`shipping-method-${method.id}-label`}
             className='shrink-0'
           />
-          <label
-            htmlFor={`shipping-method-${method.id}`}
+          <span
+            id={`shipping-method-${method.id}-label`}
             className='flex flex-1'
           >
             <DeliveryMethodLabel
@@ -45,8 +46,8 @@ export function DeliveryMethodItem({
               freeAboveInCents={method.freeAbove?.centAmount}
               freeAboveCurrency={method.freeAbove?.currencyCode}
             />
-          </label>
-        </div>
+          </span>
+        </label>
       </div>
     </div>
   )
