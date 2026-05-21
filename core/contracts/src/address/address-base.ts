@@ -34,12 +34,7 @@ export const AddressBaseSchema = z.object({
   postalCode: z.string().min(1, 'address.errors.postalCodeRequired').optional(),
   city: z.string().min(1, 'address.errors.cityRequired').optional(),
   country: z.string().min(2, 'address.errors.countryRequired').optional(),
-  email: z
-    .union([
-      z.literal(''), // allow empty string to be used as email
-      z.email('address.errors.emailInvalid'),
-    ])
-    .optional(),
+  email: z.email('address.errors.emailInvalid').optional(),
   isDefaultShipping: z.boolean().optional(),
   isDefaultBilling: z.boolean().optional(),
 })
