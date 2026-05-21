@@ -31,8 +31,8 @@ export function useAddToCart() {
         quantity,
       })
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: cartKeys.all })
+    onSuccess: (data) => {
+      queryClient.setQueryData(cartKeys.all, data)
       setOpen(true)
     },
   })
