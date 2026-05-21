@@ -24,10 +24,10 @@ export function CheckboxFilterOptions({
 }: CheckboxFilterOptionsProps) {
   return (
     <div className='flex flex-col gap-3'>
-      {terms.map((term) => {
+      {terms.map((term, index) => {
         const isSelected = selectedValues.includes(term.term)
         const termSlug = slugForId(term.term)
-        const checkboxId = `filter-${facetName}-${termSlug}`
+        const checkboxId = `filter-${facetName}-${termSlug}-${index}`
         const labelId = `${checkboxId}-label`
         return (
           <label
