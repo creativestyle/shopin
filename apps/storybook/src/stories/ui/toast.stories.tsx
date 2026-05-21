@@ -265,6 +265,34 @@ const scenarios: ToastScenario[] = [
     trackState: true,
   },
   {
+    id: 9,
+    title: 'Short custom duration (3 s)',
+    description:
+      'Custom duration prop overrides the 7 s default — closes after 3 seconds.',
+    config: {
+      id: 9,
+      type: 'info',
+      duration: 3000,
+      children: 'This toast closes after 3 seconds (custom duration).',
+    },
+    trackState: true,
+  },
+  {
+    id: 10,
+    title: 'Error with short duration (5 s)',
+    description:
+      'Custom duration prop overrides the 15 s error default — closes after 5 seconds.',
+    config: {
+      id: 10,
+      type: 'error',
+      duration: 5000,
+      critical: true,
+      withCloseButton: true,
+      children: 'This error toast closes after 5 seconds (custom duration).',
+    },
+    trackState: true,
+  },
+  {
     id: 8,
     title: 'Toast without icon',
     description: 'Custom content with no leading icon.',
