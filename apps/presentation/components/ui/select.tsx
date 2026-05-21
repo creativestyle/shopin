@@ -13,6 +13,7 @@ type SelectA11yContextValue = {
   ariaRequired?: boolean
   ariaDescribedBy?: string
   invalid?: boolean
+  isOpen?: boolean
 }
 const SelectA11yContext = React.createContext<SelectA11yContextValue | null>(
   null
@@ -39,14 +40,31 @@ function SelectRoot({
   ariaRequired,
   ariaDescribedBy,
   invalid,
+  open: openProp,
+  defaultOpen,
+  onOpenChange,
   ...props
 }: SelectRootProps) {
+  const [internalOpen, setInternalOpen] = React.useState(defaultOpen ?? false)
+  const isOpen = openProp ?? internalOpen
+
+  const handleOpenChange = React.useCallback(
+    (nextOpen: boolean) => {
+      setInternalOpen(nextOpen)
+      onOpenChange?.(nextOpen)
+    },
+    [onOpenChange]
+  )
+
   return (
     <SelectA11yContext.Provider
-      value={{ ariaRequired, ariaDescribedBy, invalid }}
+      value={{ ariaRequired, ariaDescribedBy, invalid, isOpen }}
     >
       <SelectPrimitive.Root
         data-slot='select'
+        open={openProp}
+        defaultOpen={defaultOpen}
+        onOpenChange={handleOpenChange}
         {...props}
       >
         {children}
@@ -99,11 +117,23 @@ function SelectTrigger({
   const effectiveAriaRequired = ariaRequired ?? a11yContext?.ariaRequired
   const effectiveAriaDescribedBy =
     ariaDescribedBy ?? a11yContext?.ariaDescribedBy
+  const isOpen = a11yContext?.isOpen ?? false
+
+  const triggerRef = React.useRef<HTMLButtonElement>(null)
+  React.useEffect(() => {
+    const el = triggerRef.current
+    if (!el || isOpen) {
+      return
+    }
+    el.removeAttribute('aria-controls')
+  }, [isOpen])
 
   return (
     <SelectPrimitive.Trigger
+      ref={triggerRef}
       data-slot='select-trigger'
       data-size={size}
+      aria-label={label || undefined}
       aria-required={effectiveAriaRequired || undefined}
       aria-invalid={effectiveInvalid || undefined}
       aria-describedby={effectiveAriaDescribedBy || undefined}
