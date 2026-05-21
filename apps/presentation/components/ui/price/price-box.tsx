@@ -5,7 +5,7 @@ import { DecoratedPrice } from './decorated-price'
 import { FormattedPrice } from './formatted-price'
 import type { DetailedPriceResponse } from '@core/contracts/core/detailed-price'
 
-const priceBoxVariants = cva('flex flex-col items-start whitespace-nowrap', {
+const priceBoxVariants = cva('flex flex-row items-start whitespace-nowrap', {
   variants: {
     size: {
       small: 'text-base/none',
@@ -54,10 +54,30 @@ function PriceBox({
   return (
     <div>
       <div
-        className={cn(priceBoxVariants({ size, variant, className }))}
+        className={cn(
+          priceBoxVariants({ size, variant, className }),
+          'flex items-center gap-2'
+        )}
         {...props}
       >
         {header && <span className='font-bold italic'>{header}</span>}
+
+        {price.regularUnitPriceInCents && (
+          <FormattedPrice
+            regularUnitPrice={price.regularUnitPriceInCents}
+            currency={price.currency}
+            fractionDigits={price.fractionDigits}
+            unit={price.unit}
+            locale={locale}
+            className={cn(
+              {
+                'mt-1': size === 'small',
+                'mt-1.5': size !== 'small',
+              },
+              'text-xs/[1.6]'
+            )}
+          />
+        )}
 
         <DecoratedPrice
           price={
@@ -76,6 +96,19 @@ function PriceBox({
           taxNote={footer}
         />
 
+        {price.discountedPriceInCents !== undefined &&
+          price.omnibusPriceInCents !== undefined &&
+          omnibusPriceLabel && (
+            <FormattedPrice
+              value={price.omnibusPriceInCents}
+              currency={price.currency}
+              fractionDigits={price.fractionDigits}
+              prefix={`${omnibusPriceLabel}`}
+              locale={locale}
+              className='mt-0.5 text-xs/[1.6]'
+            />
+          )}
+
         {footer && <span className='sr-only'>{footer}</span>}
       </div>
 
@@ -90,36 +123,6 @@ function PriceBox({
             className='mt-1 text-xs/[1.6]'
           />
         )}
-
-      {price.discountedPriceInCents !== undefined &&
-        price.omnibusPriceInCents !== undefined &&
-        omnibusPriceLabel && (
-          <FormattedPrice
-            value={price.omnibusPriceInCents}
-            currency={price.currency}
-            fractionDigits={price.fractionDigits}
-            prefix={`${omnibusPriceLabel}`}
-            locale={locale}
-            className='mt-0.5 text-xs/[1.6]'
-          />
-        )}
-
-      {price.regularUnitPriceInCents && (
-        <FormattedPrice
-          regularUnitPrice={price.regularUnitPriceInCents}
-          currency={price.currency}
-          fractionDigits={price.fractionDigits}
-          unit={price.unit}
-          locale={locale}
-          className={cn(
-            {
-              'mt-1': size === 'small',
-              'mt-1.5': size !== 'small',
-            },
-            'text-xs/[1.6]'
-          )}
-        />
-      )}
     </div>
   )
 }

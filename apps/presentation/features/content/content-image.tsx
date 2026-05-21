@@ -18,8 +18,9 @@ type Props = {
  * Uses next/image with a loader that builds URLs (e.g. Contentful w/q/fm);
  * integrations pass a single base URL. Next.js calls the loader per width for srcset.
  *
- * Loading: next/image defaults to loading="lazy". When preload is true we also set
- * loading="eager" so the image loads immediately (LCP / above-the-fold).
+ * When `preload` is true, Next 16's `preload` prop is forwarded, which injects a
+ * `<link rel="preload">` into `<head>`, and `fetchPriority="high"` is set on the
+ * rendered img element (required for Lighthouse LCP audits).
  */
 export function ContentImage({
   image,
@@ -42,18 +43,10 @@ export function ContentImage({
       loader={contentImageLoader}
       src={url}
       alt={image.alt}
+      sizes={sizes}
       className={cn({ 'object-cover': useFill }, className)}
-      {...(useFill
-        ? {
-            fill: true,
-            sizes,
-            ...(preload && {
-              preload: true,
-              loading: 'eager',
-              fetchPriority: 'high',
-            }),
-          }
-        : { width: width!, height: height! })}
+      {...(useFill ? { fill: true } : { width: width!, height: height! })}
+      {...(preload ? { preload: true, fetchPriority: 'high' as const } : {})}
     />
   )
 }

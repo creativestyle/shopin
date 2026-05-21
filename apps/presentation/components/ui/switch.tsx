@@ -7,15 +7,15 @@ import { cva, type VariantProps } from 'class-variance-authority'
 import { cn } from '@/lib/utils'
 
 const switchSchemes = cva(
-  'peer -mt-px inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border-2 p-1 transition-all outline-none focus-visible:ring-1 disabled:cursor-not-allowed disabled:!border-gray-400 disabled:!bg-gray-400 data-[state=unchecked]:bg-white disabled:[&>span]:!bg-gray-200 disabled:[&>span[data-state=checked]]:!bg-white',
+  'peer -mt-px inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border-2 p-1 transition-all outline-none focus-visible:ring-1 disabled:cursor-not-allowed data-[state=unchecked]:bg-white',
   {
     variants: {
       scheme: {
         primary:
-          'focus-visible:ring-primary/30 data-[state=checked]:border-primary data-[state=checked]:bg-primary data-[state=unchecked]:border-gray-500 data-[state=unchecked]:hover:enabled:border-primary [&:hover:enabled>span[data-state=unchecked]]:bg-primary',
+          'focus-visible:ring-primary/30 disabled:!border-gray-400 disabled:!bg-gray-400 data-[state=checked]:border-primary data-[state=checked]:bg-primary data-[state=unchecked]:border-gray-500 data-[state=unchecked]:hover:enabled:border-primary [&:hover:enabled>span[data-state=unchecked]]:bg-primary disabled:[&>span]:!bg-gray-200 disabled:[&>span[data-state=checked]]:!bg-white',
         accent:
-          'focus-visible:ring-accent/30 data-[state=checked]:border-accent data-[state=checked]:bg-accent data-[state=unchecked]:border-gray-500 data-[state=unchecked]:hover:enabled:border-accent [&:hover:enabled>span[data-state=unchecked]]:bg-accent',
-        gray: 'focus-visible:ring-gray-700/30 data-[state=checked]:border-gray-700 data-[state=checked]:bg-gray-700 data-[state=unchecked]:border-gray-300 data-[state=unchecked]:!bg-gray-50 data-[state=unchecked]:hover:enabled:border-gray-700 [&:hover:enabled>span[data-state=unchecked]]:bg-gray-700',
+          'focus-visible:ring-accent/30 disabled:!border-gray-400 disabled:!bg-gray-400 data-[state=checked]:border-accent data-[state=checked]:bg-accent data-[state=unchecked]:border-gray-500 data-[state=unchecked]:hover:enabled:border-accent [&:hover:enabled>span[data-state=unchecked]]:bg-accent disabled:[&>span]:!bg-gray-200 disabled:[&>span[data-state=checked]]:!bg-white',
+        gray: 'focus-visible:ring-gray-700/30 data-[state=checked]:border-gray-700 data-[state=checked]:bg-gray-700 disabled:data-[state=checked]:!border-gray-100 disabled:data-[state=checked]:!bg-gray-100 data-[state=unchecked]:border-gray-300 data-[state=unchecked]:!bg-gray-50 data-[state=unchecked]:hover:enabled:border-gray-700 disabled:data-[state=unchecked]:!border-gray-100 disabled:data-[state=unchecked]:!bg-gray-100 [&:hover:enabled>span[data-state=unchecked]]:bg-gray-700 disabled:[&>span]:!bg-gray-300 disabled:[&>span[data-state=checked]]:!bg-gray-300',
       },
     },
     defaultVariants: {
@@ -35,7 +35,7 @@ const thumbSchemes = cva(
       },
     },
     defaultVariants: {
-      scheme: 'primary',
+      scheme: 'gray',
     },
   }
 )

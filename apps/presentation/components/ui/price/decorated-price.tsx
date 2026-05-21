@@ -50,7 +50,7 @@ function DecoratedPrice({
   return (
     <div className='flex flex-wrap items-baseline justify-end gap-1'>
       {originalPrice !== undefined && (
-        <span className='order-2 text-right text-sm/[1.6] text-gray-500 line-through'>
+        <span className='order-1 text-right text-sm/[1.6] text-gray-500 line-through'>
           {formatPriceWithPrefix(originalPrice, locale, {
             currency,
             fractionDigits,
@@ -60,9 +60,8 @@ function DecoratedPrice({
       <span
         className={cn(
           variants({ variant, size, className }),
-          'order-1 text-right'
+          'order-2 text-right'
         )}
-        aria-label={formattedPrice}
         {...props}
       >
         <span>{formattedPrice}</span>

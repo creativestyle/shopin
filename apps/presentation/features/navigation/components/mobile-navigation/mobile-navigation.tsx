@@ -105,14 +105,11 @@ export function MobileNavigation({
           )}
 
           {currentLevel === 1 ? (
-            <div className='h-10 w-32'>
-              <Logo
-                src='/logo.svg'
-                alt='Logo'
-                width={130}
-                height={40}
-              />
-            </div>
+            <Logo
+              src='/logo.svg'
+              alt='Logo'
+              className='h-10 w-32'
+            />
           ) : currentLevel === 2 ? (
             <span className='max-w-50 truncate text-base font-normal'>
               {selectedCategory?.text}

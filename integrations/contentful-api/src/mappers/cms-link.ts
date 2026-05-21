@@ -49,5 +49,6 @@ export function mapButtonEntryToCmsButton(
     link,
     variant: cta.variant ?? undefined,
     style: cta.style ?? undefined,
+    size: cta.size ?? undefined,
   })
 }

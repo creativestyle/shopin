@@ -12,11 +12,12 @@ export const LinkEntryApiResponseSchema = z.object({
   target: z.string().optional().nullable(),
 })
 
-/** Button entry (link + variant + style). Variant/style only on Button. */
+/** Button entry (link + variant + style + size). Variant/style/size only on Button. */
 export const ButtonEntryApiResponseSchema = z.object({
   link: LinkEntryApiResponseSchema.optional().nullable(),
   variant: z.string().optional().nullable(),
   style: z.string().optional().nullable(),
+  size: z.string().optional().nullable(),
 })
 
 export type LinkEntryApiResponse = z.infer<typeof LinkEntryApiResponseSchema>

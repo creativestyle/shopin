@@ -9,8 +9,7 @@ interface LogoProps {
   className?: string
   alt?: string
   linkAriaLabel?: string
-  width?: number
-  height?: number
+  preload?: boolean
 }
 
 export const Logo: React.FC<LogoProps> = ({
@@ -18,8 +17,7 @@ export const Logo: React.FC<LogoProps> = ({
   className,
   alt,
   linkAriaLabel,
-  width,
-  height,
+  preload,
 }) => {
   const t = useTranslations('common')
   const resolvedAlt = alt || t('logoAlt')
@@ -35,12 +33,12 @@ export const Logo: React.FC<LogoProps> = ({
         <Image
           src={src}
           alt={resolvedAlt}
-          width={width || 165}
-          height={height || 146}
-          className='h-full w-auto object-contain'
-          preload
-          loading='eager'
-          fetchPriority='high'
+          fill
+          sizes='200px'
+          className='object-contain'
+          {...(preload
+            ? { preload: true, fetchPriority: 'high' as const }
+            : {})}
         />
       </Link>
     </div>

@@ -5,6 +5,7 @@ export const ButtonEntryFragment = gql`
   fragment ButtonEntryFragment on Button {
     variant
     style
+    size
     link {
       ...LinkEntryFragment
     }

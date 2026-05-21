@@ -114,8 +114,6 @@ export function SearchPopup({ open, onOpenChange }: SearchPopupProps) {
                 <Logo
                   src='/logo.svg'
                   className='h-12 w-40'
-                  width={150}
-                  height={48}
                 />
               </div>
               <DialogPrimitive.Close className='flex cursor-pointer items-center justify-center text-gray-950 lg:hidden'>

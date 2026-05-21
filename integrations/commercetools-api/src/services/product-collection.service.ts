@@ -14,7 +14,8 @@ import {
   DEFAULT_SORT_OPTION,
   type SortOption,
 } from '@config/constants'
-import type { Category } from '@commercetools/platform-sdk'
+import type { Category, LocalizedString } from '@commercetools/platform-sdk'
+import { getLocalizedString } from '../helpers/get-localized-string'
 import {
   buildQueryFilters,
   buildPostFilters,
@@ -175,6 +176,9 @@ export class ProductCollectionService {
       priceRange,
       categoryTree,
       currentCategoryId: categoryId,
+      categoryName:
+        getLocalizedString(category.name as LocalizedString, currentLanguage) ||
+        undefined,
     }
   }
 }
