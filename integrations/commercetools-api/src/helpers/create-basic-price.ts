@@ -1,43 +1,33 @@
 import type { BasicPriceResponse } from '@core/contracts/core/basic-price'
 
 export interface CreateBasicPriceOptions {
-  currency?: string
+  currency: string
   discountedPriceInCents?: number
   recommendedRetailPriceInCents?: number
   omnibusPriceInCents?: number
   fractionDigits?: number
 }
 
-/**
- * Creates a BasicPriceResponse object with standard fraction digits.
- * Returns undefined if the amount is undefined (useful for optional price fields).
- *
- * @param regularPriceInCents - The price amount in cents (can be undefined)
- * @param options - Optional configuration for the price object
- * @returns A BasicPriceResponse object, or undefined if amount is not provided
- */
 export function createBasicPrice(
   regularPriceInCents: number | undefined,
-  options?: CreateBasicPriceOptions
+  options: CreateBasicPriceOptions
 ): BasicPriceResponse | undefined {
   if (regularPriceInCents === undefined) {
     return undefined
   }
 
-  const opts = options || {}
-
   return {
     regularPriceInCents,
-    fractionDigits: opts.fractionDigits ?? 2,
-    ...(opts.currency && { currency: opts.currency }),
-    ...(opts.discountedPriceInCents !== undefined && {
-      discountedPriceInCents: opts.discountedPriceInCents,
+    currency: options.currency,
+    fractionDigits: options.fractionDigits ?? 2,
+    ...(options.discountedPriceInCents !== undefined && {
+      discountedPriceInCents: options.discountedPriceInCents,
     }),
-    ...(opts.recommendedRetailPriceInCents !== undefined && {
-      recommendedRetailPriceInCents: opts.recommendedRetailPriceInCents,
+    ...(options.recommendedRetailPriceInCents !== undefined && {
+      recommendedRetailPriceInCents: options.recommendedRetailPriceInCents,
     }),
-    ...(opts.omnibusPriceInCents !== undefined && {
-      omnibusPriceInCents: opts.omnibusPriceInCents,
+    ...(options.omnibusPriceInCents !== undefined && {
+      omnibusPriceInCents: options.omnibusPriceInCents,
     }),
   }
 }

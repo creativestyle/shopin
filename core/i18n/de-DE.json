@@ -23,6 +23,7 @@
     "hidePassword": "Passwort ausblenden",
     "showPassword": "Passwort anzeigen",
     "viewAll": "Alle anzeigen",
+    "logoAlt": "Shopin Logo",
     "navigation": "Navigation",
     "mobileNavigationMenu": "Mobile Navigation Menü",
     "toggleMobileMenu": "Mobile Menü umschalten",
@@ -36,7 +37,13 @@
       "DE": "Deutschland",
       "FR": "Frankreich",
       "GB": "Vereinigtes Königreich",
-      "US": "Vereinigte Staaten"
+      "US": "Vereinigte Staaten",
+      "CA": "Kanada",
+      "AT": "Österreich",
+      "CH": "Schweiz",
+      "NL": "Niederlande",
+      "BE": "Belgien",
+      "LU": "Luxemburg"
     },
     "loading": "Lädt...",
     "loadingAriaLabel": "Lädt...",
@@ -47,8 +54,20 @@
       "validationFailed": "Bitte überprüfen Sie Ihre Eingabe."
     }
   },
+  "notFound": {
+    "title": "Seite nicht gefunden",
+    "description": "Die gesuchte Seite existiert nicht oder wurde verschoben.",
+    "backHome": "Zurück zur Startseite"
+  },
   "topBar": {
     "ariaLabel": "Siteweite Ankündigung"
+  },
+  "languageSwitcher": {
+    "ariaLabel": "Sprache auswählen",
+    "current": "Aktuelle Sprache: {language}",
+    "change": "Sprache wechseln",
+    "shipTo": "Lieferung nach",
+    "footerTitle": "Region und Sprache"
   },
   "userMenu": {
     "storeLocator": "Store Locator",
@@ -527,6 +546,7 @@
     "currentPageAriaLabel": "Seite {currentPage} von {totalPages}"
   },
   "checkout": {
+    "logoAlt": "Shopin Logo",
     "breadcrumb": "Kasse",
     "title": "Kasse",
     "accountSelectionTitle": "Kontoauswahl",
@@ -551,6 +571,7 @@
       "saving": "Wird gespeichert...",
       "noAddress": "Keine Versandadresse gesetzt",
       "sameAsBilling": "Die Lieferadresse entspricht der Rechnungsadresse",
+      "sameAsBillingCountryError": "Das Land der Rechnungsadresse ist für den Versand mit diesem Store nicht verfügbar. Bitte geben Sie eine Versandadresse manuell ein.",
       "saveError": "Fehler beim Speichern der Versandadresse. Bitte versuchen Sie es erneut."
     },
     "deliveryMethod": {

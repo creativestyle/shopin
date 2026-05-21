@@ -33,6 +33,11 @@ export const ProductCollectionResponseSchema = z.object({
   categoryTree: z.array(CategoryTreeNodeSchema).optional(),
   currentCategoryId: z.string().optional(),
   categoryName: z.string().optional(),
+  /**
+   * Category slug per RFC 5646 locale (e.g. { 'en-US': 'shoes', 'de-DE': 'schuhe' }).
+   * Used by the language switcher to resolve the localized category URL.
+   */
+  slugByLocale: z.record(z.string(), z.string()).optional(),
 })
 
 export type ProductCollectionResponse = z.infer<

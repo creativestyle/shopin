@@ -12,11 +12,11 @@ function buildSlugByLocale(
   page: PageItemApiResponse
 ): Record<string, string> | undefined {
   const out: Record<string, string> = {}
-  for (const locale of I18N_CONFIG.supportedLanguages) {
+  for (const locale of I18N_CONFIG.supportedLocales) {
     const s = page[localeSlugKey(locale) as keyof PageItemApiResponse]
     out[locale] = typeof s === 'string' && s ? s : page.slug
   }
-  const allSame = I18N_CONFIG.supportedLanguages.every(
+  const allSame = I18N_CONFIG.supportedLocales.every(
     (locale) => out[locale] === page.slug
   )
   return allSame ? undefined : out

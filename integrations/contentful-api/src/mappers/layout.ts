@@ -130,7 +130,7 @@ export function mapFooterItemToFooterResponse(
         }
       : undefined,
     paymentMethods,
-    language: optionalString(footer.languageTitle)
+    country: optionalString(footer.languageTitle)
       ? { title: optionalString(footer.languageTitle) ?? '' }
       : undefined,
   }

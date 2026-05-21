@@ -7,9 +7,14 @@ import type { AddressBase } from '@core/contracts/address/address-base'
 
 function getInitialSameAsBillingState(
   billingAddress: AddressBase | undefined,
-  shippingAddress: AddressBase | undefined
+  shippingAddress: AddressBase | undefined,
+  countries: readonly string[]
 ): boolean {
   if (!billingAddress) {
+    return false
+  }
+
+  if (billingAddress.country && !countries.includes(billingAddress.country)) {
     return false
   }
 
@@ -20,13 +25,13 @@ function getInitialSameAsBillingState(
   return addressesMatch(shippingAddress, billingAddress)
 }
 
-export function useSameAsBilling() {
+export function useSameAsBilling(countries: readonly string[]) {
   const { cart } = useCart()
   const billingAddress = cart?.billingAddress
   const shippingAddress = cart?.shippingAddress
 
   const [sameAsBilling, setSameAsBilling] = useState(() =>
-    getInitialSameAsBillingState(billingAddress, shippingAddress)
+    getInitialSameAsBillingState(billingAddress, shippingAddress, countries)
   )
 
   return {

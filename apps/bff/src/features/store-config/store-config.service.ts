@@ -1,8 +1,8 @@
-import { Injectable } from '@nestjs/common'
+import { Injectable, Scope } from '@nestjs/common'
 import type { StoreConfigResponse } from '@core/contracts/store-config/store-config'
 import { DataSourceFactory } from '../../data-source/data-source.factory'
 
-@Injectable()
+@Injectable({ scope: Scope.REQUEST })
 export class StoreConfigService {
   constructor(private readonly dataSourceFactory: DataSourceFactory) {}
 

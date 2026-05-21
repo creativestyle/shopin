@@ -1,4 +1,4 @@
-import { Injectable, Inject } from '@nestjs/common'
+import { Injectable, Inject, Scope } from '@nestjs/common'
 import { COMMERCETOOLS_CLIENT, Client } from '../client/client.module'
 import { LANGUAGE_TOKEN, LanguageTagUtils } from '@core/i18n'
 import type { LanguageProvider } from '@apps/bff/src/common/language/language.provider'
@@ -7,7 +7,7 @@ import { I18N_CONFIG } from '@config/constants'
 import { CategoryPagedQueryApiResponseSchema } from '../schemas/category'
 import { buildCategoryTree, mapCategoryToLink } from '../mappers/navigation'
 
-@Injectable()
+@Injectable({ scope: Scope.REQUEST })
 export class NavigationService {
   constructor(
     @Inject(COMMERCETOOLS_CLIENT) private readonly client: Client,
@@ -19,7 +19,7 @@ export class NavigationService {
     // Commercetools uses underscores for query parameters (en_US) but hyphens for data keys (en-US)
     const queryLocale = LanguageTagUtils.toUnderscoreKey(currentLanguage)
     const dataLocale = currentLanguage
-    const fallbackLocale = I18N_CONFIG.fallbackLanguage
+    const fallbackLocale = I18N_CONFIG.defaultLocale
 
     // Fetch all categories (including children) - up to 500 for navigation
     const response = await this.client

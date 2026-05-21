@@ -9,6 +9,7 @@ const meta: Meta<typeof PriceBox> = {
     price: {
       regularPriceInCents: 1955,
       discountedPriceInCents: 1599,
+      currency: 'EUR',
     },
   },
 }
@@ -67,6 +68,7 @@ export const DisabledPrice: Story = {
     price: {
       regularPriceInCents: 1999,
       discountedPriceInCents: 1599,
+      currency: 'EUR',
     },
     size: 'medium',
     disabled: true,
