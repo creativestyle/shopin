@@ -130,6 +130,7 @@
     },
     "filters": {
       "drawerTitle": "Filters",
+      "dialogDescription": "Refine product listing by sort order, filters, price range, and sale status.",
       "saleOnly": "Sale only %",
       "searchByName": "Search by name",
       "priceRange": "Price",
@@ -200,6 +201,7 @@
     },
     "addToCartModal": {
       "toastMessage": "Good choice. Item has been added to cart.",
+      "dialogDescription": "Review your cart contents after adding an item.",
       "moreProducts": "More products",
       "goToCart": "Go to cart"
     },

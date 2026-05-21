@@ -112,22 +112,23 @@ export function AddressForm({
                   className='grid-flow-row gap-4 sm:grid-flow-col sm:gap-8'
                 >
                   {SALUTATION_OPTIONS.map((salutation) => (
-                    <div
+                    <label
                       key={salutation}
-                      className='flex items-center gap-3'
+                      className='flex cursor-pointer items-center gap-3'
                     >
                       <RadioGroupItem
                         value={salutation}
                         id={`salutation-${salutation}`}
+                        aria-labelledby={`salutation-${salutation}-label`}
                         invalid={fieldState.invalid}
                       />
-                      <label
-                        htmlFor={`salutation-${salutation}`}
-                        className='cursor-pointer text-base text-gray-700 capitalize'
+                      <span
+                        id={`salutation-${salutation}-label`}
+                        className='text-base text-gray-700 capitalize'
                       >
                         {t(`salutationOptions.${salutation}`)}
-                      </label>
-                    </div>
+                      </span>
+                    </label>
                   ))}
                 </RadioGroup>
                 {fieldState.invalid && fieldState.error && (
@@ -361,19 +362,20 @@ export function AddressForm({
               name='isDefaultShipping'
               control={form.control}
               render={({ field }) => (
-                <div className='flex items-center gap-3'>
+                <label className='flex cursor-pointer items-center gap-3'>
                   <Checkbox
                     id='isDefaultShipping'
+                    aria-labelledby='isDefaultShipping-label'
                     checked={field.value || false}
                     onCheckedChange={field.onChange}
                   />
-                  <label
-                    htmlFor='isDefaultShipping'
-                    className='cursor-pointer text-sm font-medium text-gray-700'
+                  <span
+                    id='isDefaultShipping-label'
+                    className='text-sm font-medium text-gray-700'
                   >
                     {t('defaultShipping')}
-                  </label>
-                </div>
+                  </span>
+                </label>
               )}
             />
           </Field>
@@ -382,19 +384,20 @@ export function AddressForm({
               name='isDefaultBilling'
               control={form.control}
               render={({ field }) => (
-                <div className='flex items-center gap-3'>
+                <label className='flex cursor-pointer items-center gap-3'>
                   <Checkbox
                     id='isDefaultBilling'
+                    aria-labelledby='isDefaultBilling-label'
                     checked={field.value || false}
                     onCheckedChange={field.onChange}
                   />
-                  <label
-                    htmlFor='isDefaultBilling'
-                    className='cursor-pointer text-sm font-medium text-gray-700'
+                  <span
+                    id='isDefaultBilling-label'
+                    className='text-sm font-medium text-gray-700'
                   >
                     {t('defaultBilling')}
-                  </label>
-                </div>
+                  </span>
+                </label>
               )}
             />
           </Field>

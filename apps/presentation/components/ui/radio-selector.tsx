@@ -51,7 +51,6 @@ export function RadioSelectorOption({
   const hasLabel = Boolean(label)
   return (
     <label
-      htmlFor={id}
       className={cn(
         'group/opt w-full rounded-lg border bg-white px-6 py-4',
         {

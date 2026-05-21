@@ -92,22 +92,23 @@ export const CustomerDataForm: FC<ContactDataFormProps> = ({
               className='grid-flow-row gap-4 sm:grid-flow-col sm:gap-8'
             >
               {SALUTATION_OPTIONS.map((salutation) => (
-                <div
+                <label
                   key={salutation}
-                  className='flex items-center gap-3'
+                  className='flex cursor-pointer items-center gap-3'
                 >
                   <RadioGroupItem
                     value={salutation}
                     id={`salutation-${salutation}`}
+                    aria-labelledby={`salutation-${salutation}-label`}
                     invalid={fieldState.invalid}
                   />
-                  <label
-                    htmlFor={`salutation-${salutation}`}
-                    className='cursor-pointer text-base text-gray-700 capitalize'
+                  <span
+                    id={`salutation-${salutation}-label`}
+                    className='text-base text-gray-700 capitalize'
                   >
                     {t(`customerData.salutationOptions.${salutation}`)}
-                  </label>
-                </div>
+                  </span>
+                </label>
               ))}
             </RadioGroup>
             {fieldState.invalid && fieldState.error && (

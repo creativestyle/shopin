@@ -50,14 +50,11 @@ export function CheckoutStepFuture({ step }: CheckoutStepFutureProps) {
 
   const content = (
     <div
-      className={cn(
-        'w-full rounded-lg border border-gray-200 bg-white px-8 pt-4 pb-6',
-        {
-          'cursor-pointer opacity-100 transition-opacity hover:opacity-90':
-            isClickable,
-          'opacity-60': !isClickable,
-        }
-      )}
+      className={cn('w-full rounded-lg border bg-white px-8 pt-4 pb-6', {
+        'cursor-pointer border-gray-200 transition-opacity hover:opacity-90':
+          isClickable,
+        'border-gray-100 bg-gray-50': !isClickable,
+      })}
     >
       <div className='mb-6 flex items-center justify-between gap-3'>
         <div className='flex flex-1 items-center gap-4'>
@@ -68,7 +65,7 @@ export function CheckoutStepFuture({ step }: CheckoutStepFutureProps) {
                 'bg-gray-100 text-gray-700': isStepCompleted,
                 'border-gray-400 bg-gray-50 text-gray-600':
                   !isStepCompleted && isClickable,
-                'border-gray-300 bg-transparent text-gray-400':
+                'border-gray-300 bg-transparent text-gray-600':
                   !isStepCompleted && !isClickable,
               }
             )}
@@ -81,8 +78,8 @@ export function CheckoutStepFuture({ step }: CheckoutStepFutureProps) {
           </div>
           <h2
             className={cn('text-sm/[1.6] font-bold', {
-              'text-gray-600': isClickable,
-              'text-gray-400': !isClickable,
+              'text-gray-700': isClickable,
+              'text-gray-600': !isClickable,
             })}
           >
             {stepTitle}
