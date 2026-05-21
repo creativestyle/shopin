@@ -118,7 +118,7 @@ function AccordionTrigger({
 function AccordionContent({
   className,
   children,
-  forceMount: forceMountProp,
+  forceMount,
   ...props
 }: Omit<
   React.ComponentProps<typeof AccordionPrimitive.Content>,
@@ -129,18 +129,18 @@ function AccordionContent({
   const { md: disabledMd, lg: disabledLg } = React.useContext(
     AccordionForceMountContext
   )
-  const forceMount = forceMountProp ?? (disabledMd || disabledLg)
+  const isForcedMount = forceMount ?? (disabledMd || disabledLg)
 
   return (
     <AccordionPrimitive.Content
       data-slot='accordion-content'
       className={cn(
         'overflow-hidden',
-        forceMount
+        isForcedMount
           ? getClosedHiddenClass(disabledMd, disabledLg)
           : 'data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down'
       )}
-      forceMount={forceMount || undefined}
+      forceMount={isForcedMount || undefined}
       {...props}
     >
       <div className={cn('pb-6', className)}>{children}</div>
