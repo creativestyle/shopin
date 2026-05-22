@@ -12,8 +12,8 @@ import { Select } from '@/components/ui/select'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-button'
 import { SALUTATION_OPTIONS } from '@config/constants'
 import {
-  AddressBaseSchema,
-  type AddressBase,
+  AddressRequestSchema,
+  type AddressRequest,
 } from '@core/contracts/address/address-base'
 import PlusIcon from '@/public/icons/plus.svg'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -29,11 +29,11 @@ export interface AddressFormProps {
   /**
    * Form submission handler
    */
-  onSubmit?: (data: AddressBase) => void | Promise<void>
+  onSubmit?: (data: AddressRequest) => void | Promise<void>
   /**
    * Default values for the form
    */
-  defaultValues?: AddressBase
+  defaultValues?: Partial<AddressRequest>
   /**
    * Form ID for external form submission
    */
@@ -76,8 +76,8 @@ export function AddressForm({
     () => !!defaultValues?.additionalStreetInfo
   )
 
-  const form = useForm<AddressBase>({
-    resolver: zodResolver(AddressBaseSchema),
+  const form = useForm<AddressRequest>({
+    resolver: zodResolver(AddressRequestSchema),
     defaultValues: defaultValues || {},
   })
 
@@ -151,6 +151,7 @@ export function AddressForm({
                 {...field}
                 id='firstName'
                 label={t('fields.firstName')}
+                required
                 autoComplete='given-name'
               />
               {fieldState.invalid && fieldState.error && (
@@ -172,6 +173,7 @@ export function AddressForm({
                 {...field}
                 id='lastName'
                 label={t('fields.lastName')}
+                required
                 autoComplete='family-name'
               />
               {fieldState.invalid && fieldState.error && (
@@ -317,6 +319,7 @@ export function AddressForm({
                 id='email'
                 label={t('fields.email')}
                 type='email'
+                required
                 autoComplete='email'
               />
               {fieldState.invalid && fieldState.error && (
