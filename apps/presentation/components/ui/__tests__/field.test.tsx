@@ -442,6 +442,20 @@ describe('Field Integration', () => {
     expect(input).toHaveAttribute('aria-invalid', 'true')
   })
 
+  it('TextInput has no aria-describedby when Field has no FieldDescription or FieldError', () => {
+    render(
+      <Field>
+        <TextInput
+          id='bare-input'
+          label='Email'
+        />
+      </Field>
+    )
+
+    const input = screen.getByRole('textbox')
+    expect(input).not.toHaveAttribute('aria-describedby')
+  })
+
   it('TextInput shows error state styling when Field is invalid', () => {
     render(
       <Field data-invalid={true}>

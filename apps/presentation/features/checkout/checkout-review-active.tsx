@@ -78,21 +78,22 @@ export function ReviewActive() {
   return (
     <div className='flex flex-col gap-6'>
       <Field data-invalid={hasError}>
-        <div className='flex items-start gap-3'>
+        <label className='flex cursor-pointer items-start gap-3'>
           <Checkbox
             id='accept-terms'
+            aria-labelledby='accept-terms-label'
             checked={termsAccepted}
             onCheckedChange={handleTermsChange}
             invalid={hasError}
             className='mt-0.5 shrink-0'
           />
-          <label
-            htmlFor='accept-terms'
-            className='flex-1 cursor-pointer text-sm/[1.6] text-gray-700'
+          <span
+            id='accept-terms-label'
+            className='flex-1 text-sm/[1.6] text-gray-700'
           >
             {t('acceptTerms')}
-          </label>
-        </div>
+          </span>
+        </label>
         {hasError && (
           <FieldError
             error={{ message: 'checkout.steps.review.termsRequired' }}

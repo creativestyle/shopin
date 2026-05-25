@@ -23,7 +23,9 @@ export function buildSelectionFromVariantId(
   // excluding any non-selectable attributes that might exist in the variant
   const selectionByKey: Record<string, string> = {}
   options.forEach((optionDefinition) => {
-    const attributeValue = matchedVariant.attributes?.[optionDefinition.key]
+    const attributeValue = matchedVariant.attributes?.find(
+      (a) => a.name === optionDefinition.key
+    )?.value
     if (attributeValue) {
       selectionByKey[optionDefinition.key] = attributeValue
     }

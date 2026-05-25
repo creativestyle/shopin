@@ -75,7 +75,7 @@ function addToast({ children, ...toast }: React.PropsWithChildren<ToastProps>) {
     ),
     {
       ...(toast.id ? { id: toast.id } : {}),
-      duration: (toast.duration ?? toast.type === 'error') ? 15000 : 7000,
+      duration: toast.duration ?? (toast.type === 'error' ? 15000 : 7000),
       onDismiss: toast.onDismiss,
       onAutoClose: toast.onAutoClose,
     }

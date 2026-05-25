@@ -18,15 +18,16 @@ export function AddressStepItem({
   const addressLines = useFormatAddressLines(address)
 
   return (
-    <div className='flex items-start gap-3'>
+    <label className='flex cursor-pointer items-start gap-3'>
       <RadioGroupItem
         value={address.id || ''}
         id={`${addressType}-address-${address.id}`}
+        aria-labelledby={`${addressType}-address-${address.id}-label`}
         className='mt-1'
       />
-      <label
-        htmlFor={`${addressType}-address-${address.id}`}
-        className='flex-1 cursor-pointer space-y-0.5'
+      <div
+        id={`${addressType}-address-${address.id}-label`}
+        className='flex-1 space-y-0.5'
       >
         {addressLines.map((line, index) => (
           <div
@@ -39,7 +40,7 @@ export function AddressStepItem({
             {line}
           </div>
         ))}
-      </label>
-    </div>
+      </div>
+    </label>
   )
 }

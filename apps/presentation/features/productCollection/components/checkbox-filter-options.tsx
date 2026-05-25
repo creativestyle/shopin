@@ -10,6 +10,12 @@ interface CheckboxFilterOptionsProps {
   onToggle: (facetName: string, value: string) => void
 }
 
+const slugForId = (value: string) =>
+  value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '') || 'value'
+
 export function CheckboxFilterOptions({
   terms,
   selectedValues,
@@ -18,21 +24,26 @@ export function CheckboxFilterOptions({
 }: CheckboxFilterOptionsProps) {
   return (
     <div className='flex flex-col gap-3'>
-      {terms.map((term) => {
+      {terms.map((term, index) => {
         const isSelected = selectedValues.includes(term.term)
-        const checkboxId = `filter-${facetName}-${term.term}`
+        const termSlug = slugForId(term.term)
+        const checkboxId = `filter-${facetName}-${termSlug}-${index}`
+        const labelId = `${checkboxId}-label`
         return (
           <label
             key={term.term}
-            htmlFor={checkboxId}
             className='flex cursor-pointer items-center gap-3'
           >
             <Checkbox
               id={checkboxId}
+              aria-labelledby={labelId}
               checked={isSelected}
               onCheckedChange={() => onToggle(facetName, term.term)}
             />
-            <span className='text-sm text-gray-700'>
+            <span
+              id={labelId}
+              className='text-sm text-gray-700'
+            >
               {term.label} ({term.count})
             </span>
           </label>

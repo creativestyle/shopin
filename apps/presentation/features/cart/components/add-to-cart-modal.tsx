@@ -6,6 +6,7 @@ import { useTranslations } from 'next-intl'
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
@@ -59,6 +60,9 @@ export function AddToCartModal({ open, onOpenChange }: AddToCartModalProps) {
               {`${t('title')} (${cart.itemCount})`}
             </p>
           </DialogTitle>
+          <DialogDescription className='sr-only'>
+            {t('addToCartModal.dialogDescription')}
+          </DialogDescription>
           <Button
             size='icon-sm'
             scheme='black'

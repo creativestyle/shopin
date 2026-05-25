@@ -11,7 +11,7 @@ import { mapVariantPriceToShopin } from '../mappers/price'
 import { mapBadges } from '../mappers/badges'
 import { mapConfigurableOptions } from '../mappers/configurable-options'
 import { mapVariantToGallery } from '../mappers/gallery'
-import { mapVariantsToShopin } from '../mappers/variants'
+import { mapVariantsToShopin, mapVariantsToResponse } from '../mappers/variants'
 import { ProductProjectionPagedQueryApiResponseSchema } from '../schemas/product-projection'
 import type { Category, LocalizedString } from '@commercetools/platform-sdk'
 
@@ -94,6 +94,7 @@ export class ProductService {
       currentLanguage,
       defsByName
     )
+
     const variantIdToImage: Record<string, string> = Object.fromEntries(
       allVariants
         .map(
@@ -104,7 +105,9 @@ export class ProductService {
     )
     const configurableOptions = mapConfigurableOptions(
       shopinVariants,
-      variantIdToImage
+      variantIdToImage,
+      defsByName,
+      currentLanguage
     )
 
     return {
@@ -129,7 +132,11 @@ export class ProductService {
         badges,
         // deliveryEstimate is not available from commercetools by default
         configurableOptions,
-        variants: shopinVariants,
+        variants: mapVariantsToResponse(
+          shopinVariants,
+          defsByName,
+          currentLanguage
+        ),
       },
       breadcrumb: [
         ...this.resolveCategoryBreadcrumb(

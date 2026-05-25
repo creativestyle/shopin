@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
@@ -71,7 +72,8 @@ export function VariantSelectorModal({
 
     const selectedVariant = productData.product.variants.find((variant) => {
       return Object.entries(selectedOptions).every(
-        ([key, value]) => variant.attributes[key] === value
+        ([key, value]) =>
+          variant.attributes?.find((a) => a.name === key)?.value === value
       )
     })
 
@@ -137,9 +139,9 @@ export function VariantSelectorModal({
           ) : (
             productData?.product && (
               <div className='flex flex-col gap-6'>
-                <p className='text-sm text-gray-700'>
+                <DialogDescription className='text-sm text-gray-700'>
                   {t('buyBox.selectVariant')}
-                </p>
+                </DialogDescription>
                 {productData.product.configurableOptions &&
                   productData.product.configurableOptions.length > 0 && (
                     <ConfigurableOptions

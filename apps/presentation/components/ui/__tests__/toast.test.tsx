@@ -122,7 +122,7 @@ describe('Toast Component', () => {
 
       expect(mockToast.custom).toHaveBeenCalledWith(expect.any(Function), {
         id: 'test-id',
-        duration: 15000,
+        duration: 5000,
         onDismiss: expect.any(Function),
         onAutoClose: expect.any(Function),
       })
