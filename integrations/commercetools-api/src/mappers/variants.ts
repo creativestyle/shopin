@@ -5,10 +5,17 @@ import type {
 import type { ProductVariantApiResponse } from '../schemas/product-variant'
 import { stringifySelectableAttributeValue } from '../helpers/stringify-selectable-attribute-value'
 import { isSelectableAttribute } from '../helpers/is-selectable-attribute'
+import { getLocalizedString } from '../helpers/get-localized-string'
 
 export interface ShopinVariantAttributes {
   id: string
   attributes: Record<string, string>
+}
+
+export interface VariantAttributeDetail {
+  name: string
+  label: string
+  value: string
 }
 
 export function mapVariantAttributes(
@@ -71,5 +78,20 @@ export function mapVariantsToShopin(
         varyingAttributeNames.has(name)
       )
     ),
+  }))
+}
+
+export function mapVariantsToResponse(
+  shopinVariants: ShopinVariantAttributes[],
+  defsByName?: Record<string, AttributeDefinitionApiResponse>,
+  language = 'en'
+): { id: string; attributes: VariantAttributeDetail[] }[] {
+  return shopinVariants.map(({ id, attributes }) => ({
+    id,
+    attributes: Object.entries(attributes).map(([name, value]) => {
+      const def = defsByName?.[name]
+      const label = getLocalizedString(def?.label, language) ?? name
+      return { name, label, value }
+    }),
   }))
 }

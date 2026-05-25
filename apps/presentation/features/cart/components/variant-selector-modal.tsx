@@ -72,7 +72,8 @@ export function VariantSelectorModal({
 
     const selectedVariant = productData.product.variants.find((variant) => {
       return Object.entries(selectedOptions).every(
-        ([key, value]) => variant.attributes[key] === value
+        ([key, value]) =>
+          variant.attributes?.find((a) => a.name === key)?.value === value
       )
     })
 
