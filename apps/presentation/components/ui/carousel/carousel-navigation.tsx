@@ -1,8 +1,8 @@
 'use client'
 
 import { useTranslations } from 'next-intl'
-import ChevronLeftIcon from '@/public/icons/chevronleft.svg'
-import ChevronRightIcon from '@/public/icons/chevronright.svg'
+import ChevronLeftIcon from '@/public/icons/chevron-left.svg'
+import ChevronRightIcon from '@/public/icons/chevron-right.svg'
 import type { CarouselNavigationProps } from '@/types/carousel'
 import { cn } from '@/lib/utils'
 import { Button } from '../button'

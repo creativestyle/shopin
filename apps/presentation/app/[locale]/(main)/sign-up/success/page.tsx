@@ -4,7 +4,7 @@ import { Suspense } from 'react'
 import { RegistrationSuccessWithHref } from './registration-success-with-href'
 import { AuthPageGuard } from '../../auth-page-guard'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
-import ChevronLeftIcon from '@/public/icons/chevronleft.svg'
+import ChevronLeftIcon from '@/public/icons/chevron-left.svg'
 import { StandardContainer } from '@/components/ui/standard-container'
 
 export default async function RegistrationSuccessPage() {
