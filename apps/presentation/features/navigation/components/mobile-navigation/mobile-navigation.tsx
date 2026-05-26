@@ -1,6 +1,7 @@
 'use client'
 
-import { useTranslations } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
+import { rfcToUrlPrefix } from '@config/constants'
 import { cn } from '@/lib/utils'
 import {
   Sheet,
@@ -41,6 +42,8 @@ export function MobileNavigation({
   } = useNavigationState(open)
 
   const t = useTranslations('common')
+  const locale = useLocale()
+  const homeHref = `/${rfcToUrlPrefix(locale)}`
 
   function openSecondLevel(category: LinkResponse) {
     setCurrentLevel(2)
@@ -105,14 +108,12 @@ export function MobileNavigation({
           )}
 
           {currentLevel === 1 ? (
-            <div className='h-10 w-32'>
-              <Logo
-                src='/logo.svg'
-                alt='Logo'
-                width={130}
-                height={40}
-              />
-            </div>
+            <Logo
+              src='/logo.svg'
+              href={homeHref}
+              alt={t('logoAlt')}
+              className='h-10 w-32'
+            />
           ) : currentLevel === 2 ? (
             <span className='max-w-50 truncate text-base font-normal'>
               {selectedCategory?.text}

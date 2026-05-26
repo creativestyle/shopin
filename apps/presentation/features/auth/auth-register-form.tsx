@@ -116,22 +116,23 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
                 className='gap-8'
               >
                 {SALUTATION_OPTIONS.map((salutation) => (
-                  <div
+                  <label
                     key={salutation}
-                    className='flex items-center gap-3'
+                    className='flex cursor-pointer items-center gap-3'
                   >
                     <RadioGroupItem
                       value={salutation}
                       id={`salutation-${salutation}`}
+                      aria-labelledby={`salutation-${salutation}-label`}
                       invalid={fieldState.invalid}
                     />
-                    <label
-                      htmlFor={`salutation-${salutation}`}
-                      className='cursor-pointer text-base text-gray-700 capitalize'
+                    <span
+                      id={`salutation-${salutation}-label`}
+                      className='text-base text-gray-700 capitalize'
                     >
                       {t(`salutationOptions.${salutation}`)}
-                    </label>
-                  </div>
+                    </span>
+                  </label>
                 ))}
               </RadioGroup>
               {fieldState.invalid && fieldState.error && (
@@ -263,16 +264,17 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
           control={form.control}
           render={({ field, fieldState }) => (
             <Field data-invalid={fieldState.invalid}>
-              <div className='flex items-start gap-3'>
+              <label className='flex cursor-pointer items-start gap-3'>
                 <Checkbox
                   id='acceptTerms'
+                  aria-labelledby='acceptTerms-label'
                   checked={field.value}
                   onCheckedChange={field.onChange}
                   invalid={fieldState.invalid}
                 />
-                <label
-                  htmlFor='acceptTerms'
-                  className='flex-1 cursor-pointer text-sm/[1.6] text-gray-700'
+                <span
+                  id='acceptTerms-label'
+                  className='flex-1 text-sm/[1.6] text-gray-700'
                 >
                   <span>{t('termsTextPrefix')}</span>
                   <Link
@@ -291,8 +293,8 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
                     {t('privacyLink')}
                   </Link>
                   <span>{t('termsTextSuffix')}</span>
-                </label>
-              </div>
+                </span>
+              </label>
               {fieldState.invalid && fieldState.error && (
                 <FieldError error={fieldState.error} />
               )}

@@ -19,10 +19,11 @@ export const CmsLinkSchema = z.object({
 })
 export type CmsLinkResponse = z.infer<typeof CmsLinkSchema>
 
-/** Button (CTA): link + presentation. Variant/style only here, not on link. */
+/** Button (CTA): link + presentation. Variant/style/size only here, not on link. */
 export const CmsButtonSchema = z.object({
   link: CmsLinkSchema,
   variant: z.string().optional(),
   style: z.string().optional(),
+  size: z.string().optional(),
 })
 export type CmsButtonResponse = z.infer<typeof CmsButtonSchema>

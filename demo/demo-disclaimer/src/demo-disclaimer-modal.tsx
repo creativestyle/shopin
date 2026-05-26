@@ -237,7 +237,7 @@ export function DemoDisclaimerModal() {
                   </a>
                   .
                 </p>
-                <p className='text-xs italic text-gray-400'>
+                <p className='text-xs italic text-gray-500'>
                   {t.acknowledgement}
                 </p>
               </div>
@@ -266,7 +266,9 @@ export function DemoDisclaimerModal() {
           <div className='shrink-0 space-y-4 px-6 pb-6 pt-6'>
             <label className='flex cursor-pointer items-center gap-3 text-sm text-gray-600'>
               <CheckboxPrimitive.Root
+                id='dont-show-again-demo-disclaimer-modal'
                 checked={dontShowAgain}
+                aria-labelledby='dont-show-again-demo-disclaimer-modal-label'
                 onCheckedChange={(checked) =>
                   setDontShowAgain(checked === true)
                 }
@@ -289,7 +291,9 @@ export function DemoDisclaimerModal() {
                   </svg>
                 </CheckboxPrimitive.Indicator>
               </CheckboxPrimitive.Root>
-              {t.dontShowAgain}
+              <span id='dont-show-again-demo-disclaimer-modal-label'>
+                {t.dontShowAgain}
+              </span>
             </label>
             <button
               type='button'

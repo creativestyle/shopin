@@ -1,10 +1,10 @@
-import { Injectable, Inject } from '@nestjs/common'
+import { Injectable, Inject, Scope } from '@nestjs/common'
 import type { _SearchQuery } from '@commercetools/platform-sdk'
 import { COMMERCETOOLS_CLIENT, Client } from '../client/client.module'
 import {
   LANGUAGE_TOKEN,
+  LanguageTagUtils,
   resolveCurrencyFromLanguage,
-  resolveCountryFromLanguage,
 } from '@core/i18n'
 import type { LanguageProvider } from '@apps/bff/src/common/language/language.provider'
 import type { ProductSearchResponse } from '@core/contracts/product-search/product-search'
@@ -25,7 +25,7 @@ import { mapProjectionsToCards } from '../mappers/search-results'
 import { fetchProjectionsByIds } from '../helpers/fetch-projections'
 import { FilterableAttributesCacheService } from './filterable-attributes-cache.service'
 
-@Injectable()
+@Injectable({ scope: Scope.REQUEST })
 export class ProductSearchService {
   constructor(
     @Inject(COMMERCETOOLS_CLIENT) private readonly client: Client,
@@ -79,7 +79,7 @@ export class ProductSearchService {
   }: ProductSearchParams): Promise<ProductSearchResponse> {
     const currentLanguage = this.languageProvider.getCurrentLanguage()
     const currency = resolveCurrencyFromLanguage(currentLanguage)
-    const country = resolveCountryFromLanguage(currentLanguage)
+    const country = LanguageTagUtils.getCountry(currentLanguage) ?? ''
     const offset = (page - 1) * limit
 
     if (!faceted && !saleOnly) {

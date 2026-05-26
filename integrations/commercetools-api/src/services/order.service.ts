@@ -3,6 +3,7 @@ import {
   Inject,
   NotFoundException,
   ConflictException,
+  Scope,
 } from '@nestjs/common'
 import { LANGUAGE_TOKEN } from '@core/i18n'
 import type { LanguageProvider } from '@apps/bff/src/common/language/language.provider'
@@ -25,7 +26,7 @@ import {
 } from '../schemas/order'
 import { isNotFoundError, isConflictError } from '../helpers/is-not-found-error'
 
-@Injectable()
+@Injectable({ scope: Scope.REQUEST })
 export class OrderService {
   private static readonly ORDER_EXPAND = [
     'lineItems[*].product',

@@ -51,7 +51,7 @@ export const PageBySlugQuery = gql`
     ) {
       items {
         slug
-        ${I18N_CONFIG.supportedLanguages
+        ${I18N_CONFIG.supportedLocales
           .map(
             (locale) =>
               `slug_${locale.replace(/-/g, '_')}: slug(locale: "${locale}")`

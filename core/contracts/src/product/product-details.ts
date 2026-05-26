@@ -18,10 +18,21 @@ export const ProductDetailsResponseSchema = BaseEntityResponseSchema.extend({
     .array(
       z.object({
         id: z.string(),
-        attributes: z.record(z.string(), z.string()),
+        attributes: z.array(
+          z.object({
+            name: z.string(),
+            label: z.string(),
+            value: z.string(),
+          })
+        ),
       })
     )
     .optional(),
+  /**
+   * Product slug per RFC 5646 locale (e.g. { 'en-US': 'red-shoes', 'de-DE': 'rote-schuhe' }).
+   * Used by the language switcher to resolve the localized product URL.
+   */
+  slugByLocale: z.record(z.string(), z.string()).optional(),
 })
 
 export type ProductDetailsResponse = z.infer<

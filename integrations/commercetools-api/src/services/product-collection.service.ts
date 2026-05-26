@@ -1,9 +1,9 @@
-import { Injectable, Inject, NotFoundException } from '@nestjs/common'
+import { Injectable, Inject, NotFoundException, Scope } from '@nestjs/common'
 import { COMMERCETOOLS_CLIENT, Client } from '../client/client.module'
 import {
   LANGUAGE_TOKEN,
+  LanguageTagUtils,
   resolveCurrencyFromLanguage,
-  resolveCountryFromLanguage,
 } from '@core/i18n'
 import type { LanguageProvider } from '@apps/bff/src/common/language/language.provider'
 import type { ProductCollectionResponse } from '@core/contracts/product-collection/product-collection'
@@ -14,7 +14,8 @@ import {
   DEFAULT_SORT_OPTION,
   type SortOption,
 } from '@config/constants'
-import type { Category } from '@commercetools/platform-sdk'
+import type { Category, LocalizedString } from '@commercetools/platform-sdk'
+import { getLocalizedString } from '../helpers/get-localized-string'
 import {
   buildQueryFilters,
   buildPostFilters,
@@ -27,7 +28,7 @@ import { mapCategoryTree } from '../mappers/product-collection'
 import { buildCategoryBreadcrumb } from '../mappers/category-breadcrumb'
 import { FilterableAttributesCacheService } from './filterable-attributes-cache.service'
 
-@Injectable()
+@Injectable({ scope: Scope.REQUEST })
 export class ProductCollectionService {
   constructor(
     @Inject(COMMERCETOOLS_CLIENT) private readonly client: Client,
@@ -43,6 +44,7 @@ export class ProductCollectionService {
     categoryId: string
     categoryTree: ReturnType<typeof mapCategoryTree>
     allCategories: Category[]
+    slugByLocale: Record<string, string>
   }> {
     const categoryResponse = await this.client
       .categories()
@@ -78,11 +80,19 @@ export class ProductCollectionService {
       language
     )
 
+    const categorySlugMap = (category.slug ?? {}) as LocalizedString
+    const slugByLocale = Object.fromEntries(
+      Object.entries(categorySlugMap).filter(
+        ([, value]) => typeof value === 'string' && value.length > 0
+      )
+    ) as Record<string, string>
+
     return {
       category,
       categoryId: category.id,
       categoryTree,
       allCategories: allCategoriesResponse.body.results,
+      slugByLocale,
     }
   }
 
@@ -99,11 +109,11 @@ export class ProductCollectionService {
     const currentLanguage = this.languageProvider.getCurrentLanguage()
     const offset = (page - 1) * limit
     const currency = resolveCurrencyFromLanguage(currentLanguage)
-    const country = resolveCountryFromLanguage(currentLanguage)
+    const country = LanguageTagUtils.getCountry(currentLanguage) ?? ''
 
     const [
       filterableAttributes,
-      { category, categoryId, categoryTree, allCategories },
+      { category, categoryId, categoryTree, allCategories, slugByLocale },
     ] = await Promise.all([
       this.filterableAttributesCache.getFilterableAttributes(),
       this.resolveCategory(productCollectionSlug, currentLanguage),
@@ -175,6 +185,10 @@ export class ProductCollectionService {
       priceRange,
       categoryTree,
       currentCategoryId: categoryId,
+      categoryName:
+        getLocalizedString(category.name as LocalizedString, currentLanguage) ||
+        undefined,
+      slugByLocale,
     }
   }
 }

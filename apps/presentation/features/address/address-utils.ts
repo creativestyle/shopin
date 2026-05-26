@@ -10,6 +10,13 @@ import {
 import { AddressBase } from '@core/contracts/address/address-base'
 import { CustomerResponse } from '@core/contracts/customer/customer'
 
+export function getCountryOptions(countries: string[], rfcLocale: string) {
+  const displayNames = new Intl.DisplayNames([rfcLocale], { type: 'region' })
+  return countries
+    .map((code) => ({ value: code, label: displayNames.of(code) ?? code }))
+    .sort((a, b) => a.label.localeCompare(b.label, rfcLocale))
+}
+
 /**
  * Sorts addresses with default shipping/billing addresses first.
  * @param addresses - Array of addresses to sort
@@ -169,7 +176,7 @@ export function getAddressFormDefaultValues(
     additionalStreetInfo: address?.additionalStreetInfo || '',
     postalCode: address?.postalCode || '',
     city: address?.city || '',
-    email: address?.email || (useCustomerDefaults ? customer?.email : '') || '',
+    email: address?.email || customer?.email || '',
     isDefaultShipping: address?.id
       ? address.id === defaultShippingAddressId
       : false,

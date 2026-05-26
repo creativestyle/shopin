@@ -36,7 +36,7 @@ function DecoratedPrice({
 }: React.ComponentProps<'span'> &
   VariantProps<typeof variants> & {
     price: number
-    currency?: string
+    currency: string
     fractionDigits?: number
     originalPrice?: number
     taxNote?: string
@@ -62,7 +62,6 @@ function DecoratedPrice({
           variants({ variant, size, className }),
           'order-2 text-right'
         )}
-        aria-label={formattedPrice}
         {...props}
       >
         <span>{formattedPrice}</span>

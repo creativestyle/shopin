@@ -97,17 +97,17 @@ describe('ConfigurableOptions', () => {
         variants={[
           {
             id: variantId,
-            attributes: {
-              color: 'Black',
-              size: 'M',
-            },
+            attributes: [
+              { name: 'color', label: 'Color', value: 'Black' },
+              { name: 'size', label: 'Size', value: 'M' },
+            ],
           },
           {
             id: 'variant-456',
-            attributes: {
-              color: 'White',
-              size: 'S',
-            },
+            attributes: [
+              { name: 'color', label: 'Color', value: 'White' },
+              { name: 'size', label: 'Size', value: 'S' },
+            ],
           },
         ]}
       />
@@ -159,17 +159,17 @@ describe('ConfigurableOptions', () => {
         variants={[
           {
             id: variantId,
-            attributes: {
-              color: 'Black',
-              size: 'M',
-            },
+            attributes: [
+              { name: 'color', label: 'Color', value: 'Black' },
+              { name: 'size', label: 'Size', value: 'M' },
+            ],
           },
           {
             id: 'variant-456',
-            attributes: {
-              color: 'White',
-              size: 'S',
-            },
+            attributes: [
+              { name: 'color', label: 'Color', value: 'White' },
+              { name: 'size', label: 'Size', value: 'S' },
+            ],
           },
         ]}
       />

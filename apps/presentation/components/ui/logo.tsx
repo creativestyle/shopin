@@ -6,20 +6,20 @@ import { cn } from '@/lib/utils'
 
 interface LogoProps {
   src: string
+  href?: string
   className?: string
   alt?: string
   linkAriaLabel?: string
-  width?: number
-  height?: number
+  preload?: boolean
 }
 
 export const Logo: React.FC<LogoProps> = ({
   src,
+  href = '/',
   className,
   alt,
   linkAriaLabel,
-  width,
-  height,
+  preload,
 }) => {
   const t = useTranslations('common')
   const resolvedAlt = alt || t('logoAlt')
@@ -28,19 +28,19 @@ export const Logo: React.FC<LogoProps> = ({
   return (
     <div className={cn('relative', className)}>
       <Link
-        href='/'
+        href={href}
         aria-label={resolvedLinkAriaLabel}
         className='relative flex h-full w-full items-center justify-center transition-opacity outline-none hover:opacity-80 focus-visible:inset-ring-1 focus-visible:inset-ring-black/20'
       >
         <Image
           src={src}
           alt={resolvedAlt}
-          width={width || 165}
-          height={height || 146}
-          className='h-full w-auto object-contain'
-          preload
-          loading='eager'
-          fetchPriority='high'
+          fill
+          sizes='200px'
+          className='object-contain'
+          {...(preload
+            ? { preload: true, fetchPriority: 'high' as const }
+            : {})}
         />
       </Link>
     </div>

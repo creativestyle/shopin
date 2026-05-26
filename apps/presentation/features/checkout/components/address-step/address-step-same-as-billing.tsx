@@ -6,6 +6,8 @@ import { useCheckoutNavigation } from '../checkout-steps-frame/use-checkout-navi
 import { useSameAsBilling } from '../../hooks/use-same-as-billing'
 import { AddressStepContinueButton } from './address-step-continue-button'
 import { Checkbox } from '@/components/ui/checkbox'
+import { addToast } from '@/components/ui/toast'
+import { useStoreConfig } from '@/features/store-config/store-config-provider'
 import type {
   AddressBase,
   AddressType,
@@ -29,21 +31,33 @@ export function AddressStepSameAsBilling({
 }: AddressStepSameAsBillingProps) {
   const { handleNextStep } = useCheckoutNavigation(stepId)
   const tCheckout = useTranslations('checkout')
-  const { billingAddress, sameAsBilling, setSameAsBilling } = useSameAsBilling()
+  const { storeConfig } = useStoreConfig()
+  const { billingAddress, sameAsBilling, setSameAsBilling } = useSameAsBilling(
+    storeConfig.shippingCountries
+  )
 
   // Notify parent when checked state changes
   useEffect(() => {
     onCheckedChange?.(sameAsBilling)
   }, [sameAsBilling, onCheckedChange])
 
+  const isBillingCountryShippable =
+    !billingAddress?.country ||
+    storeConfig.shippingCountries.includes(billingAddress.country)
+
   // Handle "same as billing" checkbox change
   const handleSameAsBillingChange = async (checked: boolean) => {
+    if (checked && !isBillingCountryShippable) {
+      addToast({
+        type: 'error',
+        children: tCheckout('shipping.sameAsBillingCountryError'),
+      })
+      return
+    }
     setSameAsBilling(checked)
     if (checked && billingAddress) {
       const cart = await onSetAddress(billingAddress)
       if (!cart) {
-        // Error toast is already shown by the hook
-        // Revert checkbox state on error
         setSameAsBilling(false)
       }
     }
@@ -54,7 +68,6 @@ export function AddressStepSameAsBilling({
     if (billingAddress) {
       const cart = await onSetAddress(billingAddress)
       if (!cart) {
-        // Error toast is already shown by the hook
         return
       }
       handleNextStep()
@@ -63,22 +76,23 @@ export function AddressStepSameAsBilling({
 
   return (
     <>
-      <div className='mb-6 flex items-start gap-3'>
+      <label className='mb-6 flex cursor-pointer items-start gap-3'>
         <Checkbox
           id='same-as-billing-shipping'
+          aria-labelledby='same-as-billing-shipping-label'
           checked={sameAsBilling}
           onCheckedChange={(checked) =>
             handleSameAsBillingChange(checked === true)
           }
           className='shrink-0'
         />
-        <label
-          htmlFor='same-as-billing-shipping'
-          className='cursor-pointer text-sm/[1.6] text-gray-700'
+        <span
+          id='same-as-billing-shipping-label'
+          className='text-sm/[1.6] text-gray-700'
         >
           {tCheckout('shipping.sameAsBilling')}
-        </label>
-      </div>
+        </span>
+      </label>
 
       {sameAsBilling && (
         <AddressStepContinueButton

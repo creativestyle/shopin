@@ -7,6 +7,7 @@ import PinIcon from '@/public/icons/pin.svg'
 import AccountIcon from '@/public/icons/account.svg'
 import MailIcon from '@/public/icons/mail.svg'
 import HelpIcon from '@/public/icons/help.svg'
+import { CountryBlock } from '@/components/layout/footer/country-block'
 
 interface NavigationFooterProps {
   onLinkClick: () => void
@@ -25,6 +26,9 @@ export function NavigationFooter({ onLinkClick }: NavigationFooterProps) {
 
   return (
     <div className='bg-gray-50 px-3 py-6'>
+      <div className='mb-6'>
+        <CountryBlock />
+      </div>
       <ul className='flex flex-col gap-3'>
         {footerLinks.map((link) => {
           const IconComponent = link.icon

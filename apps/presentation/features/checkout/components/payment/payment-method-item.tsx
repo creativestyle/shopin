@@ -28,19 +28,20 @@ export function PaymentMethodItem({
       )}
     >
       <div className='flex items-center justify-between gap-3'>
-        <div className='flex flex-1 items-center gap-3'>
+        <label className='flex flex-1 cursor-pointer items-center gap-3'>
           <RadioGroupItem
             value={method.id}
             id={`payment-method-${method.id}`}
+            aria-labelledby={`payment-method-${method.id}-label`}
             className='shrink-0'
           />
-          <label
-            htmlFor={`payment-method-${method.id}`}
-            className='flex flex-1 cursor-pointer flex-col gap-1'
+          <span
+            id={`payment-method-${method.id}-label`}
+            className='flex flex-1 flex-col gap-1'
           >
             <span className='text-sm/[1.6] text-gray-700'>{description}</span>
-          </label>
-        </div>
+          </span>
+        </label>
       </div>
     </div>
   )

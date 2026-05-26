@@ -83,6 +83,8 @@ describe('ProductCollectionService', () => {
       priceRange: undefined,
       categoryTree: undefined,
       currentCategoryId: undefined,
+      categoryName: undefined,
+      slugByLocale: undefined,
     })
   })
 })

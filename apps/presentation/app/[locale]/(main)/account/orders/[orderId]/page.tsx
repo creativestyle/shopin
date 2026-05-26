@@ -18,6 +18,7 @@ export default async function Page({ params }: PageProps) {
 
   return (
     <>
+      <h1 className='sr-only'>{t('orderDetailLabel')}</h1>
       <Breadcrumbs
         crumbs={breadcrumbs}
         className='max-sm:hidden'

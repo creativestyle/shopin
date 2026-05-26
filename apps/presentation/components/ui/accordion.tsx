@@ -6,6 +6,28 @@ import ChevronDownIcon from '@/public/icons/chevron-down.svg'
 
 import { cn } from '@/lib/utils'
 
+type AccordionDisabledBreakpoints = { md: boolean; lg: boolean }
+const AccordionForceMountContext =
+  React.createContext<AccordionDisabledBreakpoints>({ md: false, lg: false })
+
+// Apply hidden only at breakpoints where the accordion is still interactive;
+// omit it at breakpoints where the item is "disabled" (content always visible).
+function getClosedHiddenClass(
+  disabledMd: boolean,
+  disabledLg: boolean
+): string {
+  if (disabledMd && disabledLg) {
+    return 'max-md:data-[state=closed]:hidden'
+  }
+  if (disabledMd) {
+    return 'max-md:data-[state=closed]:hidden lg:data-[state=closed]:hidden'
+  }
+  if (disabledLg) {
+    return 'max-lg:data-[state=closed]:hidden'
+  }
+  return 'data-[state=closed]:hidden'
+}
+
 function Accordion({
   ...props
 }: React.ComponentProps<typeof AccordionPrimitive.Root>) {
@@ -26,21 +48,35 @@ function AccordionItem({
   disabledMd?: boolean
   disabledLg?: boolean
 }) {
+  if (!disabledMd && !disabledLg) {
+    return (
+      <AccordionPrimitive.Item
+        data-slot='accordion-item'
+        className={cn('border-b border-gray-200 last:border-b-0', className)}
+        {...props}
+      />
+    )
+  }
+
   return (
-    <AccordionPrimitive.Item
-      data-slot='accordion-item'
-      className={cn(
-        'border-b border-gray-200 last:border-b-0',
-        {
-          'md:max-lg:**:data-[slot=accordion-trigger]:pointer-events-none md:max-lg:[&_[data-slot=accordion-trigger]>svg]:hidden md:max-lg:[&>div]:animate-none! md:max-lg:data-[state=closed]:[&>div]:block!':
-            disabledMd,
-          'lg:**:data-[slot=accordion-trigger]:pointer-events-none lg:[&_[data-slot=accordion-trigger]>svg]:hidden lg:[&>div]:animate-none! lg:data-[state=closed]:[&>div]:block!':
-            disabledLg,
-        },
-        className
-      )}
-      {...props}
-    />
+    <AccordionForceMountContext.Provider
+      value={{ md: disabledMd, lg: disabledLg }}
+    >
+      <AccordionPrimitive.Item
+        data-slot='accordion-item'
+        className={cn(
+          'border-b border-gray-200 last:border-b-0',
+          {
+            'md:max-lg:**:data-[slot=accordion-trigger]:pointer-events-none md:max-lg:[&_[data-slot=accordion-trigger]>svg]:hidden':
+              disabledMd,
+            'lg:**:data-[slot=accordion-trigger]:pointer-events-none lg:[&_[data-slot=accordion-trigger]>svg]:hidden':
+              disabledLg,
+          },
+          className
+        )}
+        {...props}
+      />
+    </AccordionForceMountContext.Provider>
   )
 }
 
@@ -82,7 +118,7 @@ function AccordionTrigger({
 function AccordionContent({
   className,
   children,
-  forceMount = true,
+  forceMount,
   ...props
 }: Omit<
   React.ComponentProps<typeof AccordionPrimitive.Content>,
@@ -90,25 +126,21 @@ function AccordionContent({
 > & {
   forceMount?: boolean
 }) {
-  function handleAnimationStart(e: React.AnimationEvent<HTMLDivElement>) {
-    ;(e.target as HTMLDivElement).classList.remove('data-[state=closed]:hidden')
-  }
-
-  function handleAnimationEnd(e: React.AnimationEvent<HTMLDivElement>) {
-    const el = e.target as HTMLDivElement
-
-    if (el.getAttribute('data-state') === 'closed') {
-      el.classList.add('data-[state=closed]:hidden')
-    }
-  }
+  const { md: disabledMd, lg: disabledLg } = React.useContext(
+    AccordionForceMountContext
+  )
+  const isForcedMount = forceMount ?? (disabledMd || disabledLg)
 
   return (
     <AccordionPrimitive.Content
       data-slot='accordion-content'
-      className='overflow-hidden data-[state=closed]:hidden data-[state=closed]:animate-out data-[state=closed]:fade-out data-[state=closed]:slide-out-to-top-6 data-[state=open]:animate-in data-[state=open]:fade-in data-[state=open]:slide-in-from-top-6'
-      onAnimationStart={handleAnimationStart}
-      onAnimationEnd={handleAnimationEnd}
-      {...(forceMount && { forceMount: true })}
+      className={cn(
+        'overflow-hidden',
+        isForcedMount
+          ? getClosedHiddenClass(disabledMd, disabledLg)
+          : 'data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down'
+      )}
+      forceMount={isForcedMount || undefined}
       {...props}
     >
       <div className={cn('pb-6', className)}>{children}</div>

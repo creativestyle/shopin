@@ -3,21 +3,22 @@
 import { useState, useEffect } from 'react'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useTranslations } from 'next-intl'
+import { useTranslations, useLocale } from 'next-intl'
+import { urlPrefixToRfc } from '@config/constants'
 import { useStoreConfig } from '@/features/store-config/store-config-provider'
 import { Field, FieldError } from '@/components/ui/field'
 import { TextInput } from '@/components/ui/inputs/text-input'
 import { Select } from '@/components/ui/select'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-button'
 import { SALUTATION_OPTIONS } from '@config/constants'
-import { getCountryLabel } from '@/features/store-config/store-config-utils'
 import {
-  AddressBaseSchema,
-  type AddressBase,
+  AddressRequestSchema,
+  type AddressRequest,
 } from '@core/contracts/address/address-base'
 import PlusIcon from '@/public/icons/plus.svg'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Button } from '@/components/ui/button'
+import { getCountryOptions } from '@/features/address/address-utils'
 
 export interface AddressFormState {
   isDirty: boolean
@@ -28,11 +29,11 @@ export interface AddressFormProps {
   /**
    * Form submission handler
    */
-  onSubmit?: (data: AddressBase) => void | Promise<void>
+  onSubmit?: (data: AddressRequest) => void | Promise<void>
   /**
    * Default values for the form
    */
-  defaultValues?: AddressBase
+  defaultValues?: Partial<AddressRequest>
   /**
    * Form ID for external form submission
    */
@@ -46,6 +47,11 @@ export interface AddressFormProps {
    * Callback to notify parent component of form state changes
    */
   onStateChange?: (state: AddressFormState) => void
+  /**
+   * ISO 3166-1 alpha-2 country codes to show in the country select.
+   * Defaults to all countries configured in the project.
+   */
+  countries?: string[]
 }
 
 export function AddressForm({
@@ -54,16 +60,24 @@ export function AddressForm({
   formId,
   showDefaultAddressOptions = false,
   onStateChange,
+  countries,
 }: AddressFormProps) {
   const t = useTranslations('address.form')
-  const tCommon = useTranslations('common')
+  const locale = useLocale()
   const { storeConfig } = useStoreConfig()
+  const rfcLocale = urlPrefixToRfc(locale)
+
+  const countryOptions = getCountryOptions(
+    countries ?? storeConfig.projectCountries,
+    rfcLocale
+  )
+
   const [showAdditionalStreetInfo, setShowAdditionalStreetInfo] = useState(
     () => !!defaultValues?.additionalStreetInfo
   )
 
-  const form = useForm<AddressBase>({
-    resolver: zodResolver(AddressBaseSchema),
+  const form = useForm<AddressRequest>({
+    resolver: zodResolver(AddressRequestSchema),
     defaultValues: defaultValues || {},
   })
 
@@ -98,22 +112,23 @@ export function AddressForm({
                   className='grid-flow-row gap-4 sm:grid-flow-col sm:gap-8'
                 >
                   {SALUTATION_OPTIONS.map((salutation) => (
-                    <div
+                    <label
                       key={salutation}
-                      className='flex items-center gap-3'
+                      className='flex cursor-pointer items-center gap-3'
                     >
                       <RadioGroupItem
                         value={salutation}
                         id={`salutation-${salutation}`}
+                        aria-labelledby={`salutation-${salutation}-label`}
                         invalid={fieldState.invalid}
                       />
-                      <label
-                        htmlFor={`salutation-${salutation}`}
-                        className='cursor-pointer text-base text-gray-700 capitalize'
+                      <span
+                        id={`salutation-${salutation}-label`}
+                        className='text-base text-gray-700 capitalize'
                       >
                         {t(`salutationOptions.${salutation}`)}
-                      </label>
-                    </div>
+                      </span>
+                    </label>
                   ))}
                 </RadioGroup>
                 {fieldState.invalid && fieldState.error && (
@@ -136,6 +151,7 @@ export function AddressForm({
                 {...field}
                 id='firstName'
                 label={t('fields.firstName')}
+                required
                 autoComplete='given-name'
               />
               {fieldState.invalid && fieldState.error && (
@@ -157,6 +173,7 @@ export function AddressForm({
                 {...field}
                 id='lastName'
                 label={t('fields.lastName')}
+                required
                 autoComplete='family-name'
               />
               {fieldState.invalid && fieldState.error && (
@@ -302,6 +319,7 @@ export function AddressForm({
                 id='email'
                 label={t('fields.email')}
                 type='email'
+                required
                 autoComplete='email'
               />
               {fieldState.invalid && fieldState.error && (
@@ -318,18 +336,14 @@ export function AddressForm({
           name='country'
           control={form.control}
           render={({ field, fieldState }) => {
-            // Ensure value is a string (not undefined) for Select component
             const countryValue = field.value || ''
             return (
               <Field data-invalid={fieldState.invalid}>
                 <Select
-                  key={countryValue} // Force re-render when country value changes
+                  key={countryValue}
                   value={countryValue}
                   label={t('fields.country')}
-                  options={storeConfig.countries.map((country) => ({
-                    value: country,
-                    label: getCountryLabel(country, tCommon),
-                  }))}
+                  options={countryOptions}
                   required
                   invalid={fieldState.invalid}
                   onValueChange={field.onChange}
@@ -351,19 +365,20 @@ export function AddressForm({
               name='isDefaultShipping'
               control={form.control}
               render={({ field }) => (
-                <div className='flex items-center gap-3'>
+                <label className='flex cursor-pointer items-center gap-3'>
                   <Checkbox
                     id='isDefaultShipping'
+                    aria-labelledby='isDefaultShipping-label'
                     checked={field.value || false}
                     onCheckedChange={field.onChange}
                   />
-                  <label
-                    htmlFor='isDefaultShipping'
-                    className='cursor-pointer text-sm font-medium text-gray-700'
+                  <span
+                    id='isDefaultShipping-label'
+                    className='text-sm font-medium text-gray-700'
                   >
                     {t('defaultShipping')}
-                  </label>
-                </div>
+                  </span>
+                </label>
               )}
             />
           </Field>
@@ -372,19 +387,20 @@ export function AddressForm({
               name='isDefaultBilling'
               control={form.control}
               render={({ field }) => (
-                <div className='flex items-center gap-3'>
+                <label className='flex cursor-pointer items-center gap-3'>
                   <Checkbox
                     id='isDefaultBilling'
+                    aria-labelledby='isDefaultBilling-label'
                     checked={field.value || false}
                     onCheckedChange={field.onChange}
                   />
-                  <label
-                    htmlFor='isDefaultBilling'
-                    className='cursor-pointer text-sm font-medium text-gray-700'
+                  <span
+                    id='isDefaultBilling-label'
+                    className='text-sm font-medium text-gray-700'
                   >
                     {t('defaultBilling')}
-                  </label>
-                </div>
+                  </span>
+                </label>
               )}
             />
           </Field>

@@ -1,9 +1,9 @@
 import type { ProductCardResponse } from '@core/contracts/product-collection/product-card'
+import { resolveCurrencyFromLanguage } from '@core/i18n'
 import { buildAlgoliaFieldNames } from './algolia-query-utils'
 
 const DEFAULT_PRODUCT_NAME = 'Unnamed Product'
 const DEFAULT_IMAGE_SRC = '/images/product-image.png'
-const DEFAULT_IMAGE_ALT = 'Product image'
 const DEFAULT_FRACTION_DIGITS = 2
 
 export interface AlgoliaProductHit {
@@ -27,19 +27,21 @@ export function mapAlgoliaHitToProduct(
   const pricePrefix = `price_${langKey}`
   const slugStr = hit.slug?.[language] ?? hit.objectID
 
+  const productName = (hit[nameAttr] as string) || DEFAULT_PRODUCT_NAME
+
   return {
     id: hit.objectID,
-    name: (hit[nameAttr] as string) || DEFAULT_PRODUCT_NAME,
+    name: productName,
     slug: slugStr,
     image: {
       src: (hit.imageUrl as string) || DEFAULT_IMAGE_SRC,
-      alt: (hit.imageAlt as string) || DEFAULT_IMAGE_ALT,
+      alt: (hit.imageAlt as string) || productName,
     },
     price: {
       regularPriceInCents: (hit[`${pricePrefix}_centAmount`] as number) || 0,
-      ...(hit[`${pricePrefix}_currency`] != null && {
-        currency: hit[`${pricePrefix}_currency`] as string,
-      }),
+      currency:
+        (hit[`${pricePrefix}_currency`] as string | null | undefined) ??
+        resolveCurrencyFromLanguage(language),
       fractionDigits:
         (hit[`${pricePrefix}_fractionDigits`] as number) ??
         DEFAULT_FRACTION_DIGITS,
