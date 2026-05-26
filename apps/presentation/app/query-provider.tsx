@@ -1,13 +1,13 @@
 'use client'
 
 import React from 'react'
+import dynamic from 'next/dynamic'
 import {
   isServer,
   MutationCache,
   QueryClient,
   QueryClientProvider,
 } from '@tanstack/react-query'
-import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import {
   isAuthMutationKey,
   type AuthMutationKind,
@@ -16,6 +16,16 @@ import { customerKeys } from '@/features/customer/customer-keys'
 import { cartKeys } from '@/features/cart/cart-keys'
 import { wishlistKeys } from '@/features/wishlist/wishlist-keys'
 import { orderHistoryKeys } from '@/features/order-history/order-history-keys'
+
+// Excluded from production bundles via dead-code elimination on process.env.NODE_ENV
+const ReactQueryDevtools =
+  process.env.NODE_ENV === 'development'
+    ? dynamic(() =>
+        import('@tanstack/react-query-devtools').then((mod) => ({
+          default: mod.ReactQueryDevtools,
+        }))
+      )
+    : () => null
 
 type AuthEventData = { success?: boolean }
 
