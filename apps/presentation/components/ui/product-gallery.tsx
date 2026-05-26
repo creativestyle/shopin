@@ -44,6 +44,7 @@ export const ProductGallery: React.FC<ProductGalleryProps> = ({
       alt={img.alt}
       onZoom={() => openDialog(idx)}
       loading={idx < visibleCount ? 'eager' : undefined}
+      preload={idx === 0}
     />
   ))
 
@@ -62,6 +63,7 @@ export const ProductGallery: React.FC<ProductGalleryProps> = ({
         onZoom={() => openDialog(idx)}
         className='h-full lg:aspect-square lg:h-auto'
         loading={idx === 0 ? 'eager' : undefined}
+        preload={idx === 0}
       />
     </CarouselSlide>
   ))

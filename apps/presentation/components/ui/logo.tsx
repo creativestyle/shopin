@@ -38,9 +38,8 @@ export const Logo: React.FC<LogoProps> = ({
           fill
           sizes='200px'
           className='object-contain'
-          {...(preload
-            ? { preload: true, fetchPriority: 'high' as const }
-            : {})}
+          preload={preload}
+          fetchPriority={preload ? 'high' : undefined}
         />
       </Link>
     </div>
