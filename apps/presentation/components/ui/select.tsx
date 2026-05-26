@@ -14,6 +14,7 @@ type SelectA11yContextValue = {
   ariaDescribedBy?: string
   invalid?: boolean
   isOpen?: boolean
+  contentId?: string
 }
 const SelectA11yContext = React.createContext<SelectA11yContextValue | null>(
   null
@@ -47,6 +48,7 @@ function SelectRoot({
 }: SelectRootProps) {
   const [internalOpen, setInternalOpen] = React.useState(defaultOpen ?? false)
   const isOpen = openProp ?? internalOpen
+  const contentId = `select-content-${React.useId().replace(/:/g, '')}`
 
   const handleOpenChange = React.useCallback(
     (nextOpen: boolean) => {
@@ -58,7 +60,7 @@ function SelectRoot({
 
   return (
     <SelectA11yContext.Provider
-      value={{ ariaRequired, ariaDescribedBy, invalid, isOpen }}
+      value={{ ariaRequired, ariaDescribedBy, invalid, isOpen, contentId }}
     >
       <SelectPrimitive.Root
         data-slot='select'
@@ -90,7 +92,7 @@ function SelectValue({
   return (
     <SelectPrimitive.Value
       data-slot='select-value'
-      className='pt-2'
+      className='text-base/[1.5]'
       {...props}
     />
   )
@@ -118,60 +120,66 @@ function SelectTrigger({
   const effectiveAriaDescribedBy =
     ariaDescribedBy ?? a11yContext?.ariaDescribedBy
   const isOpen = a11yContext?.isOpen ?? false
-
-  const triggerRef = React.useRef<HTMLButtonElement>(null)
-  React.useEffect(() => {
-    const el = triggerRef.current
-    if (!el || isOpen) {
-      return
-    }
-    el.removeAttribute('aria-controls')
-  }, [isOpen])
+  const contentId = a11yContext?.contentId
 
   return (
-    <SelectPrimitive.Trigger
-      ref={triggerRef}
-      data-slot='select-trigger'
-      data-size={size}
-      aria-label={label || undefined}
-      aria-required={effectiveAriaRequired || undefined}
-      aria-invalid={effectiveInvalid || undefined}
-      aria-describedby={effectiveAriaDescribedBy || undefined}
-      className={cn(
-        "group relative grid h-14 w-fit grid-cols-[minmax(0,1fr)_auto] grid-rows-[5_auto] items-center justify-between gap-x-4 rounded-lg border border-gray-300 bg-gray-50 px-4 py-2 whitespace-nowrap transition-all outline-none hover:border-gray-500 hover:bg-white focus-visible:border focus-visible:border-gray-500 focus-visible:ring-1 focus-visible:ring-gray-100 disabled:cursor-not-allowed disabled:border-gray-100 disabled:bg-gray-100 has-[[data-slot=select-value]:empty]:grid-rows-[1fr_0fr] aria-invalid:border-red-600 aria-invalid:ring-red-600/20 data-[placeholder]:text-gray-500 *:data-[slot=select-value]:line-clamp-1 *:data-[slot=select-value]:flex *:data-[slot=select-value]:items-center *:data-[slot=select-value]:gap-2 data-[state=open]:border-gray-500 data-[state=open]:bg-white [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 [&_svg:not([class*='text-'])]:text-gray-500",
-        !label && 'grid-rows-1',
-        effectiveInvalid &&
-          'border-red-600 hover:border-red-600 focus-visible:border-red-600',
-        className
-      )}
-      {...props}
-    >
-      {label && (
-        <span className="col-start-1 row-start-1 origin-top-left scale-[0.8125] text-left text-base/[1.5] text-gray-500 transition-all group-disabled:!text-gray-500 group-has-[[data-slot=select-value]:empty]:row-span-full group-has-[[data-slot=select-value]:empty]:scale-100 group-aria-required:after:content-['*']">
-          {label}
-        </span>
-      )}
-      <span
+    <>
+      <SelectPrimitive.Trigger
+        data-slot='select-trigger'
+        data-size={size}
+        aria-label={label || undefined}
+        aria-required={effectiveAriaRequired || undefined}
+        aria-invalid={effectiveInvalid || undefined}
+        aria-describedby={effectiveAriaDescribedBy || undefined}
         className={cn(
-          'col-start-1 truncate text-left group-disabled:text-gray-500 group-has-[[data-slot=select-value]:empty]:hidden',
-          label ? 'row-start-2' : 'row-start-1'
+          "group relative grid h-14 w-fit grid-cols-[minmax(0,1fr)_auto] grid-rows-[18px_minmax(0,1fr)] items-center justify-between gap-x-4 rounded-lg border border-gray-300 bg-gray-50 px-4 py-2 whitespace-nowrap transition-all outline-none hover:border-gray-500 hover:bg-white focus-visible:border focus-visible:border-gray-500 focus-visible:ring-1 focus-visible:ring-gray-100 disabled:cursor-not-allowed disabled:border-gray-100 disabled:bg-gray-100 has-[[data-slot=select-value]:empty]:grid-rows-[1fr_0fr] aria-invalid:border-red-600 aria-invalid:ring-red-600/20 data-[placeholder]:text-gray-500 *:data-[slot=select-value]:line-clamp-1 *:data-[slot=select-value]:flex *:data-[slot=select-value]:items-center *:data-[slot=select-value]:gap-2 data-[state=open]:border-gray-500 data-[state=open]:bg-white [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 [&_svg:not([class*='text-'])]:text-gray-500",
+          !label && 'grid-rows-1',
+          effectiveInvalid &&
+            'border-red-600 hover:border-red-600 focus-visible:border-red-600',
+          className
         )}
+        {...props}
+        aria-controls={contentId || undefined}
       >
-        {children}
-      </span>
-      <SelectPrimitive.Icon asChild>
-        <ChevronDownIcon className='col-start-2 row-span-2 size-5 self-center fill-gray-950 transition-transform group-disabled:fill-gray-500 group-data-[state=open]:-scale-y-100' />
-      </SelectPrimitive.Icon>
-    </SelectPrimitive.Trigger>
+        {label && (
+          <span className="col-start-1 row-start-1 text-left text-xs/[1.5] text-gray-500 transition-all group-disabled:!text-gray-500 group-has-[[data-slot=select-value]:empty]:row-span-full group-has-[[data-slot=select-value]:empty]:text-base/[1.5] group-aria-required:after:content-['*']">
+            {label}
+          </span>
+        )}
+        <span
+          className={cn(
+            'col-start-1 truncate text-left group-disabled:text-gray-500 group-has-[[data-slot=select-value]:empty]:hidden',
+            label ? 'row-start-2 pt-1' : 'row-start-1'
+          )}
+        >
+          {children}
+        </span>
+        <SelectPrimitive.Icon asChild>
+          <ChevronDownIcon className='col-start-2 row-span-2 size-5 self-center fill-gray-950 transition-transform group-disabled:fill-gray-500 group-data-[state=open]:-scale-y-100' />
+        </SelectPrimitive.Icon>
+      </SelectPrimitive.Trigger>
+      {!isOpen && contentId && (
+        <div
+          data-slot='select-content-proxy'
+          id={contentId}
+          hidden
+          aria-hidden='true'
+        />
+      )}
+    </>
   )
 }
 
 function SelectContent({
+  id,
   className,
   children,
   position = 'popper',
   ...props
 }: React.ComponentProps<typeof SelectPrimitive.Content>) {
+  const a11yContext = useSelectA11yContext()
+  const contentId = a11yContext?.contentId
+
   return (
     <SelectPrimitive.Portal>
       <SelectPrimitive.Content
@@ -185,6 +193,7 @@ function SelectContent({
         sideOffset={3}
         position={position}
         {...props}
+        id={contentId || id}
       >
         <SelectPrimitive.Viewport
           className={cn(
