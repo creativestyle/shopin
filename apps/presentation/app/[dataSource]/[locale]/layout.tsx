@@ -9,14 +9,16 @@ import { StoreConfigProvider } from '@/features/store-config/store-config-provid
 import { getStoreConfig } from '@/features/store-config/get-store-config-server'
 import { TopBar } from '@/components/layout/top-bar'
 import { getHeaderLayout } from '@/features/content/get-layout'
-import { QueryProvider } from '../query-provider'
+import { QueryProvider } from '../../query-provider'
 import { DemoDisclaimerModalWrapper } from './demo-disclaimer-modal-wrapper'
 import {
   listLocales,
   urlPrefixToRfc,
   PRODUCT_IMAGE_HOSTS,
   CONTENT_IMAGE_API_HOSTS,
+  type DataSource,
 } from '@config/constants'
+import { setRequestDataSource } from '@/lib/request-context/data-source'
 
 const dmSans = DM_Sans({
   subsets: ['latin'],
@@ -30,10 +32,11 @@ export default async function LocaleLayout({
   params,
   children,
 }: {
-  params: Promise<{ locale: string }>
+  params: Promise<{ dataSource: DataSource; locale: string }>
   children: ReactNode
 }) {
-  const { locale } = await params
+  const { dataSource, locale } = await params
+  setRequestDataSource(dataSource)
   setRequestLocale(locale)
 
   if (!listLocales().some((l) => l.urlPrefix === locale)) {

@@ -14,7 +14,7 @@ jest.mock('next/headers', () => ({
 }))
 
 jest.mock('@demo/data-source-selector', () => ({
-  getDataSourceHeader: () => ({}),
+  getDataSourceHeader: jest.fn(() => ({})),
 }))
 
 jest.mock('@/lib/draft-mode', () => ({
@@ -130,6 +130,43 @@ describe('bffFetch', () => {
     it('omits draft mode header when isDraft option is absent', async () => {
       await bffFetch('http://bff', 'nav')
       expect(lastCallHeaders()[DRAFT_MODE_HEADER]).toBeUndefined()
+    })
+  })
+
+  describe('dataSource option', () => {
+    it('sets X-Data-Source header when explicit dataSource is provided', async () => {
+      await bffFetch('http://bff', 'nav', {
+        dataSource: 'commercetools-algolia-set',
+      })
+      expect(lastCallHeaders()['x-data-source']).toBe(
+        'commercetools-algolia-set'
+      )
+    })
+
+    it('uses getDataSourceHeader fallback when no explicit dataSource provided', async () => {
+      const { getDataSourceHeader } = jest.requireMock(
+        '@demo/data-source-selector'
+      )
+      getDataSourceHeader.mockReturnValue({
+        'X-Data-Source': 'commercetools-set',
+      })
+      await bffFetch('http://bff', 'nav')
+      expect(lastCallHeaders()['x-data-source']).toBe('commercetools-set')
+    })
+
+    it('explicit dataSource takes precedence over cookie-based header', async () => {
+      const { getDataSourceHeader } = jest.requireMock(
+        '@demo/data-source-selector'
+      )
+      getDataSourceHeader.mockReturnValue({
+        'X-Data-Source': 'commercetools-set',
+      })
+      await bffFetch('http://bff', 'nav', {
+        dataSource: 'commercetools-algolia-set',
+      })
+      expect(lastCallHeaders()['x-data-source']).toBe(
+        'commercetools-algolia-set'
+      )
     })
   })
 })

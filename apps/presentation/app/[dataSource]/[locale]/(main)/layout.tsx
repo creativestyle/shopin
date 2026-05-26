@@ -1,8 +1,11 @@
 import type { ReactNode } from 'react'
 import { setRequestLocale } from 'next-intl/server'
-import { Header } from '../../../components/layout/header'
-import { Footer } from '../../../components/layout/footer'
-import { PageShell, PageContent } from '../../../components/layout/page-shell'
+import { Header } from '../../../../components/layout/header'
+import { Footer } from '../../../../components/layout/footer'
+import {
+  PageShell,
+  PageContent,
+} from '../../../../components/layout/page-shell'
 
 export default async function Layout({
   params,

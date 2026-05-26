@@ -11,7 +11,7 @@
  */
 
 import { getDataSourceHeader } from '@demo/data-source-selector'
-import { I18N_CONFIG, urlPrefixToRfc } from '@config/constants'
+import { I18N_CONFIG, urlPrefixToRfc, type DataSource } from '@config/constants'
 import { AcceptLanguageUtils, LANGUAGE_HEADER } from '@core/i18n'
 import { CORRELATION_ID_HEADER } from '@config/constants'
 import { DRAFT_MODE_HEADER, getDraftModeHeaderValue } from '@/lib/draft-mode'
@@ -21,6 +21,8 @@ type BffFetchOptions = RequestInit & {
   skipServerCookies?: boolean
   /** Explicitly enable draft mode (preview route). When true, adds the draft header without reading cookies. */
   isDraft?: boolean
+  /** Explicit data source — bypasses cookie parsing. Set by server-side callers that read from the URL segment. */
+  dataSource?: DataSource
 }
 
 type HeadersInput =
@@ -111,13 +113,17 @@ export async function bffFetch(
 
   const draftHeader = isDraftMode ? getDraftModeHeaderValue() : undefined
 
+  const dataSourceHeaders = options?.dataSource
+    ? { 'X-Data-Source': options.dataSource }
+    : getDataSourceHeader(cookieInput)
+
   const defaultOptions: BffFetchOptions = {
     ...options,
     ...(shouldIncludeCredentials && { credentials: 'include' }),
     headers: {
       'Content-Type': 'application/json',
       [LANGUAGE_HEADER]: acceptLanguageHeader,
-      ...getDataSourceHeader(cookieInput),
+      ...dataSourceHeaders,
       ...(correlationId && { [CORRELATION_ID_HEADER]: correlationId }),
       ...(draftHeader && { [DRAFT_MODE_HEADER]: draftHeader }),
       ...normalizeHeaders(options?.headers),

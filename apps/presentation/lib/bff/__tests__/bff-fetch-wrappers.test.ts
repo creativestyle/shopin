@@ -40,15 +40,14 @@ describe('bff fetch wrappers', () => {
     )
   })
 
-  it('server wrapper calls bffFetch with server url, server locale, and correlation ID', async () => {
+  it('server wrapper calls bffFetch with server url and server locale', async () => {
     const server = await createBffFetchServer()
     await server.fetch('nav/path', { method: 'POST' })
     expect(BffFetchModule.bffFetch).toHaveBeenCalledWith(
       'http://server-bff',
       'nav/path',
       expect.objectContaining({ method: 'POST' }),
-      'de-DE',
-      expect.any(String)
+      'de-DE'
     )
   })
 
@@ -65,7 +64,6 @@ describe('bff fetch wrappers', () => {
     expect(logger.error).toHaveBeenCalledWith(
       {
         path: 'navigation/getNavigation',
-        correlationId: expect.any(String),
         error: 'Connection refused',
       },
       'BFF request failed'
