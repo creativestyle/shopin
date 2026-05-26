@@ -4,21 +4,11 @@
 import { bffFetch } from '../core/bff-fetch'
 import { AcceptLanguageUtils } from '@core/i18n'
 import { I18N_CONFIG } from '@config/constants'
-import {
-  isDraftCookieValid,
-  getDraftModeHeaderValue,
-  DRAFT_COOKIE_NAME,
-  DRAFT_MODE_HEADER,
-} from '@/lib/draft-mode'
-
-let cookieStore: Record<string, string> = {}
+import { getDraftModeHeaderValue, DRAFT_MODE_HEADER } from '@/lib/draft-mode'
 
 jest.mock('next/headers', () => ({
   cookies: async () => ({
-    get: (name: string) =>
-      cookieStore[name] !== undefined
-        ? { value: cookieStore[name] }
-        : undefined,
+    get: () => undefined,
     toString: (): string => '',
   }),
 }))
@@ -28,9 +18,7 @@ jest.mock('@demo/data-source-selector', () => ({
 }))
 
 jest.mock('@/lib/draft-mode', () => ({
-  isDraftCookieValid: jest.fn(() => false),
   getDraftModeHeaderValue: jest.fn(() => 'signed-draft-token'),
-  DRAFT_COOKIE_NAME: '__draft',
   DRAFT_MODE_HEADER: 'x-next-draft-mode',
 }))
 
@@ -66,8 +54,7 @@ describe('bffFetch', () => {
       json: async () => ({}),
       text: async () => '{}',
     }) as unknown as typeof fetch
-    cookieStore = {}
-    jest.mocked(isDraftCookieValid).mockReturnValue(false)
+    jest.mocked(getDraftModeHeaderValue).mockReturnValue('signed-draft-token')
   })
 
   afterEach(() => {
@@ -134,15 +121,13 @@ describe('bffFetch', () => {
   })
 
   describe('draft mode', () => {
-    it('adds draft mode header when cookie is valid', async () => {
-      cookieStore[DRAFT_COOKIE_NAME] = 'cookie-value'
-      jest.mocked(isDraftCookieValid).mockReturnValue(true)
+    it('adds draft mode header when isDraft option is true', async () => {
       jest.mocked(getDraftModeHeaderValue).mockReturnValue('signed-draft-token')
-      await bffFetch('http://bff', 'nav')
+      await bffFetch('http://bff', 'nav', { isDraft: true })
       expect(lastCallHeaders()[DRAFT_MODE_HEADER]).toBe('signed-draft-token')
     })
 
-    it('omits draft mode header when cookie is absent', async () => {
+    it('omits draft mode header when isDraft option is absent', async () => {
       await bffFetch('http://bff', 'nav')
       expect(lastCallHeaders()[DRAFT_MODE_HEADER]).toBeUndefined()
     })

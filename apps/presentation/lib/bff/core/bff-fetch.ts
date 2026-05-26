@@ -14,14 +14,14 @@ import { getDataSourceHeader } from '@demo/data-source-selector'
 import { I18N_CONFIG, urlPrefixToRfc } from '@config/constants'
 import { AcceptLanguageUtils, LANGUAGE_HEADER } from '@core/i18n'
 import { CORRELATION_ID_HEADER } from '@config/constants'
-import {
-  DRAFT_MODE_HEADER,
-  getDraftModeHeaderValue,
-  isDraftCookieValid,
-  DRAFT_COOKIE_NAME,
-} from '@/lib/draft-mode'
+import { DRAFT_MODE_HEADER, getDraftModeHeaderValue } from '@/lib/draft-mode'
 
-type BffFetchOptions = RequestInit
+type BffFetchOptions = RequestInit & {
+  /** Skip server-side cookies() access. Use for ISR-cacheable fetches (CMS chrome, navigation, store-config). */
+  skipServerCookies?: boolean
+  /** Explicitly enable draft mode (preview route). When true, adds the draft header without reading cookies. */
+  isDraft?: boolean
+}
 
 type HeadersInput =
   | Headers
@@ -85,15 +85,19 @@ export async function bffFetch(
   let rawCookieString: string | undefined
 
   if (typeof window === 'undefined') {
-    cookies = await (await import('next/headers')).cookies()
+    if (!options?.skipServerCookies) {
+      try {
+        cookies = await (await import('next/headers')).cookies()
+      } catch {
+        // Unavailable at build time — draft and data-source headers use safe defaults
+      }
+    }
   } else {
     rawCookieString = document.cookie
   }
 
-  let isDraftMode = false
-  if (typeof window === 'undefined' && cookies) {
-    isDraftMode = isDraftCookieValid(cookies.get(DRAFT_COOKIE_NAME)?.value)
-  }
+  // Draft mode is now explicit — never inferred from cookies
+  const isDraftMode = options?.isDraft ?? false
 
   const cookieInput = cookies ?? rawCookieString ?? ''
 

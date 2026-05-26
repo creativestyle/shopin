@@ -1,5 +1,4 @@
 import { DEFAULT_CONTENT_REVALIDATE_SECONDS } from '@config/constants'
-import { isDraftModeEnabled } from '@/lib/draft-mode'
 
 export type BffCacheOptions =
   | { cache: 'no-store' }
@@ -8,17 +7,15 @@ export type BffCacheOptions =
 export type BffCacheOptionsWithDraft = BffCacheOptions & { isDraft: boolean }
 
 /**
- * Returns fetch cache options for BFF requests based on draft mode, plus the isDraft flag.
- * When draft mode is enabled (valid signed cookie from /api/draft), returns no-store and isDraft: true.
- * Otherwise returns revalidate and isDraft: false.
- * Use the returned options for fetch; use isDraft when you need the flag (e.g. noStore() in a page).
+ * Returns fetch cache options for BFF requests, plus the isDraft flag.
+ * Pass isDraft: true (from the preview route) to get no-store; otherwise returns revalidate.
  */
-export async function getBffCacheOptions(
-  revalidateSeconds: number = DEFAULT_CONTENT_REVALIDATE_SECONDS
-): Promise<BffCacheOptionsWithDraft> {
-  const isDraft = await isDraftModeEnabled()
-  const options: BffCacheOptions = isDraft
-    ? ({ cache: 'no-store' } as const)
-    : { next: { revalidate: revalidateSeconds } }
-  return { ...options, isDraft }
+export function getBffCacheOptions(
+  revalidateSeconds: number = DEFAULT_CONTENT_REVALIDATE_SECONDS,
+  opts?: { isDraft?: boolean }
+): BffCacheOptionsWithDraft {
+  if (opts?.isDraft) {
+    return { cache: 'no-store', isDraft: true }
+  }
+  return { next: { revalidate: revalidateSeconds }, isDraft: false }
 }

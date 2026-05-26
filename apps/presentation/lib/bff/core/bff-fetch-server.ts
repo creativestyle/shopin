@@ -16,11 +16,17 @@ import { logger } from '@/lib/logger'
  * - Handles server-side cookie access
  * - Logs network errors only (BFF never sees these: connection refused, timeout, etc.).
  *   For 4xx/5xx the BFF already logs; callers can throw or handle as needed.
- * @param locale - Locale override when not using next-intl context (e.g. i18n/request.ts).
+ * @param opts.locale - Locale override when not using next-intl context (e.g. i18n/request.ts).
+ * @param opts.isDraft - Controls cookies and draft header:
+ *   false (default) → skip cookies, no draft header (ISR-safe)
+ *   true → skip cookies, add draft header (preview route only)
  */
-export async function createBffFetchServer(locale?: string) {
+export async function createBffFetchServer(opts?: {
+  locale?: string
+  isDraft?: boolean
+}) {
   const [effectiveLocale, baseUrl, correlationId] = await Promise.all([
-    locale || getLocale(),
+    opts?.locale || getLocale(),
     getBffServerUrl(),
     getCorrelationId(),
   ])
@@ -33,10 +39,14 @@ export async function createBffFetchServer(locale?: string) {
      */
     fetch: async (path: string, options?: RequestInit) => {
       try {
+        const extraOpts =
+          opts?.isDraft === true
+            ? { skipServerCookies: true as const, isDraft: true as const }
+            : { skipServerCookies: true as const }
         return await baseBffFetch(
           baseUrl,
           path,
-          options,
+          extraOpts ? { ...options, ...extraOpts } : options,
           effectiveLocale,
           correlationId
         )

@@ -11,7 +11,7 @@ export const getHeaderLayout = cache(
   async (): Promise<HeaderResponse | null> => {
     const bffFetch = await createBffFetchServer()
     const contentService = new ContentService(bffFetch)
-    return contentService.getHeader(await getBffCacheOptions())
+    return contentService.getHeader(getBffCacheOptions())
   }
 )
 
@@ -19,6 +19,6 @@ export const getFooterLayout = cache(
   async (): Promise<FooterResponse | null> => {
     const bffFetch = await createBffFetchServer()
     const contentService = new ContentService(bffFetch)
-    return contentService.getFooter(await getBffCacheOptions())
+    return contentService.getFooter(getBffCacheOptions())
   }
 )

@@ -21,9 +21,10 @@ export const getProductCollectionPage = cache(
     filters?: Filters,
     saleOnly: boolean = false,
     priceMin?: number,
-    priceMax?: number
+    priceMax?: number,
+    isDraft = false
   ): Promise<ProductCollectionPageResponse> => {
-    const bffFetch = await createBffFetchServer()
+    const bffFetch = await createBffFetchServer({ isDraft })
     const productCollectionService = new ProductCollectionService(bffFetch)
     return productCollectionService.getProductCollectionPage(
       slug,

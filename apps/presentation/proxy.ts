@@ -2,7 +2,8 @@ import createMiddleware from 'next-intl/middleware'
 import { NextRequest, NextResponse } from 'next/server'
 import { I18N_CONFIG, listLocales, getLocale } from '@config/constants'
 import { AcceptLanguageUtils } from '@core/i18n'
-import { DRAFT_COOKIE_NAME, isDraftCookieValid } from '@/lib/draft-mode'
+import { isPreviewTokenValid, PREVIEW_TOKEN_COOKIE } from '@/lib/draft-mode'
+import { getHomepageSlugForLocale } from '@/features/content/homepage-slug'
 
 const intlMiddleware = createMiddleware({
   locales: listLocales().map((l) => l.urlPrefix),
@@ -10,6 +11,8 @@ const intlMiddleware = createMiddleware({
   localePrefix: 'as-needed',
   localeDetection: true,
 })
+
+const knownLocalePrefixes = new Set(listLocales().map((l) => l.urlPrefix))
 
 export default function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
@@ -29,17 +32,25 @@ export default function proxy(request: NextRequest) {
     }
   }
 
-  const response = intlMiddleware(request)
-  // Draft mode: disable caching only when draft cookie is valid (signed + not expired)
-  const draftCookieValue = request.cookies.get(DRAFT_COOKIE_NAME)?.value
-  if (isDraftCookieValid(draftCookieValue)) {
-    response.headers.set(
-      'Cache-Control',
-      'no-store, no-cache, must-revalidate, private'
-    )
-    response.headers.set('Pragma', 'no-cache')
+  // Preview session: rewrite live paths → /preview/ so editors can browse the draft site.
+  // Token stays in an HttpOnly cookie — never in the URL.
+  const previewToken = request.cookies.get(PREVIEW_TOKEN_COOKIE)?.value
+  if (previewToken && isPreviewTokenValid(previewToken)) {
+    const segments = pathname.split('/').filter(Boolean)
+    const locale = segments[0]
+    const isPreviewPath = segments[1] === 'preview'
+
+    if (locale && knownLocalePrefixes.has(locale) && !isPreviewPath) {
+      const slugPath = segments.slice(1).join('/')
+      const url = request.nextUrl.clone()
+      url.pathname = slugPath
+        ? `/${locale}/preview/${slugPath}`
+        : `/${locale}/preview/${getHomepageSlugForLocale(locale)}`
+      return NextResponse.rewrite(url)
+    }
   }
-  return response
+
+  return intlMiddleware(request)
 }
 
 export const config = {
