@@ -6,6 +6,55 @@ import pluginQuery from '@tanstack/eslint-plugin-query'
 const FEATURE_BOUNDARY_MESSAGE =
   'Import only feature entry points (files at the feature root). Do not import from any subdirectory of a feature.'
 
+// Every server-rendered page and layout under app/[locale]/ must call setRequestLocale(locale).
+// Under ISR (revalidate=3600 on [locale]/layout.tsx), each segment renders independently —
+// the parent layout may be served from cache without re-executing, so children cannot rely
+// on the layout's setRequestLocale call. The rule fires unconditionally for all non-client
+// locale route files, regardless of whether they directly import next-intl APIs.
+const requireSetRequestLocale = {
+  meta: {
+    type: 'problem',
+    docs: {
+      description:
+        'Require setRequestLocale in every server-rendered locale page/layout.',
+    },
+    messages: {
+      missing:
+        'Locale route files must call setRequestLocale(locale). ' +
+        'Under ISR each segment may render independently of its parent layout, ' +
+        'so every page and layout must set the locale for next-intl.',
+    },
+  },
+  create(context) {
+    let callsSetRequestLocale = false
+    let isClientComponent = false
+
+    return {
+      'ExpressionStatement'(node) {
+        if (
+          node.expression.type === 'Literal' &&
+          node.expression.value === 'use client'
+        ) {
+          isClientComponent = true
+        }
+      },
+      'CallExpression'(node) {
+        if (
+          node.callee.type === 'Identifier' &&
+          node.callee.name === 'setRequestLocale'
+        ) {
+          callsSetRequestLocale = true
+        }
+      },
+      'Program:exit'(node) {
+        if (!isClientComponent && !callsSetRequestLocale) {
+          context.report({ node, messageId: 'missing' })
+        }
+      },
+    }
+  },
+}
+
 const eslintConfig = defineConfig([
   ...nextVitals,
   ...pluginQuery.configs['flat/recommended'],
@@ -38,6 +87,21 @@ const eslintConfig = defineConfig([
           ],
         },
       ],
+    },
+  },
+  // In [locale] route files, setRequestLocale must be called whenever next-intl translation
+  // APIs are used. This rule enforces that contract — see the requireSetRequestLocale rule above.
+  {
+    // Note: \\[ and \\] escape the square brackets so glob treats [locale] as a literal
+    // directory name rather than a character class.
+    files: ['app/\\[locale\\]/**/page.tsx', 'app/\\[locale\\]/**/layout.tsx'],
+    plugins: {
+      'locale-route': {
+        rules: { 'require-set-request-locale': requireSetRequestLocale },
+      },
+    },
+    rules: {
+      'locale-route/require-set-request-locale': 'error',
     },
   },
   // Override default ignores of eslint-config-next.

@@ -1,17 +1,15 @@
+import { setRequestLocale, getTranslations } from 'next-intl/server'
 import { PaymentSuccessCallback } from '@/features/checkout/payment-success-callback'
 import { StandardContainer } from '@/components/ui/standard-container'
-import { getTranslations } from 'next-intl/server'
 
-interface PaymentSuccessPageProps {
-  params: Promise<{
-    locale: string
-  }>
-}
-
-export default async function PaymentSuccessPage({
+export default async function Page({
   params,
-}: PaymentSuccessPageProps) {
+}: {
+  params: Promise<{ locale: string }>
+}) {
   const { locale } = await params
+  setRequestLocale(locale)
+
   const t = await getTranslations('checkout')
 
   return (

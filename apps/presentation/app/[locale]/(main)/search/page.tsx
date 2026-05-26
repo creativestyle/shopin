@@ -1,18 +1,17 @@
+import { setRequestLocale } from 'next-intl/server'
 import { SearchResultsPage } from '@/features/searchResults/search-results-page'
 
-interface PageProps {
+export default async function Page({
+  params,
+  searchParams,
+}: {
   params: Promise<{ locale: string }>
-  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
-}
-
-export default async function Page({ params, searchParams }: PageProps) {
-  const [{ locale }, resolvedSearchParams] = await Promise.all([
-    params,
-    searchParams,
-  ])
-
-  const query =
-    typeof resolvedSearchParams.q === 'string' ? resolvedSearchParams.q : ''
+  searchParams: Promise<{ q?: string }>
+}) {
+  const { locale } = await params
+  const { q } = await searchParams
+  setRequestLocale(locale)
+  const query = typeof q === 'string' ? q : ''
 
   return (
     <SearchResultsPage

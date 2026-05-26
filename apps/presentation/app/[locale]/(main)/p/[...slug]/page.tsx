@@ -1,17 +1,21 @@
+import { setRequestLocale } from 'next-intl/server'
 import { ProductPage } from '@/features/product/product-page'
 import { AddToCart } from '@/features/cart/cart-add-to-cart'
 import { AddToWishlist } from '@/features/wishlist/add-to-wishlist'
 
-interface PageProps {
+export default async function Page({
+  params,
+  searchParams,
+}: {
   params: Promise<{ locale: string; slug: string[] }>
-  searchParams?: Promise<{ [key: string]: string | string[] | undefined }>
-}
-
-export default async function Page({ params, searchParams }: PageProps) {
-  const [paramsData, sp] = await Promise.all([params, searchParams])
-  const { slug, locale } = paramsData
+  searchParams: Promise<{ variantId?: string }>
+}) {
+  const { locale, slug } = await params
+  const { variantId: variantIdParam } = await searchParams
+  setRequestLocale(locale)
   const slugString = Array.isArray(slug) ? slug.join('/') : slug
-  const variantId = typeof sp?.variantId === 'string' ? sp.variantId : undefined
+  const variantId =
+    typeof variantIdParam === 'string' ? variantIdParam : undefined
 
   return (
     <ProductPage

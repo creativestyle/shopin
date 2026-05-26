@@ -1,14 +1,10 @@
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
-import { getLocale } from 'next-intl/server'
+import { setRequestLocale } from 'next-intl/server'
 import { ContentPage } from '@/features/content/content-page'
 import { buildContentPageMetadata } from '@/features/content/build-content-page-metadata'
 import { getContentPage } from '@/features/content/get-content-page'
 import { getSiteBaseUrl } from '@/lib/site-url'
-
-interface PageProps {
-  params: Promise<{ locale?: string; page: string[] }>
-}
 
 /** Paths with a file extension (e.g. .html, .json) are not CMS pages — 404. */
 function hasFileExtension(slug: string): boolean {
@@ -26,27 +22,26 @@ function getCmsSlug(pageSegments: string[] | undefined): string | null {
   return slug
 }
 
-/**
- * CMS page metadata: title, description, canonical, openGraph, twitter, robots from page SEO.
- */
 export async function generateMetadata({
   params,
-}: PageProps): Promise<Metadata> {
-  const cmsSlug = getCmsSlug((await params).page)
+}: {
+  params: Promise<{ locale: string; page: string[] }>
+}): Promise<Metadata> {
+  const { locale, page } = await params
+  setRequestLocale(locale)
+  const cmsSlug = getCmsSlug(page)
   if (!cmsSlug) {
     return {}
   }
 
   try {
-    const [pageData, localePrefixRes, baseUrl] = await Promise.all([
+    const [pageData, baseUrl] = await Promise.all([
       getContentPage(cmsSlug),
-      getLocale(),
       getSiteBaseUrl(),
     ])
-    const localePrefix = localePrefixRes ?? 'en'
     return buildContentPageMetadata({
       pageData,
-      localePrefix,
+      localePrefix: locale,
       baseUrl,
     })
   } catch {
@@ -54,13 +49,14 @@ export async function generateMetadata({
   }
 }
 
-/**
- * CMS catch-all: URL path → CMS slug (no /content/ prefix).
- * - /en/about → slug "about", /en/legal/privacy → "legal/privacy"
- * Paths with a file extension 404. Reserved paths use their own routes.
- */
-export default async function CmsPageByPath({ params }: PageProps) {
-  const cmsSlug = getCmsSlug((await params).page)
+export default async function Page({
+  params,
+}: {
+  params: Promise<{ locale: string; page: string[] }>
+}) {
+  const { locale, page } = await params
+  setRequestLocale(locale)
+  const cmsSlug = getCmsSlug(page)
   if (!cmsSlug) {
     notFound()
   }

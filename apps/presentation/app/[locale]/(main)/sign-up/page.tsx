@@ -1,4 +1,4 @@
-import { getTranslations } from 'next-intl/server'
+import { setRequestLocale, getTranslations } from 'next-intl/server'
 import Link from 'next/link'
 import { SignUpFormWithRedirect } from './sign-up-form-with-redirect'
 import ChevronLeftIcon from '@/public/icons/chevronleft.svg'
@@ -6,18 +6,19 @@ import { AuthPageGuard } from '../auth-page-guard'
 import { getIsCheckoutServer } from '@/features/checkout/checkout-param-utils'
 import { StandardContainer } from '@/components/ui/standard-container'
 
-interface SignUpPageProps {
+export default async function Page({
+  params,
+  searchParams,
+}: {
   params: Promise<{ locale: string }>
-  searchParams?: Promise<{ [key: string]: string | string[] | undefined }>
-}
+  searchParams: Promise<Record<string, string | string[] | undefined>>
+}) {
+  const { locale } = await params
+  const resolvedSearchParams = await searchParams
+  setRequestLocale(locale)
+  const [t] = await Promise.all([getTranslations('account.signUp')])
 
-export default async function SignUpPage({ searchParams }: SignUpPageProps) {
-  const [t, sp] = await Promise.all([
-    getTranslations('account.signUp'),
-    searchParams,
-  ])
-
-  const isCheckout = getIsCheckoutServer(sp)
+  const isCheckout = getIsCheckoutServer(resolvedSearchParams)
 
   return (
     <AuthPageGuard>

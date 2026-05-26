@@ -1,10 +1,16 @@
-import { getTranslations } from 'next-intl/server'
+import { setRequestLocale, getTranslations } from 'next-intl/server'
 import Link from 'next/link'
 import { LoginForm } from '@/features/auth/auth-login-form'
 import { AuthPageGuard } from '../auth-page-guard'
 import { StandardContainer } from '@/components/ui/standard-container'
 
-export default async function SignInPage() {
+export default async function Page({
+  params,
+}: {
+  params: Promise<{ locale: string }>
+}) {
+  const { locale } = await params
+  setRequestLocale(locale)
   const t = await getTranslations('account.signIn')
 
   return (

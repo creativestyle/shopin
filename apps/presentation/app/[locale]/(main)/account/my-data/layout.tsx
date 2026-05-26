@@ -1,10 +1,19 @@
 import type { ReactNode } from 'react'
+import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { AccountWrapper } from '@/features/account/account-wrapper'
 import { MyDataTabs } from '@/features/account/my-data-tabs'
 import { Breadcrumbs } from '@/components/ui/breadcrumbs'
-import { getTranslations } from 'next-intl/server'
 
-export default async function Layout({ children }: { children: ReactNode }) {
+export default async function Layout({
+  params,
+  children,
+}: {
+  params: Promise<{ locale: string }>
+  children: ReactNode
+}) {
+  const { locale } = await params
+  setRequestLocale(locale)
+
   const t = await getTranslations('account.myAccount')
 
   const breadcrumbs = [

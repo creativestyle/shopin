@@ -1,10 +1,17 @@
-import React from 'react'
+import type { ReactNode } from 'react'
+import { setRequestLocale } from 'next-intl/server'
 
-export default function CheckoutLayout({
+export const dynamic = 'force-dynamic'
+
+export default async function Layout({
+  params,
   children,
 }: {
-  children: React.ReactNode
+  params: Promise<{ locale: string }>
+  children: ReactNode
 }) {
-  // Parent layout just passes through - each route group has its own layout
+  const { locale } = await params
+  setRequestLocale(locale)
+
   return <>{children}</>
 }

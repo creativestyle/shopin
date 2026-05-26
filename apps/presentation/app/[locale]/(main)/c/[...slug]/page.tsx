@@ -1,68 +1,28 @@
+import { setRequestLocale } from 'next-intl/server'
 import { ProductCollectionPage } from '@/features/productCollection/product-collection-page'
-import {
-  FiltersSchema,
-  SaleOnlySchema,
-  PriceMinSchema,
-  PriceMaxSchema,
-  SortSchema,
-} from '@core/contracts/product-collection/product-collection-page'
-import {
-  MIN_PAGE,
-  DEFAULT_SORT_OPTION,
-  type SortOption,
-} from '@config/constants'
+import { parsePlpSearchParams } from '@/features/productCollection/parse-search-params'
 
-interface PageProps {
+export default async function Page({
+  params,
+  searchParams,
+}: {
   params: Promise<{ locale: string; slug: string[] }>
-  searchParams: Promise<{
-    page?: string
-    sort?: string
-    filters?: string
-    saleOnly?: string
-    priceMin?: string
-    priceMax?: string
-  }>
-}
+  searchParams: Promise<Record<string, string | string[] | undefined>>
+}) {
+  const { locale, slug } = await params
+  const search = await searchParams
+  setRequestLocale(locale)
 
-export default async function Page({ params, searchParams }: PageProps) {
-  const [
-    { locale, slug },
-    {
-      page,
-      sort,
-      filters: filtersParam,
-      saleOnly: saleOnlyParam,
-      priceMin: priceMinParam,
-      priceMax: priceMaxParam,
-    },
-  ] = await Promise.all([params, searchParams])
   const slugString = Array.isArray(slug) ? slug.join('/') : slug
-  const parsedPage = page ? parseInt(page, 10) : MIN_PAGE
-  const currentPage =
-    !isNaN(parsedPage) && parsedPage >= MIN_PAGE ? parsedPage : MIN_PAGE
-
-  const sortResult = SortSchema.safeParse(sort)
-  const currentSort: SortOption = sortResult.success
-    ? sortResult.data
-    : DEFAULT_SORT_OPTION
-
-  const filtersResult = FiltersSchema.safeParse(filtersParam)
-  const filters = filtersResult.success ? filtersResult.data : undefined
-
-  const saleOnly = SaleOnlySchema.parse(saleOnlyParam)
-
-  const priceMinResult = PriceMinSchema.safeParse(priceMinParam)
-  const priceMin = priceMinResult.success ? priceMinResult.data : undefined
-
-  const priceMaxResult = PriceMaxSchema.safeParse(priceMaxParam)
-  const priceMax = priceMaxResult.success ? priceMaxResult.data : undefined
+  const { page, sort, filters, saleOnly, priceMin, priceMax } =
+    parsePlpSearchParams(search)
 
   return (
     <ProductCollectionPage
       locale={locale}
       slug={slugString}
-      page={currentPage}
-      sort={currentSort}
+      page={page}
+      sort={sort}
       filters={filters}
       saleOnly={saleOnly}
       priceMin={priceMin}

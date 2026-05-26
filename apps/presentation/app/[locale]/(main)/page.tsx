@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { getLocale } from 'next-intl/server'
+import { setRequestLocale } from 'next-intl/server'
 import { ContentPage } from '@/features/content/content-page'
 import { buildContentPageMetadata } from '@/features/content/build-content-page-metadata'
 import { getContentPage } from '@/features/content/get-content-page'
@@ -7,20 +7,22 @@ import { getHomepageSlugForLocale } from '@/features/content/homepage-slug'
 import { getSiteBaseUrl } from '@/lib/site-url'
 import { logger } from '@/lib/logger'
 
-/**
- * Homepage metadata from CMS (same SEO fields as other content pages).
- */
-export async function generateMetadata(): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>
+}): Promise<Metadata> {
+  const { locale } = await params
+  setRequestLocale(locale)
   try {
-    const localePrefix = (await getLocale()) ?? 'en'
-    const slug = getHomepageSlugForLocale(localePrefix)
+    const slug = getHomepageSlugForLocale(locale)
     const [pageData, baseUrl] = await Promise.all([
       getContentPage(slug),
       getSiteBaseUrl(),
     ])
     return buildContentPageMetadata({
       pageData,
-      localePrefix,
+      localePrefix: locale,
       baseUrl,
     })
   } catch (error) {
@@ -34,11 +36,13 @@ export async function generateMetadata(): Promise<Metadata> {
   }
 }
 
-/**
- * Homepage uses the same content layout as other CMS pages (hero full width, grid, breadcrumb).
- */
-export default async function Home() {
-  const localePrefix = (await getLocale()) ?? 'en'
-  const slug = getHomepageSlugForLocale(localePrefix)
+export default async function Page({
+  params,
+}: {
+  params: Promise<{ locale: string }>
+}) {
+  const { locale } = await params
+  setRequestLocale(locale)
+  const slug = getHomepageSlugForLocale(locale)
   return <ContentPage slug={slug} />
 }

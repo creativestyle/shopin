@@ -1,14 +1,16 @@
+import { setRequestLocale, getTranslations } from 'next-intl/server'
 import { AccountWrapper } from '@/features/account/account-wrapper'
 import { Breadcrumbs } from '@/components/ui/breadcrumbs'
-import { getTranslations } from 'next-intl/server'
 import { OrderHistoryDetail } from '@/features/order-history/order-history-detail'
 
-interface PageProps {
-  params: Promise<{ orderId: string }>
-}
+export default async function Page({
+  params,
+}: {
+  params: Promise<{ locale: string; orderId: string }>
+}) {
+  const { locale, orderId } = await params
+  setRequestLocale(locale)
 
-export default async function Page({ params }: PageProps) {
-  const { orderId } = await params
   const t = await getTranslations('account.myAccount')
   const breadcrumbs = [
     { label: t('overviewLabel'), path: '/account' },

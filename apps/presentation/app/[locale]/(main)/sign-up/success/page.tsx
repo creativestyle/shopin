@@ -1,4 +1,4 @@
-import { getTranslations } from 'next-intl/server'
+import { setRequestLocale, getTranslations } from 'next-intl/server'
 import Link from 'next/link'
 import { Suspense } from 'react'
 import { RegistrationSuccessWithHref } from './registration-success-with-href'
@@ -7,7 +7,13 @@ import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import ChevronLeftIcon from '@/public/icons/chevronleft.svg'
 import { StandardContainer } from '@/components/ui/standard-container'
 
-export default async function RegistrationSuccessPage() {
+export default async function Page({
+  params,
+}: {
+  params: Promise<{ locale: string }>
+}) {
+  const { locale } = await params
+  setRequestLocale(locale)
   const t = await getTranslations('account.registrationSuccess')
 
   return (

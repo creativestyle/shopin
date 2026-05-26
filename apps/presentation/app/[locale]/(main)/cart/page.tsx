@@ -1,10 +1,18 @@
-import { getTranslations } from 'next-intl/server'
+import { setRequestLocale, getTranslations } from 'next-intl/server'
 import { Breadcrumbs } from '@/components/ui/breadcrumbs'
 import { CartContent } from '@/features/cart/cart-content'
 import { CartTitleCount } from '@/features/cart/cart-title-count'
 import { StandardContainer } from '@/components/ui/standard-container'
 
-export default async function CartPage() {
+export const dynamic = 'force-dynamic'
+
+export default async function Page({
+  params,
+}: {
+  params: Promise<{ locale: string }>
+}) {
+  const { locale } = await params
+  setRequestLocale(locale)
   const t = await getTranslations('cart')
 
   const breadcrumbs = [

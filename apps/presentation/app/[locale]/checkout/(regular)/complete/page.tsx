@@ -1,16 +1,17 @@
+import { setRequestLocale } from 'next-intl/server'
 import { CheckoutComplete } from '@/features/checkout/checkout-complete'
 import { StandardContainer } from '@/components/ui/standard-container'
 
-interface CheckoutCompletePageProps {
-  searchParams: Promise<{
-    orderId?: string
-    token?: string
-  }>
-}
-
-export default async function CheckoutCompletePage({
+export default async function Page({
+  params,
   searchParams,
-}: CheckoutCompletePageProps) {
+}: {
+  params: Promise<{ locale: string }>
+  searchParams: Promise<{ orderId?: string; token?: string }>
+}) {
+  const { locale } = await params
+  setRequestLocale(locale)
+
   const { orderId, token } = await searchParams
 
   return (
