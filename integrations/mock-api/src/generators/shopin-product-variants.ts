@@ -7,7 +7,8 @@ import type {
 
 type Faker = ReturnType<MockApi['getFaker']>
 
-type Variant = { id: string; attributes: Record<string, string> }
+type AttributeDetail = { name: string; label: string; value: string }
+type Variant = { id: string; attributes: AttributeDetail[] }
 
 function buildAllVariantCombinations(
   colors: ColorOptionItemResponse[],
@@ -23,11 +24,11 @@ function buildAllVariantCombinations(
             styleIndex +
             1
         ),
-        attributes: {
-          color: color.label,
-          size: size.label,
-          style: style.label,
-        },
+        attributes: [
+          { name: 'color', label: 'Color', value: color.label },
+          { name: 'size', label: 'Size', value: size.label },
+          { name: 'style', label: 'Style', value: style.label },
+        ],
       }))
     )
   )
@@ -36,7 +37,7 @@ function buildAllVariantCombinations(
 function groupByColor(variants: Variant[]): Map<string, Variant[]> {
   const byColor = new Map<string, Variant[]>()
   variants.forEach((variant) => {
-    const key = variant.attributes.color
+    const key = variant.attributes.find((a) => a.name === 'color')?.value ?? ''
     const arr = byColor.get(key) || []
     arr.push(variant)
     byColor.set(key, arr)
@@ -69,7 +70,7 @@ export function createShopinProductVariants(
   colors: ColorOptionItemResponse[],
   sizes: ValueOptionItemResponse[],
   styles: ImageOptionItemResponse[]
-): Array<{ id: string; attributes: Record<string, string> }> {
+): Variant[] {
   const all = buildAllVariantCombinations(colors, sizes, styles)
   const grouped = groupByColor(all)
   return chooseVariantsPerColor(faker, grouped)

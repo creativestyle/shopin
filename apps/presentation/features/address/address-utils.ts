@@ -176,7 +176,7 @@ export function getAddressFormDefaultValues(
     additionalStreetInfo: address?.additionalStreetInfo || '',
     postalCode: address?.postalCode || '',
     city: address?.city || '',
-    email: address?.email || (useCustomerDefaults ? customer?.email : '') || '',
+    email: address?.email || customer?.email || '',
     isDefaultShipping: address?.id
       ? address.id === defaultShippingAddressId
       : false,

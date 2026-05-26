@@ -4,23 +4,36 @@ import type {
   ImageOptionItemResponse,
 } from '@core/contracts/product/option-item'
 import type { ShopinVariantAttributes } from './variants'
+import type { AttributeDefinitionApiResponse } from '../schemas/attribute'
 import { isCssColor, parseColorPair } from '../helpers/color-utils'
+import { getLocalizedString } from '../helpers/get-localized-string'
+
+function resolveLabel(
+  attributeName: string,
+  defsByName: Record<string, AttributeDefinitionApiResponse> | undefined,
+  language: string
+): string {
+  return (
+    getLocalizedString(defsByName?.[attributeName]?.label, language) ??
+    attributeName
+  )
+}
 
 function buildOptionForAttribute(
   attributeName: string,
-  values: Set<string>
+  values: Set<string>,
+  label: string
 ): ConfigurableOptionResponse | undefined {
   const valueList = Array.from(values)
   return {
     key: attributeName,
-    label: attributeName,
+    label,
     type: 'string',
     options: valueList.map((label) => ({ label })),
   }
 }
 
 function buildColorOptionsForAttribute(
-  attributeName: string,
   values: Set<string>
 ): ColorOptionItemResponse[] | undefined {
   const valueList = Array.from(values)
@@ -103,7 +116,9 @@ export function collectAttributeValuesByName(
 
 export function mapConfigurableOptions(
   shopinVariants: ShopinVariantAttributes[],
-  variantIdToImage?: Record<string, string>
+  variantIdToImage?: Record<string, string>,
+  defsByName?: Record<string, AttributeDefinitionApiResponse>,
+  language = 'en'
 ): ConfigurableOptionResponse[] | undefined {
   const attrToValues = collectAttributeValuesByName(shopinVariants)
 
@@ -117,7 +132,9 @@ export function mapConfigurableOptions(
       attributeName,
       values,
       shopinVariants,
-      variantIdToImage
+      variantIdToImage,
+      defsByName,
+      language
     )
     if (chosen) {
       options.push(chosen)
@@ -131,9 +148,12 @@ function chooseConfigurableOptionForAttribute(
   attributeName: string,
   values: Set<string>,
   shopinVariants: ShopinVariantAttributes[],
-  variantIdToImage?: Record<string, string>
+  variantIdToImage?: Record<string, string>,
+  defsByName?: Record<string, AttributeDefinitionApiResponse>,
+  language = 'en'
 ) {
-  // Prefer image option when image mapping is provided and viable
+  const label = resolveLabel(attributeName, defsByName, language)
+
   const imageOptions = buildImageOptionsForAttribute(
     attributeName,
     shopinVariants,
@@ -142,22 +162,21 @@ function chooseConfigurableOptionForAttribute(
   if (imageOptions) {
     return {
       key: attributeName,
-      label: attributeName,
+      label,
       type: 'image' as const,
       options: imageOptions,
     }
   }
 
-  // Next, prefer color when all values look colorish or label:color pairs
-  const colorOptions = buildColorOptionsForAttribute(attributeName, values)
+  const colorOptions = buildColorOptionsForAttribute(values)
   if (colorOptions) {
     return {
       key: attributeName,
-      label: attributeName,
+      label,
       type: 'color' as const,
       options: colorOptions,
     }
   }
 
-  return buildOptionForAttribute(attributeName, values)
+  return buildOptionForAttribute(attributeName, values, label)
 }
