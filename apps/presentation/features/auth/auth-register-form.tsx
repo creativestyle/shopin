@@ -5,7 +5,9 @@ import { useTranslations } from 'next-intl'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Field, FieldError } from '@/components/ui/field'
+import { FormField } from '@/components/ui/form-field'
 import { TextInput } from '@/components/ui/inputs/text-input'
+import { DateInput } from '@/components/ui/inputs/date-input'
 import { PasswordInput } from '@/components/ui/inputs/password-input'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-button'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -143,119 +145,93 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
         />
 
         <div className='flex flex-col gap-4'>
-          <Controller
+          <FormField
             name='firstName'
             control={form.control}
-            render={({ field, fieldState }) => (
-              <Field data-invalid={fieldState.invalid}>
-                <TextInput
-                  {...field}
-                  id='firstName'
-                  label={t('firstNameLabel')}
-                  required
-                  autoComplete='given-name'
-                />
-                {fieldState.invalid && fieldState.error && (
-                  <FieldError error={fieldState.error} />
-                )}
-              </Field>
+            render={({ field, validationState }) => (
+              <TextInput
+                {...field}
+                id='firstName'
+                label={t('firstNameLabel')}
+                required
+                autoComplete='given-name'
+                validationState={validationState}
+              />
             )}
           />
 
-          <Controller
+          <FormField
             name='lastName'
             control={form.control}
-            render={({ field, fieldState }) => (
-              <Field data-invalid={fieldState.invalid}>
-                <TextInput
-                  {...field}
-                  id='lastName'
-                  label={t('lastNameLabel')}
-                  required
-                  autoComplete='family-name'
-                />
-                {fieldState.invalid && fieldState.error && (
-                  <FieldError error={fieldState.error} />
-                )}
-              </Field>
+            render={({ field, validationState }) => (
+              <TextInput
+                {...field}
+                id='lastName'
+                label={t('lastNameLabel')}
+                required
+                autoComplete='family-name'
+                validationState={validationState}
+              />
             )}
           />
         </div>
 
-        <Controller
+        <FormField
           name='email'
           control={form.control}
-          render={({ field, fieldState }) => (
-            <Field data-invalid={fieldState.invalid}>
-              <TextInput
-                {...field}
-                id='email'
-                label={t('emailLabel')}
-                required
-                autoComplete='email'
-              />
-              {fieldState.invalid && fieldState.error && (
-                <FieldError error={fieldState.error} />
-              )}
-            </Field>
+          render={({ field, validationState }) => (
+            <TextInput
+              {...field}
+              id='email'
+              label={t('emailLabel')}
+              required
+              autoComplete='email'
+              validationState={validationState}
+            />
           )}
         />
 
-        <Controller
+        <FormField
           name='dateOfBirth'
           control={form.control}
-          render={({ field, fieldState }) => (
-            <Field data-invalid={fieldState.invalid}>
-              <TextInput
-                {...field}
-                id='dateOfBirth'
-                label={t('dateOfBirthLabel')}
-                placeholder='YYYY-MM-DD'
-                type='date'
-                autoComplete='bday'
-              />
-              {fieldState.invalid && fieldState.error && (
-                <FieldError error={fieldState.error} />
-              )}
-            </Field>
+          render={({ field, validationState }) => (
+            <DateInput
+              {...field}
+              id='dateOfBirth'
+              label={t('dateOfBirthLabel')}
+              autoComplete='bday'
+              validationState={validationState}
+            />
           )}
         />
 
-        <Controller
+        <FormField
           name='password'
           control={form.control}
-          render={({ field, fieldState }) => (
-            <Field data-invalid={fieldState.invalid}>
-              <PasswordInput
-                {...field}
-                id='password'
-                label={t('passwordLabel')}
-                required
-                autoComplete='new-password'
-              />
-              {fieldState.invalid && fieldState.error && (
-                <FieldError error={fieldState.error} />
-              )}
-            </Field>
+          render={({ field, validationState }) => (
+            <PasswordInput
+              {...field}
+              id='password'
+              label={t('passwordLabel')}
+              required
+              autoComplete='new-password'
+              validationState={validationState}
+            />
           )}
         />
 
-        <Controller
+        <FormField
           name='confirmPassword'
           control={form.control}
-          render={({ field, fieldState }) => (
-            <Field data-invalid={fieldState.invalid}>
-              <PasswordInput
-                {...field}
-                id='confirmPassword'
-                label={t('confirmPasswordLabel')}
-                required
-                autoComplete='new-password'
-              />
-              {fieldState.invalid && fieldState.error && (
-                <FieldError error={fieldState.error} />
-              )}
-            </Field>
+          render={({ field, validationState }) => (
+            <PasswordInput
+              {...field}
+              id='confirmPassword'
+              label={t('confirmPasswordLabel')}
+              required
+              autoComplete='new-password'
+              validationState={validationState}
+            />
           )}
         />
 

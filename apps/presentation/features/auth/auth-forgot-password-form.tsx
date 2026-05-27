@@ -3,10 +3,10 @@
 import { FC, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
-import { Field, FieldError } from '@/components/ui/field'
+import { FormField } from '@/components/ui/form-field'
 import { TextInput } from '@/components/ui/inputs/text-input'
 import { ForgotPasswordRequestSchema } from '@core/contracts/auth/forgot-password'
-import { useForm, Controller } from 'react-hook-form'
+import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Toast } from '@/components/ui/toast'
 import { HttpError } from '@/lib/error-utils'
@@ -70,22 +70,18 @@ export const ForgotPasswordForm: FC<ForgotPasswordFormProps> = ({
         className='flex w-full flex-col content-stretch gap-6'
         noValidate
       >
-        <Controller
+        <FormField
           name='email'
           control={form.control}
-          render={({ field, fieldState }) => (
-            <Field data-invalid={fieldState.invalid}>
-              <TextInput
-                {...field}
-                id='email'
-                label={t('emailLabel')}
-                required
-                autoComplete='email'
-              />
-              {fieldState.invalid && fieldState.error && (
-                <FieldError error={fieldState.error} />
-              )}
-            </Field>
+          render={({ field, validationState }) => (
+            <TextInput
+              {...field}
+              id='email'
+              label={t('emailLabel')}
+              required
+              autoComplete='email'
+              validationState={validationState}
+            />
           )}
         />
 

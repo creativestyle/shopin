@@ -2,11 +2,11 @@
 
 import { useState } from 'react'
 import { useTranslations } from 'next-intl'
-import { useForm, Controller } from 'react-hook-form'
+import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useResendVerificationEmail } from './hooks/use-resend-verification-email'
 import { Button } from '@/components/ui/button'
-import { Field, FieldError } from '@/components/ui/field'
+import { FormField } from '@/components/ui/form-field'
 import { TextInput } from '@/components/ui/inputs/text-input'
 // TODO: Remove once email service provider is configured.
 import { TemporaryVerifyEmailButton } from './auth-temporary-verify-email-button'
@@ -65,22 +65,18 @@ export function ResendVerificationEmailForm() {
       className='flex w-full flex-col gap-2'
       noValidate
     >
-      <Controller
+      <FormField
         name='email'
         control={form.control}
-        render={({ field, fieldState }) => (
-          <Field data-invalid={fieldState.invalid}>
-            <TextInput
-              {...field}
-              id='resend-email'
-              label={t('resendEmailLabel')}
-              required
-              autoComplete='email'
-            />
-            {fieldState.invalid && fieldState.error && (
-              <FieldError error={fieldState.error} />
-            )}
-          </Field>
+        render={({ field, validationState }) => (
+          <TextInput
+            {...field}
+            id='resend-email'
+            label={t('resendEmailLabel')}
+            required
+            autoComplete='email'
+            validationState={validationState}
+          />
         )}
       />
       {error && (

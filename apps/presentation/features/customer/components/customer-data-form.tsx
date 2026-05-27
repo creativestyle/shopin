@@ -1,7 +1,9 @@
 'use client'
 
 import { Field, FieldError } from '@/components/ui/field'
+import { FormField } from '@/components/ui/form-field'
 import { TextInput } from '@/components/ui/inputs/text-input'
+import { DateInput } from '@/components/ui/inputs/date-input'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-button'
 import { addToast } from '@/components/ui/toast'
 import { useBffClientMutation } from '@/lib/bff/utils/mutations'
@@ -118,69 +120,49 @@ export const CustomerDataForm: FC<ContactDataFormProps> = ({
         )}
       />
 
-      <Field>
-        <Controller
-          name='firstName'
-          control={form.control}
-          render={({ field, fieldState }) => (
-            <Field data-invalid={fieldState.invalid}>
-              <TextInput
-                {...field}
-                id='firstName'
-                label={t('customerData.firstName')}
-                required
-                autoComplete='given-name'
-              />
-              {fieldState.invalid && fieldState.error && (
-                <FieldError error={fieldState.error} />
-              )}
-            </Field>
-          )}
-        />
-      </Field>
+      <FormField
+        name='firstName'
+        control={form.control}
+        render={({ field, validationState }) => (
+          <TextInput
+            {...field}
+            id='firstName'
+            label={t('customerData.firstName')}
+            required
+            autoComplete='given-name'
+            validationState={validationState}
+          />
+        )}
+      />
 
-      <Field>
-        <Controller
-          name='lastName'
-          control={form.control}
-          render={({ field, fieldState }) => (
-            <Field data-invalid={fieldState.invalid}>
-              <TextInput
-                {...field}
-                id='lastName'
-                label={t('customerData.lastName')}
-                required
-                autoComplete='family-name'
-              />
-              {fieldState.invalid && fieldState.error && (
-                <FieldError error={fieldState.error} />
-              )}
-            </Field>
-          )}
-        />
-      </Field>
+      <FormField
+        name='lastName'
+        control={form.control}
+        render={({ field, validationState }) => (
+          <TextInput
+            {...field}
+            id='lastName'
+            label={t('customerData.lastName')}
+            required
+            autoComplete='family-name'
+            validationState={validationState}
+          />
+        )}
+      />
 
-      <Field>
-        <Controller
-          name='dateOfBirth'
-          control={form.control}
-          render={({ field, fieldState }) => (
-            <>
-              <TextInput
-                {...field}
-                id='dateOfBirth'
-                label={t('customerData.dateOfBirth')}
-                placeholder='YYYY-MM-DD'
-                type='date'
-                aria-invalid={!!fieldState.error}
-              />
-              {fieldState.invalid && fieldState.error && (
-                <FieldError error={fieldState.error} />
-              )}
-            </>
-          )}
-        />
-      </Field>
+      <FormField
+        name='dateOfBirth'
+        control={form.control}
+        render={({ field, validationState }) => (
+          <DateInput
+            {...field}
+            id='dateOfBirth'
+            label={t('customerData.dateOfBirth')}
+            autoComplete='bday'
+            validationState={validationState}
+          />
+        )}
+      />
     </form>
   )
 }
