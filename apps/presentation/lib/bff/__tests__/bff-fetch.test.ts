@@ -13,8 +13,8 @@ jest.mock('next/headers', () => ({
   }),
 }))
 
-jest.mock('@demo/data-source-selector', () => ({
-  getDataSourceHeader: jest.fn(() => ({})),
+jest.mock('@/lib/vary/vary-key', () => ({
+  resolveVaryHeadersFromCookies: jest.fn(() => ({})),
 }))
 
 jest.mock('@/lib/draft-mode', () => ({
@@ -133,36 +133,36 @@ describe('bffFetch', () => {
     })
   })
 
-  describe('dataSource option', () => {
-    it('sets X-Data-Source header when explicit dataSource is provided', async () => {
+  describe('varyHeaders option', () => {
+    it('sends explicit varyHeaders as-is', async () => {
       await bffFetch('http://bff', 'nav', {
-        dataSource: 'commercetools-algolia-set',
+        varyHeaders: { 'X-Data-Source': 'commercetools-algolia-set' },
       })
       expect(lastCallHeaders()['x-data-source']).toBe(
         'commercetools-algolia-set'
       )
     })
 
-    it('uses getDataSourceHeader fallback when no explicit dataSource provided', async () => {
-      const { getDataSourceHeader } = jest.requireMock(
-        '@demo/data-source-selector'
+    it('falls back to resolveVaryHeadersFromCookies when varyHeaders not provided', async () => {
+      const { resolveVaryHeadersFromCookies } = jest.requireMock(
+        '@/lib/vary/vary-key'
       )
-      getDataSourceHeader.mockReturnValue({
+      resolveVaryHeadersFromCookies.mockReturnValue({
         'X-Data-Source': 'commercetools-set',
       })
       await bffFetch('http://bff', 'nav')
       expect(lastCallHeaders()['x-data-source']).toBe('commercetools-set')
     })
 
-    it('explicit dataSource takes precedence over cookie-based header', async () => {
-      const { getDataSourceHeader } = jest.requireMock(
-        '@demo/data-source-selector'
+    it('explicit varyHeaders takes precedence over cookie-based fallback', async () => {
+      const { resolveVaryHeadersFromCookies } = jest.requireMock(
+        '@/lib/vary/vary-key'
       )
-      getDataSourceHeader.mockReturnValue({
+      resolveVaryHeadersFromCookies.mockReturnValue({
         'X-Data-Source': 'commercetools-set',
       })
       await bffFetch('http://bff', 'nav', {
-        dataSource: 'commercetools-algolia-set',
+        varyHeaders: { 'X-Data-Source': 'commercetools-algolia-set' },
       })
       expect(lastCallHeaders()['x-data-source']).toBe(
         'commercetools-algolia-set'

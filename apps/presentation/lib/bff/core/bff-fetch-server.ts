@@ -4,7 +4,8 @@ import { bffFetch as baseBffFetch } from './bff-fetch'
 import { getBffServerUrl } from './bff-utils-server'
 import { getLocale } from 'next-intl/server'
 import { logger } from '@/lib/logger'
-import { getRequestDataSource } from '@/lib/request-context/data-source'
+import { getRequestVary } from '@/lib/request-context/vary'
+import { varyHeaders } from '@/lib/vary/vary-key'
 
 /**
  * Server-side BFF client
@@ -36,7 +37,17 @@ export async function createBffFetchServer(opts?: {
     opts?.locale || getLocale(),
     getBffServerUrl(),
   ])
-  const dataSource = getRequestDataSource()
+  // getRequestVary() is set by [vary]/[locale]/layout.tsx on initial load and ISR.
+  // For client-side navigation within the same layout scope, the layout doesn't
+  // re-render, so the context is unset. Fall back to cookie-based resolution
+  // (skipServerCookies: false) in that case — cookies are always available for
+  // dynamic renders triggered by client navigation.
+  let resolvedVaryHeaders: Record<string, string> | undefined
+  try {
+    resolvedVaryHeaders = varyHeaders(getRequestVary())
+  } catch {
+    resolvedVaryHeaders = undefined
+  }
 
   return {
     fetch: async (path: string, options?: RequestInit) => {
@@ -44,11 +55,20 @@ export async function createBffFetchServer(opts?: {
         const extraOpts =
           opts?.isDraft === true
             ? {
-                skipServerCookies: true as const,
                 isDraft: true as const,
-                dataSource,
+                ...(resolvedVaryHeaders != null
+                  ? {
+                      skipServerCookies: true as const,
+                      varyHeaders: resolvedVaryHeaders,
+                    }
+                  : {}),
               }
-            : { skipServerCookies: true as const, dataSource }
+            : resolvedVaryHeaders != null
+              ? {
+                  skipServerCookies: true as const,
+                  varyHeaders: resolvedVaryHeaders,
+                }
+              : {}
         return await baseBffFetch(
           baseUrl,
           path,

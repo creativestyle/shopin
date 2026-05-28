@@ -17,13 +17,16 @@ import { cartKeys } from '@/features/cart/cart-keys'
 import { wishlistKeys } from '@/features/wishlist/wishlist-keys'
 import { orderHistoryKeys } from '@/features/order-history/order-history-keys'
 
-// Excluded from production bundles via dead-code elimination on process.env.NODE_ENV
+// Excluded from production bundles via dead-code elimination on process.env.NODE_ENV.
+// Errors are caught so a failed chunk load in dev doesn't trigger an HMR reload loop.
 const ReactQueryDevtools =
   process.env.NODE_ENV === 'development'
-    ? dynamic(() =>
-        import('@tanstack/react-query-devtools').then((mod) => ({
-          default: mod.ReactQueryDevtools,
-        }))
+    ? dynamic(
+        () =>
+          import('@tanstack/react-query-devtools')
+            .then((mod) => ({ default: mod.ReactQueryDevtools }))
+            .catch(() => ({ default: () => null })),
+        { ssr: false }
       )
     : () => null
 

@@ -4,10 +4,7 @@ import {
   I18N_CONFIG,
   listLocales,
   getLocale,
-  ALLOWED_DATA_SOURCES,
-  DEFAULT_DATA_SOURCE,
   CORRELATION_ID_HEADER,
-  type DataSource,
 } from '@config/constants'
 import { AcceptLanguageUtils } from '@core/i18n'
 import {
@@ -16,6 +13,7 @@ import {
 } from '@core/logger-config'
 import { isPreviewTokenValid, PREVIEW_TOKEN_COOKIE } from '@/lib/draft-mode'
 import { getHomepageSlugForLocale } from '@/features/content/homepage-slug'
+import { resolveVary, encodeVary } from '@/lib/vary/vary-key'
 
 const intlMiddleware = createMiddleware({
   locales: listLocales().map((l) => l.urlPrefix),
@@ -27,18 +25,9 @@ const intlMiddleware = createMiddleware({
 const knownLocalePrefixes = new Set(listLocales().map((l) => l.urlPrefix))
 const defaultLocalePrefix = getLocale(I18N_CONFIG.defaultLocale).urlPrefix
 
-/** Cookie name for data-source selection (set by demo selector UI). */
-const DATA_SOURCE_COOKIE = 'data-source'
-
-function resolveDataSource(request: NextRequest): DataSource {
-  const raw = request.cookies.get(DATA_SOURCE_COOKIE)?.value
-  return raw && (ALLOWED_DATA_SOURCES as readonly string[]).includes(raw)
-    ? (raw as DataSource)
-    : DEFAULT_DATA_SOURCE
-}
-
 /** Ensures responses carry Vary: Cookie so shared HTTP caches (CDN, proxy) do not
- *  serve one user's data-source variant to a different user. */
+ *  serve one vary-key variant to a different user. All dimensions in VARY_DIMENSIONS
+ *  must remain cookie-sourced for this to be correct. */
 function withCookieVary(response: NextResponse): NextResponse {
   response.headers.set('Vary', 'Cookie')
   return response
@@ -59,20 +48,7 @@ export default function proxy(request: NextRequest) {
   const requestHeaders = new Headers(request.headers)
   requestHeaders.set(CORRELATION_ID_HEADER, correlationId)
 
-  // Strip incoming /<dataSource>/... URLs — these are internal rewrite targets that
-  // should never be publicly accessible. Redirect to the clean URL without the segment
-  // so the browser re-enters middleware and gets the correct rewrite from the cookie.
-  const firstSegment = pathname.split('/').filter(Boolean)[0]
-  if (
-    firstSegment &&
-    (ALLOWED_DATA_SOURCES as readonly string[]).includes(firstSegment)
-  ) {
-    const url = request.nextUrl.clone()
-    url.pathname = '/' + pathname.split('/').filter(Boolean).slice(1).join('/')
-    return withCookieVary(NextResponse.redirect(url, 302))
-  }
-
-  const dataSource = resolveDataSource(request)
+  const varyKey = encodeVary(resolveVary((n) => request.cookies.get(n)?.value))
 
   // intlMiddleware returns NextResponse.next() for the default locale at '/',
   // leaving the [locale] dynamic segment without a value → 404.
@@ -84,13 +60,13 @@ export default function proxy(request: NextRequest) {
     )
     if (language === I18N_CONFIG.defaultLocale) {
       const url = request.nextUrl.clone()
-      url.pathname = `/${dataSource}/${getLocale(language).urlPrefix}`
+      url.pathname = `/${varyKey}/${getLocale(language).urlPrefix}`
       return withCookieVary(
         NextResponse.rewrite(url, { request: { headers: requestHeaders } })
       )
     }
     // Non-default locale at root — let intlMiddleware redirect to /<locale>;
-    // the browser follows the redirect and our middleware injects [dataSource] on the next pass.
+    // the browser follows the redirect and our middleware injects [vary] on the next pass.
     return withCookieVary(intlMiddleware(request))
   }
 
@@ -106,19 +82,19 @@ export default function proxy(request: NextRequest) {
       const slugPath = segments.slice(1).join('/')
       const url = request.nextUrl.clone()
       url.pathname = slugPath
-        ? `/${dataSource}/${locale}/preview/${slugPath}`
-        : `/${dataSource}/${locale}/preview/${getHomepageSlugForLocale(locale)}`
+        ? `/${varyKey}/${locale}/preview/${slugPath}`
+        : `/${varyKey}/${locale}/preview/${getHomepageSlugForLocale(locale)}`
       return withCookieVary(
         NextResponse.rewrite(url, { request: { headers: requestHeaders } })
       )
     }
   }
 
-  // For all remaining paths, run intlMiddleware and then inject the [dataSource] segment.
+  // For all remaining paths, run intlMiddleware and then inject the [vary] segment.
   const intlResponse = intlMiddleware(request)
 
   // If intlMiddleware issued a redirect (locale detection), let it through — the browser
-  // follows the redirect and our middleware injects [dataSource] on the next pass.
+  // follows the redirect and our middleware injects [vary] on the next pass.
   if (intlResponse.headers.get('location')) {
     return withCookieVary(intlResponse)
   }
@@ -133,29 +109,31 @@ export default function proxy(request: NextRequest) {
   const localeSegment = segments[0]
 
   if (localeSegment && knownLocalePrefixes.has(localeSegment)) {
-    // Path has an explicit locale prefix: /en/foo → /${dataSource}/en/foo
+    // Path has an explicit locale prefix: /en/foo → /${varyKey}/en/foo
     const url = request.nextUrl.clone()
-    url.pathname = `/${dataSource}/${segments.join('/')}`
+    url.pathname = `/${varyKey}/${segments.join('/')}`
     return withCookieVary(
       NextResponse.rewrite(url, { request: { headers: requestHeaders } })
     )
   }
 
-  // Default locale path without prefix: /foo/bar → /${dataSource}/${defaultLocale}/foo/bar
+  // Default locale path without prefix: /foo/bar → /${varyKey}/${defaultLocale}/foo/bar
   const url = request.nextUrl.clone()
   url.pathname =
     segments.length > 0
-      ? `/${dataSource}/${defaultLocalePrefix}/${segments.join('/')}`
-      : `/${dataSource}/${defaultLocalePrefix}`
+      ? `/${varyKey}/${defaultLocalePrefix}/${segments.join('/')}`
+      : `/${varyKey}/${defaultLocalePrefix}`
   return withCookieVary(
     NextResponse.rewrite(url, { request: { headers: requestHeaders } })
   )
 }
 
 export const config = {
-  // Match only internationalized pathnames, exclude static assets and API routes
+  // Match only internationalized pathnames, exclude static assets, API routes,
+  // and internal vary-key rewrite targets (~ prefix) so the proxy does not
+  // re-run on its own rewrites and create a redirect loop.
   matcher: [
     '/',
-    '/((?!api|_next/static|_next/image|favicon.ico|images|.*\\.).*)',
+    '/((?!api|_next/static|_next/image|favicon.ico|images|~|.*\\.).*)',
   ],
 }

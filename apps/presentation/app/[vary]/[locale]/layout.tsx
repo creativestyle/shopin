@@ -16,9 +16,9 @@ import {
   urlPrefixToRfc,
   PRODUCT_IMAGE_HOSTS,
   CONTENT_IMAGE_API_HOSTS,
-  type DataSource,
 } from '@config/constants'
-import { setRequestDataSource } from '@/lib/request-context/data-source'
+import { setRequestVary } from '@/lib/request-context/vary'
+import { decodeVary } from '@/lib/vary/vary-key'
 
 const dmSans = DM_Sans({
   subsets: ['latin'],
@@ -32,11 +32,11 @@ export default async function LocaleLayout({
   params,
   children,
 }: {
-  params: Promise<{ dataSource: DataSource; locale: string }>
+  params: Promise<{ vary: string; locale: string }>
   children: ReactNode
 }) {
-  const { dataSource, locale } = await params
-  setRequestDataSource(dataSource)
+  const { vary, locale } = await params
+  setRequestVary(decodeVary(vary))
   setRequestLocale(locale)
 
   if (!listLocales().some((l) => l.urlPrefix === locale)) {

@@ -10,8 +10,8 @@
  * The baseUrl parameter is provided by the calling code (server or client)
  */
 
-import { getDataSourceHeader } from '@demo/data-source-selector'
-import { I18N_CONFIG, urlPrefixToRfc, type DataSource } from '@config/constants'
+import { resolveVaryHeadersFromCookies } from '@/lib/vary/vary-key'
+import { I18N_CONFIG, urlPrefixToRfc } from '@config/constants'
 import { AcceptLanguageUtils, LANGUAGE_HEADER } from '@core/i18n'
 import { CORRELATION_ID_HEADER } from '@config/constants'
 import { DRAFT_MODE_HEADER, getDraftModeHeaderValue } from '@/lib/draft-mode'
@@ -21,8 +21,9 @@ type BffFetchOptions = RequestInit & {
   skipServerCookies?: boolean
   /** Explicitly enable draft mode (preview route). When true, adds the draft header without reading cookies. */
   isDraft?: boolean
-  /** Explicit data source — bypasses cookie parsing. Set by server-side callers that read from the URL segment. */
-  dataSource?: DataSource
+  /** Resolved vary headers (e.g. X-Data-Source). Set by server-side callers from the URL [vary] segment.
+   *  When absent, headers are derived from cookies via resolveVaryHeadersFromCookies. */
+  varyHeaders?: Record<string, string>
 }
 
 type HeadersInput =
@@ -113,9 +114,8 @@ export async function bffFetch(
 
   const draftHeader = isDraftMode ? getDraftModeHeaderValue() : undefined
 
-  const dataSourceHeaders = options?.dataSource
-    ? { 'X-Data-Source': options.dataSource }
-    : getDataSourceHeader(cookieInput)
+  const headersFromVary =
+    options?.varyHeaders ?? resolveVaryHeadersFromCookies(cookieInput)
 
   const defaultOptions: BffFetchOptions = {
     ...options,
@@ -123,7 +123,7 @@ export async function bffFetch(
     headers: {
       'Content-Type': 'application/json',
       [LANGUAGE_HEADER]: acceptLanguageHeader,
-      ...dataSourceHeaders,
+      ...headersFromVary,
       ...(correlationId && { [CORRELATION_ID_HEADER]: correlationId }),
       ...(draftHeader && { [DRAFT_MODE_HEADER]: draftHeader }),
       ...normalizeHeaders(options?.headers),
