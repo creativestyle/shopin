@@ -50,25 +50,22 @@ function DecoratedPrice({
   return (
     <div className='flex flex-wrap items-baseline justify-end gap-1'>
       {originalPrice !== undefined && (
-        <span className='order-1 text-right text-sm/[1.6] text-gray-500 line-through'>
+        <span className='text-right text-sm/[1.6] text-gray-500 line-through'>
           {formatPriceWithPrefix(originalPrice, locale, {
             currency,
             fractionDigits,
           })}
         </span>
       )}
+      {taxNote && (
+        <span className='text-sm/[1.6] text-gray-500'>{taxNote}</span>
+      )}
       <span
-        className={cn(
-          variants({ variant, size, className }),
-          'order-2 text-right'
-        )}
+        className={cn(variants({ variant, size, className }), 'text-right')}
         {...props}
       >
         <span>{formattedPrice}</span>
       </span>
-      {taxNote && (
-        <span className='text-sm/[1.6] text-gray-500'>{taxNote}</span>
-      )}
     </div>
   )
 }
