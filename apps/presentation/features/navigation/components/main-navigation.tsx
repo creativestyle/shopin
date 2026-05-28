@@ -114,7 +114,7 @@ export const MainNavigation: React.FC<MainNavigationProps> = ({
                 className={cn(
                   'text-center text-base leading-normal font-normal whitespace-nowrap',
                   {
-                    'text-red-400': item.isHighlighted,
+                    'text-primary': item.isHighlighted,
                     'text-gray-700': !item.isHighlighted,
                   }
                 )}

@@ -26,7 +26,7 @@ export function NavigationItem({
         className={cn(
           'flex h-11 w-full cursor-pointer items-center lord-of-the-focus-ring text-base font-normal',
           {
-            'text-red-400': isHighlighted,
+            'text-primary': isHighlighted,
             'text-gray-700': !isHighlighted,
           }
         )}
