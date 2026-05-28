@@ -17,7 +17,8 @@ export function useRemoveCartItem() {
     mutationFn: async (request: { lineItemId: string }) => {
       return await cartService.removeItem(request)
     },
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
+      await queryClient.cancelQueries({ queryKey: cartKeys.all, exact: true })
       queryClient.setQueryData(cartKeys.all, data)
     },
   })

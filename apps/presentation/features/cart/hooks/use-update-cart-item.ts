@@ -17,7 +17,8 @@ export function useUpdateCartItem() {
     mutationFn: async (request: { lineItemId: string; quantity: number }) => {
       return await cartService.updateItem(request)
     },
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
+      await queryClient.cancelQueries({ queryKey: cartKeys.all, exact: true })
       queryClient.setQueryData(cartKeys.all, data)
     },
   })
