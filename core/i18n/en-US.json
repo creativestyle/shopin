@@ -133,6 +133,7 @@
       "dialogDescription": "Refine product listing by sort order, filters, price range, and sale status.",
       "saleOnly": "Sale only %",
       "searchByName": "Search by name",
+      "clearSearchByName": "Clear search by name",
       "priceRange": "Price",
       "color": "Color",
       "size": "Size",

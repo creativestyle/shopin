@@ -10,8 +10,8 @@ import { OrderHistoryRow } from './components/order-history-row'
 import { Button } from '@/components/ui/button'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { ErrorDisplay } from '@/components/ui/error-display'
-import ChevronLeftIcon from '@/public/icons/chevronleft.svg'
-import ChevronRightIcon from '@/public/icons/chevronright.svg'
+import ChevronLeftIcon from '@/public/icons/chevron-left.svg'
+import ChevronRightIcon from '@/public/icons/chevron-right.svg'
 
 const COLUMN_KEYS = [
   'products',
