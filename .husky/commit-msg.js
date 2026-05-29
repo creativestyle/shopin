@@ -9,6 +9,10 @@ try {
     .find((line) => !line.startsWith("#"))
     ?.trim();
 
+  if (commitHeader?.startsWith("Merge ")) {
+    process.exit(0);
+  }
+
   const commitPattern =
     /^(build|ci|docs|feat|fix|perf|refactor|test)(\(.+\))?!?: (\.+|[^\[\]].+)/;
 
