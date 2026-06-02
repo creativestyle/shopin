@@ -64,13 +64,10 @@ export function mapLineItems(
           language
         ) || 'Unknown Product'
 
-      const price = item.variant?.prices?.[0]
+      const price = item.price
       const regularPriceCents = price?.value.centAmount ?? 0
       const discountedCents = price?.discounted?.value.centAmount
-      const currency =
-        price?.value.currencyCode ||
-        cart.currency ||
-        cart.totalPrice.currencyCode
+      const currency = price?.value.currencyCode ?? cart.totalPrice.currencyCode
 
       const productSlug = getLocalizedProductSlug(item.product, language)
 
@@ -116,7 +113,7 @@ export function calculateLineItemsSubtotal(
       if (item.totalPrice) {
         return sum + item.totalPrice.centAmount
       }
-      const unitPrice = item.variant?.prices?.[0]?.value.centAmount ?? 0
+      const unitPrice = item.price?.value.centAmount ?? 0
       return sum + unitPrice * item.quantity
     }, 0) ?? 0
   )
@@ -230,7 +227,7 @@ export function mapCartToResponse(
   const grandTotalCents =
     cart.taxedPrice?.totalGross.centAmount ?? cart.totalPrice.centAmount
 
-  const currency = cart.currency || cart.totalPrice.currencyCode
+  const currency = cart.totalPrice.currencyCode
   const itemCount = calculateItemCount(lineItems)
 
   const shippingInfo = mapShippingInfo(cart.shippingInfo)

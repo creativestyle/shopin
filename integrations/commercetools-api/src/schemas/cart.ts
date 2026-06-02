@@ -78,6 +78,21 @@ export const CartLineItemApiResponseSchema = z.object({
   product: CartLineItemProductApiResponseSchema.optional(),
   variant: CartLineItemVariantApiResponseSchema.optional(),
   totalPrice: TypedMoneyApiResponseSchema.optional(),
+  price: z
+    .object({
+      value: z.object({
+        centAmount: z.number(),
+        currencyCode: z.string(),
+      }),
+      discounted: z
+        .object({
+          value: z.object({
+            centAmount: z.number(),
+          }),
+        })
+        .optional(),
+    })
+    .optional(),
 })
 
 const AddressApiResponseSchema = z.object({
@@ -182,7 +197,6 @@ export const CartApiResponseSchema = z.object({
       discountedAmount: TypedMoneyApiResponseSchema,
     })
     .optional(),
-  currency: z.string().optional(),
   billingAddress: AddressApiResponseSchema.optional(),
   shippingAddress: AddressApiResponseSchema.optional(),
   shippingInfo: ShippingInfoApiResponseSchema,
