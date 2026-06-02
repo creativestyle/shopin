@@ -78,6 +78,16 @@ const weeklyOperationsData: BasicTableData = {
   ],
 }
 
+const productFactsData = {
+  caption: 'Key product facts shown as simple two-column pairs.',
+  body: [
+    ['Material', '100% brushed cotton'],
+    ['Fit', 'Relaxed'],
+    ['Care', 'Cold wash / line dry'],
+    ['Origin', 'Made in Portugal'],
+  ],
+}
+
 const enablementPathsData: ComparisonTableData = {
   caption:
     'Enablement path comparison for onboarding internal teams to the platform.',
@@ -134,6 +144,23 @@ function BasicTable({
   )
 }
 
+function SimpleTable() {
+  return (
+    <Table type='flex-simple'>
+      <TableCaption>{productFactsData.caption}</TableCaption>
+      <TableBody>
+        {productFactsData.body.map((row) => (
+          <TableRow key={row[0]}>
+            {row.map((cell, index) => (
+              <TableCell key={index}>{cell}</TableCell>
+            ))}
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
+  )
+}
+
 const meta = {
   title: 'UI/Table',
   component: Table,
@@ -164,6 +191,11 @@ export const WeeklyOperationsScrollable: Story = {
       type='scrollable'
     />
   ),
+}
+
+export const ProductFactsSimple: Story = {
+  name: 'Product facts (simple)',
+  render: () => <SimpleTable />,
 }
 
 export const EnablementComparison: Story = {

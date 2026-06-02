@@ -1,7 +1,6 @@
 'use client'
 
 import * as React from 'react'
-import { useEffect, useRef } from 'react'
 import { useTranslations } from 'next-intl'
 import {
   Dialog,
@@ -26,18 +25,9 @@ interface AddToCartModalProps {
 export function AddToCartModal({ open, onOpenChange }: AddToCartModalProps) {
   const t = useTranslations('cart')
   const tCommon = useTranslations('common')
-  const { cart, refetch, error } = useCart()
+  const { cart, error } = useCart()
   const productsScrollRef = React.useRef<HTMLDivElement>(null)
   const scrollSentinelRef = React.useRef<HTMLDivElement>(null)
-  const wasOpenRef = useRef(false)
-
-  // Refetch cart data when modal opens
-  useEffect(() => {
-    if (open && !wasOpenRef.current) {
-      refetch()
-    }
-    wasOpenRef.current = open
-  }, [open, refetch])
 
   if (error || !cart || cart.itemCount === 0) {
     return null

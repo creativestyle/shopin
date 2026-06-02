@@ -109,7 +109,7 @@ function PriceBox({
             />
           )}
 
-        {footer && <span className='sr-only'>{footer}</span>}
+        {footer && <span className='sr-only text-gray-900'>{footer}</span>}
       </div>
 
       {price.recommendedRetailPriceInCents !== undefined &&
