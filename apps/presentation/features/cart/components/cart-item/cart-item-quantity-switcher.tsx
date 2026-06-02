@@ -28,6 +28,7 @@ export function CartItemQuantitySwitcher({
       onDecrease={handleDecrease}
       onIncrease={handleIncrease}
       onChange={handleDirectInputChange}
+      max={item.maxQuantity}
       ariaLabel={t('item.quantity')}
       className={className}
     />

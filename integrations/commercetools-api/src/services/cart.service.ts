@@ -1,10 +1,11 @@
-import { Injectable, Inject, Scope } from '@nestjs/common'
+import { Injectable, Inject, Logger, Scope } from '@nestjs/common'
 import { LANGUAGE_TOKEN } from '@core/i18n'
 import { resolveCurrencyFromLanguage } from '@core/i18n/currency-utils'
 import { resolveCountryFromLanguage } from '@core/i18n/language-tag-utils'
 import type { LanguageProvider } from '@apps/bff/src/common/language/language.provider'
 import type {
   CartResponse,
+  LineItemResponse,
   SetBillingAddressRequest,
   SetShippingAddressRequest,
 } from '@core/contracts/cart/cart'
@@ -14,6 +15,7 @@ import type {
   SetShippingMethodRequest,
 } from '@core/contracts/cart/shipping-method'
 import { UserClientService } from '../client/user-client.service'
+import { ServerClientService } from '../client/server-client.service'
 import { mapCartToResponse } from '../mappers/cart'
 import { mapShippingMethodsToResponse } from '../mappers/shipping-method'
 import { CartApiResponseSchema } from '../schemas/cart'
@@ -33,6 +35,7 @@ export class CartService {
 
   constructor(
     private readonly userClientService: UserClientService,
+    private readonly serverClientService: ServerClientService,
     @Inject(LANGUAGE_TOKEN) private readonly languageProvider: LanguageProvider
   ) {}
 
@@ -57,7 +60,102 @@ export class CartService {
   ): Promise<CartResponse> {
     const validatedCart = CartApiResponseSchema.parse(responseBody)
     const mappedCart = mapCartToResponse(validatedCart, currentLanguage)
-    return CartResponseSchema.parse(mappedCart)
+    const enrichedCart = await this.enrichWithInventory(mappedCart)
+    return CartResponseSchema.parse(enrichedCart)
+  }
+
+  private async enrichWithInventory(cart: CartResponse): Promise<CartResponse> {
+    const skus = this.getCartLineItemSkus(cart.lineItems)
+
+    if (skus.length === 0) {
+      return cart
+    }
+
+    try {
+      const inventoryBySku = await this.getInventoryBySku(skus)
+
+      if (inventoryBySku.size === 0) {
+        return cart
+      }
+
+      return {
+        ...cart,
+        lineItems: cart.lineItems.map((item) =>
+          this.applyInventoryLimit(item, inventoryBySku)
+        ),
+      }
+    } catch (error) {
+      Logger.warn(
+        'Failed to fetch inventory for cart line items',
+        error,
+        CartService.name
+      )
+      return cart
+    }
+  }
+
+  private getCartLineItemSkus(lineItems: LineItemResponse[]): string[] {
+    return [
+      ...new Set(
+        lineItems
+          .map((item) => item.sku)
+          .filter((sku): sku is string => sku != null)
+      ),
+    ]
+  }
+
+  private async getInventoryBySku(
+    skus: string[]
+  ): Promise<Map<string, number>> {
+    const response = await this.serverClientService
+      .getClient()
+      .inventory()
+      .get({
+        queryArgs: {
+          where: this.buildInventoryWhereClause(skus),
+          limit: skus.length,
+        },
+      })
+      .execute()
+
+    return new Map<string, number>(
+      (response.body.results ?? [])
+        .filter(
+          (entry): entry is typeof entry & { sku: string } =>
+            entry.sku != null && entry.availableQuantity != null
+        )
+        .map((entry) => [entry.sku, entry.availableQuantity])
+    )
+  }
+
+  private applyInventoryLimit(
+    item: LineItemResponse,
+    inventoryBySku: Map<string, number>
+  ): LineItemResponse {
+    const availableQuantity = item.sku
+      ? inventoryBySku.get(item.sku)
+      : undefined
+
+    if (availableQuantity == null) {
+      return item
+    }
+
+    return {
+      ...item,
+      maxQuantity: Math.max(item.quantity, availableQuantity),
+    }
+  }
+
+  private buildInventoryWhereClause(skus: string[]): string {
+    const escapedSkus = skus
+      .map((sku) => `"${this.escapeWhereStringValue(sku)}"`)
+      .join(', ')
+
+    return `sku in (${escapedSkus})`
+  }
+
+  private escapeWhereStringValue(value: string): string {
+    return value.replace(/\\/g, '\\\\').replace(/"/g, '\\"')
   }
 
   async updateCartWithActions(
