@@ -50,13 +50,10 @@ function SelectRoot({
   const isOpen = openProp ?? internalOpen
   const contentId = `select-content-${React.useId().replace(/:/g, '')}`
 
-  const handleOpenChange = React.useCallback(
-    (nextOpen: boolean) => {
-      setInternalOpen(nextOpen)
-      onOpenChange?.(nextOpen)
-    },
-    [onOpenChange]
-  )
+  const handleOpenChange = (nextOpen: boolean) => {
+    setInternalOpen(nextOpen)
+    onOpenChange?.(nextOpen)
+  }
 
   return (
     <SelectA11yContext.Provider
