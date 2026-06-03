@@ -112,6 +112,19 @@ After updating `LOCALE_CONFIG`, also:
 
 The architecture aims to keep **core, BFF, and presentation as platform-agnostic as possible**. Only the **integrations** (in `integrations/`) hold platform-specific logic and data; they talk to a given e-commerce API, CMS, or mock, and **map** that data into the shared, agnostic types from [core/contracts](core/contracts/README.md). Each integration implements the same contract interfaces: it fetches or writes in the backend’s format, then returns or accepts the shared types (Zod schemas and TypeScript types). The BFF chooses which integration to use per request (data source) and exposes a **single API** to the frontend. The **presentation** app only talks to the BFF and stays agnostic of the backend. To add a new backend: implement an integration that fulfils the contract, register it in the BFF’s data-source layer ([apps/bff/README.md](apps/bff/README.md)), and extend contracts only if the domain requires it.
 
+## AI coding assistants
+
+This repo ships with guidance for AI coding agents (Claude Code, Codex, Cursor, etc.):
+
+- **[AGENTS.md](AGENTS.md)** — the in-repo source of truth for agents: stack, layout, commands, architecture, and conventions. Committed and read directly by supported tools.
+- **Shared skills** — reusable agent skills are maintained separately in **[creativestyle/shopin-ai-tools](https://github.com/creativestyle/shopin-ai-tools)**. Install them with the [`skills` CLI](https://github.com/vercel-labs/skills):
+
+  ```bash
+  npx skills add creativestyle/shopin-ai-tools
+  ```
+
+  This installs each skill into the right per-tool directory (`.claude/skills/`, `.agents/skills/`, …). Those directories are git-ignored and local-only — re-run the command to pull updates instead of committing them.
+
 ## Documentation and community
 
 - **[CONTRIBUTING.md](CONTRIBUTING.md)** — How to set up for development and submit changes.
