@@ -9,7 +9,9 @@ try {
     .find((line) => !line.startsWith("#"))
     ?.trim();
 
-  if (commitHeader?.startsWith("Merge ")) {
+  const gitDir = require("path").join(process.cwd(), ".git");
+  const isMergeCommit = fs.existsSync(require("path").join(gitDir, "MERGE_HEAD"));
+  if (isMergeCommit) {
     process.exit(0);
   }
 
