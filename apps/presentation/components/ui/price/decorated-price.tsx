@@ -7,8 +7,8 @@ const variants = cva('inline-flex items-baseline font-normal', {
   variants: {
     variant: {
       regular: 'text-gray-900',
-      discount: 'text-red-400',
-      disabled: 'text-gray-500',
+      discount: 'text-primary',
+      disabled: 'text-gray-600',
     },
     size: {
       small: 'text-xl/[1.1]',
@@ -50,15 +50,12 @@ function DecoratedPrice({
   return (
     <div className='flex flex-wrap items-baseline justify-end gap-1'>
       {originalPrice !== undefined && (
-        <span className='text-right text-sm/[1.6] text-gray-500 line-through'>
+        <span className='order-1 text-right text-sm/[1.6] text-gray-600 line-through'>
           {formatPriceWithPrefix(originalPrice, locale, {
             currency,
             fractionDigits,
           })}
         </span>
-      )}
-      {taxNote && (
-        <span className='text-sm/[1.6] text-gray-500'>{taxNote}</span>
       )}
       <span
         className={cn(variants({ variant, size, className }), 'text-right')}
@@ -66,6 +63,9 @@ function DecoratedPrice({
       >
         <span>{formattedPrice}</span>
       </span>
+      {taxNote && (
+        <span className='text-sm/[1.6] text-gray-600'>{taxNote}</span>
+      )}
     </div>
   )
 }

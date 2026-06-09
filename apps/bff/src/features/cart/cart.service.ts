@@ -169,7 +169,9 @@ export class CartService extends BaseAuthenticatedService {
   }
 
   /**
-   * Gets the current cart ID (logged-in or guest)
+   * Gets the current cart ID (logged-in or guest).
+   * For logged-in users with no cached cart ID, falls back to discovering the active cart
+   * from CT — this handles the case where the user logged in from a different currency/language.
    * @returns Cart ID or undefined if none exists
    */
   private async getCartId(): Promise<string | undefined> {
@@ -180,6 +182,15 @@ export class CartService extends BaseAuthenticatedService {
       if (cartId) {
         return cartId
       }
+
+      const cartService = this.getCartService()
+      const activeCart = await cartService.getActiveCart()
+      if (activeCart) {
+        await this.cartIdService.setLoggedInCartId(activeCart.id)
+        return activeCart.id
+      }
+
+      return undefined
     }
 
     return await this.cartIdService.getGuestCartId()

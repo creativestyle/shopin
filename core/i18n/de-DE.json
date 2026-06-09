@@ -132,6 +132,7 @@
       "dialogDescription": "Produktliste nach Sortierung, Filtern, Preisbereich und Sale-Status verfeinern.",
       "saleOnly": "Nur Sale %",
       "searchByName": "Nach Name suchen",
+      "clearSearchByName": "Suche nach Namen löschen",
       "priceRange": "Preis",
       "color": "Farbe",
       "size": "Größe",

@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { RadioGroup } from '@/components/ui/radio-button'
-import ChevronUpIcon from '@/public/icons/chevronup.svg'
+import ChevronUpIcon from '@/public/icons/chevron-up.svg'
 import ChevronDownIcon from '@/public/icons/chevron-down.svg'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'

@@ -8,18 +8,29 @@ interface IconData {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const iconContext = (require as any).context('@/public/icons', false, /\.svg$/)
 
-export function loadIcons(): IconData[] {
-  return iconContext.keys().map((key: string) => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const componentModule: any = iconContext(key)
-    const name = key.replace('./', '').replace('.svg', '')
-    const Component = componentModule.default || componentModule
+function toPascalCase(fileName: string) {
+  return fileName
+    .split('-')
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join('')
+}
 
-    return {
-      name:
-        name.charAt(0).toUpperCase() +
-        name.slice(1).replace(/-([a-z])/g, (_, letter) => letter.toUpperCase()),
-      Component,
-    }
-  })
+export function loadIcons(): IconData[] {
+  return iconContext
+    .keys()
+    .map((key: string) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const componentModule: any = iconContext(key)
+      const fileName = key.replace('./', '').replace('.svg', '')
+      const Component = componentModule.default || componentModule
+
+      return {
+        name: toPascalCase(fileName),
+        Component,
+      }
+    })
+    .sort((left: IconData, right: IconData) =>
+      left.name.localeCompare(right.name)
+    )
 }

@@ -1,9 +1,8 @@
 'use client'
 
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import Link from 'next/link'
-import { FC, PropsWithChildren } from 'react'
-import { TabsContent } from '@/components/ui/tabs'
+import { FC, PropsWithChildren, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { useSelectedLayoutSegment } from 'next/navigation'
 
@@ -28,9 +27,19 @@ const TABS = [
 export const MyDataTabs: FC<PropsWithChildren> = ({ children }) => {
   const segment = useSelectedLayoutSegment()
   const t = useTranslations('account.myAccount')
+  const [activeTab, setActiveTab] = useState(segment || 'personal-data')
+  const [prevSegment, setPrevSegment] = useState(segment)
+
+  if (prevSegment !== segment) {
+    setPrevSegment(segment)
+    setActiveTab(segment || 'personal-data')
+  }
 
   return (
-    <Tabs defaultValue={segment || 'personal-data'}>
+    <Tabs
+      value={activeTab}
+      onValueChange={setActiveTab}
+    >
       <TabsList>
         {TABS.map((tab) => (
           <TabsTrigger
@@ -47,8 +56,8 @@ export const MyDataTabs: FC<PropsWithChildren> = ({ children }) => {
         ))}
       </TabsList>
       <TabsContent
-        value={segment || 'personal-data'}
-        className='pt-8'
+        value={activeTab}
+        className='min-h-72 pt-8'
       >
         {children}
       </TabsContent>

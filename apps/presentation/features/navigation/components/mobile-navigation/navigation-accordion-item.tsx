@@ -7,7 +7,7 @@ import {
   AccordionContent,
 } from '@/components/ui/accordion'
 import type { ThirdLevelLink } from '@core/contracts/core/link'
-import ChevronRightIcon from '@/public/icons/chevronright.svg'
+import ChevronRightIcon from '@/public/icons/chevron-right.svg'
 
 interface NavigationAccordionItemProps {
   item: ThirdLevelLink
