@@ -1,4 +1,4 @@
-import { setRequestLocale } from 'next-intl/server'
+import { initRouteContext } from '@/lib/request-context/route-context'
 import { CheckoutComplete } from '@/features/checkout/checkout-complete'
 import { StandardContainer } from '@/components/ui/standard-container'
 
@@ -6,11 +6,11 @@ export default async function Page({
   params,
   searchParams,
 }: {
-  params: Promise<{ locale: string }>
+  params: Promise<{ variant: string; locale: string }>
   searchParams: Promise<{ orderId?: string; token?: string }>
 }) {
-  const { locale } = await params
-  setRequestLocale(locale)
+  const { variant, locale } = await params
+  initRouteContext({ variant, locale })
 
   const { orderId, token } = await searchParams
 

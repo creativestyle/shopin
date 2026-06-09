@@ -6,27 +6,29 @@ import pluginQuery from '@tanstack/eslint-plugin-query'
 const FEATURE_BOUNDARY_MESSAGE =
   'Import only feature entry points (files at the feature root). Do not import from any subdirectory of a feature.'
 
-// Every server-rendered page and layout under app/[locale]/ must call setRequestLocale(locale).
-// Under ISR (revalidate=3600 on [locale]/layout.tsx), each segment renders independently —
-// the parent layout may be served from cache without re-executing, so children cannot rely
-// on the layout's setRequestLocale call. The rule fires unconditionally for all non-client
-// locale route files, regardless of whether they directly import next-intl APIs.
-const requireSetRequestLocale = {
+// Every server-rendered page and layout under app/[variant]/[locale]/ must call
+// initRouteContext({ variant, locale }). Under ISR (revalidate=3600 on the layout), each
+// segment renders independently — the parent layout may be served from cache without
+// re-executing, so children cannot rely on the layout having already set the locale
+// (next-intl) or the variant (server BFF data-source routing). initRouteContext sets both
+// atomically. The rule fires unconditionally for all non-client route files.
+const requireInitRouteContext = {
   meta: {
     type: 'problem',
     docs: {
       description:
-        'Require setRequestLocale in every server-rendered locale page/layout.',
+        'Require initRouteContext in every server-rendered variant/locale page/layout.',
     },
     messages: {
       missing:
-        'Locale route files must call setRequestLocale(locale). ' +
+        'Variant/locale route files must call initRouteContext({ variant, locale }). ' +
         'Under ISR each segment may render independently of its parent layout, ' +
-        'so every page and layout must set the locale for next-intl.',
+        'so every page and layout must initialise both locale (next-intl) and variant ' +
+        '(server BFF data-source) for the current render.',
     },
   },
   create(context) {
-    let callsSetRequestLocale = false
+    let callsInitRouteContext = false
     let isClientComponent = false
 
     return {
@@ -41,13 +43,13 @@ const requireSetRequestLocale = {
       'CallExpression'(node) {
         if (
           node.callee.type === 'Identifier' &&
-          node.callee.name === 'setRequestLocale'
+          node.callee.name === 'initRouteContext'
         ) {
-          callsSetRequestLocale = true
+          callsInitRouteContext = true
         }
       },
       'Program:exit'(node) {
-        if (!isClientComponent && !callsSetRequestLocale) {
+        if (!isClientComponent && !callsInitRouteContext) {
           context.report({ node, messageId: 'missing' })
         }
       },
@@ -89,8 +91,9 @@ const eslintConfig = defineConfig([
       ],
     },
   },
-  // In [locale] route files, setRequestLocale must be called whenever next-intl translation
-  // APIs are used. This rule enforces that contract — see the requireSetRequestLocale rule above.
+  // In [variant]/[locale] route files, initRouteContext must be called to initialise both
+  // the next-intl locale and the server BFF variant. This rule enforces that contract —
+  // see the requireInitRouteContext rule above.
   {
     // Note: \\[ and \\] escape the square brackets so glob treats [variant] and [locale]
     // as literal directory names rather than character classes.
@@ -99,12 +102,12 @@ const eslintConfig = defineConfig([
       'app/\\[variant\\]/\\[locale\\]/**/layout.tsx',
     ],
     plugins: {
-      'locale-route': {
-        rules: { 'require-set-request-locale': requireSetRequestLocale },
+      'route-context': {
+        rules: { 'require-init-route-context': requireInitRouteContext },
       },
     },
     rules: {
-      'locale-route/require-set-request-locale': 'error',
+      'route-context/require-init-route-context': 'error',
     },
   },
   // Override default ignores of eslint-config-next.

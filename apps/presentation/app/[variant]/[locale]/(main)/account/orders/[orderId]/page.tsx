@@ -1,4 +1,5 @@
-import { setRequestLocale, getTranslations } from 'next-intl/server'
+import { getTranslations } from 'next-intl/server'
+import { initRouteContext } from '@/lib/request-context/route-context'
 import { AccountWrapper } from '@/features/account/account-wrapper'
 import { Breadcrumbs } from '@/components/ui/breadcrumbs'
 import { OrderHistoryDetail } from '@/features/order-history/order-history-detail'
@@ -6,10 +7,10 @@ import { OrderHistoryDetail } from '@/features/order-history/order-history-detai
 export default async function Page({
   params,
 }: {
-  params: Promise<{ locale: string; orderId: string }>
+  params: Promise<{ variant: string; locale: string; orderId: string }>
 }) {
-  const { locale, orderId } = await params
-  setRequestLocale(locale)
+  const { variant, locale, orderId } = await params
+  initRouteContext({ variant, locale })
 
   const t = await getTranslations('account.myAccount')
   const breadcrumbs = [

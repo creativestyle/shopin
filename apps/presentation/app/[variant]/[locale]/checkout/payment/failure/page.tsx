@@ -1,13 +1,13 @@
-import { setRequestLocale } from 'next-intl/server'
+import { initRouteContext } from '@/lib/request-context/route-context'
 import { redirect } from 'next/navigation'
 
 export default async function Page({
   params,
 }: {
-  params: Promise<{ locale: string }>
+  params: Promise<{ variant: string; locale: string }>
 }) {
-  const { locale } = await params
-  setRequestLocale(locale)
+  const { variant, locale } = await params
+  initRouteContext({ variant, locale })
 
   // Server-side redirect to review page with payment failure parameter
   // The review page will show the toast

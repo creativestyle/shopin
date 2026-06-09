@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation'
-import { setRequestLocale } from 'next-intl/server'
+import { initRouteContext } from '@/lib/request-context/route-context'
 import {
   isPreviewTokenValid,
   PREVIEW_TOKEN_INTERNAL_PARAM,
@@ -17,11 +17,14 @@ export default async function PreviewPage({
   params,
   searchParams,
 }: {
-  params: Promise<{ locale: string; path: string[] }>
+  params: Promise<{ variant: string; locale: string; path: string[] }>
   searchParams: Promise<Record<string, string | string[] | undefined>>
 }) {
-  const [{ locale, path }, search] = await Promise.all([params, searchParams])
-  setRequestLocale(locale)
+  const [{ variant, locale, path }, search] = await Promise.all([
+    params,
+    searchParams,
+  ])
+  initRouteContext({ variant, locale })
 
   if (!isPreviewTokenValid(asString(search[PREVIEW_TOKEN_INTERNAL_PARAM]))) {
     notFound()

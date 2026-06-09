@@ -1,4 +1,4 @@
-import { setRequestLocale } from 'next-intl/server'
+import { initRouteContext } from '@/lib/request-context/route-context'
 import { WishlistPage } from '@/features/wishlist/wishlist-page'
 import { MIN_PAGE } from '@config/constants'
 
@@ -8,12 +8,12 @@ export default async function Page({
   params,
   searchParams,
 }: {
-  params: Promise<{ locale: string }>
+  params: Promise<{ variant: string; locale: string }>
   searchParams: Promise<{ page?: string }>
 }) {
-  const { locale } = await params
+  const { variant, locale } = await params
   const { page: pageParam } = await searchParams
-  setRequestLocale(locale)
+  initRouteContext({ variant, locale })
   const page =
     typeof pageParam === 'string'
       ? Math.max(parseInt(pageParam, 10) || MIN_PAGE, MIN_PAGE)

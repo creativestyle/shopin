@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
-import { setRequestLocale } from 'next-intl/server'
+import { initRouteContext } from '@/lib/request-context/route-context'
 import { ContentPage } from '@/features/content/content-page'
 import { buildContentPageMetadata } from '@/features/content/build-content-page-metadata'
 import { getContentPage } from '@/features/content/get-content-page'
@@ -25,10 +25,10 @@ function getCmsSlug(pageSegments: string[] | undefined): string | null {
 export async function generateMetadata({
   params,
 }: {
-  params: Promise<{ locale: string; page: string[] }>
+  params: Promise<{ variant: string; locale: string; page: string[] }>
 }): Promise<Metadata> {
-  const { locale, page } = await params
-  setRequestLocale(locale)
+  const { variant, locale, page } = await params
+  initRouteContext({ variant, locale })
   const cmsSlug = getCmsSlug(page)
   if (!cmsSlug) {
     return {}
@@ -52,10 +52,10 @@ export async function generateMetadata({
 export default async function Page({
   params,
 }: {
-  params: Promise<{ locale: string; page: string[] }>
+  params: Promise<{ variant: string; locale: string; page: string[] }>
 }) {
-  const { locale, page } = await params
-  setRequestLocale(locale)
+  const { variant, locale, page } = await params
+  initRouteContext({ variant, locale })
   const cmsSlug = getCmsSlug(page)
   if (!cmsSlug) {
     notFound()

@@ -7,11 +7,11 @@
  * components and page loaders. Its key responsibility is choosing the right
  * fetch options based on two orthogonal flags:
  *
- * 1. Variant context (getRequestVariant): if the current request was routed through
- *    the [variant] layout, the resolved data-source headers are available. The
- *    client forwards them as explicit variantHeaders ({...}) so ISR-cached fetches
- *    carry X-Data-Source. When the context is undefined (client-side navigation
- *    that skips the layout), variantHeaders is omitted and the BFF uses its default.
+ * 1. Variant context (getRequestVariant): every server page/layout under [variant]/[locale]
+ *    calls initRouteContext({ variant, locale }) which sets the request-scoped variant holder.
+ *    The client reads it lazily per fetch so ISR-cached fetches carry X-Data-Source.
+ *    When undefined (callers outside the route tree, e.g. i18n/request.ts), variantHeaders
+ *    is omitted and the BFF uses its default data source.
  *
  * 2. Draft mode (isDraft): preview/draft renders must bypass the ISR cache
  *    entirely. When true, isDraft is forwarded regardless of the variant context.
@@ -134,7 +134,8 @@ describe('createBffFetchServer', () => {
 
   describe('variant context — undefined', () => {
     it('does not set variantHeaders when variant context is undefined', async () => {
-      // When undefined the BFF falls back to its own default data source.
+      // undefined means the caller is outside the [variant]/[locale] route tree
+      // (e.g. i18n/request.ts). The BFF falls back to its own default data source.
       const client = await createBffFetchServer()
       await client.fetch('/nav')
       expect(lastCallOptions().variantHeaders).toBeUndefined()

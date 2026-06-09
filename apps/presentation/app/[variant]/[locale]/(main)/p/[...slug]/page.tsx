@@ -1,4 +1,4 @@
-import { setRequestLocale } from 'next-intl/server'
+import { initRouteContext } from '@/lib/request-context/route-context'
 import { ProductPage } from '@/features/product/product-page'
 import { AddToCart } from '@/features/cart/cart-add-to-cart'
 import { AddToWishlist } from '@/features/wishlist/add-to-wishlist'
@@ -7,12 +7,12 @@ export default async function Page({
   params,
   searchParams,
 }: {
-  params: Promise<{ locale: string; slug: string[] }>
+  params: Promise<{ variant: string; locale: string; slug: string[] }>
   searchParams: Promise<{ variantId?: string }>
 }) {
-  const { locale, slug } = await params
+  const { variant, locale, slug } = await params
   const { variantId: variantIdParam } = await searchParams
-  setRequestLocale(locale)
+  initRouteContext({ variant, locale })
   const slugString = Array.isArray(slug) ? slug.join('/') : slug
   const variantId =
     typeof variantIdParam === 'string' ? variantIdParam : undefined

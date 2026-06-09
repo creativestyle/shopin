@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import { notFound } from 'next/navigation'
 import { NextIntlClientProvider } from 'next-intl'
-import { getMessages, setRequestLocale } from 'next-intl/server'
+import { getMessages } from 'next-intl/server'
 import { DM_Sans } from 'next/font/google'
 import { Toaster } from 'sonner'
 import { AddToCartModalProvider } from '@/features/cart/cart-add-to-cart-modal-provider'
@@ -17,8 +17,7 @@ import {
   PRODUCT_IMAGE_HOSTS,
   CONTENT_IMAGE_API_HOSTS,
 } from '@config/constants'
-import { setRequestVariant } from '@/lib/request-context/variant'
-import { decodeVariant } from '@/lib/variant/variant-key'
+import { initRouteContext } from '@/lib/request-context/route-context'
 
 const dmSans = DM_Sans({
   subsets: ['latin'],
@@ -38,8 +37,7 @@ export default async function LocaleLayout({
   children: ReactNode
 }) {
   const { variant, locale } = await params
-  setRequestVariant(decodeVariant(variant))
-  setRequestLocale(locale)
+  initRouteContext({ variant, locale })
 
   if (!listLocales().some((l) => l.urlPrefix === locale)) {
     notFound()

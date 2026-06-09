@@ -1,16 +1,16 @@
-import { setRequestLocale } from 'next-intl/server'
+import { initRouteContext } from '@/lib/request-context/route-context'
 import { SearchResultsPage } from '@/features/searchResults/search-results-page'
 
 export default async function Page({
   params,
   searchParams,
 }: {
-  params: Promise<{ locale: string }>
+  params: Promise<{ variant: string; locale: string }>
   searchParams: Promise<{ q?: string }>
 }) {
-  const { locale } = await params
+  const { variant, locale } = await params
   const { q } = await searchParams
-  setRequestLocale(locale)
+  initRouteContext({ variant, locale })
   const query = typeof q === 'string' ? q : ''
 
   return (

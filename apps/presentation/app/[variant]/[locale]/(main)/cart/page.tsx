@@ -1,4 +1,5 @@
-import { setRequestLocale, getTranslations } from 'next-intl/server'
+import { getTranslations } from 'next-intl/server'
+import { initRouteContext } from '@/lib/request-context/route-context'
 import { Breadcrumbs } from '@/components/ui/breadcrumbs'
 import { CartContent } from '@/features/cart/cart-content'
 import { CartTitleCount } from '@/features/cart/cart-title-count'
@@ -9,10 +10,10 @@ export const dynamic = 'force-dynamic'
 export default async function Page({
   params,
 }: {
-  params: Promise<{ locale: string }>
+  params: Promise<{ variant: string; locale: string }>
 }) {
-  const { locale } = await params
-  setRequestLocale(locale)
+  const { variant, locale } = await params
+  initRouteContext({ variant, locale })
   const t = await getTranslations('cart')
 
   const breadcrumbs = [

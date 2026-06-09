@@ -1,4 +1,5 @@
-import { setRequestLocale, getTranslations } from 'next-intl/server'
+import { getTranslations } from 'next-intl/server'
+import { initRouteContext } from '@/lib/request-context/route-context'
 import Link from 'next/link'
 import { SignUpFormWithRedirect } from './sign-up-form-with-redirect'
 import ChevronLeftIcon from '@/public/icons/chevron-left.svg'
@@ -10,12 +11,12 @@ export default async function Page({
   params,
   searchParams,
 }: {
-  params: Promise<{ locale: string }>
+  params: Promise<{ variant: string; locale: string }>
   searchParams: Promise<Record<string, string | string[] | undefined>>
 }) {
-  const { locale } = await params
+  const { variant, locale } = await params
   const resolvedSearchParams = await searchParams
-  setRequestLocale(locale)
+  initRouteContext({ variant, locale })
   const t = await getTranslations('account.signUp')
 
   const isCheckout = getIsCheckoutServer(resolvedSearchParams)
