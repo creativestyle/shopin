@@ -1,4 +1,3 @@
-import { PRODUCT_PAGE_REVALIDATE_SECONDS } from '@config/constants'
 import {
   ProductPageResponse,
   ProductPageResponseSchema,
@@ -6,19 +5,16 @@ import {
   VariantIdSchema,
 } from '@core/contracts/product/product-page'
 import { BaseService } from '@/lib/bff/services/base-service'
+import type { BffCacheOptions } from '@/lib/bff/bff-cache-options'
 
 /**
  * Service for product operations. Used only inside the product feature.
  */
 export class ProductService extends BaseService {
-  /**
-   * Get product page data by slug
-   * @param slug - Product slug
-   * @param variantId - Optional variant ID
-   */
   async getProductPage(
     slug: string,
-    variantId?: string
+    variantId?: string,
+    cacheOptions?: BffCacheOptions
   ): Promise<ProductPageResponse> {
     ProductSlugSchema.parse(slug)
     if (variantId) {
@@ -29,9 +25,7 @@ export class ProductService extends BaseService {
       `/product/slug/${slug}/page`,
       {
         queryParams: variantId ? { variantId } : undefined,
-        next: {
-          revalidate: PRODUCT_PAGE_REVALIDATE_SECONDS,
-        },
+        ...cacheOptions,
       }
     )
     return ProductPageResponseSchema.parse(data)

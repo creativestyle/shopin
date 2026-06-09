@@ -1,13 +1,17 @@
-import { cookies } from 'next/headers'
 import { notFound } from 'next/navigation'
 import { setRequestLocale } from 'next-intl/server'
-import { isPreviewTokenValid, PREVIEW_TOKEN_COOKIE } from '@/lib/draft-mode'
+import {
+  isPreviewTokenValid,
+  PREVIEW_TOKEN_INTERNAL_PARAM,
+} from '@/lib/draft-mode'
 import { parsePlpSearchParams } from '@/features/productCollection/parse-search-params'
 import { ContentPage } from '@/features/content/content-page'
 import { ProductPage } from '@/features/product/product-page'
 import { ProductCollectionPage } from '@/features/productCollection/product-collection-page'
-
 export const dynamic = 'force-dynamic'
+
+const asString = (v: string | string[] | undefined) =>
+  typeof v === 'string' ? v : undefined
 
 export default async function PreviewPage({
   params,
@@ -16,35 +20,27 @@ export default async function PreviewPage({
   params: Promise<{ locale: string; path: string[] }>
   searchParams: Promise<Record<string, string | string[] | undefined>>
 }) {
-  const { locale, path } = await params
+  const [{ locale, path }, search] = await Promise.all([params, searchParams])
   setRequestLocale(locale)
 
-  const cookieStore = await cookies()
-  const token = cookieStore.get(PREVIEW_TOKEN_COOKIE)?.value
-  if (!isPreviewTokenValid(token)) {
+  if (!isPreviewTokenValid(asString(search[PREVIEW_TOKEN_INTERNAL_PARAM]))) {
     notFound()
   }
 
-  // Product page: path starts with 'p'
   if (path[0] === 'p') {
     const slug = path.slice(1).join('/')
-    const search = await searchParams
-    const variantId =
-      typeof search.variantId === 'string' ? search.variantId : undefined
     return (
       <ProductPage
         slug={slug}
         locale={locale}
-        variantId={variantId}
+        variantId={asString(search.variantId)}
         isDraft
       />
     )
   }
 
-  // Category page: path starts with 'c'
   if (path[0] === 'c') {
     const slug = path.slice(1).join('/')
-    const search = await searchParams
     const { page, sort, filters, saleOnly, priceMin, priceMax } =
       parsePlpSearchParams(search)
     return (
@@ -62,11 +58,9 @@ export default async function PreviewPage({
     )
   }
 
-  // CMS page: everything else
-  const slug = path.join('/')
   return (
     <ContentPage
-      slug={slug}
+      slug={path.join('/')}
       isDraft
     />
   )

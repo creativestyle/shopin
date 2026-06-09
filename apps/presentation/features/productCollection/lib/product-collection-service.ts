@@ -1,7 +1,6 @@
 import {
   ITEMS_PER_PAGE,
   MIN_PAGE,
-  PRODUCT_COLLECTION_PAGE_REVALIDATE_SECONDS,
   DEFAULT_SORT_OPTION,
   type SortOption,
 } from '@config/constants'
@@ -12,22 +11,12 @@ import {
   type Filters,
 } from '@core/contracts/product-collection/product-collection-page'
 import { BaseService } from '@/lib/bff/services/base-service'
+import type { BffCacheOptions } from '@/lib/bff/bff-cache-options'
 
 /**
  * Service for product collection operations
  */
 export class ProductCollectionService extends BaseService {
-  /**
-   * Get product collection page data by slug
-   * @param slug - Product collection slug
-   * @param page - Page number (1-indexed)
-   * @param limit - Items per page
-   * @param sort - Sort option
-   * @param filters - Optional filters to apply
-   * @param saleOnly - When true, only show discounted products
-   * @param priceMin - Minimum price in cents (optional)
-   * @param priceMax - Maximum price in cents (optional)
-   */
   async getProductCollectionPage(
     slug: string,
     page: number = MIN_PAGE,
@@ -36,9 +25,9 @@ export class ProductCollectionService extends BaseService {
     filters?: Filters,
     saleOnly: boolean = false,
     priceMin?: number,
-    priceMax?: number
+    priceMax?: number,
+    cacheOptions?: BffCacheOptions
   ): Promise<ProductCollectionPageResponse> {
-    // Validate slug input
     ProductCollectionSlugSchema.parse(slug)
 
     const queryParams: Record<string, string> = {
@@ -47,17 +36,14 @@ export class ProductCollectionService extends BaseService {
       sort,
     }
 
-    // Add filters as JSON string if present
     if (filters && Object.keys(filters).length > 0) {
       queryParams.filters = JSON.stringify(filters)
     }
 
-    // Add saleOnly if true
     if (saleOnly) {
       queryParams.saleOnly = 'true'
     }
 
-    // Add price range if specified
     if (priceMin !== undefined) {
       queryParams.priceMin = priceMin.toString()
     }
@@ -69,9 +55,7 @@ export class ProductCollectionService extends BaseService {
       `productCollection/slug/${slug}/page`,
       {
         queryParams,
-        next: {
-          revalidate: PRODUCT_COLLECTION_PAGE_REVALIDATE_SECONDS,
-        },
+        ...cacheOptions,
       }
     )
     return ProductCollectionPageResponseSchema.parse(data)

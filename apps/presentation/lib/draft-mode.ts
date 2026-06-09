@@ -2,13 +2,17 @@
  * Draft mode: URL-token-based CMS preview.
  *
  * Flow: /api/draft?secret=X&slug=Y&locale=Z validates the secret, generates a short-lived
- * signed token, and redirects to /<locale>/preview/<slug>?token=<token>. The preview route
- * validates the token before fetching draft content. Regular live routes are never involved
- * in draft detection and remain ISR-cacheable.
+ * signed token, and redirects to /<locale>/preview/<slug>?__pt=<token>. The proxy preserves
+ * __pt when rewriting to the internal route. The preview page validates the token, renders
+ * draft content, then strips __pt from the address bar via router.replace(). Regular live
+ * routes are never involved and remain ISR-cacheable.
  *
- * Security note: the token is in the URL (visible in browser history, logs, referrer headers).
- * It is signed + short-lived (DRAFT_COOKIE_MAX_AGE_SEC). Forwarding the URL grants preview
- * access until expiry — same risk as the previous cookie-sharing approach.
+ * Why URL param: Contentful opens preview in a cross-site iframe. SameSite=Lax cookies are
+ * not forwarded in cross-site iframes so cookie delivery is unreliable. URL params have no
+ * same-site restriction and work in all embedding contexts including HTTP localhost.
+ *
+ * Security: the token is signed + short-lived (DRAFT_COOKIE_MAX_AGE_SEC). It is briefly
+ * visible in the address bar during navigation and then stripped by the preview page.
  *
  * Header x-next-draft-mode: a separate short-lived signed token (DRAFT_HEADER_TOKEN_MAX_AGE_SEC)
  * is generated per BFF request so the raw secret never travels on the wire.
@@ -27,8 +31,20 @@ import {
 
 export { DRAFT_COOKIE_MAX_AGE_SEC, DRAFT_MODE_HEADER }
 
-/** Cookie name for the editor's preview session. HttpOnly, session-scoped (no maxAge). */
+/**
+ * HttpOnly cookie carrying the signed preview token on HTTPS (production).
+ * On HTTPS, /api/draft sets this with SameSite=None;Secure so it is forwarded
+ * even inside Contentful's cross-site iframe. Not usable on plain HTTP.
+ */
 export const PREVIEW_TOKEN_COOKIE = 'preview_token'
+
+/**
+ * URL search param carrying the signed preview token on HTTP (local dev).
+ * On HTTP, SameSite=None;Secure is unavailable so the token travels via URL param.
+ * The proxy injects it into the internal rewrite URL; the preview page strips it
+ * from the address bar via router.replace() after rendering.
+ */
+export const PREVIEW_TOKEN_INTERNAL_PARAM = '__pt'
 
 function getSecret(): string {
   return process.env.NEXT_DRAFT_MODE_SECRET ?? ''

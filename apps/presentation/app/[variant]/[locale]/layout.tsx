@@ -17,8 +17,8 @@ import {
   PRODUCT_IMAGE_HOSTS,
   CONTENT_IMAGE_API_HOSTS,
 } from '@config/constants'
-import { setRequestVary } from '@/lib/request-context/vary'
-import { decodeVary } from '@/lib/vary/vary-key'
+import { setRequestVariant } from '@/lib/request-context/variant'
+import { decodeVariant } from '@/lib/variant/variant-key'
 
 const dmSans = DM_Sans({
   subsets: ['latin'],
@@ -26,17 +26,19 @@ const dmSans = DM_Sans({
   display: 'swap',
 })
 
+const PRECONNECT_HOSTS = [...PRODUCT_IMAGE_HOSTS, ...CONTENT_IMAGE_API_HOSTS]
+
 export const revalidate = 3600
 
 export default async function LocaleLayout({
   params,
   children,
 }: {
-  params: Promise<{ vary: string; locale: string }>
+  params: Promise<{ variant: string; locale: string }>
   children: ReactNode
 }) {
-  const { vary, locale } = await params
-  setRequestVary(decodeVary(vary))
+  const { variant, locale } = await params
+  setRequestVariant(decodeVariant(variant))
   setRequestLocale(locale)
 
   if (!listLocales().some((l) => l.urlPrefix === locale)) {
@@ -55,7 +57,7 @@ export default async function LocaleLayout({
       className={dmSans.variable}
     >
       <head>
-        {[...PRODUCT_IMAGE_HOSTS, ...CONTENT_IMAGE_API_HOSTS].map((host) => (
+        {PRECONNECT_HOSTS.map((host) => (
           <link
             key={host}
             rel='preconnect'

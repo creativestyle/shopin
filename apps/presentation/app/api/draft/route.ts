@@ -1,12 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { rfcToUrlPrefix } from '@config/constants'
+import { rfcToUrlPrefix, I18N_CONFIG, getLocale } from '@config/constants'
 import { getHomepageSlugForLocale } from '@/features/content/homepage-slug'
 import {
   createPreviewToken,
   isDraftSecretValid,
   isSafeDraftRedirectPath,
   PREVIEW_TOKEN_COOKIE,
+  PREVIEW_TOKEN_INTERNAL_PARAM,
 } from '@/lib/draft-mode'
+
+const defaultLocalePrefix = getLocale(I18N_CONFIG.defaultLocale).urlPrefix
 
 /**
  * Base URL for the draft redirect. Uses FRONTEND_URL so redirect always goes to the canonical site.
@@ -32,9 +35,15 @@ function getDraftRedirectBase(request: NextRequest): string {
  * https://<your-site>/api/draft?secret=<NEXT_DRAFT_MODE_SECRET>&slug=<entry-slug>&locale=<locale>
  *
  * The CMS typically sends locale as en-US, de-DE, etc. We redirect to app URL prefix (en, de).
- * Validates secret and slug, generates a short-lived signed token, then redirects to
- * /<locale>/preview/<slug>?token=<token>. The preview route validates the token before
- * fetching draft content; live routes are never involved and remain ISR-cacheable.
+ * Token delivery strategy depends on protocol:
+ *
+ * HTTPS (production): HttpOnly cookie with SameSite=None;Secure. Works in Contentful's cross-site
+ * iframe. Token never appears in the URL, access logs, or Referer headers. The proxy reads the
+ * cookie and injects it into the internal rewrite URL as ?__pt=.
+ *
+ * HTTP (local dev): URL param ?__pt=. SameSite=None;Secure requires HTTPS so cookies cannot be
+ * forwarded cross-site on plain HTTP. The proxy passes the param through; the preview page strips
+ * it from the address bar via router.replace() after rendering.
  */
 export function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl
@@ -62,20 +71,37 @@ export function GET(request: NextRequest) {
   }
 
   const token = createPreviewToken()
-  const previewPath = `/${locale}/preview/${normalizedSlug}`
   const redirectBase = getDraftRedirectBase(request)
-  const response = NextResponse.redirect(
-    new URL(previewPath, redirectBase),
-    307
-  )
-  response.cookies.set({
-    name: PREVIEW_TOKEN_COOKIE,
-    value: token,
-    httpOnly: true,
-    secure: true,
-    sameSite: 'lax',
-    path: '/',
-    // no maxAge → session cookie, cleared when browser closes
-  })
-  return response
+  // Omit the default locale prefix — intlMiddleware would strip it anyway (localePrefix: 'as-needed').
+  const previewPath =
+    locale === defaultLocalePrefix
+      ? `/preview/${normalizedSlug}`
+      : `/${locale}/preview/${normalizedSlug}`
+
+  // On HTTPS: deliver token via HttpOnly cookie so it never appears in URLs or logs.
+  // SameSite=None is required for the Contentful cross-site iframe context.
+  // Note: Chrome's CHIPS proposal may eventually require adding `partitioned: true` for
+  // third-party iframe cookies; monitor browser compatibility if preview breaks on new Chrome.
+  // On HTTP (local dev): SameSite=None;Secure requires HTTPS, fall back to URL param.
+  const isHttps =
+    request.nextUrl.protocol === 'https:' ||
+    request.headers.get('x-forwarded-proto') === 'https'
+
+  const redirectUrl = new URL(previewPath, redirectBase)
+
+  if (isHttps) {
+    const response = NextResponse.redirect(redirectUrl, 307)
+    response.cookies.set({
+      name: PREVIEW_TOKEN_COOKIE,
+      value: token,
+      httpOnly: true,
+      secure: true,
+      sameSite: 'none',
+      path: '/',
+    })
+    return response
+  }
+
+  redirectUrl.searchParams.set(PREVIEW_TOKEN_INTERNAL_PARAM, token)
+  return NextResponse.redirect(redirectUrl, 307)
 }

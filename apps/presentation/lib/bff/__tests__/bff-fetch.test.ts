@@ -13,9 +13,7 @@ jest.mock('next/headers', () => ({
   }),
 }))
 
-jest.mock('@/lib/vary/vary-key', () => ({
-  resolveVaryHeadersFromCookies: jest.fn(() => ({})),
-}))
+// No variant-key mock needed — bffFetch no longer imports from variant-key.
 
 jest.mock('@/lib/draft-mode', () => ({
   getDraftModeHeaderValue: jest.fn(() => 'signed-draft-token'),
@@ -133,40 +131,23 @@ describe('bffFetch', () => {
     })
   })
 
-  describe('varyHeaders option', () => {
-    it('sends explicit varyHeaders as-is', async () => {
+  describe('variantHeaders option', () => {
+    it('sends explicit variantHeaders as-is', async () => {
+      // When the [variant] layout (server) or usePathname (client) provides
+      // explicit headers, they are forwarded verbatim to the BFF.
       await bffFetch('http://bff', 'nav', {
-        varyHeaders: { 'X-Data-Source': 'commercetools-algolia-set' },
+        variantHeaders: { 'X-Data-Source': 'commercetools-algolia-set' },
       })
       expect(lastCallHeaders()['x-data-source']).toBe(
         'commercetools-algolia-set'
       )
     })
 
-    it('falls back to resolveVaryHeadersFromCookies when varyHeaders not provided', async () => {
-      const { resolveVaryHeadersFromCookies } = jest.requireMock(
-        '@/lib/vary/vary-key'
-      )
-      resolveVaryHeadersFromCookies.mockReturnValue({
-        'X-Data-Source': 'commercetools-set',
-      })
+    it('omits X-Data-Source when variantHeaders is not provided', async () => {
+      // No explicit header → BFF defaults to its own default (commercetools-set).
+      // The data-source cookie is no longer read; variant is URL-based now.
       await bffFetch('http://bff', 'nav')
-      expect(lastCallHeaders()['x-data-source']).toBe('commercetools-set')
-    })
-
-    it('explicit varyHeaders takes precedence over cookie-based fallback', async () => {
-      const { resolveVaryHeadersFromCookies } = jest.requireMock(
-        '@/lib/vary/vary-key'
-      )
-      resolveVaryHeadersFromCookies.mockReturnValue({
-        'X-Data-Source': 'commercetools-set',
-      })
-      await bffFetch('http://bff', 'nav', {
-        varyHeaders: { 'X-Data-Source': 'commercetools-algolia-set' },
-      })
-      expect(lastCallHeaders()['x-data-source']).toBe(
-        'commercetools-algolia-set'
-      )
+      expect(lastCallHeaders()['x-data-source']).toBeUndefined()
     })
   })
 })

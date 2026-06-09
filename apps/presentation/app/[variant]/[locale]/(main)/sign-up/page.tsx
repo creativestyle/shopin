@@ -16,7 +16,7 @@ export default async function Page({
   const { locale } = await params
   const resolvedSearchParams = await searchParams
   setRequestLocale(locale)
-  const [t] = await Promise.all([getTranslations('account.signUp')])
+  const t = await getTranslations('account.signUp')
 
   const isCheckout = getIsCheckoutServer(resolvedSearchParams)
 

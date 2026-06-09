@@ -92,9 +92,12 @@ const eslintConfig = defineConfig([
   // In [locale] route files, setRequestLocale must be called whenever next-intl translation
   // APIs are used. This rule enforces that contract — see the requireSetRequestLocale rule above.
   {
-    // Note: \\[ and \\] escape the square brackets so glob treats [locale] as a literal
-    // directory name rather than a character class.
-    files: ['app/\\[locale\\]/**/page.tsx', 'app/\\[locale\\]/**/layout.tsx'],
+    // Note: \\[ and \\] escape the square brackets so glob treats [variant] and [locale]
+    // as literal directory names rather than character classes.
+    files: [
+      'app/\\[variant\\]/\\[locale\\]/**/page.tsx',
+      'app/\\[variant\\]/\\[locale\\]/**/layout.tsx',
+    ],
     plugins: {
       'locale-route': {
         rules: { 'require-set-request-locale': requireSetRequestLocale },

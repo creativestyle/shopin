@@ -3,6 +3,11 @@ import { createBffFetchServer } from '../core/bff-fetch-server'
 import * as BffFetchModule from '../core/bff-fetch'
 import { logger } from '../../logger'
 
+jest.mock('react', () => ({
+  ...jest.requireActual('react'),
+  useMemo: (fn: () => unknown) => fn(),
+}))
+
 jest.mock('../core/bff-fetch', () => ({
   bffFetch: jest.fn(() => Promise.resolve({ ok: true })),
 }))
@@ -13,6 +18,10 @@ jest.mock('../../logger', () => ({
 
 jest.mock('next-intl', () => ({
   useLocale: () => 'en-US',
+}))
+
+jest.mock('next/navigation', () => ({
+  usePathname: () => '/en-US/nav/path',
 }))
 
 jest.mock('../core/bff-utils-client', () => ({

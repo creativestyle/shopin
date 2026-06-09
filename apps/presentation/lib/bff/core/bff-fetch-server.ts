@@ -1,11 +1,11 @@
 'use server'
 
-import { bffFetch as baseBffFetch } from './bff-fetch'
+import { bffFetch as baseBffFetch, type BffFetchOptions } from './bff-fetch'
 import { getBffServerUrl } from './bff-utils-server'
 import { getLocale } from 'next-intl/server'
 import { logger } from '@/lib/logger'
-import { getRequestVary } from '@/lib/request-context/vary'
-import { varyHeaders } from '@/lib/vary/vary-key'
+import { getRequestVariant } from '@/lib/request-context/variant'
+import { variantHeaders } from '@/lib/variant/variant-key'
 
 /**
  * Server-side BFF client
@@ -25,9 +25,9 @@ import { varyHeaders } from '@/lib/vary/vary-key'
  * User-scoped correlation IDs live exclusively in useBffFetchClient (client side).
  *
  * @param opts.locale - Locale override when not using next-intl context (e.g. i18n/request.ts).
- * @param opts.isDraft - Controls cookies and draft header:
- *   false (default) → skip cookies, no draft header (ISR-safe)
- *   true → skip cookies, add draft header (preview route only)
+ * @param opts.isDraft - Controls draft header:
+ *   false (default) → no draft header (ISR-safe)
+ *   true → add draft header (preview route only)
  */
 export async function createBffFetchServer(opts?: {
   locale?: string
@@ -37,42 +37,30 @@ export async function createBffFetchServer(opts?: {
     opts?.locale || getLocale(),
     getBffServerUrl(),
   ])
-  // getRequestVary() is set by [vary]/[locale]/layout.tsx on initial load and ISR.
-  // For client-side navigation within the same layout scope, the layout doesn't
-  // re-render, so the context is unset. Fall back to cookie-based resolution
-  // (skipServerCookies: false) in that case — cookies are always available for
-  // dynamic renders triggered by client navigation.
-  let resolvedVaryHeaders: Record<string, string> | undefined
-  try {
-    resolvedVaryHeaders = varyHeaders(getRequestVary())
-  } catch {
-    resolvedVaryHeaders = undefined
-  }
-
   return {
+    // getRequestVariant() is read lazily on each fetch so it reflects the
+    // context set by [variant]/[locale]/layout.tsx even if createBffFetchServer
+    // was called before setRequestVariant(). When undefined (client-nav path
+    // handled by bff-fetch-client), variantHeaders is omitted and the BFF uses
+    // its default data source.
     fetch: async (path: string, options?: RequestInit) => {
       try {
-        const extraOpts =
-          opts?.isDraft === true
-            ? {
-                isDraft: true as const,
-                ...(resolvedVaryHeaders != null
-                  ? {
-                      skipServerCookies: true as const,
-                      varyHeaders: resolvedVaryHeaders,
-                    }
-                  : {}),
-              }
-            : resolvedVaryHeaders != null
-              ? {
-                  skipServerCookies: true as const,
-                  varyHeaders: resolvedVaryHeaders,
-                }
-              : {}
+        const requestVariant = getRequestVariant()
+        const resolvedVariantHeaders =
+          requestVariant !== undefined
+            ? variantHeaders(requestVariant)
+            : undefined
+        const extraOpts: Partial<BffFetchOptions> = {}
+        if (resolvedVariantHeaders != null) {
+          extraOpts.variantHeaders = resolvedVariantHeaders
+        }
+        if (opts?.isDraft === true) {
+          extraOpts.isDraft = true
+        }
         return await baseBffFetch(
           baseUrl,
           path,
-          extraOpts ? { ...options, ...extraOpts } : options,
+          { ...options, ...extraOpts },
           effectiveLocale
         )
       } catch (error) {
