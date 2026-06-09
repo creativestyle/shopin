@@ -5,7 +5,7 @@ import { useLocale, useTranslations } from 'next-intl'
 import { FormattedPrice } from '@/components/ui/price/formatted-price'
 import { type OrderSummaryResponse } from '@core/contracts/order/order'
 import { Button } from '@/components/ui/button'
-import ChevronRightIcon from '@/public/icons/chevronright.svg'
+import ChevronRightIcon from '@/public/icons/chevron-right.svg'
 import { OrderStateBadge } from './order-state-badge'
 import { LineItemImages } from './line-item-images'
 

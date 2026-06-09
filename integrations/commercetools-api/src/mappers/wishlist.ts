@@ -1,10 +1,20 @@
-import type { ShoppingList } from '@commercetools/platform-sdk'
+import type {
+  ShoppingList,
+  ShoppingListLineItem,
+} from '@commercetools/platform-sdk'
 import type { WishlistResponse } from '@core/contracts/wishlist/wishlist'
 import { WishlistResponseSchema } from '@core/contracts/wishlist/wishlist'
 import { resolveCurrencyFromLanguage } from '@core/i18n/currency-utils'
 import { getLocalizedString as mapLocalized } from '../helpers/get-localized-string'
 import { ProductProjectionPagedQueryApiResponseSchema } from '../schemas/product-projection'
 import type { ByProjectKeyRequestBuilder } from '@commercetools/platform-sdk'
+
+type ValidLineItem = Omit<ShoppingListLineItem, 'productId' | 'variant'> & {
+  productId: string
+  variant: NonNullable<ShoppingListLineItem['variant']> & {
+    prices: NonNullable<NonNullable<ShoppingListLineItem['variant']>['prices']>
+  }
+}
 
 /**
  * Maps a Commercetools ShoppingList to WishlistResponse
@@ -18,8 +28,14 @@ export async function mapShoppingListToWishlist(
   // Get currency for current language to filter prices
   const currency = resolveCurrencyFromLanguage(currentLanguage)
 
-  // Fetch product projections to get slugs (shopping list expansion doesn't work)
-  const productIds = shoppingList.lineItems?.map((item) => item.productId) || []
+  // Drop items whose product was deleted/unpublished (no variant) or have no prices (schema requires price).
+  const lineItems = (shoppingList.lineItems ?? []).filter(
+    (item): item is ValidLineItem =>
+      !!item.productId && !!item.variant && !!item.variant.prices?.length
+  )
+
+  // Shopping list expansion doesn't return slugs, so fetch product projections separately.
+  const productIds = lineItems.map((item) => item.productId)
   const productSlugMap = new Map<string, string>()
 
   if (productIds.length > 0) {
@@ -48,42 +64,30 @@ export async function mapShoppingListToWishlist(
     })
   }
 
-  const items = (shoppingList.lineItems || []).map((lineItem) => {
-    const productName =
-      lineItem.name[currentLanguage] ||
-      lineItem.name['en-US'] ||
-      Object.values(lineItem.name)[0] ||
-      ''
-
-    // Extract price from expanded variant, filtered by current currency
+  const items = lineItems.map((lineItem) => {
+    const productName = mapLocalized(lineItem.name, currentLanguage) ?? ''
     const variantPrice =
-      lineItem.variant?.prices?.find(
-        (p) => p.value.currencyCode === currency
-      ) || lineItem.variant?.prices?.[0]
-    const price = variantPrice
-      ? {
-          regularPriceInCents: variantPrice.value.centAmount,
-          discountedPriceInCents: variantPrice.discounted?.value.centAmount,
-          currency: variantPrice.value.currencyCode,
-          fractionDigits: variantPrice.value.fractionDigits,
-        }
-      : undefined
-
-    // Get product slug from the map we built earlier
-    const productSlug = productSlugMap.get(lineItem.productId || '') || ''
+      lineItem.variant.prices.find((p) => p.value.currencyCode === currency) ??
+      lineItem.variant.prices[0]
+    const price = {
+      regularPriceInCents: variantPrice.value.centAmount,
+      discountedPriceInCents: variantPrice.discounted?.value.centAmount,
+      currency: variantPrice.value.currencyCode,
+      fractionDigits: variantPrice.value.fractionDigits,
+    }
 
     return {
-      id: lineItem.id, // Line item ID for remove operations
+      id: lineItem.id,
       product: {
-        id: lineItem.productId || '',
+        id: lineItem.productId,
         name: productName,
-        slug: productSlug,
+        slug: productSlugMap.get(lineItem.productId) ?? '',
         image: {
-          src: lineItem.variant?.images?.[0]?.url || '/placeholder-product.png',
+          src: lineItem.variant.images?.[0]?.url ?? '/placeholder-product.png',
           alt: productName,
         },
-        price: price!,
-        variantId: lineItem.variant?.id?.toString(),
+        price,
+        variantId: lineItem.variant.id?.toString(),
       },
     }
   })

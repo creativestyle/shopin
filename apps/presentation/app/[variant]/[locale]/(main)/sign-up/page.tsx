@@ -1,7 +1,7 @@
 import { setRequestLocale, getTranslations } from 'next-intl/server'
 import Link from 'next/link'
 import { SignUpFormWithRedirect } from './sign-up-form-with-redirect'
-import ChevronLeftIcon from '@/public/icons/chevronleft.svg'
+import ChevronLeftIcon from '@/public/icons/chevron-left.svg'
 import { AuthPageGuard } from '../auth-page-guard'
 import { getIsCheckoutServer } from '@/features/checkout/checkout-param-utils'
 import { StandardContainer } from '@/components/ui/standard-container'

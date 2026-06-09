@@ -18,7 +18,13 @@ export const ProductDetailsResponseSchema = BaseEntityResponseSchema.extend({
     .array(
       z.object({
         id: z.string(),
-        attributes: z.record(z.string(), z.string()),
+        attributes: z.array(
+          z.object({
+            name: z.string(),
+            label: z.string(),
+            value: z.string(),
+          })
+        ),
       })
     )
     .optional(),

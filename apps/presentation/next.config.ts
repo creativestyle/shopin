@@ -4,6 +4,15 @@ import path from 'path'
 import { CONTENT_IMAGE_API_HOSTS, PRODUCT_IMAGE_HOSTS } from '@config/constants'
 
 const withNextIntl = createNextIntlPlugin()
+const svgLoader = {
+  loader: '@svgr/webpack',
+  options: {
+    svgProps: {
+      'aria-hidden': true,
+      'focusable': false,
+    },
+  },
+}
 
 const nextConfig: NextConfig = {
   // Pino and pino-pretty must be externalized for Next.js server (see pino docs)
@@ -14,7 +23,7 @@ const nextConfig: NextConfig = {
   turbopack: {
     rules: {
       '*.svg': {
-        loaders: ['@svgr/webpack'],
+        loaders: [svgLoader],
         as: '*.js',
       },
     },

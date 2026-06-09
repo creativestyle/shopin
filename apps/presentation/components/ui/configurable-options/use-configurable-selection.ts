@@ -24,7 +24,8 @@ export function useConfigurableSelection(
   ) => {
     return Object.entries(selection).every(
       ([attributeKey, selectedValue]) =>
-        variant.attributes?.[attributeKey] === selectedValue
+        variant.attributes?.find((a) => a.name === attributeKey)?.value ===
+        selectedValue
     )
   }
 

@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { MainNavigationResponse } from '@core/contracts/navigation/main-navigation'
-import HamburgerMenuIcon from '@/public/icons/hamburgermenu.svg'
+import HamburgerMenuIcon from '@/public/icons/hamburger-menu.svg'
 import { MobileNavigation } from './mobile-navigation/mobile-navigation'
 import { Button } from '@/components/ui/button'
 

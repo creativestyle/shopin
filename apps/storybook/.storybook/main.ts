@@ -3,6 +3,16 @@ import { fileURLToPath } from 'url'
 import { dirname, resolve } from 'path'
 import webpack from 'webpack'
 
+const svgLoader = {
+  loader: '@svgr/webpack',
+  options: {
+    svgProps: {
+      'aria-hidden': true,
+      'focusable': false,
+    },
+  },
+}
+
 const config: StorybookConfig = {
   stories: ['../src/stories/**/*.stories.@(js|jsx|mjs|ts|tsx)'],
   framework: '@storybook/nextjs',
@@ -41,7 +51,7 @@ const config: StorybookConfig = {
           },
           // For default imports, treat as React component
           {
-            use: ['@svgr/webpack'],
+            use: [svgLoader],
             type: 'javascript/auto',
           },
         ],
