@@ -14,10 +14,10 @@ type Story = StoryObj<typeof meta>
 
 const GalleryDialogStory = () => {
   const [isOpen, setIsOpen] = useState(false)
-  const images = [
-    { src: './product-image.png', alt: 'Image 1' },
-    { src: './product-image.png', alt: 'Image 2' },
-  ]
+  const images = Array.from({ length: 10 }, (_, i) => ({
+    src: './product-image.png',
+    alt: `Image ${i + 1}`,
+  }))
 
   return (
     <>

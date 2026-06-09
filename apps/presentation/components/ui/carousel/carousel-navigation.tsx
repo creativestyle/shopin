@@ -14,10 +14,46 @@ export function CarouselNavigation({
   onSlideToPrev,
   onSlideToNext,
   carouselId,
+  size,
   className,
 }: CarouselNavigationProps & { className?: string }) {
   const t = useTranslations('carousel')
   const isAtStart = currentIndex === 1
+
+  if (size === 'sm') {
+    return (
+      <div className={className}>
+        {!isAtStart && (
+          <Button
+            type='button'
+            variant='secondary'
+            scheme='white'
+            size='icon-sm'
+            className='absolute top-[var(--carousel-arrow-position)] left-0 z-[var(--z-carousel-arrow)] -ml-1 -translate-x-full -translate-y-1/2 shadow-sm touchscreen:hidden'
+            aria-label={t('previousSlide')}
+            aria-controls={carouselId}
+            onClick={onSlideToPrev}
+          >
+            <ChevronLeftIcon className='pointer-events-none size-4' />
+          </Button>
+        )}
+        {isNextSlidePossible && (
+          <Button
+            type='button'
+            variant='secondary'
+            scheme='white'
+            size='icon-sm'
+            className='absolute top-[var(--carousel-arrow-position)] right-0 z-[var(--z-carousel-arrow)] translate-x-full -translate-y-1/2 shadow-sm touchscreen:hidden'
+            aria-label={t('nextSlide')}
+            aria-controls={carouselId}
+            onClick={onSlideToNext}
+          >
+            <ChevronRightIcon className='pointer-events-none size-4' />
+          </Button>
+        )}
+      </div>
+    )
+  }
 
   return (
     <div className={className}>

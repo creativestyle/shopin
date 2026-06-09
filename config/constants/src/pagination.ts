@@ -5,3 +5,6 @@ export const MAX_ITEMS_PER_PAGE = 100
 
 /** Page size for product carousel teasers (BFF enrichment). */
 export const PRODUCT_CAROUSEL_PAGE_SIZE = 12
+
+/** Number of slides scrolled per arrow click in the gallery thumbnail strip. */
+export const GALLERY_THUMBNAIL_SCROLL_SIZE = 2
