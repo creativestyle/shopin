@@ -14,7 +14,7 @@ import { useProductSearch } from '@/features/searchResults/use-product-search'
 import { ProductCard } from '@/components/ui/product-card'
 import SearchIcon from '@/public/icons/search.svg'
 import CloseIcon from '@/public/icons/close.svg'
-import ChevronLeftIcon from '@/public/icons/chevronleft.svg'
+import ChevronLeftIcon from '@/public/icons/chevron-left.svg'
 
 interface SearchPopupProps {
   open: boolean

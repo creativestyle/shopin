@@ -1,6 +1,7 @@
 # SHOPin storefront accelerator
 
 [![License: OSL-3.0](https://img.shields.io/badge/License-OSL--3.0-blue.svg)](https://opensource.org/licenses/OSL-3.0)
+[![Build Status](https://github.com/creativestyle/shopin/actions/workflows/ci.yml/badge.svg)](https://github.com/creativestyle/shopin/actions)
 
 A modular storefront accelerator with a NestJS Backend for Frontend (BFF), Next.js presentation app, and pluggable data sources. Swap e-commerce backends and CMSs via a data-source layer; built for flexibility and type-safe development in a monorepo. **[Turborepo](https://turbo.build/repo)** orchestrates the monorepo: builds, tasks, and caching across all apps and packages.
 

@@ -2,7 +2,7 @@
 
 import { cn } from '@/lib/utils'
 import { Button } from './button'
-import ChevronRightIcon from '@/public/icons/chevronright.svg'
+import ChevronRightIcon from '@/public/icons/chevron-right.svg'
 
 export interface ScrollButtonProps {
   side: 'left' | 'right'

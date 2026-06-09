@@ -31,8 +31,9 @@ export function useAddToCart() {
         quantity,
       })
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: cartKeys.all })
+    onSuccess: async (data) => {
+      await queryClient.cancelQueries({ queryKey: cartKeys.all, exact: true })
+      queryClient.setQueryData(cartKeys.all, data)
       setOpen(true)
     },
   })

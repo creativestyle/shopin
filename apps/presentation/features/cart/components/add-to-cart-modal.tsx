@@ -1,7 +1,6 @@
 'use client'
 
 import * as React from 'react'
-import { useEffect, useRef } from 'react'
 import { useTranslations } from 'next-intl'
 import {
   Sheet,
@@ -27,9 +26,9 @@ export function AddToCartModal({ open, onOpenChange }: AddToCartModalProps) {
   const { cart, refetch, error } = useCart()
   const productsScrollRef = React.useRef<HTMLDivElement>(null)
   const scrollSentinelRef = React.useRef<HTMLDivElement>(null)
-  const wasOpenRef = useRef(false)
+  const wasOpenRef = React.useRef(false)
 
-  useEffect(() => {
+  React.useEffect(() => {
     if (open && !wasOpenRef.current) {
       refetch()
     }
