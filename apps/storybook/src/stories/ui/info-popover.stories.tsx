@@ -73,7 +73,7 @@ function InfoPopoverExample({
         sideOffset={sideOffset}
         withArrow={withArrow}
       >
-        <p>{content}</p>
+        {content}
       </InfoPopoverContent>
     </InfoPopover>
   )
