@@ -4,9 +4,11 @@
 /**
  * GET /api/draft is the CMS preview entry route. A CMS editor clicks a
  * "Preview" link in the CMS UI, which hits this route with a short-lived
- * secret + slug + locale. On success the route redirects the editor to the live
- * site's /preview/ path with a signed token as ?__pt=. The preview page validates
- * the token then strips it from the address bar via router.replace().
+ * secret + slug + locale. On success the route redirects the editor to the
+ * live site's /preview/ path. Token delivery depends on the redirect base
+ * protocol (FRONTEND_URL when set): HTTPS → HttpOnly cookie; HTTP (local dev)
+ * → ?__pt= URL param. The preview page validates the token and renders draft
+ * content; the token is not stripped from the address bar.
  *
  * Slug normalisation and isSafeDraftRedirectPath guard against open-redirect attacks.
  */
@@ -177,6 +179,17 @@ describe('GET /api/draft', () => {
     it('does NOT set a cookie on HTTP', () => {
       const res = GET(makeRequest(validParams(), 'http://localhost:3000'))
       expect(res.headers.get('set-cookie')).toBeNull()
+    })
+
+    it('uses cookie (not URL param) when FRONTEND_URL is https:// even if request is HTTP', () => {
+      // This verifies the security invariant: delivery mode is keyed on the redirect base
+      // protocol (server config), not the incoming request protocol (request-controlled header).
+      // A production deploy with a misconfigured HTTP-only ingress cannot leak __pt to the URL.
+      process.env.FRONTEND_URL = 'https://shop.example.com'
+      draftModeMocks().createPreviewToken.mockReturnValue('my-signed-token')
+      const res = GET(makeRequest(validParams(), 'http://localhost:3000'))
+      expect(res.headers.get('set-cookie')).toContain('my-signed-token')
+      expect(res.headers.get('location')).not.toContain('my-signed-token')
     })
   })
 

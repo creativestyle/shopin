@@ -35,15 +35,17 @@ function getDraftRedirectBase(request: NextRequest): string {
  * https://<your-site>/api/draft?secret=<NEXT_DRAFT_MODE_SECRET>&slug=<entry-slug>&locale=<locale>
  *
  * The CMS typically sends locale as en-US, de-DE, etc. We redirect to app URL prefix (en, de).
- * Token delivery strategy depends on protocol:
+ * Token delivery strategy depends on the redirect base protocol (FRONTEND_URL when set):
  *
- * HTTPS (production): HttpOnly cookie with SameSite=None;Secure. Works in Contentful's cross-site
- * iframe. Token never appears in the URL, access logs, or Referer headers. The proxy reads the
- * cookie and injects it into the internal rewrite URL as ?__pt=.
+ * HTTPS redirect base (production): HttpOnly cookie with SameSite=None;Secure. Works in
+ * Contentful's cross-site iframe. Token never appears in the URL, access logs, or Referer
+ * headers. The proxy reads the cookie and injects it into the internal rewrite URL as ?__pt=.
  *
- * HTTP (local dev): URL param ?__pt=. SameSite=None;Secure requires HTTPS so cookies cannot be
- * forwarded cross-site on plain HTTP. The proxy passes the param through; the preview page strips
- * it from the address bar via router.replace() after rendering.
+ * HTTP redirect base (local dev, e.g. FRONTEND_URL=http://localhost:3000 or unset):
+ * URL param ?__pt=. SameSite=None;Secure requires HTTPS so cookies cannot be forwarded
+ * cross-site on plain HTTP. The signed, short-lived token rides in the URL; the preview
+ * page validates it and renders draft content. The token is not stripped from the address
+ * bar — this is safe given the short TTL and signature, and only occurs in local dev.
  */
 export function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl
@@ -78,18 +80,19 @@ export function GET(request: NextRequest) {
       ? `/preview/${normalizedSlug}`
       : `/${locale}/preview/${normalizedSlug}`
 
-  // On HTTPS: deliver token via HttpOnly cookie so it never appears in URLs or logs.
+  // Delivery strategy is keyed on the redirect base protocol (a server-controlled config value),
+  // not the incoming request's x-forwarded-proto header (which could be spoofed/misconfigured).
+  // Production always sets FRONTEND_URL to an https:// URL, so URL-param delivery is local-only.
+  // On HTTPS redirect base: deliver token via HttpOnly cookie so it never appears in URLs or logs.
   // SameSite=None is required for the Contentful cross-site iframe context.
   // Note: Chrome's CHIPS proposal may eventually require adding `partitioned: true` for
   // third-party iframe cookies; monitor browser compatibility if preview breaks on new Chrome.
-  // On HTTP (local dev): SameSite=None;Secure requires HTTPS, fall back to URL param.
-  const isHttps =
-    request.nextUrl.protocol === 'https:' ||
-    request.headers.get('x-forwarded-proto') === 'https'
+  // On HTTP redirect base (local dev): SameSite=None;Secure is unavailable, fall back to URL param.
+  const redirectIsHttps = new URL(redirectBase).protocol === 'https:'
 
   const redirectUrl = new URL(previewPath, redirectBase)
 
-  if (isHttps) {
+  if (redirectIsHttps) {
     const response = NextResponse.redirect(redirectUrl, 307)
     response.cookies.set({
       name: PREVIEW_TOKEN_COOKIE,

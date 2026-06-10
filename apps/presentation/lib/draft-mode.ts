@@ -2,17 +2,20 @@
  * Draft mode: URL-token-based CMS preview.
  *
  * Flow: /api/draft?secret=X&slug=Y&locale=Z validates the secret, generates a short-lived
- * signed token, and redirects to /<locale>/preview/<slug>?__pt=<token>. The proxy preserves
- * __pt when rewriting to the internal route. The preview page validates the token, renders
- * draft content, then strips __pt from the address bar via router.replace(). Regular live
- * routes are never involved and remain ISR-cacheable.
+ * signed token, and redirects to /<locale>/preview/<slug>. On HTTPS the token is delivered
+ * as an HttpOnly cookie; on HTTP (local dev) it is appended as ?__pt=<token>. The proxy
+ * preserves the token when rewriting to the internal route. The preview page validates the
+ * token and renders draft content. Regular live routes are never involved and remain
+ * ISR-cacheable.
  *
- * Why URL param: Contentful opens preview in a cross-site iframe. SameSite=Lax cookies are
- * not forwarded in cross-site iframes so cookie delivery is unreliable. URL params have no
- * same-site restriction and work in all embedding contexts including HTTP localhost.
+ * Why URL param on local: Contentful opens preview in a cross-site iframe. SameSite=Lax
+ * cookies are not forwarded in cross-site iframes, and SameSite=None;Secure requires HTTPS.
+ * URL params have no same-site restriction and work in all embedding contexts including
+ * HTTP localhost.
  *
- * Security: the token is signed + short-lived (DRAFT_COOKIE_MAX_AGE_SEC). It is briefly
- * visible in the address bar during navigation and then stripped by the preview page.
+ * Security: the token is signed + short-lived (DRAFT_COOKIE_MAX_AGE_SEC). On local/HTTP
+ * it remains in the address bar for the duration of the preview session, which is acceptable
+ * given its signature and short TTL. On production (HTTPS) it travels only via HttpOnly cookie.
  *
  * Header x-next-draft-mode: a separate short-lived signed token (DRAFT_HEADER_TOKEN_MAX_AGE_SEC)
  * is generated per BFF request so the raw secret never travels on the wire.
@@ -41,8 +44,9 @@ export const PREVIEW_TOKEN_COOKIE = 'preview_token'
 /**
  * URL search param carrying the signed preview token on HTTP (local dev).
  * On HTTP, SameSite=None;Secure is unavailable so the token travels via URL param.
- * The proxy injects it into the internal rewrite URL; the preview page strips it
- * from the address bar via router.replace() after rendering.
+ * The proxy injects it into the internal rewrite URL (HTTPS: from cookie; HTTP: already
+ * present in the URL). The preview page validates the token; it is not stripped from
+ * the address bar, which is safe given the short TTL and signature.
  */
 export const PREVIEW_TOKEN_INTERNAL_PARAM = '__pt'
 
