@@ -135,7 +135,13 @@ export function SearchPopup({ open, onOpenChange }: SearchPopupProps) {
                 }
               }}
             >
-              <SearchIcon className='size-6 flex-shrink-0 text-gray-500' />
+              <button
+                type='submit'
+                aria-label={t('submitSearch')}
+                className='size-6'
+              >
+                <SearchIcon />
+              </button>
               <input
                 type='text'
                 placeholder={t('searchPlaceholder')}
