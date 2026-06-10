@@ -1,6 +1,6 @@
 import { setRequestLocale } from 'next-intl/server'
 import { setRequestVariant } from './variant'
-import { decodeVariant } from '@/lib/variant/variant-key'
+import { decodeVariant, isVariantSegment } from '@/lib/variant/variant-key'
 
 /**
  * Per-render context initialiser for every [variant]/[locale] page & layout.
@@ -23,6 +23,9 @@ export function initRouteContext({
   variant: string
   locale: string
 }): void {
+  if (!isVariantSegment(variant)) {
+    throw new Error(`Invalid variant segment: "${variant}"`)
+  }
   setRequestLocale(locale)
   setRequestVariant(decodeVariant(variant))
 }
