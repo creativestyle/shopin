@@ -28,6 +28,7 @@ export const ForgotPasswordForm: FC<ForgotPasswordFormProps> = ({
   const [showErrorToast, setShowErrorToast] = useState(false)
 
   const form = useForm<ForgotPasswordFormData>({
+    mode: 'onTouched',
     resolver: zodResolver(ForgotPasswordRequestSchema),
     defaultValues: {
       email: '',

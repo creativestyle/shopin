@@ -47,6 +47,7 @@ export const ResetPasswordForm: FC<ResetPasswordFormProps> = ({
   const token = searchParams.get('token')
 
   const form = useForm<ResetPasswordFormData>({
+    mode: 'onTouched',
     resolver: zodResolver(ResetPasswordFormSchema),
     defaultValues: {
       newPassword: '',

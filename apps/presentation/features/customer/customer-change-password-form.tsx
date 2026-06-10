@@ -28,6 +28,7 @@ export const ChangePasswordForm: FC = () => {
   const { handlePasswordChange, isPasswordChangePending } = useChangePassword()
 
   const form = useForm<ChangePasswordFormData>({
+    mode: 'onTouched',
     resolver: zodResolver(ChangePasswordFormSchema),
     defaultValues: {
       currentPassword: '',

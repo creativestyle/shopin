@@ -45,7 +45,7 @@ export function FormField<
       render={({ field, fieldState }) => {
         const validationState: 'error' | 'valid' | 'none' = fieldState.invalid
           ? 'error'
-          : fieldState.isDirty
+          : fieldState.isTouched && fieldState.isDirty
             ? 'valid'
             : 'none'
         return (

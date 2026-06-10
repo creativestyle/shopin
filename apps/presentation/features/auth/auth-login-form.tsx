@@ -34,6 +34,7 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
   const [verifyEmailHref, setVerifyEmailHref] = useState<string | null>(null)
 
   const form = useForm<LoginRequest>({
+    mode: 'onTouched',
     resolver: zodResolver(LoginRequestSchema),
     defaultValues: {
       email: '',

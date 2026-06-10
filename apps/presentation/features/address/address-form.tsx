@@ -78,6 +78,7 @@ export function AddressForm({
   )
 
   const form = useForm<AddressRequest>({
+    mode: 'onTouched',
     resolver: zodResolver(AddressRequestSchema),
     defaultValues: defaultValues || {},
   })

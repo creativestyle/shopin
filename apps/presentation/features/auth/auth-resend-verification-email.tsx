@@ -23,6 +23,7 @@ export function ResendVerificationEmailForm() {
   const [verifyEmailHref, setVerifyEmailHref] = useState<string | null>(null)
 
   const form = useForm<ResendVerificationEmailRequest>({
+    mode: 'onTouched',
     resolver: zodResolver(ResendVerificationEmailRequestSchema),
     defaultValues: { email: '' },
   })

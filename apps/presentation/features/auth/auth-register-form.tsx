@@ -42,6 +42,7 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
   const [showErrorToast, setShowErrorToast] = useState(false)
 
   const form = useForm<RegisterFormData>({
+    mode: 'onTouched',
     resolver: zodResolver(RegisterFormSchema),
     defaultValues: {
       salutation: undefined,

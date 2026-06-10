@@ -55,6 +55,7 @@ export const CustomerDataForm: FC<ContactDataFormProps> = ({
   })
 
   const form = useForm<UpdateCustomerRequest>({
+    mode: 'onTouched',
     resolver: zodResolver(UpdateCustomerRequestSchema),
     defaultValues: getCustomerDataFormDefaultValues(customer),
   })
