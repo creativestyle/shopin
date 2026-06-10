@@ -27,8 +27,8 @@ import { useCustomerAddressOperations } from './customer-use-customer-address-op
 import { useCustomer } from './customer-use-customer'
 import { AddressBase } from '@core/contracts/address/address-base'
 import PlusIcon from '@/public/icons/plus.svg'
-import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { ErrorDisplay } from '@/components/ui/error-display'
+import { CustomerAddressesSkeleton } from './customer-addresses-skeleton'
 
 export const CustomerAddresses: FC = () => {
   const t = useTranslations('account.myAccount')
@@ -87,7 +87,7 @@ export const CustomerAddresses: FC = () => {
   }
 
   if (isLoading) {
-    return <LoadingSpinner className='size-6' />
+    return <CustomerAddressesSkeleton />
   }
 
   if (error) {
