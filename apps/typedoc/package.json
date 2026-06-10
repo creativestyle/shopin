@@ -15,7 +15,7 @@
     "@core/eslint-config": "*",
     "@core/prettier-config": "*",
     "@core/typescript-config": "*",
-    "concurrently": "^9.1.2",
+    "concurrently": "^10.0.3",
     "nodemon": "^3.1.9",
     "typedoc": "^0.27.9",
     "vite": "8.0.8"
