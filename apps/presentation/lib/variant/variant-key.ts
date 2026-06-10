@@ -77,8 +77,8 @@ export const DEFAULT_VARIANT_SEGMENT = encodeVariant(
 )
 
 /** Returns true only for the default variant segment (all dimensions at their default value).
- *  The proxy uses this to distinguish the default segment (308-redirect to the clean canonical
- *  URL) from non-default segments (valid public alt-variant URLs, pass through). */
+ *  Used by {@link getVariantSegmentFromPathname} to treat the default segment as "no active
+ *  variant" (return null), so URL-derived callers fall back to the default data source. */
 export function isDefaultVariantSegment(segment: string): boolean {
   return segment === DEFAULT_VARIANT_SEGMENT
 }
