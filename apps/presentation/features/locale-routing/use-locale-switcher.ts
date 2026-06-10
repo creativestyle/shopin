@@ -29,13 +29,16 @@ export function useLocaleSwitcher() {
         ? '/' + segments.slice(1).join('/')
         : pathname
 
+      // Extract before resolveLocalizedPath so slug lookups hit the correct
+      // data source on alt-variant pages (passed into the server action).
+      const variantSegment = getVariantSegmentFromPathname(pathname)
       const next = await resolveLocalizedPath({
         path: cleanPathname,
         targetUrlPrefix,
+        variantSegment,
       })
 
       // Re-prepend the non-default variant prefix (null → default → no prefix).
-      const variantSegment = getVariantSegmentFromPathname(pathname)
       const variantPrefix = variantSegment ? `/${variantSegment}` : ''
       const final = variantPrefix + next
 

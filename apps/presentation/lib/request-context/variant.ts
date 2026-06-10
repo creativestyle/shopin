@@ -1,4 +1,5 @@
 import { cache } from 'react'
+import { decodeVariant } from '@/lib/variant/variant-key'
 
 const getHolder = cache((): { value: Record<string, string> | undefined } => ({
   value: undefined,
@@ -6,6 +7,13 @@ const getHolder = cache((): { value: Record<string, string> | undefined } => ({
 
 export function setRequestVariant(resolved: Record<string, string>): void {
   getHolder().value = resolved
+}
+
+/** Decodes a raw variant URL segment and sets it as the request variant.
+ *  Used by {@link initRouteContext} (in-route-tree) and by server actions that
+ *  run outside the route tree (e.g. resolveLocalizedPath). */
+export function setRequestVariantFromSegment(segment: string): void {
+  setRequestVariant(decodeVariant(segment))
 }
 
 /**

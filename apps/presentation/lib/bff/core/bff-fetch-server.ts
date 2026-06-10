@@ -42,9 +42,10 @@ export async function createBffFetchServer(opts?: {
     // set by initRouteContext() in the current segment even if createBffFetchServer
     // was called before that. Every server page/layout under [variant]/[locale]
     // calls initRouteContext({ variant, locale }) so the variant is always set for
-    // in-tree renders. undefined falls back to the BFF default and applies only to
-    // callers outside the route tree (e.g. i18n/request.ts locale detection, or
-    // any future non-route usage with opts.locale override).
+    // in-tree renders. Outside the route tree (e.g. i18n/request.ts, server actions
+    // like resolveLocalizedPath) callers must call setRequestVariant() themselves
+    // before invoking any loader, otherwise getRequestVariant() returns undefined
+    // and the BFF falls back to its default data source.
     fetch: async (path: string, options?: RequestInit) => {
       try {
         const requestVariant = getRequestVariant()
