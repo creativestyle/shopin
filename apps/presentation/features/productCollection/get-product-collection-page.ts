@@ -34,14 +34,16 @@ export const getProductCollectionPage = cache(
     const productCollectionService = new ProductCollectionService(bffFetch)
     return productCollectionService.getProductCollectionPage(
       slug,
-      page,
-      limit,
-      sort,
-      filters,
-      saleOnly,
-      priceMin,
-      priceMax,
-      cacheOptions
+      cacheOptions,
+      {
+        page,
+        limit,
+        sort,
+        filters,
+        saleOnly,
+        priceMin,
+        priceMax,
+      }
     )
   }
 )

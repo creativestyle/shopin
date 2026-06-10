@@ -83,18 +83,16 @@ describe('getProductCollectionPage', () => {
     })
   })
 
-  // cacheOptions is the last positional arg; using lastCall[length-1] keeps the
-  // test stable if new filter args are added to the signature in future.
-  it('passes cache options to the service as the last positional argument', async () => {
+  // cacheOptions is the second positional arg (after slug).
+  it('passes cache options to the service as the second argument', async () => {
     setCacheOpts({ next: { revalidate: 60 } })
     await getProductCollectionPage('slug')
     const callArgs = getServiceMock().getProductCollectionPage.mock
       .lastCall as unknown[]
-    expect(callArgs[callArgs.length - 1]).toEqual({ next: { revalidate: 60 } })
+    expect(callArgs[1]).toEqual({ next: { revalidate: 60 } })
   })
 
   // Draft pages must never enter the ISR cache.
-  // Arg positions: slug, page, pageSize, sortKey, filters, onSale, priceMin, priceMax, isDraft.
   it('passes no-store cache options when isDraft is true', async () => {
     setCacheOpts({ cache: 'no-store' as const })
     await getProductCollectionPage(
@@ -114,12 +112,11 @@ describe('getProductCollectionPage', () => {
     ).toHaveBeenCalledWith({ isDraft: true })
     const callArgs = getServiceMock().getProductCollectionPage.mock
       .lastCall as unknown[]
-    expect(callArgs[callArgs.length - 1]).toEqual({ cache: 'no-store' })
+    expect(callArgs[1]).toEqual({ cache: 'no-store' })
   })
 
-  // Verifies the loader doesn't silently drop or reorder any filter/pagination
-  // argument. Arg positions: slug, page, pageSize, sortKey, filters, onSale, priceMin, priceMax.
-  it('forwards all positional filter args to the service', async () => {
+  // Verifies the loader doesn't silently drop or reorder any filter/pagination argument.
+  it('forwards all filter args to the service opts object', async () => {
     setCacheOpts({ next: { revalidate: 60 } })
     const filters = { color: ['red'] }
     await getProductCollectionPage(
@@ -135,12 +132,14 @@ describe('getProductCollectionPage', () => {
     const callArgs = getServiceMock().getProductCollectionPage.mock
       .lastCall as unknown[]
     expect(callArgs[0]).toBe('slug')
-    expect(callArgs[1]).toBe(2)
-    expect(callArgs[2]).toBe(20)
-    expect(callArgs[3]).toBe('price-asc')
-    expect(callArgs[4]).toBe(filters)
-    expect(callArgs[5]).toBe(true)
-    expect(callArgs[6]).toBe(100)
-    expect(callArgs[7]).toBe(500)
+    expect(callArgs[2]).toEqual({
+      page: 2,
+      limit: 20,
+      sort: 'price-asc',
+      filters,
+      saleOnly: true,
+      priceMin: 100,
+      priceMax: 500,
+    })
   })
 })

@@ -16,6 +16,6 @@ export const getProductPage = cache(
       isDraft,
     })
     const productService = new ProductService(bffFetch)
-    return productService.getProductPage(slug, variantId, cacheOptions)
+    return productService.getProductPage(slug, cacheOptions, variantId)
   }
 )

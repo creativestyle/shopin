@@ -92,8 +92,8 @@ describe('getProductPage', () => {
       .value as { getProductPage: jest.Mock }
     expect(serviceInstance.getProductPage).toHaveBeenCalledWith(
       'some-slug',
-      undefined,
-      cacheOpts
+      cacheOpts,
+      undefined
     )
   })
 
@@ -120,8 +120,8 @@ describe('getProductPage', () => {
       .value as { getProductPage: jest.Mock }
     expect(serviceInstance.getProductPage).toHaveBeenCalledWith(
       'draft-slug',
-      undefined,
-      noStore
+      noStore,
+      undefined
     )
   })
 
@@ -137,8 +137,8 @@ describe('getProductPage', () => {
       .value as { getProductPage: jest.Mock }
     expect(serviceInstance.getProductPage).toHaveBeenCalledWith(
       'slug',
-      'variant-1',
-      expect.anything()
+      expect.anything(),
+      'variant-1'
     )
   })
 })

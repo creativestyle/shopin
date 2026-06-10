@@ -13,8 +13,8 @@ import type { BffCacheOptions } from '@/lib/bff/bff-cache-options'
 export class ProductService extends BaseService {
   async getProductPage(
     slug: string,
-    variantId?: string,
-    cacheOptions?: BffCacheOptions
+    cacheOptions: BffCacheOptions,
+    variantId?: string
   ): Promise<ProductPageResponse> {
     ProductSlugSchema.parse(slug)
     if (variantId) {
