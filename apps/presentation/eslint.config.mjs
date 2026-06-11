@@ -2,86 +2,10 @@ import { defineConfig, globalIgnores } from 'eslint/config'
 import nextVitals from 'eslint-config-next/core-web-vitals'
 import tailwind from 'eslint-plugin-tailwindcss'
 import pluginQuery from '@tanstack/eslint-plugin-query'
+import requireInitRouteContext from './lib/eslint-rules/require-init-route-context.js'
 
 const FEATURE_BOUNDARY_MESSAGE =
   'Import only feature entry points (files at the feature root). Do not import from any subdirectory of a feature.'
-
-// Every server-rendered page and layout under app/[variant]/[locale]/ must call
-// initRouteContext({ variant, locale }). Under ISR (revalidate=3600 on the layout), each
-// segment renders independently — the parent layout may be served from cache without
-// re-executing, so children cannot rely on the layout having already set the locale
-// (next-intl) or the variant (server BFF data-source routing). initRouteContext sets both
-// atomically. The rule fires unconditionally for all non-client route files.
-const requireInitRouteContext = {
-  meta: {
-    type: 'problem',
-    docs: {
-      description:
-        'Require initRouteContext in every server-rendered variant/locale page/layout.',
-    },
-    messages: {
-      missing:
-        'Variant/locale route files must call initRouteContext({ variant, locale }). ' +
-        'Under ISR each segment may render independently of its parent layout, ' +
-        'so every page and layout must initialise both locale (next-intl) and variant ' +
-        '(server BFF data-source) for the current render.',
-      badCall:
-        'initRouteContext must be called with { variant, locale } where variant is a ' +
-        'variable from route params — a literal or missing variant silently routes to ' +
-        'the wrong data source.',
-    },
-  },
-  create(context) {
-    let callsInitRouteContext = false
-    let badInitRouteContextNode = null
-    let isClientComponent = false
-
-    return {
-      'ExpressionStatement'(node) {
-        if (
-          node.expression.type === 'Literal' &&
-          node.expression.value === 'use client'
-        ) {
-          isClientComponent = true
-        }
-      },
-      'CallExpression'(node) {
-        if (
-          node.callee.type !== 'Identifier' ||
-          node.callee.name !== 'initRouteContext'
-        ) {
-          return
-        }
-        const arg = node.arguments[0]
-        const hasVariantIdentifier =
-          arg?.type === 'ObjectExpression' &&
-          arg.properties.some(
-            (p) =>
-              p.type === 'Property' &&
-              p.key.type === 'Identifier' &&
-              p.key.name === 'variant' &&
-              p.value.type === 'Identifier'
-          )
-        if (hasVariantIdentifier) {
-          callsInitRouteContext = true
-        } else {
-          badInitRouteContextNode = node
-        }
-      },
-      'Program:exit'(node) {
-        if (isClientComponent) {
-          return
-        }
-        if (!callsInitRouteContext) {
-          context.report({
-            node: badInitRouteContextNode ?? node,
-            messageId: badInitRouteContextNode ? 'badCall' : 'missing',
-          })
-        }
-      },
-    }
-  },
-}
 
 const eslintConfig = defineConfig([
   ...nextVitals,
