@@ -101,14 +101,16 @@ function TextInput({
 
   return (
     <div className={cn('flex w-full flex-col gap-2')}>
-      <div className='relative w-full'>
+      <div
+        className='relative w-full'
+        onPointerDown={handlePointerDown}
+      >
         <InputComponent
           id={id}
           type={type}
           aria-required={required || undefined}
           aria-invalid={isInvalid || undefined}
           aria-describedby={describedBy || undefined}
-          onPointerDown={handlePointerDown}
           onFocus={handleFocus}
           onBlur={handleBlur}
           className={cn(

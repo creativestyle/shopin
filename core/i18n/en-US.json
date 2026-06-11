@@ -274,7 +274,7 @@
         "firstNameRequired": "First name is required",
         "lastNameRequired": "Last name is required",
         "emailInvalid": "Please enter a valid email address",
-        "dateOfBirthInvalid": "Please enter a valid date in YYYY-MM-DD format",
+        "dateOfBirthInvalid": "Please enter a valid date in DD-MM-YYYY format",
         "passwordMinLength": "Password must be at least 8 characters",
         "acceptTermsRequired": "You must accept the terms and conditions",
         "confirmPasswordRequired": "Please confirm your password",
@@ -394,7 +394,8 @@
         "errors": {
           "general": "Failed to update personal data",
           "firstNameRequired": "First name is required",
-          "lastNameRequired": "Last name is required"
+          "lastNameRequired": "Last name is required",
+          "dateOfBirthInvalid": "Please enter a valid date in DD-MM-YYYY format"
         }
       },
       "changePassword": {

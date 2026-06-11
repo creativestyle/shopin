@@ -5,6 +5,18 @@ import { IMaskInput } from 'react-imask'
 import IMask from 'imask'
 import { TextInput, type TextInputProps } from './text-input'
 
+type DateChangeEvent = {
+  target: { name: string; value: string; type: 'text' }
+  currentTarget: { value: string }
+}
+
+type DateInputProps = Omit<
+  TextInputProps,
+  'type' | 'inputMode' | 'pattern' | 'onChange'
+> & {
+  onChange?: (event: DateChangeEvent) => void
+}
+
 const MASK = 'dd-mm-yyyy'
 
 // Reorder segments between ISO (YYYY-MM-DD) and display (DD-MM-YYYY) formats.
@@ -23,8 +35,6 @@ const DATE_BLOCKS = {
   mm: { mask: IMask.MaskedRange, from: 1, to: 12 },
   yyyy: { mask: IMask.MaskedRange, from: 1900, to: 2099 },
 } as const
-
-type DateInputProps = Omit<TextInputProps, 'type' | 'inputMode' | 'pattern'>
 
 /** Masked date input (dd - mm - yyyy). */
 function buildOverlaySuffix(mask: string, val?: string) {
@@ -51,6 +61,21 @@ function DateInput({
     ? isoToDisplay(rawValue)
     : rawValue
   const overlayText = buildOverlaySuffix(MASK, currentValue)
+
+  // Synthetic event shape is RHF-compatible only (name + value); type:'text' satisfies RHF's text-input path.
+  const handleAccept = (val: string) => {
+    const emitVal = val.length === MASK.length ? displayToIso(val) : val
+    if (onChange) {
+      onChange({
+        target: { name: name ?? id, value: emitVal, type: 'text' },
+        currentTarget: { value: emitVal },
+      })
+    }
+    if (!isControlled) {
+      setInternalValue(emitVal)
+    }
+  }
+
   return (
     <TextInput
       id={id}
@@ -73,27 +98,12 @@ function DateInput({
     >
       <IMaskInput
         id={id}
+        name={name}
         mask={MASK}
         blocks={DATE_BLOCKS}
         inputMode='numeric'
         value={currentValue}
-        onAccept={(val: unknown) => {
-          const displayVal = typeof val === 'string' ? val : String(val ?? '')
-          // Emit ISO (YYYY-MM-DD) when complete, display string otherwise.
-          const emitVal =
-            displayVal.length === MASK.length
-              ? displayToIso(displayVal)
-              : displayVal
-          if (onChange) {
-            onChange({
-              target: { name: name ?? id, value: emitVal },
-              currentTarget: { value: emitVal },
-            } as unknown as React.ChangeEvent<HTMLInputElement>)
-          }
-          if (!isControlled) {
-            setInternalValue(emitVal)
-          }
-        }}
+        onAccept={handleAccept}
       />
     </TextInput>
   )
