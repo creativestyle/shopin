@@ -32,6 +32,7 @@ export class CartService {
     'lineItems[*].product.productType',
     'paymentInfo.payments[*]',
   ] satisfies string[]
+  private static readonly INVENTORY_PAGE_LIMIT = 500
 
   constructor(
     private readonly userClientService: UserClientService,
@@ -52,6 +53,18 @@ export class CartService {
     actionData: unknown
   ): Promise<CartResponse> {
     return this.updateCartWithActions(cartId, [actionData])
+  }
+
+  private async getCartVersion(cartId: string): Promise<number> {
+    const client = await this.getClient()
+    const response = await client
+      .me()
+      .carts()
+      .withId({ ID: cartId })
+      .get()
+      .execute()
+
+    return CartApiResponseSchema.parse(response.body).version
   }
 
   private async processCartResponse(
@@ -107,25 +120,41 @@ export class CartService {
   private async getInventoryBySku(
     skus: string[]
   ): Promise<Map<string, number>> {
-    const response = await this.serverClientService
-      .getClient()
-      .inventory()
-      .get({
-        queryArgs: {
-          where: this.buildInventoryWhereClause(skus),
-          limit: skus.length,
-        },
-      })
-      .execute()
+    const client = this.serverClientService.getClient()
+    const inventoryBySku = new Map<string, number>()
+    let offset = 0
 
-    return new Map<string, number>(
-      (response.body.results ?? [])
-        .filter(
-          (entry): entry is typeof entry & { sku: string } =>
-            entry.sku != null && entry.availableQuantity != null
+    while (true) {
+      const response = await client
+        .inventory()
+        .get({
+          queryArgs: {
+            where: this.buildInventoryWhereClause(skus),
+            limit: CartService.INVENTORY_PAGE_LIMIT,
+            offset,
+          },
+        })
+        .execute()
+
+      const results = response.body.results ?? []
+
+      for (const entry of results) {
+        if (entry.sku == null || entry.availableQuantity == null) {
+          continue
+        }
+
+        inventoryBySku.set(
+          entry.sku,
+          (inventoryBySku.get(entry.sku) ?? 0) + entry.availableQuantity
         )
-        .map((entry) => [entry.sku, entry.availableQuantity])
-    )
+      }
+
+      if (results.length < CartService.INVENTORY_PAGE_LIMIT) {
+        return inventoryBySku
+      }
+
+      offset += results.length
+    }
   }
 
   private applyInventoryLimit(
@@ -165,9 +194,7 @@ export class CartService {
     const currentLanguage = await this.getCurrentLanguage()
     const client = await this.getClient()
 
-    // Get cart version from cartId
-    const cartForVersion = await this.getCart(cartId, [])
-    const cartVersion = cartForVersion.version
+    const cartVersion = await this.getCartVersion(cartId)
 
     const validatedActions = actionsData.map((actionData) =>
       CartUpdateActionSchema.parse(actionData)
