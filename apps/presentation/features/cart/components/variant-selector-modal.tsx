@@ -2,12 +2,14 @@
 
 import { useEffect, useState } from 'react'
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
+  Sheet,
+  SheetBody,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+} from '@/components/ui/sheet'
 import { ConfigurableOptions } from '@/components/ui/configurable-options/configurable-options'
 import { Button } from '@/components/ui/button'
 import { useAddToCart } from '../hooks/use-add-to-cart'
@@ -15,7 +17,6 @@ import { useTranslations } from 'next-intl'
 import { useBffFetchClient } from '@/lib/bff/core/bff-fetch-client'
 import type { ProductPageResponse } from '@core/contracts/product/product-page'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
-import CloseIcon from '@/public/icons/close.svg'
 
 interface VariantSelectorModalProps {
   open: boolean
@@ -33,7 +34,6 @@ export function VariantSelectorModal({
   productName,
 }: VariantSelectorModalProps) {
   const t = useTranslations('product')
-  const tCommon = useTranslations('common')
   const [productData, setProductData] = useState<ProductPageResponse | null>(
     null
   )
@@ -86,11 +86,7 @@ export function VariantSelectorModal({
       return
     }
 
-    await handleAddToCart({
-      productId,
-      variantId,
-      quantity: 1,
-    })
+    await handleAddToCart({ productId, variantId, quantity: 1 })
     onOpenChange(false)
     setProductData(null)
     setSelectedOptions({})
@@ -105,33 +101,16 @@ export function VariantSelectorModal({
         productData.product.configurableOptions.length)
 
   return (
-    <Dialog
+    <Sheet
       open={open}
       onOpenChange={onOpenChange}
     >
-      <DialogContent
-        className='!inset-y-0 !top-0 !right-0 !left-auto flex h-full !max-h-full w-full max-w-full !translate-x-0 !translate-y-0 flex-col p-0 md:!inset-y-0 md:!top-0 md:!max-h-full md:w-112 md:max-w-112 md:!translate-y-0'
-        showCloseButton={false}
-      >
-        {/* Header */}
-        <DialogHeader className='relative flex h-14 w-full items-center justify-between bg-white !px-4 py-4 md:w-112'>
-          <div className='relative size-8 shrink-0 opacity-0' />
-          <DialogTitle className='relative flex shrink-0 flex-col justify-center text-center text-base leading-none font-normal text-nowrap text-gray-950'>
-            <p className='leading-[1.1] whitespace-pre'>{productName}</p>
-          </DialogTitle>
-          <Button
-            variant='tertiary'
-            scheme='black'
-            size='icon-sm'
-            onClick={() => onOpenChange(false)}
-            aria-label={tCommon('close')}
-          >
-            <CloseIcon className='h-6 w-6 shrink-0 text-gray-700' />
-          </Button>
-        </DialogHeader>
+      <SheetContent className='md:max-w-md'>
+        <SheetHeader className='text-center'>
+          <SheetTitle className='font-normal'>{productName}</SheetTitle>
+        </SheetHeader>
 
-        {/* Content */}
-        <div className='flex flex-1 flex-col overflow-y-auto px-4 py-6 md:px-6'>
+        <SheetBody>
           {isLoading ? (
             <div className='flex flex-1 items-center justify-center'>
               <LoadingSpinner />
@@ -139,9 +118,9 @@ export function VariantSelectorModal({
           ) : (
             productData?.product && (
               <div className='flex flex-col gap-6'>
-                <DialogDescription className='text-sm text-gray-700'>
+                <SheetDescription className='text-sm text-gray-700'>
                   {t('buyBox.selectVariant')}
-                </DialogDescription>
+                </SheetDescription>
                 {productData.product.configurableOptions &&
                   productData.product.configurableOptions.length > 0 && (
                     <ConfigurableOptions
@@ -155,10 +134,9 @@ export function VariantSelectorModal({
               </div>
             )
           )}
-        </div>
+        </SheetBody>
 
-        {/* Footer */}
-        <div className='flex w-full shrink-0 flex-col border-t border-gray-200 bg-white px-4 py-4 md:px-6'>
+        <SheetFooter className='border-t border-gray-200'>
           <Button
             onClick={handleAddToBasket}
             disabled={isAddDisabled}
@@ -174,8 +152,8 @@ export function VariantSelectorModal({
               t('buyBox.addToBasket')
             )}
           </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
+        </SheetFooter>
+      </SheetContent>
+    </Sheet>
   )
 }

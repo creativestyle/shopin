@@ -3,12 +3,13 @@
 import { useRouter, usePathname, useSearchParams } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
+  Sheet,
+  SheetBody,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from '@/components/ui/sheet'
 import {
   Accordion,
   AccordionContent,
@@ -25,8 +26,6 @@ import {
 import type { Facet } from '@core/contracts/product-collection/facet'
 import type { Filters } from '@core/contracts/product-collection/product-collection-page'
 import type { PriceRange } from '@core/contracts/product-collection/product-collection'
-import { Button } from '@/components/ui/button'
-import CloseIcon from '@/public/icons/close.svg'
 import { FacetAccordionItem } from './components/facet-accordion-item'
 import { PriceRangeAccordion } from './components/price-range-accordion'
 import { FilterDrawerFooter } from './components/filter-drawer-footer'
@@ -73,7 +72,6 @@ export function FilterDrawer({
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const t = useTranslations('productCollection')
-  const tCommon = useTranslations('common')
 
   const sortOptions = VALID_SORT_OPTIONS.map((option) => ({
     value: option,
@@ -96,36 +94,22 @@ export function FilterDrawer({
   }
 
   return (
-    <Dialog
+    <Sheet
       open={open}
       onOpenChange={onOpenChange}
     >
-      <DialogContent
+      <SheetContent
         id={id}
-        className='!inset-y-0 !top-0 !right-0 !left-auto flex h-full !max-h-full w-full max-w-full !translate-x-0 !translate-y-0 flex-col p-0 md:!inset-y-0 md:!top-0 md:!max-h-full md:w-96 md:max-w-96 md:!translate-y-0'
-        showCloseButton={false}
+        className='md:max-w-96'
       >
-        <DialogHeader className='relative flex h-14 w-full items-center justify-between bg-white !px-4 py-4'>
-          <div className='relative size-8 shrink-0 opacity-0' />
-          <DialogTitle className='text-base font-bold text-gray-950'>
-            {t('filters.drawerTitle')}
-          </DialogTitle>
-          <DialogDescription className='sr-only'>
+        <SheetHeader className='text-center'>
+          <SheetTitle>{t('filters.drawerTitle')}</SheetTitle>
+          <SheetDescription className='sr-only'>
             {t('filters.dialogDescription' as Parameters<typeof t>[0])}
-          </DialogDescription>
-          <Button
-            type='button'
-            variant='tertiary'
-            scheme='black'
-            size='icon-sm'
-            onClick={() => onOpenChange(false)}
-            aria-label={tCommon('close')}
-          >
-            <CloseIcon className='h-6 w-6 shrink-0 text-gray-700' />
-          </Button>
-        </DialogHeader>
+          </SheetDescription>
+        </SheetHeader>
 
-        <div className='flex-1 overflow-y-auto px-4 pb-24'>
+        <SheetBody>
           <Accordion
             type='multiple'
             className='w-full'
@@ -206,13 +190,13 @@ export function FilterDrawer({
               aria-labelledby='filter-drawer-sale-only-label'
             />
           </label>
-        </div>
+        </SheetBody>
 
         <FilterDrawerFooter
           onResetAll={handleResetAll}
           onApplyFilters={handleApplyFilters}
         />
-      </DialogContent>
-    </Dialog>
+      </SheetContent>
+    </Sheet>
   )
 }
