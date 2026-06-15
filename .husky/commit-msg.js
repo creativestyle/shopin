@@ -9,6 +9,12 @@ try {
     .find((line) => !line.startsWith("#"))
     ?.trim();
 
+  const gitDir = require("path").join(process.cwd(), ".git");
+  const isMergeCommit = fs.existsSync(require("path").join(gitDir, "MERGE_HEAD"));
+  if (isMergeCommit) {
+    process.exit(0);
+  }
+
   const commitPattern =
     /^(build|ci|docs|feat|fix|perf|refactor|test)(\(.+\))?!?: (\.+|[^\[\]].+)/;
 

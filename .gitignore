@@ -40,10 +40,20 @@ pnpm-debug.log*
 # Misc
 .DS_Store
 *.pem
-.cursor
-.claude
 .eslintcache
 .cache
+
+# AI / agent tooling (installed locally, not committed)
+.claude
+.cursor
+.codex
+.gemini
+.windsurf
+.continue
+.aider*
+.agents
+CLAUDE.md
+skills-lock.json
 
 # TypeScript
 tsconfig.tsbuildinfo
