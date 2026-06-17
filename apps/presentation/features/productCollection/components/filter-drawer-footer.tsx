@@ -16,7 +16,7 @@ export function FilterDrawerFooter({
   const t = useTranslations('productCollection')
 
   return (
-    <div className='absolute right-0 bottom-0 left-0 flex h-18 items-center justify-between border-t border-gray-200 bg-white px-3'>
+    <div className='flex h-18 shrink-0 items-center justify-between border-t border-gray-200 bg-white px-3'>
       <Button
         type='button'
         variant='tertiary'
