@@ -16,7 +16,7 @@
  *   layout's client-side StripPreviewToken component after hydration; the session cookie
  *   keeps the session alive for reloads.
  *
- * In-app draft navigation (#12): the proxy checks for the preview_token cookie on every
+ * In-app draft navigation: the proxy checks for the preview_token cookie on every
  * request and rewrites clean /en/… paths to the preview subtree when a valid session is
  * active. Draft state therefore persists across Next.js router navigations, not just
  * explicit /preview/ URL visits.

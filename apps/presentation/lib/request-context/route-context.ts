@@ -15,6 +15,11 @@ import { isVariantSegment } from '@/lib/variant/variant-key'
  * Sets:
  *  - next-intl locale   (enables getTranslations(), getMessages(), etc.)
  *  - request variant    (server BFF fetches hit the selected data source)
+ *
+ * No-ops silently when variant is not a valid ~-prefixed key — it may be a
+ * dot-prefixed path (/.well-known/…) or any other non-variant segment that bypassed
+ * the middleware matcher. Routing decisions (notFound()) belong in the layout, not
+ * here; this function must never interfere with paths it does not own.
  */
 export function initRouteContext({
   variant,
@@ -24,7 +29,7 @@ export function initRouteContext({
   locale: string
 }): void {
   if (!isVariantSegment(variant)) {
-    throw new Error(`Invalid variant segment: "${variant}"`)
+    return
   }
   setRequestLocale(locale)
   setRequestVariantFromSegment(variant)

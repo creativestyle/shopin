@@ -258,7 +258,7 @@ describe('preview path routing — explicit locale', () => {
 // ─────────────────────────────────────────────────────────────────────────────
 // When the user holds an active preview_token cookie and navigates to a clean
 // /locale/page URL (not explicitly a /preview/ path), the proxy injects /preview/
-// so they remain in draft mode during in-app navigation (#12).
+// so they remain in draft mode during in-app navigation.
 // Token must pass isDraftTokenActiveByExp: format "${exp}.${sig}" with future exp.
 
 describe('cookie-driven preview — clean /locale/... path (isDraftActive=true)', () => {
@@ -306,6 +306,17 @@ describe('cookie-driven preview — clean /locale/... path (isDraftActive=true)'
       makeRequest('/en/about-us', { cookie: `preview_token=${farFutureToken}` })
     )
     expect(rewritePath(res)).toBe(`/${DEFAULT_VARIANT}/en/about-us`)
+  })
+
+  it('rewrites /about-us (no locale prefix) to /<variant>/en/preview/about-us when draft cookie is active', () => {
+    // With localePrefix:'as-needed' the default locale has no URL prefix — the canonical
+    // in-app navigation URL is /slug, not /en/slug.
+    const res = proxy(
+      makeRequest('/about-us', {
+        cookie: `preview_token=${ACTIVE_PREVIEW_TOKEN}`,
+      })
+    )
+    expect(rewritePath(res)).toBe(`/${DEFAULT_VARIANT}/en/preview/about-us`)
   })
 
   it('prefers URL param over an expired session cookie (editor opens fresh CMS link)', () => {

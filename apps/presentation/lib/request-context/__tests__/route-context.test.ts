@@ -59,12 +59,15 @@ describe('initRouteContext', () => {
     expect(m.setRequestVariantFromSegment).toHaveBeenCalledTimes(1)
   })
 
-  it('throws on a malformed variant segment instead of silently defaulting', () => {
+  it('no-ops on a non-variant segment without throwing', () => {
+    // Routing decisions (notFound()) belong in the layout. initRouteContext must
+    // not interfere with paths it does not own — e.g. dot-prefixed paths that
+    // bypassed the middleware matcher and landed on the [variant] dynamic route.
     const m = mocks()
     m.isVariantSegment.mockReturnValue(false)
     expect(() =>
       initRouteContext({ variant: 'malformed', locale: 'en' })
-    ).toThrow('Invalid variant segment: "malformed"')
+    ).not.toThrow()
     expect(m.setRequestLocale).not.toHaveBeenCalled()
     expect(m.setRequestVariantFromSegment).not.toHaveBeenCalled()
   })

@@ -163,6 +163,15 @@ describe('GET /api/draft', () => {
       expect(cookie.toLowerCase()).toContain('samesite=none')
     })
 
+    it('HTTPS cookie includes Max-Age so it survives browser close (not a session cookie)', () => {
+      // Fix 2 regression guard: the HTTPS branch previously omitted maxAge, making the
+      // cookie session-scoped (cleared on browser close before the first preview page load).
+      draftModeMocks().createPreviewToken.mockReturnValue('my-signed-token')
+      const res = GET(makeRequest(validParams()))
+      const cookie = res.headers.get('set-cookie') ?? ''
+      expect(cookie.toLowerCase()).toMatch(/max-age=\d+/)
+    })
+
     it('does NOT put the token in the redirect URL on HTTPS', () => {
       draftModeMocks().createPreviewToken.mockReturnValue('my-signed-token')
       const res = GET(makeRequest(validParams()))
