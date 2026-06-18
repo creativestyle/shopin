@@ -49,6 +49,9 @@
       "persistent": true,
       "inputs": ["$TURBO_DEFAULT$", ".env*"],
       "env": ["COMMERCETOOLS_*", "CONTENTFUL_*", "NEXT_*"]
+    },
+    "e2e": {
+      "cache": false
     }
   },
   "concurrency": "20"

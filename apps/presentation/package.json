@@ -7,7 +7,9 @@
   "scripts": {
     "dev": "dotenv -e ../../.env -- next dev",
     "build": "next build",
+    "build:e2e": "dotenv -e .env.e2e -- next build && cp -r public .next/standalone/apps/presentation/ && cp -r .next/static .next/standalone/apps/presentation/.next/",
     "start:local": "dotenv -e ../../.env -- next build && dotenv -e ../../.env -- next start",
+    "start:e2e": "dotenv -e .env.e2e -- node .next/standalone/apps/presentation/server.js",
     "lint": "eslint --fix .",
     "format": "prettier --write --ignore-unknown .",
     "format:check": "prettier --check --ignore-unknown .",

@@ -24,6 +24,7 @@
     "check-types": "turbo run check-types",
     "check-dependencies": "npm audit --audit-level=critical",
     "test": "turbo run test",
+    "e2e": "turbo run e2e",
     "prepare": "husky install || true"
   },
   "devDependencies": {
