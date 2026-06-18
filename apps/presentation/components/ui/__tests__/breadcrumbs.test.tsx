@@ -21,9 +21,9 @@ async function renderBreadcrumbs(crumbs: CrumbResponse[], className?: string) {
   return render(BreadcrumbsComponent)
 }
 
-// Mock Next.js Link component
-jest.mock('next/link', () => {
-  return function MockLink({
+// Mock locale-aware Link — breadcrumbs imports from @/lib/navigation (next-intl wrapper)
+jest.mock('@/lib/navigation', () => ({
+  Link: function MockLink({
     children,
     href,
     ...props
@@ -40,8 +40,8 @@ jest.mock('next/link', () => {
         {children}
       </a>
     )
-  }
-})
+  },
+}))
 
 describe('Breadcrumbs', () => {
   const mockCrumbs: CrumbResponse[] = [

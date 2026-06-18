@@ -1,6 +1,6 @@
 import { getTranslations } from 'next-intl/server'
 import { cn } from '@/lib/utils'
-import Link from 'next/link'
+import { Link } from '@/lib/navigation'
 import { CrumbResponse } from '@core/contracts/core/crumb'
 import HomeIcon from '@/public/icons/home.svg'
 import ChevronRightIcon from '@/public/icons/chevron-right.svg'
@@ -16,7 +16,7 @@ async function Breadcrumbs({
   }
   const allCrumbs = [homeCrumb, ...crumbs]
 
-  if (allCrumbs.length <= 1) {
+  if (allCrumbs.length <= 2) {
     return null
   }
 
