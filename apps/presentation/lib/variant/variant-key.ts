@@ -43,8 +43,16 @@ export function decodeVariant(segment: string): Record<string, string> {
   return resolved
 }
 
-/** Returns true for internal variant-key URL segments (always prefixed with `~`).
+/** Returns true for any segment that starts with the internal variant prefix `~`.
+ *  The `~` marker must never appear in public URLs — valid variant or not.
  *  Used by the leaked-URL guard in the proxy to redirect direct external hits. */
+export function hasVariantPrefix(segment: string): boolean {
+  return segment.startsWith(VARIANT_PREFIX)
+}
+
+/** Returns true for internal variant-key URL segments (always prefixed with `~`).
+ *  Used by initRouteContext to validate the [variant] route param, and by
+ *  use-locale-switcher to detect a variant prefix in the current pathname. */
 export function isVariantSegment(segment: string): boolean {
   if (!segment.startsWith(VARIANT_PREFIX)) {
     return false

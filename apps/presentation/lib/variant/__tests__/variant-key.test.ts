@@ -16,6 +16,7 @@ import {
   encodeVariant,
   decodeVariant,
   isVariantSegment,
+  hasVariantPrefix,
   isDefaultVariantSegment,
   variantHeaders,
   variantHeadersFromSegment,
@@ -101,6 +102,42 @@ describe('isVariantSegment', () => {
   it('returns false when part count is wrong (extra __ parts)', () => {
     // Registry has 1 dimension; two parts means wrong count
     expect(isVariantSegment(`~${DEFAULT}__extra`)).toBe(false)
+  })
+})
+
+// ─── hasVariantPrefix ────────────────────────────────────────────────────────
+// Used by the proxy leaked-URL guard: any ~ segment is redirected, valid or not.
+
+describe('hasVariantPrefix', () => {
+  it('returns true for a valid default variant segment', () => {
+    expect(hasVariantPrefix(`~${DEFAULT}`)).toBe(true)
+  })
+
+  it('returns true for a valid alt variant segment', () => {
+    expect(hasVariantPrefix(`~${ALT}`)).toBe(true)
+  })
+
+  it('returns true for a ~ prefix with a bogus value (not in allowed list)', () => {
+    // Unlike isVariantSegment, hasVariantPrefix does not validate the value.
+    expect(hasVariantPrefix('~bogus')).toBe(true)
+  })
+
+  it('returns true for a bare ~ (empty inner value)', () => {
+    expect(hasVariantPrefix('~')).toBe(true)
+  })
+
+  it('returns false when ~ prefix is absent', () => {
+    expect(hasVariantPrefix(DEFAULT)).toBe(false)
+  })
+
+  it('returns false for an empty string', () => {
+    expect(hasVariantPrefix('')).toBe(false)
+  })
+
+  it('returns false for a string starting with ~ look-alike character', () => {
+    // Tilde character must be exact ASCII 0x7E (~); a look-alike is different.
+    // (Sanity check — ~ is ASCII, no confusables expected in practice.)
+    expect(hasVariantPrefix('en')).toBe(false)
   })
 })
 

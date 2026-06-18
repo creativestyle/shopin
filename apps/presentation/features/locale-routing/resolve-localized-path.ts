@@ -5,7 +5,8 @@ import { getProductPage } from '@/features/product/get-product-page'
 import { getProductCollectionPage } from '@/features/productCollection/get-product-collection-page'
 import { getContentPage } from '@/features/content/get-content-page'
 import { isHomepageSlug } from '@/features/content/homepage-slug'
-import { setRequestVariantFromSegment } from '@/lib/request-context/variant'
+import { runWithRequestVariantFromSegment } from '@/lib/request-context/variant'
+import { isVariantSegment } from '@/lib/variant/variant-key'
 
 function stripLocalePrefix(path: string): string {
   for (const { urlPrefix } of listLocales()) {
@@ -56,22 +57,24 @@ export async function resolveLocalizedPath({
   targetUrlPrefix: string
   variantSegment: string | null
 }): Promise<string> {
-  // Populate the per-request variant context so loaders hit the correct data
-  // source. Without this, getRequestVariant() returns undefined here (we're
-  // outside the [variant]/[locale] route tree) and the BFF would fall back to
-  // the default data source, producing wrong localized slugs for alt-variant pages.
-  if (variantSegment) {
-    setRequestVariantFromSegment(variantSegment)
-  }
-
   const rest = stripLocalePrefix(path)
   const targetRfc = urlPrefixToRfc(targetUrlPrefix)
   const fallback = `/${targetUrlPrefix}${rest}`
 
-  try {
-    const targetPath = await resolveTargetPath(rest, targetRfc)
-    return targetPath !== null ? `/${targetUrlPrefix}${targetPath}` : fallback
-  } catch {
+  if (variantSegment !== null && !isVariantSegment(variantSegment)) {
     return fallback
   }
+
+  const resolve = async () => {
+    try {
+      const targetPath = await resolveTargetPath(rest, targetRfc)
+      return targetPath !== null ? `/${targetUrlPrefix}${targetPath}` : fallback
+    } catch {
+      return fallback
+    }
+  }
+
+  return variantSegment
+    ? runWithRequestVariantFromSegment(variantSegment, resolve)
+    : resolve()
 }

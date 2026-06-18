@@ -1,18 +1,5 @@
 /**
  * @jest-environment node
- *
- * resolveLocalizedPath is the server action invoked by the client locale switcher.
- * It runs outside the [variant]/[locale] route tree, so getRequestVariant() would
- * otherwise be undefined and BFF calls would silently fall back to the default data
- * source — producing wrong localized slugs for alt-variant pages.
- *
- * The central invariant these tests protect:
- *   - When variantSegment is provided, setRequestVariantFromSegment is called BEFORE
- *     any loader, so BFF fetches inside those loaders use the correct data source.
- *   - When variantSegment is absent (default / clean URL), the setter is NOT called —
- *     the BFF default is correct.
- *   - Slug resolution correctly maps /p/, /c/, and content paths to the target locale.
- *   - On loader error, the fallback /<targetUrlPrefix><rest> path is returned.
  */
 
 jest.mock('react', () => ({ cache: <T>(fn: T) => fn }))
@@ -32,12 +19,14 @@ jest.mock('@/features/content/get-content-page', () => ({
 jest.mock('@/features/content/homepage-slug', () => ({
   isHomepageSlug: jest.fn(),
 }))
-jest.mock('@/lib/request-context/variant', () => ({
-  setRequestVariantFromSegment: jest.fn(),
+jest.mock('@/lib/variant/variant-key', () => ({
+  decodeVariant: jest.fn(),
+  isVariantSegment: jest.fn(),
 }))
 
 import { resolveLocalizedPath } from '../resolve-localized-path'
-import { setRequestVariantFromSegment } from '@/lib/request-context/variant'
+import { decodeVariant, isVariantSegment } from '@/lib/variant/variant-key'
+import { getRequestVariant } from '@/lib/request-context/variant'
 import { getProductPage } from '@/features/product/get-product-page'
 import { getProductCollectionPage } from '@/features/productCollection/get-product-collection-page'
 import { getContentPage } from '@/features/content/get-content-page'
@@ -51,7 +40,8 @@ function mocks() {
   return {
     listLocales: config.listLocales,
     urlPrefixToRfc: config.urlPrefixToRfc,
-    setRequestVariantFromSegment: jest.mocked(setRequestVariantFromSegment),
+    decodeVariant: jest.mocked(decodeVariant),
+    isVariantSegment: jest.mocked(isVariantSegment),
     getProductPage: jest.mocked(getProductPage),
     getProductCollectionPage: jest.mocked(getProductCollectionPage),
     getContentPage: jest.mocked(getContentPage),
@@ -71,39 +61,38 @@ describe('resolveLocalizedPath', () => {
       prefix === 'de' ? 'de-DE' : 'en-US'
     )
     m.isHomepageSlug.mockReturnValue(false)
+    m.isVariantSegment.mockReturnValue(true)
   })
 
-  // The bug this test guards: on an alt-variant page the variant must be set before
-  // any loader runs so BFF hits the correct data source.
-  it('calls setRequestVariantFromSegment before any loader when variantSegment is provided', async () => {
+  it('sets variant context via ALS so getRequestVariant() reads it inside the loader when variantSegment is provided', async () => {
     const m = mocks()
-    const callOrder: string[] = []
-    m.setRequestVariantFromSegment.mockImplementation(() => {
-      callOrder.push('setVariant')
-    })
+    const decodedVariant = { dataSource: 'commercetools-algolia-set' }
+    m.decodeVariant.mockReturnValue(decodedVariant)
 
+    let capturedVariant: Record<string, string> | undefined
     m.getProductPage.mockImplementation(async () => {
-      callOrder.push('getProductPage')
+      capturedVariant = getRequestVariant()
       return { product: { slugByLocale: { 'de-DE': 'produkt-slug' } } } as any
     })
 
     await resolveLocalizedPath({
       path: '/en/p/product-slug',
       targetUrlPrefix: 'de',
-      variantSegment: '~algolia__en',
+      variantSegment: '~commercetools-algolia-set',
     })
 
-    expect(callOrder).toEqual(['setVariant', 'getProductPage'])
-    expect(m.setRequestVariantFromSegment).toHaveBeenCalledWith('~algolia__en')
+    expect(m.decodeVariant).toHaveBeenCalledWith('~commercetools-algolia-set')
+    expect(capturedVariant).toEqual(decodedVariant)
   })
 
-  // Default / clean URL: variantSegment is null → BFF default is correct, setter must not fire.
-  it('does not call setRequestVariantFromSegment when variantSegment is null', async () => {
+  it('getRequestVariant() is undefined inside the loader when variantSegment is null', async () => {
     const m = mocks()
 
-    m.getProductPage.mockResolvedValue({
-      product: { slugByLocale: { 'de-DE': 'produkt-slug' } },
-    } as any)
+    let capturedVariant: Record<string, string> | undefined = undefined
+    m.getProductPage.mockImplementation(async () => {
+      capturedVariant = getRequestVariant()
+      return { product: { slugByLocale: { 'de-DE': 'produkt-slug' } } } as any
+    })
 
     await resolveLocalizedPath({
       path: '/en/p/product-slug',
@@ -111,7 +100,8 @@ describe('resolveLocalizedPath', () => {
       variantSegment: null,
     })
 
-    expect(m.setRequestVariantFromSegment).not.toHaveBeenCalled()
+    expect(m.decodeVariant).not.toHaveBeenCalled()
+    expect(capturedVariant).toBeUndefined()
   })
 
   it('resolves product paths via getProductPage', async () => {
@@ -190,5 +180,20 @@ describe('resolveLocalizedPath', () => {
     })
 
     expect(result).toBe('/de/p/no-translation')
+  })
+
+  it('returns fallback without calling any loader when variantSegment is not a valid segment', async () => {
+    const m = mocks()
+    m.isVariantSegment.mockReturnValue(false)
+
+    const result = await resolveLocalizedPath({
+      path: '/en/p/product-slug',
+      targetUrlPrefix: 'de',
+      variantSegment: '~bogus',
+    })
+
+    expect(result).toBe('/de/p/product-slug')
+    expect(m.getProductPage).not.toHaveBeenCalled()
+    expect(m.decodeVariant).not.toHaveBeenCalled()
   })
 })

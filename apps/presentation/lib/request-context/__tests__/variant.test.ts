@@ -58,3 +58,91 @@ describe('getRequestVariant / setRequestVariant', () => {
     expect(getRequestVariant()).toBe(second)
   })
 })
+
+describe('runWithRequestVariant / ALS context', () => {
+  function loadModule() {
+    let result:
+      | {
+          getRequestVariant: () => Record<string, string> | undefined
+          setRequestVariant: (v: Record<string, string>) => void
+          runWithRequestVariant: <T>(
+            resolved: Record<string, string>,
+            fn: () => T
+          ) => T
+          runWithRequestVariantFromSegment: <T>(
+            segment: string,
+            fn: () => T
+          ) => T
+        }
+      | undefined
+
+    jest.isolateModules(() => {
+      jest.mock('react', () => ({
+        ...jest.requireActual('react'),
+        cache: <T extends () => unknown>(fn: T) => {
+          const cached = fn()
+          return () => cached
+        },
+      }))
+      jest.mock('@/lib/variant/variant-key', () => ({
+        decodeVariant: (segment: string) => ({
+          dataSource: segment.replace(/^~/, ''),
+        }),
+      }))
+
+      result = require('../variant') as typeof result
+    })
+
+    return result!
+  }
+
+  it('returns the value passed to runWithRequestVariant inside the callback', () => {
+    const { getRequestVariant, runWithRequestVariant } = loadModule()
+    const value = { dataSource: 'commercetools-algolia-set' }
+    let captured: Record<string, string> | undefined
+    runWithRequestVariant(value, () => {
+      captured = getRequestVariant()
+    })
+    expect(captured).toBe(value)
+  })
+
+  it('returns undefined outside the runWithRequestVariant callback', () => {
+    const { getRequestVariant, runWithRequestVariant } = loadModule()
+    const value = { dataSource: 'commercetools-algolia-set' }
+    runWithRequestVariant(value, () => {})
+    expect(getRequestVariant()).toBeUndefined()
+  })
+
+  it('ALS store takes precedence over the React.cache holder when both are set', () => {
+    const { getRequestVariant, setRequestVariant, runWithRequestVariant } =
+      loadModule()
+    const holderValue = { dataSource: 'commercetools-set' }
+    const alsValue = { dataSource: 'commercetools-algolia-set' }
+    setRequestVariant(holderValue)
+    let captured: Record<string, string> | undefined
+    runWithRequestVariant(alsValue, () => {
+      captured = getRequestVariant()
+    })
+    expect(captured).toBe(alsValue)
+  })
+
+  it('propagates correctly across awaits inside the run', async () => {
+    const { getRequestVariant, runWithRequestVariant } = loadModule()
+    const value = { dataSource: 'commercetools-algolia-set' }
+    let captured: Record<string, string> | undefined
+    await runWithRequestVariant(value, async () => {
+      await Promise.resolve()
+      captured = getRequestVariant()
+    })
+    expect(captured).toBe(value)
+  })
+
+  it('runWithRequestVariantFromSegment decodes the segment and sets ALS context', () => {
+    const { getRequestVariant, runWithRequestVariantFromSegment } = loadModule()
+    let captured: Record<string, string> | undefined
+    runWithRequestVariantFromSegment('~commercetools-algolia-set', () => {
+      captured = getRequestVariant()
+    })
+    expect(captured).toEqual({ dataSource: 'commercetools-algolia-set' })
+  })
+})
