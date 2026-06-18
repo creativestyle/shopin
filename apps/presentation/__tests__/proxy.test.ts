@@ -21,6 +21,7 @@ jest.mock('next-intl/middleware', () => {
 jest.mock('@/lib/draft-mode', () => ({
   PREVIEW_TOKEN_COOKIE: 'preview_token',
   PREVIEW_TOKEN_INTERNAL_PARAM: '__pt',
+  DRAFT_COOKIE_MAX_AGE_SEC: 86400,
 }))
 
 // ─── Mock: logger-config ─────────────────────────────────────────────────────
@@ -37,6 +38,12 @@ import proxy from '../proxy'
 const DEFAULT_VARIANT = '~commercetools-set'
 const ALT_VARIANT = '~commercetools-algolia-set'
 const BASE = 'http://localhost'
+
+// Preview tokens used across preview tests. Computed once at module load time;
+// ACTIVE has a 1-hour future exp so isDraftTokenActiveByExp returns true.
+// EXPIRED has a past exp so isDraftTokenActiveByExp returns false.
+const ACTIVE_PREVIEW_TOKEN = `${Math.floor(Date.now() / 1000) + 3600}.fakesig`
+const EXPIRED_PREVIEW_TOKEN = `${Math.floor(Date.now() / 1000) - 1}.fakesig`
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -210,12 +217,15 @@ describe('preview path routing — default locale', () => {
   })
 
   it('injects __pt from the preview_token cookie (HTTPS production path)', () => {
+    // Token must pass isDraftTokenActiveByExp: "${exp}.${sig}" format with future exp.
     const res = proxy(
-      makeRequest('/preview/slug', { cookie: 'preview_token=cookie-token' })
+      makeRequest('/preview/slug', {
+        cookie: `preview_token=${ACTIVE_PREVIEW_TOKEN}`,
+      })
     )
     const raw = res.headers.get('x-middleware-rewrite') ?? ''
     const rewritten = new URL(raw)
-    expect(rewritten.searchParams.get('__pt')).toBe('cookie-token')
+    expect(rewritten.searchParams.get('__pt')).toBe(ACTIVE_PREVIEW_TOKEN)
   })
 
   it('has no __pt param when neither URL param nor cookie is present', () => {
@@ -244,6 +254,74 @@ describe('preview path routing — explicit locale', () => {
 })
 
 // ─────────────────────────────────────────────────────────────────────────────
+// 3b. Cookie-driven preview — clean /locale/... paths (isDraftActive=true)
+// ─────────────────────────────────────────────────────────────────────────────
+// When the user holds an active preview_token cookie and navigates to a clean
+// /locale/page URL (not explicitly a /preview/ path), the proxy injects /preview/
+// so they remain in draft mode during in-app navigation (#12).
+// Token must pass isDraftTokenActiveByExp: format "${exp}.${sig}" with future exp.
+
+describe('cookie-driven preview — clean /locale/... path (isDraftActive=true)', () => {
+  it('rewrites /en/about-us to /<variant>/en/preview/about-us when draft cookie is active', () => {
+    const res = proxy(
+      makeRequest('/en/about-us', {
+        cookie: `preview_token=${ACTIVE_PREVIEW_TOKEN}`,
+      })
+    )
+    expect(rewritePath(res)).toBe(`/${DEFAULT_VARIANT}/en/preview/about-us`)
+  })
+
+  it('injects the active cookie token as __pt in the rewrite URL', () => {
+    const res = proxy(
+      makeRequest('/en/about-us', {
+        cookie: `preview_token=${ACTIVE_PREVIEW_TOKEN}`,
+      })
+    )
+    const raw = res.headers.get('x-middleware-rewrite') ?? ''
+    const rewritten = new URL(raw)
+    expect(rewritten.searchParams.get('__pt')).toBe(ACTIVE_PREVIEW_TOKEN)
+  })
+
+  it('rewrites /de/about-us to /<variant>/de/preview/about-us when draft cookie is active', () => {
+    const res = proxy(
+      makeRequest('/de/about-us', {
+        cookie: `preview_token=${ACTIVE_PREVIEW_TOKEN}`,
+      })
+    )
+    expect(rewritePath(res)).toBe(`/${DEFAULT_VARIANT}/de/preview/about-us`)
+  })
+
+  it('does NOT route to preview when the cookie token is expired', () => {
+    const res = proxy(
+      makeRequest('/en/about-us', {
+        cookie: `preview_token=${EXPIRED_PREVIEW_TOKEN}`,
+      })
+    )
+    expect(rewritePath(res)).toBe(`/${DEFAULT_VARIANT}/en/about-us`)
+  })
+
+  it('does NOT route to preview for forged far-future exp tokens (self-DoS protection)', () => {
+    const farFutureToken = '99999999999.fakedsig'
+    const res = proxy(
+      makeRequest('/en/about-us', { cookie: `preview_token=${farFutureToken}` })
+    )
+    expect(rewritePath(res)).toBe(`/${DEFAULT_VARIANT}/en/about-us`)
+  })
+
+  it('prefers URL param over an expired session cookie (editor opens fresh CMS link)', () => {
+    // Fix 1 regression guard: expired cookie must not shadow a fresh ?__pt= link.
+    const res = proxy(
+      makeRequest('/preview/slug?__pt=fresh-url-token', {
+        cookie: `preview_token=${EXPIRED_PREVIEW_TOKEN}`,
+      })
+    )
+    const raw = res.headers.get('x-middleware-rewrite') ?? ''
+    const rewritten = new URL(raw)
+    expect(rewritten.searchParams.get('__pt')).toBe('fresh-url-token')
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
 // 4. intlMiddleware fallthrough paths
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -254,6 +332,22 @@ describe('intlMiddleware fallthrough', () => {
     const res = proxy(makeRequest('/foo'))
     // Should be a redirect, not a rewrite
     expect(res.headers.get('location')).toContain('/en/foo')
+  })
+
+  it('does NOT pass through intlMiddleware redirect when draft cookie is active', () => {
+    // proxy.ts guards redirect passthrough with !ctx.isPreview. This test ensures
+    // the guard stays in place: preview users must never receive a locale-detection
+    // redirect that would silently exit their draft session.
+    const intlRes = NextResponse.redirect(`${BASE}/en/foo`)
+    getIntlMiddlewareFn().mockReturnValue(intlRes)
+    const res = proxy(
+      makeRequest('/foo', { cookie: `preview_token=${ACTIVE_PREVIEW_TOKEN}` })
+    )
+    // Must be a preview rewrite (200), not the intlMiddleware redirect (3xx).
+    // rewritePath() is non-null iff x-middleware-rewrite is present — verifies
+    // handlePreviewPath ran instead of the redirect passthrough.
+    expect(rewritePath(res)).toBe(`/${DEFAULT_VARIANT}/en/preview/foo`)
+    expect(res.status).toBe(200)
   })
 
   it('rewrites /en/product to /<variant>/en/product when intl returns no rewrite', () => {
@@ -353,5 +447,48 @@ describe('x-next-intl-locale forwarding', () => {
     expect(res.headers.get('x-middleware-request-x-next-intl-locale')).toBe(
       'en'
     )
+  })
+
+  it('reads locale from intlMiddleware x-middleware-rewrite when present', () => {
+    // Production intlMiddleware returns a rewrite (with x-middleware-rewrite) for
+    // locale-prefixed paths. Its rewrite URL has the locale in position [1] but
+    // no variant prefix (the variant prefix is added by our proxy, not intlMiddleware).
+    // The default mock returns NextResponse.next() with no rewrite, so the
+    // locale-from-rewrite branch in buildRequestContext is exercised only here.
+    const intlRes = NextResponse.next()
+    intlRes.headers.set('x-middleware-rewrite', `${BASE}/de/page`)
+    getIntlMiddlewareFn().mockReturnValue(intlRes)
+    const res = proxy(makeRequest('/page'))
+    // /page request URL would resolve to default locale 'en'; the rewrite says 'de'
+    expect(res.headers.get('x-middleware-request-x-next-intl-locale')).toBe(
+      'de'
+    )
+  })
+
+  describe('x-next-intl-locale forwarding — preview paths', () => {
+    it('sets x-next-intl-locale to the default locale for /preview/... paths', () => {
+      const res = proxy(makeRequest('/preview/slug'))
+      expect(res.headers.get('x-middleware-request-x-next-intl-locale')).toBe(
+        'en'
+      )
+    })
+
+    it('sets x-next-intl-locale to de for /de/preview/... paths', () => {
+      const res = proxy(makeRequest('/de/preview/slug'))
+      expect(res.headers.get('x-middleware-request-x-next-intl-locale')).toBe(
+        'de'
+      )
+    })
+
+    it('sets x-next-intl-locale for cookie-driven preview on /de/... paths', () => {
+      const res = proxy(
+        makeRequest('/de/about-us', {
+          cookie: `preview_token=${ACTIVE_PREVIEW_TOKEN}`,
+        })
+      )
+      expect(res.headers.get('x-middleware-request-x-next-intl-locale')).toBe(
+        'de'
+      )
+    })
   })
 })

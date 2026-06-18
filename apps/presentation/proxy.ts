@@ -40,10 +40,12 @@ function getSiteProtocol(): string {
 }
 
 /**
- * Returns true when the draft token's exp claim is in the future.
+ * Returns true when the draft token's exp claim is in the future and within
+ * the maximum allowed window (DRAFT_COOKIE_MAX_AGE_SEC + 60s clock-drift slack).
  * Token format: "${exp}.${sig}" where exp is a Unix timestamp (seconds).
  * Does NOT verify the HMAC signature — that stays in the preview page to keep
- * Node.js crypto out of the edge bundle. Expired tokens are treated as absent.
+ * Node.js crypto out of the edge bundle. Expired or forged far-future tokens
+ * are treated as absent.
  */
 function isDraftTokenActiveByExp(token: string): boolean {
   const dotIdx = token.indexOf('.')
@@ -54,7 +56,14 @@ function isDraftTokenActiveByExp(token: string): boolean {
   if (!Number.isFinite(exp)) {
     return false
   }
-  return Math.floor(Date.now() / 1000) < exp
+  const nowSec = Math.floor(Date.now() / 1000)
+  // Reject tokens whose exp is beyond what we ever issue — a legitimately minted
+  // token cannot expire more than DRAFT_COOKIE_MAX_AGE_SEC seconds from now.
+  // The +60 slack absorbs clock skew between the issuing server and this edge node.
+  if (exp > nowSec + DRAFT_COOKIE_MAX_AGE_SEC + 60) {
+    return false
+  }
+  return nowSec < exp
 }
 
 function resolveCorrelationId(request: NextRequest): string {
@@ -198,12 +207,17 @@ function handlePreviewPath(
   const rewriteUrl = request.nextUrl.clone()
   rewriteUrl.pathname = internalPathname
 
-  // Prefer the session cookie; fall back to the __pt URL param so that a direct
-  // /preview/slug?__pt=<token> link (before the cookie is established) still reaches
-  // the preview page. On HTTPS the token is never in the URL — cookie only.
+  // Prefer the session cookie when it is still valid; fall back to the __pt URL
+  // param so that a fresh CMS preview link works even when the browser holds a
+  // stale (expired) cookie. Without this check an expired cookie silently wins
+  // over a fresh URL token and every preview link 404s until cookies are cleared.
   const urlParamToken =
     request.nextUrl.searchParams.get(PREVIEW_TOKEN_INTERNAL_PARAM) ?? undefined
-  const activeToken = draftCookieToken ?? urlParamToken
+  const activeCookieToken =
+    draftCookieToken && isDraftTokenActiveByExp(draftCookieToken)
+      ? draftCookieToken
+      : undefined
+  const activeToken = activeCookieToken ?? urlParamToken
 
   if (
     activeToken &&

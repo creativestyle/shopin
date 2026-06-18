@@ -120,6 +120,7 @@ export function GET(request: NextRequest) {
       secure: true,
       sameSite: 'none',
       path: '/',
+      maxAge: DRAFT_COOKIE_MAX_AGE_SEC,
     })
     return response
   }

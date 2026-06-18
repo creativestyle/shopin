@@ -37,14 +37,17 @@ export async function createBffFetchServer(opts?: {
     opts?.locale || getLocale(),
     getBffServerUrl(),
   ])
+  // Resolve variant context once at construction time. getRequestVariant() reads
+  // ALS / React-cache which are both request-scoped and fixed from this point on.
+  // Resolving here (rather than per-fetch) means variantHeaders() errors surface
+  // immediately instead of being swallowed by the per-fetch catch block.
+  const requestVariant = getRequestVariant()
+  const resolvedVariantHeaders =
+    requestVariant !== undefined ? variantHeaders(requestVariant) : undefined
+
   return {
     fetch: async (path: string, options?: RequestInit) => {
       try {
-        const requestVariant = getRequestVariant()
-        const resolvedVariantHeaders =
-          requestVariant !== undefined
-            ? variantHeaders(requestVariant)
-            : undefined
         const extraOpts: Partial<BffFetchOptions> = {}
         if (resolvedVariantHeaders != null) {
           extraOpts.variantHeaders = resolvedVariantHeaders
