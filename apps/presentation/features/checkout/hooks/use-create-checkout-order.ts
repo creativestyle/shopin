@@ -1,7 +1,7 @@
 'use client'
 
 import { useQueryClient } from '@tanstack/react-query'
-import { useRouter } from 'next/navigation'
+import { useRouter } from '@/lib/navigation'
 import { useTranslations } from 'next-intl'
 import { useOrderService } from '@/features/order/use-order-service'
 import { useCart } from '@/features/cart/cart-use-cart'
@@ -16,39 +16,31 @@ import {
   useMutationErrorHandler,
 } from '@/lib/bff/utils/mutations'
 
-interface UseCreateCheckoutOrderOptions {
-  locale: string
-}
-
 function redirectToComplete(
   router: ReturnType<typeof useRouter>,
-  locale: string,
   orderId: string,
   token: string
 ): void {
-  router.push(`/${locale}/checkout/complete?orderId=${orderId}&token=${token}`)
+  router.push(`/checkout/complete?orderId=${orderId}&token=${token}`)
 }
 
 function handleOrderSuccess(
   router: ReturnType<typeof useRouter>,
-  locale: string,
   order: OrderResponse
 ): void {
   const existing = getStoredToken(order.id)
 
   if (existing) {
-    redirectToComplete(router, locale, order.id, existing.token)
+    redirectToComplete(router, order.id, existing.token)
     return
   }
 
   const token = generateToken()
   saveToken(order.id, token)
-  redirectToComplete(router, locale, order.id, token)
+  redirectToComplete(router, order.id, token)
 }
 
-export function useCreateCheckoutOrder({
-  locale,
-}: UseCreateCheckoutOrderOptions) {
+export function useCreateCheckoutOrder() {
   const router = useRouter()
   const t = useTranslations('checkout')
   const handleError = useMutationErrorHandler()
@@ -68,7 +60,7 @@ export function useCreateCheckoutOrder({
     onSuccess: (order) => {
       queryClient.invalidateQueries({ queryKey: cartKeys.all })
       queryClient.removeQueries({ queryKey: cartKeys.all })
-      handleOrderSuccess(router, locale, order)
+      handleOrderSuccess(router, order)
     },
     onError: (err) => {
       if (!cart?.id) {
@@ -78,7 +70,7 @@ export function useCreateCheckoutOrder({
           type: 'error',
           children: t('cartMissing'),
         })
-        router.push(`/${locale}`)
+        router.push('/')
         return
       }
 
@@ -89,7 +81,7 @@ export function useCreateCheckoutOrder({
           type: 'info',
           children: t('orderAlreadyExists'),
         })
-        router.push(`/${locale}`)
+        router.push('/')
         return
       }
 

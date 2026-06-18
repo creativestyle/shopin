@@ -16,7 +16,7 @@ export default async function Page({
   return (
     <StandardContainer className='flex w-full flex-1 flex-col items-center justify-center py-8 pb-16 lg:py-16'>
       <h1 className='sr-only'>{t('paymentProcessing')}</h1>
-      <PaymentSuccessCallback locale={locale} />
+      <PaymentSuccessCallback />
     </StandardContainer>
   )
 }
