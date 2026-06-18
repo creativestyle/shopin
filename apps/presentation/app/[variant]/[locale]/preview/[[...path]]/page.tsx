@@ -17,14 +17,18 @@ export default async function PreviewPage({
   params,
   searchParams,
 }: {
-  params: Promise<{ variant: string; locale: string; path: string[] }>
+  params: Promise<{ variant: string; locale: string; path?: string[] }>
   searchParams: Promise<Record<string, string | string[] | undefined>>
 }) {
-  const [{ variant, locale, path }, search] = await Promise.all([
+  const [{ variant, locale, path = [] }, search] = await Promise.all([
     params,
     searchParams,
   ])
   initRouteContext({ variant, locale })
+
+  if (!path.length) {
+    notFound()
+  }
 
   if (!isPreviewTokenValid(asString(search[PREVIEW_TOKEN_INTERNAL_PARAM]))) {
     notFound()
@@ -32,6 +36,9 @@ export default async function PreviewPage({
 
   if (path[0] === 'p') {
     const slug = path.slice(1).join('/')
+    if (!slug) {
+      notFound()
+    }
     return (
       <ProductPage
         slug={slug}
@@ -44,6 +51,9 @@ export default async function PreviewPage({
 
   if (path[0] === 'c') {
     const slug = path.slice(1).join('/')
+    if (!slug) {
+      notFound()
+    }
     const { page, sort, filters, saleOnly, priceMin, priceMax } =
       parsePlpSearchParams(search)
     return (

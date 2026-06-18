@@ -2,7 +2,9 @@ import type { ReactNode } from 'react'
 import { initRouteContext } from '@/lib/request-context/route-context'
 import { Header } from '@/components/layout/header'
 import { Footer } from '@/components/layout/footer'
+import { SiteTopBar } from '@/components/layout/site-top-bar'
 import { PageShell, PageContent } from '@/components/layout/page-shell'
+import { StripPreviewToken } from '@/components/layout/strip-preview-token'
 
 export default async function PreviewLayout({
   params,
@@ -16,9 +18,11 @@ export default async function PreviewLayout({
 
   return (
     <PageShell>
-      <Header />
+      <StripPreviewToken />
+      <SiteTopBar isDraft />
+      <Header isDraft />
       <PageContent>{children}</PageContent>
-      <Footer />
+      <Footer isDraft />
     </PageShell>
   )
 }
