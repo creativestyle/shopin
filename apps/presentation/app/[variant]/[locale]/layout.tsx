@@ -7,8 +7,6 @@ import { Toaster } from 'sonner'
 import { AddToCartModalProvider } from '@/features/cart/cart-add-to-cart-modal-provider'
 import { StoreConfigProvider } from '@/features/store-config/store-config-provider'
 import { getStoreConfig } from '@/features/store-config/get-store-config-server'
-import { TopBar } from '@/components/layout/top-bar'
-import { getHeaderLayout } from '@/features/content/get-layout'
 import { QueryProvider } from '../../query-provider'
 import { DemoDisclaimerModalWrapper } from './demo-disclaimer-modal-wrapper'
 import {
@@ -18,6 +16,7 @@ import {
   CONTENT_IMAGE_API_HOSTS,
 } from '@config/constants'
 import { initRouteContext } from '@/lib/request-context/route-context'
+import { isVariantSegment } from '@/lib/variant/variant-key'
 
 const dmSans = DM_Sans({
   subsets: ['latin'],
@@ -37,16 +36,19 @@ export default async function LocaleLayout({
   children: ReactNode
 }) {
   const { variant, locale } = await params
-  initRouteContext({ variant, locale })
 
-  if (!listLocales().some((l) => l.urlPrefix === locale)) {
+  if (
+    !isVariantSegment(variant) ||
+    !listLocales().some((l) => l.urlPrefix === locale)
+  ) {
     notFound()
   }
 
-  const [messages, storeConfig, headerLayout] = await Promise.all([
+  initRouteContext({ variant, locale })
+
+  const [messages, storeConfig] = await Promise.all([
     getMessages(),
     getStoreConfig(),
-    getHeaderLayout(),
   ])
 
   return (
@@ -72,7 +74,6 @@ export default async function LocaleLayout({
           >
             <StoreConfigProvider storeConfig={storeConfig}>
               <AddToCartModalProvider>
-                <TopBar messages={headerLayout?.topBarMessages ?? []} />
                 <div className='container-type-inline-size flex min-h-screen flex-col'>
                   {children}
                 </div>

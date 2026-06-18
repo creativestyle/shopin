@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import { initRouteContext } from '@/lib/request-context/route-context'
 import { Header } from '../../../../components/layout/header'
 import { Footer } from '../../../../components/layout/footer'
+import { SiteTopBar } from '../../../../components/layout/site-top-bar'
 import {
   PageShell,
   PageContent,
@@ -19,6 +20,7 @@ export default async function Layout({
 
   return (
     <PageShell>
+      <SiteTopBar />
       <Header />
       <PageContent>{children}</PageContent>
       <Footer />

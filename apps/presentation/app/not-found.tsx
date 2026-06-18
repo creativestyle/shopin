@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { getTranslations } from 'next-intl/server'
 import { RootFallbackShell } from './root-fallback-shell'
 
 /**
@@ -10,12 +11,17 @@ import { RootFallbackShell } from './root-fallback-shell'
  * above that layout (e.g. a misconfigured deployment or a build-time route
  * miss). It must render its own <html>/<body> because the root layout.tsx is
  * intentionally a bare fragment (<>{children}</>).
+ *
+ * getRequestConfig falls back to the default locale when no locale segment is
+ * present in the URL, so getTranslations resolves correctly here.
  */
-export default function NotFound() {
+export default async function NotFound() {
+  const t = await getTranslations('notFound')
+
   return (
     <RootFallbackShell>
-      <h1>404 – Page not found</h1>
-      <Link href='/'>Back to home</Link>
+      <h1>{t('title')}</h1>
+      <Link href='/'>{t('backHome')}</Link>
     </RootFallbackShell>
   )
 }

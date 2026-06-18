@@ -1,11 +1,10 @@
 import { getTranslations, getLocale } from 'next-intl/server'
-import Link from 'next/link'
-import { rfcToUrlPrefix } from '@config/constants'
+import { Link } from '@/lib/navigation'
 
 export default async function NotFound() {
-  const t = await getTranslations('notFound')
   const locale = await getLocale()
-  const homeUrl = `/${rfcToUrlPrefix(locale)}`
+  const t = await getTranslations({ locale, namespace: 'notFound' })
+  const homeUrl = `/${locale}`
 
   return (
     <div className='flex min-h-[50vh] flex-col items-center justify-center gap-6 px-4 text-center'>
