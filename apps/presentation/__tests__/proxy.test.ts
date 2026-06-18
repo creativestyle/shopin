@@ -150,9 +150,12 @@ describe('variant-segment guard (308 canonicalisation)', () => {
     expect(res.status).not.toBe(308)
   })
 
-  it('does NOT redirect when ~ prefix is present but value is not in the allowed list', () => {
+  it('308 redirects when ~ prefix is present even if value is not in the allowed list', () => {
+    // Any ~-prefixed segment is an internal marker and must never appear in public URLs.
+    // hasVariantPrefix catches bogus values that isVariantSegment would miss.
     const res = proxy(makeRequest('/~bogus/en/foo'))
-    expect(res.status).not.toBe(308)
+    expect(res.status).toBe(308)
+    expect(redirectPath(res)).toBe('/en/foo')
   })
 })
 
@@ -162,6 +165,8 @@ describe('variant-segment guard (308 canonicalisation)', () => {
 
 describe('root path', () => {
   it('rewrites to /<variant>/en when accept-language matches default locale', () => {
+    // Must be a rewrite, never a redirect: intlMiddleware ('as-needed') sends
+    // /en back to /, so a / → /en redirect would loop infinitely.
     const res = proxy(makeRequest('/', { acceptLanguage: 'en-US' }))
     expect(rewritePath(res)).toBe(`/${DEFAULT_VARIANT}/en`)
   })
@@ -220,9 +225,9 @@ describe('preview path routing — default locale', () => {
     expect(rewritten.searchParams.get('__pt')).toBeNull()
   })
 
-  it('does NOT call intlMiddleware for preview paths', () => {
+  it('calls intlMiddleware for preview paths to preserve its response headers', () => {
     proxy(makeRequest('/preview/slug'))
-    expect(getIntlMiddlewareFn()).not.toHaveBeenCalled()
+    expect(getIntlMiddlewareFn()).toHaveBeenCalledTimes(1)
   })
 })
 
@@ -232,9 +237,9 @@ describe('preview path routing — explicit locale', () => {
     expect(rewritePath(res)).toBe(`/${DEFAULT_VARIANT}/de/preview/slug`)
   })
 
-  it('does NOT call intlMiddleware for preview paths', () => {
+  it('calls intlMiddleware for preview paths to preserve its response headers', () => {
     proxy(makeRequest('/de/preview/slug'))
-    expect(getIntlMiddlewareFn()).not.toHaveBeenCalled()
+    expect(getIntlMiddlewareFn()).toHaveBeenCalledTimes(1)
   })
 })
 
@@ -318,5 +323,35 @@ describe('cookie-based variant (internal rewrite, clean URL)', () => {
     )
     expect(res.status).not.toBe(302)
     expect(rewritePath(res)).toBe(`/${ALT_VARIANT}/en/setup`)
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 7. x-next-intl-locale forwarding
+// ─────────────────────────────────────────────────────────────────────────────
+// The next-intl plugin reads x-next-intl-locale from request headers to populate
+// requestLocale in getRequestConfig. Without it, translations fall back to the
+// default (English) locale even when browsing /de/... pages.
+
+describe('x-next-intl-locale forwarding', () => {
+  it('sets x-next-intl-locale to the explicit locale for /de/... paths', () => {
+    const res = proxy(makeRequest('/de/page'))
+    expect(res.headers.get('x-middleware-request-x-next-intl-locale')).toBe(
+      'de'
+    )
+  })
+
+  it('sets x-next-intl-locale to the default locale for unprefixed paths', () => {
+    const res = proxy(makeRequest('/page'))
+    expect(res.headers.get('x-middleware-request-x-next-intl-locale')).toBe(
+      'en'
+    )
+  })
+
+  it('sets x-next-intl-locale to the default locale for /en/... paths', () => {
+    const res = proxy(makeRequest('/en/page'))
+    expect(res.headers.get('x-middleware-request-x-next-intl-locale')).toBe(
+      'en'
+    )
   })
 })

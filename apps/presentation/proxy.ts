@@ -6,13 +6,13 @@ import {
   getLocale,
   CORRELATION_ID_HEADER,
 } from '@config/constants'
-import { AcceptLanguageUtils } from '@core/i18n'
+import { routing } from '@/i18n/routing'
 import {
   generateCorrelationId,
   isValidCorrelationId,
 } from '@core/logger-config'
 import {
-  isVariantSegment,
+  hasVariantPrefix,
   DEFAULT_VARIANT_SEGMENT,
   resolveVariant,
   encodeVariant,
@@ -20,181 +20,286 @@ import {
 import {
   PREVIEW_TOKEN_COOKIE,
   PREVIEW_TOKEN_INTERNAL_PARAM,
+  DRAFT_COOKIE_MAX_AGE_SEC,
 } from '@/lib/draft-mode'
 
-const intlMiddleware = createMiddleware({
-  locales: listLocales().map((l) => l.urlPrefix),
-  defaultLocale: getLocale(I18N_CONFIG.defaultLocale).urlPrefix,
-  localePrefix: 'as-needed',
-  localeDetection: true,
-})
+const intlMiddleware = createMiddleware(routing)
 
 const knownLocalePrefixes = new Set(listLocales().map((l) => l.urlPrefix))
 const defaultLocalePrefix = getLocale(I18N_CONFIG.defaultLocale).urlPrefix
 
-/** Rewrite the request to the given internal pathname, forwarding the mutated
- *  request headers (correlation ID, etc.). */
-function rewriteToVariant(
-  request: NextRequest,
-  internalPathname: string,
-  requestHeaders: Headers
-): NextResponse {
-  const url = request.nextUrl.clone()
-  url.pathname = internalPathname
-  return NextResponse.rewrite(url, { request: { headers: requestHeaders } })
+// ─── Small helpers ────────────────────────────────────────────────────────────
+
+/** Returns the protocol ('http:' or 'https:') of FRONTEND_URL, defaulting to 'http:'. */
+function getSiteProtocol(): string {
+  try {
+    return new URL(process.env.FRONTEND_URL ?? '').protocol
+  } catch {
+    return 'http:'
+  }
 }
 
-/** Copy Set-Cookie headers from intlMiddleware's response into a rewrite response.
- *
- * intlMiddleware calls syncCookie() which sets NEXT_LOCALE when the active locale
- * differs from the browser's Accept-Language (e.g. an English-browser user visiting
- * /de/…). Our proxy discards the intlResponse for non-redirect paths and creates
- * its own rewrite — without this copy, NEXT_LOCALE is never sent to the browser,
- * so subsequent navigations to unprefixed paths (e.g. /p/bar) lose the locale. */
-function propagateIntlCookies(
-  intlResponse: Response,
-  rewriteResponse: NextResponse
-): NextResponse {
-  const setCookie = intlResponse.headers.get('set-cookie')
-  if (setCookie) {
-    rewriteResponse.headers.set('set-cookie', setCookie)
+/**
+ * Returns true when the draft token's exp claim is in the future.
+ * Token format: "${exp}.${sig}" where exp is a Unix timestamp (seconds).
+ * Does NOT verify the HMAC signature — that stays in the preview page to keep
+ * Node.js crypto out of the edge bundle. Expired tokens are treated as absent.
+ */
+function isDraftTokenActiveByExp(token: string): boolean {
+  const dotIdx = token.indexOf('.')
+  if (dotIdx < 0) {
+    return false
   }
-  return rewriteResponse
+  const exp = parseInt(token.slice(0, dotIdx), 10)
+  if (!Number.isFinite(exp)) {
+    return false
+  }
+  return Math.floor(Date.now() / 1000) < exp
 }
+
+function resolveCorrelationId(request: NextRequest): string {
+  const existing = request.headers.get(CORRELATION_ID_HEADER)
+  return existing && isValidCorrelationId(existing)
+    ? existing
+    : generateCorrelationId()
+}
+
+// ─── Request context ──────────────────────────────────────────────────────────
+
+interface RequestContext {
+  segments: string[]
+  firstSegment: string
+  firstIsLocale: boolean
+  locale: string
+  draftCookieToken: string | undefined
+  isPathPreview: boolean
+  isPreview: boolean
+  variantKey: string
+  correlationId: string
+}
+
+/**
+ * Build per-request context from the incoming request and intlMiddleware's response.
+ *
+ * Per next-intl docs, the resolved locale is read from the x-middleware-rewrite
+ * header rather than being computed independently, so our locale resolution stays
+ * in sync with next-intl's own logic across version upgrades.
+ */
+function buildRequestContext(
+  request: NextRequest,
+  intlResponse: NextResponse
+): RequestContext {
+  const segments = request.nextUrl.pathname.split('/').filter(Boolean)
+  const firstSegment = segments[0] ?? ''
+
+  // Read locale from intlMiddleware's rewrite URL; fall back to request URL when
+  // intlMiddleware issued a redirect (no x-middleware-rewrite) or plain next().
+  const rewrittenUrl = intlResponse.headers.get('x-middleware-rewrite')
+  const [, intlLocale] = new URL(rewrittenUrl || request.url).pathname.split(
+    '/'
+  )
+  const locale = knownLocalePrefixes.has(intlLocale)
+    ? intlLocale
+    : defaultLocalePrefix
+
+  const firstIsLocale = !!firstSegment && knownLocalePrefixes.has(firstSegment)
+  const draftCookieToken = request.cookies.get(PREVIEW_TOKEN_COOKIE)?.value
+  const isDraftActive =
+    !!draftCookieToken && isDraftTokenActiveByExp(draftCookieToken)
+  const isPathPreview =
+    firstSegment === 'preview' || (firstIsLocale && segments[1] === 'preview')
+  const isPreview = isPathPreview || isDraftActive
+
+  // Preview always uses the default variant — no A/B testing in editorial preview sessions.
+  const variantKey = isPreview
+    ? DEFAULT_VARIANT_SEGMENT
+    : encodeVariant(resolveVariant((n) => request.cookies.get(n)?.value))
+
+  return {
+    segments,
+    firstSegment,
+    firstIsLocale,
+    locale,
+    draftCookieToken,
+    isPathPreview,
+    isPreview,
+    variantKey,
+    correlationId: resolveCorrelationId(request),
+  }
+}
+
+// ─── Rewrite helper ───────────────────────────────────────────────────────────
+
+/**
+ * Create a rewrite response following the next-intl middleware composition pattern.
+ *   - `headers: intlResponse.headers` preserves NEXT_LOCALE cookies and any other
+ *     response headers intlMiddleware may add in future versions.
+ *   - `request.headers` carries x-next-intl-locale (required by getLocale() in server
+ *     components) and the correlation ID.
+ *
+ * Why x-next-intl-locale must be set explicitly:
+ * intlMiddleware sets X-NEXT-INTL-LOCALE via `request: { headers }` on its own
+ * NextResponse.rewrite() call. Our rewrite (which adds the variant prefix) replaces
+ * that rewrite entirely — server components only see the headers from *our* response.
+ * { headers: intlResponse.headers } only carries response headers to the browser,
+ * not request headers to server components, so we must forward the locale ourselves.
+ *
+ * @see https://next-intl.dev/docs/routing/middleware#composing-other-middlewares
+ */
+function rewrite(
+  request: NextRequest,
+  pathname: string,
+  ctx: RequestContext,
+  intlResponse: NextResponse
+): NextResponse {
+  const url = request.nextUrl.clone()
+  url.pathname = pathname
+
+  const requestHeaders = new Headers(request.headers)
+  requestHeaders.set(CORRELATION_ID_HEADER, ctx.correlationId)
+  requestHeaders.set('x-next-intl-locale', ctx.locale)
+
+  return NextResponse.rewrite(url, {
+    headers: intlResponse.headers,
+    request: { headers: requestHeaders },
+  })
+}
+
+// ─── Route handlers ───────────────────────────────────────────────────────────
+
+/** Preview paths — either explicit /preview/… URL or cookie-driven in-app navigation. */
+function handlePreviewPath(
+  request: NextRequest,
+  ctx: RequestContext,
+  intlResponse: NextResponse
+): NextResponse {
+  const {
+    segments,
+    firstSegment,
+    firstIsLocale,
+    locale,
+    draftCookieToken,
+    isPathPreview,
+    variantKey,
+  } = ctx
+
+  let internalPathname: string
+  if (isPathPreview) {
+    internalPathname = firstIsLocale
+      ? `/${variantKey}/${segments.join('/')}`
+      : `/${variantKey}/${locale}/${segments.join('/')}`
+  } else {
+    // Cookie-driven navigation on a clean /locale/... path: inject /preview/ after the locale.
+    internalPathname = firstIsLocale
+      ? `/${variantKey}/${firstSegment}/preview/${segments.slice(1).join('/')}`
+      : `/${variantKey}/${locale}/preview/${segments.join('/')}`
+  }
+
+  const rewriteUrl = request.nextUrl.clone()
+  rewriteUrl.pathname = internalPathname
+
+  // Prefer the session cookie; fall back to the __pt URL param so that a direct
+  // /preview/slug?__pt=<token> link (before the cookie is established) still reaches
+  // the preview page. On HTTPS the token is never in the URL — cookie only.
+  const urlParamToken =
+    request.nextUrl.searchParams.get(PREVIEW_TOKEN_INTERNAL_PARAM) ?? undefined
+  const activeToken = draftCookieToken ?? urlParamToken
+
+  if (
+    activeToken &&
+    !rewriteUrl.searchParams.has(PREVIEW_TOKEN_INTERNAL_PARAM)
+  ) {
+    rewriteUrl.searchParams.set(PREVIEW_TOKEN_INTERNAL_PARAM, activeToken)
+  }
+
+  const requestHeaders = new Headers(request.headers)
+  requestHeaders.set(CORRELATION_ID_HEADER, ctx.correlationId)
+  requestHeaders.set('x-next-intl-locale', ctx.locale)
+
+  const response = NextResponse.rewrite(rewriteUrl, {
+    headers: intlResponse.headers,
+    request: { headers: requestHeaders },
+  })
+
+  // Establish / refresh the draft session cookie so subsequent in-app navigations
+  // continue to be routed through the preview subtree.
+  if (activeToken) {
+    const isSiteSsl = getSiteProtocol() === 'https:'
+    response.cookies.set({
+      name: PREVIEW_TOKEN_COOKIE,
+      value: activeToken,
+      httpOnly: true,
+      path: '/',
+      maxAge: DRAFT_COOKIE_MAX_AGE_SEC,
+      secure: isSiteSsl,
+      sameSite: isSiteSsl ? 'none' : 'lax',
+    })
+  }
+
+  return response
+}
+
+/** Standard routing: inject variant prefix, delegate locale to intlMiddleware's output. */
+function handleStandardPath(
+  request: NextRequest,
+  ctx: RequestContext,
+  intlResponse: NextResponse
+): NextResponse {
+  const { segments, firstIsLocale, locale, variantKey } = ctx
+
+  let internalPathname: string
+  if (firstIsLocale) {
+    // Explicit locale: /de/foo → /${variantKey}/de/foo
+    internalPathname = `/${variantKey}/${segments.join('/')}`
+  } else if (segments.length > 0) {
+    // Unprefixed path: /foo → /${variantKey}/${locale}/foo
+    internalPathname = `/${variantKey}/${locale}/${segments.join('/')}`
+  } else {
+    // Root: / → /${variantKey}/${locale}
+    internalPathname = `/${variantKey}/${locale}`
+  }
+
+  return rewrite(request, internalPathname, ctx, intlResponse)
+}
+
+// ─── Middleware entry point ───────────────────────────────────────────────────
 
 export default function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
 
-  // Propagate (or generate) a correlation ID as a request header so downstream
-  // server components in dynamic routes can read it from headers() without the
-  // middleware needing to call cookies(). ISR routes never call headers() so they
-  // won't read it — this is intentional (ISR responses are not per-request).
-  const existingCorrelationId = request.headers.get(CORRELATION_ID_HEADER)
-  const correlationId =
-    existingCorrelationId && isValidCorrelationId(existingCorrelationId)
-      ? existingCorrelationId
-      : generateCorrelationId()
-  const requestHeaders = new Headers(request.headers)
-  requestHeaders.set(CORRELATION_ID_HEADER, correlationId)
-
-  // Compute segments once; reused by the variant-guard, preview block, and final routing.
-  const segments = pathname.split('/').filter(Boolean)
-  const firstSegment = segments[0] ?? ''
-
-  // [variant]-segment guard: the segment is an internal implementation detail.
-  //
-  // proxy.ts rewrites every incoming clean URL (e.g. /en/foo) to an internal
-  // URL that carries the active variant (~commercetools-set/en/foo or
-  // ~commercetools-algolia-set/en/foo). Next.js keys its Full Route Cache on
-  // this internal URL, giving each variant its own ISR entry.
-  //
-  // The segment must never appear in public URLs. If one leaks (bookmark,
-  // bot, direct link) — default or alt variant alike — 308 to the clean path.
-  // Next.js middleware never re-runs on its own rewrite targets, so our own
-  // internal rewrites to /~…/ do NOT trigger this guard.
-  if (isVariantSegment(firstSegment)) {
+  // [variant]-segment guard: the ~ prefix is an internal implementation detail and
+  // must never appear in public URLs. Any ~-prefixed first segment is 308-redirected
+  // to the clean path. Next.js middleware never re-runs on its own rewrite targets,
+  // so our internal ~-prefixed rewrites do NOT trigger this guard.
+  const firstSegment = pathname.split('/').filter(Boolean)[0] ?? ''
+  if (hasVariantPrefix(firstSegment)) {
     const stripped = pathname.slice(1 + firstSegment.length) || '/'
     const url = request.nextUrl.clone()
     url.pathname = stripped
     return NextResponse.redirect(url, 308)
   }
 
-  // Detect preview by path shape: /preview/slug (default-locale) or /{locale}/preview/slug.
-  // Hoist firstIsLocale so the locale check is computed once and shared with the preview block.
-  const firstIsLocale = !!firstSegment && knownLocalePrefixes.has(firstSegment)
-  const isPreview =
-    firstSegment === 'preview' || (firstIsLocale && segments[1] === 'preview')
-
-  // Determine the active variant key from the data-source cookie.
-  // Preview always uses the default variant — no A/B testing in editorial preview sessions.
-  const variantKey = isPreview
-    ? DEFAULT_VARIANT_SEGMENT
-    : encodeVariant(resolveVariant((n) => request.cookies.get(n)?.value))
-
-  // intlMiddleware returns NextResponse.next() for the default locale at '/',
-  // leaving the [locale] dynamic segment without a value → 404.
-  // Rewrite internally to /en so the route matches; non-default locales (e.g. /de)
-  // are handled by intlMiddleware's localeDetection redirect.
-  if (pathname === '/' || pathname === '') {
-    const language = AcceptLanguageUtils.getBestSupportedLanguage(
-      request.headers.get('accept-language') ?? ''
-    )
-
-    if (language === I18N_CONFIG.defaultLocale) {
-      return rewriteToVariant(
-        request,
-        `/${variantKey}/${getLocale(language).urlPrefix}`,
-        requestHeaders
-      )
-    }
-    // Non-default locale at root — let intlMiddleware redirect to /<locale>;
-    // the browser follows the redirect and our middleware injects [variant] on the next pass.
-    return intlMiddleware(request)
-  }
-
-  // Preview paths (/preview/slug or /{locale}/preview/slug).
-  // Skip intlMiddleware — locale-detection would redirect and break the preview flow.
-  // On HTTPS the token arrives via cookie and is injected as ?__pt=; on HTTP it is
-  // already in the URL and clone() carries it through. See /api/draft for rationale.
-  if (isPreview) {
-    const internalPathname = firstIsLocale
-      ? `/${variantKey}/${segments.join('/')}`
-      : `/${variantKey}/${defaultLocalePrefix}/${segments.join('/')}`
-    const rewriteUrl = request.nextUrl.clone()
-    rewriteUrl.pathname = internalPathname
-    const cookieToken = request.cookies.get(PREVIEW_TOKEN_COOKIE)?.value
-    if (cookieToken) {
-      rewriteUrl.searchParams.set(PREVIEW_TOKEN_INTERNAL_PARAM, cookieToken)
-    }
-    return NextResponse.rewrite(rewriteUrl, {
-      request: { headers: requestHeaders },
-    })
-  }
-
-  // Call intlMiddleware solely for its locale-detection redirect side-effect.
-  // Under localePrefix: 'as-needed', for explicit-locale and default-locale paths
-  // the middleware issues no redirect — we compute the rewrite target directly
-  // from the already-parsed segments to avoid coupling to the x-middleware-rewrite
-  // internal header.
+  // Run intlMiddleware first per next-intl docs recommendation for middleware
+  // composition. Its response carries x-next-intl-locale, NEXT_LOCALE cookies,
+  // and the resolved locale via x-middleware-rewrite — all preserved in our rewrites.
   const intlResponse = intlMiddleware(request)
+  const ctx = buildRequestContext(request, intlResponse)
 
-  // intlMiddleware issued a locale-detection redirect (e.g. / → /de for a German
-  // browser on a non-default locale). Let it through — the browser follows the
-  // redirect and our middleware injects [variant] on the next pass.
-  if (intlResponse.headers.get('location')) {
+  // For non-preview paths, pass intlMiddleware's locale-detection redirects through.
+  // Preview skips this — locale-detection redirects would break the preview flow.
+  if (!ctx.isPreview && intlResponse.headers.get('location')) {
     return intlResponse
   }
 
-  // Explicit-locale path: /en/foo → /${variantKey}/en/foo
-  if (firstSegment && knownLocalePrefixes.has(firstSegment)) {
-    return propagateIntlCookies(
-      intlResponse,
-      rewriteToVariant(
-        request,
-        `/${variantKey}/${segments.join('/')}`,
-        requestHeaders
-      )
-    )
+  if (ctx.isPreview) {
+    return handlePreviewPath(request, ctx, intlResponse)
   }
-
-  // Default-locale unprefixed path: /foo/bar → /${variantKey}/${defaultLocale}/foo/bar
-  return propagateIntlCookies(
-    intlResponse,
-    rewriteToVariant(
-      request,
-      segments.length > 0
-        ? `/${variantKey}/${defaultLocalePrefix}/${segments.join('/')}`
-        : `/${variantKey}/${defaultLocalePrefix}`,
-      requestHeaders
-    )
-  )
+  return handleStandardPath(request, ctx, intlResponse)
 }
 
 export const config = {
-  // Match internationalized pathnames and variant-key URLs (redirected to
-  // clean path). Excludes static assets and API routes. Next.js middleware
-  // never re-runs on its own rewrite targets, so matching ~ paths does NOT
-  // cause a redirect loop.
+  // Match internationalized pathnames and variant-key URLs (redirected to clean path).
+  // Excludes static assets and API routes.
   matcher: [
     '/',
     '/((?!api|_next/static|_next/image|favicon.ico|images|.*\\.).*)',
