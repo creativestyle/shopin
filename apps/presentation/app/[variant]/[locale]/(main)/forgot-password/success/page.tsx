@@ -1,6 +1,6 @@
 import { getTranslations } from 'next-intl/server'
 import { initRouteContext } from '@/lib/request-context/route-context'
-import Link from 'next/link'
+import { Link } from '@/lib/navigation'
 import { Suspense } from 'react'
 import { ForgotPasswordSuccessWithHref } from './forgot-password-success-with-href'
 import { AuthPageGuard } from '../../auth-page-guard'

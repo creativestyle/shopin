@@ -1,6 +1,6 @@
 import { getTranslations } from 'next-intl/server'
 import { initRouteContext } from '@/lib/request-context/route-context'
-import Link from 'next/link'
+import { Link } from '@/lib/navigation'
 import { LoginForm } from '@/features/auth/auth-login-form'
 import { AuthPageGuard } from '../auth-page-guard'
 import { StandardContainer } from '@/components/ui/standard-container'

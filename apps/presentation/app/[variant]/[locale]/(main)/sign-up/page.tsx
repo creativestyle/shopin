@@ -1,6 +1,6 @@
 import { getTranslations } from 'next-intl/server'
 import { initRouteContext } from '@/lib/request-context/route-context'
-import Link from 'next/link'
+import { Link } from '@/lib/navigation'
 import { SignUpFormWithRedirect } from './sign-up-form-with-redirect'
 import ChevronLeftIcon from '@/public/icons/chevron-left.svg'
 import { AuthPageGuard } from '../auth-page-guard'
