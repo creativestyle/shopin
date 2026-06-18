@@ -91,8 +91,12 @@ function resolveLocale(locale: string): SupportedLocale {
 
 export function DemoDisclaimerModal() {
   const appLocale = useLocale()
+  const resolvedLocale = resolveLocale(appLocale)
   const [open, setOpen] = useState(false)
-  const [lang, setLang] = useState<SupportedLocale>(resolveLocale(appLocale))
+  const [lang, setLang] = useState<SupportedLocale>(resolvedLocale)
+  // Links follow the dialog's language toggle, not the page locale — so switching
+  // to the EN tab on a /de page links to /privacy (no prefix), not /de/privacy.
+  const localeHrefPrefix = lang === 'en' ? '' : `/${lang}`
   const [dontShowAgain, setDontShowAgain] = useState(false)
   const [showScrollHint, setShowScrollHint] = useState(false)
   const bodyRef = useRef<HTMLDivElement>(null)
@@ -223,14 +227,14 @@ export function DemoDisclaimerModal() {
                 <p>
                   {t.furtherDetails}{' '}
                   <a
-                    href='/privacy'
+                    href={`${localeHrefPrefix}/privacy`}
                     className='underline hover:no-underline'
                   >
                     {t.privacy}
                   </a>{' '}
                   {t.and}{' '}
                   <a
-                    href='/imprint'
+                    href={`${localeHrefPrefix}/imprint`}
                     className='underline hover:no-underline'
                   >
                     {t.legal}
