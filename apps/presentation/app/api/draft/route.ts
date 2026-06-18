@@ -7,9 +7,24 @@ import {
   isSafeDraftRedirectPath,
   PREVIEW_TOKEN_COOKIE,
   PREVIEW_TOKEN_INTERNAL_PARAM,
+  DRAFT_COOKIE_MAX_AGE_SEC,
 } from '@/lib/draft-mode'
 
 const defaultLocalePrefix = getLocale(I18N_CONFIG.defaultLocale).urlPrefix
+
+/**
+ * Resolves the public-facing host of the incoming request. Prefers the
+ * x-forwarded-host header (set by a reverse proxy) over the raw Host header so
+ * the comparison with redirectBase is correct even behind a proxy where
+ * request.nextUrl reflects the internal host.
+ */
+function getRequestPublicHost(request: NextRequest): string {
+  const forwarded = request.headers.get('x-forwarded-host')
+  if (forwarded) {
+    return forwarded.split(',')[0].trim()
+  }
+  return request.headers.get('host') ?? request.nextUrl.host
+}
 
 /**
  * Base URL for the draft redirect. Uses FRONTEND_URL so redirect always goes to the canonical site.
@@ -44,8 +59,9 @@ function getDraftRedirectBase(request: NextRequest): string {
  * HTTP redirect base (local dev, e.g. FRONTEND_URL=http://localhost:3000 or unset):
  * URL param ?__pt=. SameSite=None;Secure requires HTTPS so cookies cannot be forwarded
  * cross-site on plain HTTP. The signed, short-lived token rides in the URL; the preview
- * page validates it and renders draft content. The token is not stripped from the address
- * bar — this is safe given the short TTL and signature, and only occurs in local dev.
+ * page validates it and renders draft content. The StripPreviewToken client component
+ * removes it from the address bar after hydration; the session cookie keeps the session
+ * alive for subsequent navigations and reloads.
  */
 export function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl
@@ -80,19 +96,22 @@ export function GET(request: NextRequest) {
       ? `/preview/${normalizedSlug}`
       : `/${locale}/preview/${normalizedSlug}`
 
-  // Delivery strategy is keyed on the redirect base protocol (a server-controlled config value),
-  // not the incoming request's x-forwarded-proto header (which could be spoofed/misconfigured).
-  // Production always sets FRONTEND_URL to an https:// URL, so URL-param delivery is local-only.
-  // On HTTPS redirect base: deliver token via HttpOnly cookie so it never appears in URLs or logs.
+  // Cookie delivery requires two conditions: the redirect base must be HTTPS (SameSite=None;Secure
+  // is unavailable on plain HTTP), and the request's public host must match the redirect base host.
+  // The host check is necessary because Set-Cookie is scoped to the responding host — if the CMS
+  // calls /api/draft on an internal hostname the browser would store the cookie there, follow the
+  // 307 to the canonical host without it, and the preview page would fail to load. When the hosts
+  // differ the signed, short-lived URL param is used instead.
   // SameSite=None is required for the Contentful cross-site iframe context.
   // Note: Chrome's CHIPS proposal may eventually require adding `partitioned: true` for
   // third-party iframe cookies; monitor browser compatibility if preview breaks on new Chrome.
-  // On HTTP redirect base (local dev): SameSite=None;Secure is unavailable, fall back to URL param.
-  const redirectIsHttps = new URL(redirectBase).protocol === 'https:'
-
   const redirectUrl = new URL(previewPath, redirectBase)
+  const parsedRedirectBase = new URL(redirectBase)
+  const redirectIsHttps = parsedRedirectBase.protocol === 'https:'
+  const hostMatchesRedirect =
+    getRequestPublicHost(request) === parsedRedirectBase.host
 
-  if (redirectIsHttps) {
+  if (redirectIsHttps && hostMatchesRedirect) {
     const response = NextResponse.redirect(redirectUrl, 307)
     response.cookies.set({
       name: PREVIEW_TOKEN_COOKIE,
@@ -106,5 +125,19 @@ export function GET(request: NextRequest) {
   }
 
   redirectUrl.searchParams.set(PREVIEW_TOKEN_INTERNAL_PARAM, token)
-  return NextResponse.redirect(redirectUrl, 307)
+  const response = NextResponse.redirect(redirectUrl, 307)
+  // On HTTP, also set a SameSite=Lax HttpOnly cookie so the proxy can establish
+  // a draft session and in-app navigation stays in draft mode after the initial
+  // preview load. The __pt URL param is the primary entry credential; the cookie
+  // persists the session. It cannot be SameSite=None;Secure here (requires HTTPS).
+  response.cookies.set({
+    name: PREVIEW_TOKEN_COOKIE,
+    value: token,
+    httpOnly: true,
+    path: '/',
+    maxAge: DRAFT_COOKIE_MAX_AGE_SEC,
+    secure: false,
+    sameSite: 'lax',
+  })
+  return response
 }

@@ -5,10 +5,12 @@
  * GET /api/draft is the CMS preview entry route. A CMS editor clicks a
  * "Preview" link in the CMS UI, which hits this route with a short-lived
  * secret + slug + locale. On success the route redirects the editor to the
- * live site's /preview/ path. Token delivery depends on the redirect base
- * protocol (FRONTEND_URL when set): HTTPS → HttpOnly cookie; HTTP (local dev)
- * → ?__pt= URL param. The preview page validates the token and renders draft
- * content; the token is not stripped from the address bar.
+ * live site's /preview/ path. Token delivery:
+ *
+ * HTTPS (production): HttpOnly SameSite=None;Secure cookie only — token never in URL.
+ * HTTP / fallback: ?__pt= URL param + SameSite=Lax HttpOnly cookie.
+ *   The URL param is the primary entry credential; the Lax cookie establishes a draft
+ *   session so in-app navigation (to /en/…) continues to serve draft content.
  *
  * Slug normalisation and isSafeDraftRedirectPath guard against open-redirect attacks.
  */
@@ -22,6 +24,7 @@ jest.mock('@/lib/draft-mode', () => ({
   createPreviewToken: jest.fn(),
   PREVIEW_TOKEN_COOKIE: 'preview_token',
   PREVIEW_TOKEN_INTERNAL_PARAM: '__pt',
+  DRAFT_COOKIE_MAX_AGE_SEC: 86400,
 }))
 
 jest.mock('@/features/content/homepage-slug', () => ({
@@ -55,11 +58,12 @@ function homepageMock() {
 
 function makeRequest(
   params: Record<string, string>,
-  origin = 'https://shop.example.com'
+  origin = 'https://shop.example.com',
+  headers?: Record<string, string>
 ): NextRequest {
   const url = new URL('/api/draft', origin)
   Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v))
-  return new NextRequest(url.toString())
+  return new NextRequest(url.toString(), headers ? { headers } : undefined)
 }
 
 function validParams() {
@@ -176,18 +180,94 @@ describe('GET /api/draft', () => {
       expect(new URL(location).searchParams.get('__pt')).toBe('my-signed-token')
     })
 
-    it('does NOT set a cookie on HTTP', () => {
+    it('sets a SameSite=Lax HttpOnly cookie on HTTP alongside the __pt URL param', () => {
+      draftModeMocks().createPreviewToken.mockReturnValue('my-signed-token')
       const res = GET(makeRequest(validParams(), 'http://localhost:3000'))
-      expect(res.headers.get('set-cookie')).toBeNull()
+      const cookie = res.headers.get('set-cookie') ?? ''
+      expect(cookie).toContain('preview_token=my-signed-token')
+      expect(cookie.toLowerCase()).toContain('httponly')
+      expect(cookie.toLowerCase()).toContain('samesite=lax')
+      // Must NOT be Secure (no TLS on HTTP)
+      expect(cookie.toLowerCase()).not.toContain('; secure')
     })
 
-    it('uses cookie (not URL param) when FRONTEND_URL is https:// even if request is HTTP', () => {
-      // This verifies the security invariant: delivery mode is keyed on the redirect base
-      // protocol (server config), not the incoming request protocol (request-controlled header).
-      // A production deploy with a misconfigured HTTP-only ingress cannot leak __pt to the URL.
+    it('also puts the token in the URL when using the Lax-cookie HTTP path', () => {
+      draftModeMocks().createPreviewToken.mockReturnValue('my-signed-token')
+      const res = GET(makeRequest(validParams(), 'http://localhost:3000'))
+      const location = res.headers.get('location') ?? ''
+      expect(new URL(location).searchParams.get('__pt')).toBe('my-signed-token')
+    })
+
+    it('falls back to URL param + Lax cookie when FRONTEND_URL is https:// but request host does not match', () => {
+      // Set-Cookie is scoped to the responding host. If the CMS calls /api/draft on a different
+      // host than FRONTEND_URL, the secure cookie would land on the wrong host. The route falls
+      // back to URL-param delivery + Lax cookie when the hosts differ.
       process.env.FRONTEND_URL = 'https://shop.example.com'
       draftModeMocks().createPreviewToken.mockReturnValue('my-signed-token')
       const res = GET(makeRequest(validParams(), 'http://localhost:3000'))
+      expect(
+        new URL(res.headers.get('location') ?? '').searchParams.get('__pt')
+      ).toBe('my-signed-token')
+      const cookie = res.headers.get('set-cookie') ?? ''
+      expect(cookie).toContain('preview_token=my-signed-token')
+      expect(cookie.toLowerCase()).toContain('samesite=lax')
+    })
+  })
+
+  // ─── Host-matching for cookie delivery ───────────────────────────────
+
+  describe('cookie delivery requires https redirect base AND matching request host', () => {
+    it('uses cookie when https FRONTEND_URL and x-forwarded-host matches', () => {
+      process.env.FRONTEND_URL = 'https://shop.example.com'
+      draftModeMocks().createPreviewToken.mockReturnValue('my-signed-token')
+      const res = GET(
+        makeRequest(validParams(), 'http://internal-host', {
+          'x-forwarded-host': 'shop.example.com',
+        })
+      )
+      expect(res.headers.get('set-cookie')).toContain('my-signed-token')
+      expect(res.headers.get('location')).not.toContain('my-signed-token')
+    })
+
+    it('uses URL param when https FRONTEND_URL but x-forwarded-host does not match', () => {
+      process.env.FRONTEND_URL = 'https://shop.example.com'
+      draftModeMocks().createPreviewToken.mockReturnValue('my-signed-token')
+      const res = GET(
+        makeRequest(validParams(), 'http://internal-host', {
+          'x-forwarded-host': 'other.example.com',
+        })
+      )
+      expect(
+        new URL(res.headers.get('location') ?? '').searchParams.get('__pt')
+      ).toBe('my-signed-token')
+      // Lax session cookie is still set (on the responding host, as a fallback)
+      expect(res.headers.get('set-cookie')).toContain(
+        'preview_token=my-signed-token'
+      )
+    })
+
+    it('x-forwarded-host takes precedence over the Host header for the match', () => {
+      process.env.FRONTEND_URL = 'https://shop.example.com'
+      draftModeMocks().createPreviewToken.mockReturnValue('my-signed-token')
+      // Host header matches, but x-forwarded-host disagrees — forwarded-host wins.
+      const res = GET(
+        makeRequest(validParams(), 'https://shop.example.com', {
+          'x-forwarded-host': 'proxy.internal',
+        })
+      )
+      expect(
+        new URL(res.headers.get('location') ?? '').searchParams.get('__pt')
+      ).toBe('my-signed-token')
+      // Lax session cookie is set on the fallback path
+      expect(res.headers.get('set-cookie')).toContain(
+        'preview_token=my-signed-token'
+      )
+    })
+
+    it('uses cookie when request origin host matches https FRONTEND_URL (no proxy headers)', () => {
+      process.env.FRONTEND_URL = 'https://shop.example.com'
+      draftModeMocks().createPreviewToken.mockReturnValue('my-signed-token')
+      const res = GET(makeRequest(validParams(), 'https://shop.example.com'))
       expect(res.headers.get('set-cookie')).toContain('my-signed-token')
       expect(res.headers.get('location')).not.toContain('my-signed-token')
     })
@@ -215,6 +295,63 @@ describe('GET /api/draft', () => {
       const res = GET(makeRequest(validParams(), 'http://0.0.0.0:3000'))
       const location = res.headers.get('location') ?? ''
       expect(location.startsWith('http://localhost:3000')).toBe(true)
+    })
+  })
+
+  // ─── 3c: Cookie attributes for cross-site CMS preview ─────────────────────
+  // These cases verify the SameSite=None;Secure cookie that enables Contentful's
+  // cross-site iframe context (HTTPS production path).  The HTTP/__pt path is
+  // tested e2e in test/e2e/specs/draft-preview/preview-token.spec.ts and draft-preview/preview-iframe.spec.ts.
+
+  describe('cookie attributes for cross-site CMS preview (3c)', () => {
+    it('HTTPS cookie is HttpOnly, Secure, and SameSite=None for cross-site iframe delivery', () => {
+      process.env.FRONTEND_URL = 'https://shop.example.com'
+      draftModeMocks().createPreviewToken.mockReturnValue('preview-tok-xyz')
+      const res = GET(makeRequest(validParams(), 'https://shop.example.com'))
+      const setCookie = res.headers.get('set-cookie') ?? ''
+      expect(setCookie).toContain('preview-tok-xyz')
+      expect(setCookie.toLowerCase()).toContain('httponly')
+      expect(setCookie.toLowerCase()).toContain('secure')
+      // SameSite=None is required for Contentful cross-site iframe context
+      expect(setCookie.toLowerCase()).toContain('samesite=none')
+    })
+
+    it('HTTPS cookie must be Secure when SameSite=None (browsers reject SameSite=None without Secure)', () => {
+      process.env.FRONTEND_URL = 'https://shop.example.com'
+      draftModeMocks().createPreviewToken.mockReturnValue('preview-tok-xyz')
+      const res = GET(makeRequest(validParams(), 'https://shop.example.com'))
+      const setCookie = res.headers.get('set-cookie') ?? ''
+      // Both attributes must be present together
+      expect(setCookie.toLowerCase()).toContain('samesite=none')
+      expect(setCookie.toLowerCase()).toContain('secure')
+    })
+
+    it('HTTP path puts token in both __pt URL param and SameSite=Lax session cookie', () => {
+      delete process.env.FRONTEND_URL
+      draftModeMocks().createPreviewToken.mockReturnValue('preview-tok-xyz')
+      const res = GET(makeRequest(validParams(), 'http://localhost:3000'))
+      // Token in URL param (primary entry credential)
+      const location = res.headers.get('location') ?? ''
+      expect(new URL(location).searchParams.get('__pt')).toBe('preview-tok-xyz')
+      // Also sets a Lax cookie so the proxy can maintain the draft session across in-app nav
+      const cookie = res.headers.get('set-cookie') ?? ''
+      expect(cookie).toContain('preview-tok-xyz')
+      expect(cookie.toLowerCase()).toContain('samesite=lax')
+      expect(cookie.toLowerCase()).toContain('httponly')
+    })
+
+    it('HTTP path __pt param is present on the redirect even for non-default locale', () => {
+      delete process.env.FRONTEND_URL
+      draftModeMocks().createPreviewToken.mockReturnValue('tok-de')
+      const res = GET(
+        makeRequest(
+          { ...validParams(), slug: 'ueber-uns', locale: 'de-DE' },
+          'http://localhost:3000'
+        )
+      )
+      const location = res.headers.get('location') ?? ''
+      expect(new URL(location).searchParams.get('__pt')).toBe('tok-de')
+      expect(location).toContain('/de/preview/')
     })
   })
 })

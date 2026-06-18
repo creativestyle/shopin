@@ -1,21 +1,25 @@
 /**
- * Draft mode: URL-token-based CMS preview.
+ * Draft mode: session-cookie + URL-token-based CMS preview.
  *
- * Flow: /api/draft?secret=X&slug=Y&locale=Z validates the secret, generates a short-lived
- * signed token, and redirects to /<locale>/preview/<slug>. On HTTPS the token is delivered
- * as an HttpOnly cookie; on HTTP (local dev) it is appended as ?__pt=<token>. The proxy
- * preserves the token when rewriting to the internal route. The preview page validates the
- * token and renders draft content. Regular live routes are never involved and remain
- * ISR-cacheable.
+ * Entry flow: /api/draft?secret=X&slug=Y&locale=Z validates the secret, generates a
+ * short-lived signed token, and redirects to /<locale>/preview/<slug>. The proxy then
+ * establishes a draft session cookie so in-app navigation continues in draft mode.
  *
- * Why URL param on local: Contentful opens preview in a cross-site iframe. SameSite=Lax
- * cookies are not forwarded in cross-site iframes, and SameSite=None;Secure requires HTTPS.
- * URL params have no same-site restriction and work in all embedding contexts including
- * HTTP localhost.
+ * Token delivery:
+ * - HTTPS (production): HttpOnly SameSite=None;Secure cookie set by /api/draft. Works in
+ *   Contentful's cross-site iframe. The proxy reads the cookie and injects it as ?__pt=
+ *   in the internal rewrite URL. The token never appears in the public URL.
+ * - HTTP (local dev): URL param ?__pt= appended by /api/draft (SameSite=None;Secure is
+ *   unavailable without TLS). The preview page validates it. The proxy also establishes a
+ *   SameSite=Lax HttpOnly cookie on the first preview load so subsequent in-app navigation
+ *   stays in draft mode. The __pt param is stripped from the address bar by the preview
+ *   layout's client-side StripPreviewToken component after hydration; the session cookie
+ *   keeps the session alive for reloads.
  *
- * Security: the token is signed + short-lived (DRAFT_COOKIE_MAX_AGE_SEC). On local/HTTP
- * it remains in the address bar for the duration of the preview session, which is acceptable
- * given its signature and short TTL. On production (HTTPS) it travels only via HttpOnly cookie.
+ * In-app draft navigation (#12): the proxy checks for the preview_token cookie on every
+ * request and rewrites clean /en/… paths to the preview subtree when a valid session is
+ * active. Draft state therefore persists across Next.js router navigations, not just
+ * explicit /preview/ URL visits.
  *
  * Header x-next-draft-mode: a separate short-lived signed token (DRAFT_HEADER_TOKEN_MAX_AGE_SEC)
  * is generated per BFF request so the raw secret never travels on the wire.
@@ -45,8 +49,9 @@ export const PREVIEW_TOKEN_COOKIE = 'preview_token'
  * URL search param carrying the signed preview token on HTTP (local dev).
  * On HTTP, SameSite=None;Secure is unavailable so the token travels via URL param.
  * The proxy injects it into the internal rewrite URL (HTTPS: from cookie; HTTP: already
- * present in the URL). The preview page validates the token; it is not stripped from
- * the address bar, which is safe given the short TTL and signature.
+ * present in the URL or injected from the session cookie). The preview page validates
+ * the token. The StripPreviewToken client component removes it from the address bar
+ * after hydration; the session cookie keeps the session alive for reloads.
  */
 export const PREVIEW_TOKEN_INTERNAL_PARAM = '__pt'
 
