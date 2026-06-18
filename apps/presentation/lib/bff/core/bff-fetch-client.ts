@@ -12,19 +12,7 @@ import {
   resolveVariant,
   variantHeaders,
 } from '@/lib/variant/variant-key'
-import { VARIANT_DIMENSIONS } from '@/lib/variant/registry'
-
-// Pre-compiled cookie regexes, keyed by cookie name. Cookie names are static
-// constants from the registry; building once at module load avoids constructing
-// a new RegExp on every render of useBffFetchClient.
-const DIMENSION_COOKIE_REGEXES = new Map<string, RegExp>(
-  VARIANT_DIMENSIONS.map(({ cookie }) => [
-    cookie,
-    new RegExp(
-      `(?:^|;\\s*)${cookie.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}=([^;]+)`
-    ),
-  ])
-)
+import { DIMENSION_COOKIE_REGEXES } from '@/lib/variant/active-variant-client'
 
 const CLIENT_CORRELATION_ID_KEY = 'correlationId'
 
@@ -52,11 +40,12 @@ function getOrCreateClientCorrelationId(): string {
  * Returns the variant headers for all dimensions so the BFF serves the correct variant.
  *
  * Two paths:
- * 1. Alt-variant URL (local dev after proxy redirect): pathname carries a `~` segment →
- *    decode all dimensions from the URL segment directly.
- * 2. Clean URL (default variant): all preference cookies are still present in the browser →
- *    read each dimension's cookie via resolveVariant so the set of cookies stays in sync
- *    with the registry.
+ * 1. Alt-variant URL (pathname carries a `~` segment): decode all dimensions from the URL
+ *    segment directly. In practice this is unreachable from normal browser navigation because
+ *    the proxy uses NextResponse.rewrite() (not redirect), so usePathname() always returns the
+ *    clean browser URL — but the path is kept for completeness and direct SSR tool access.
+ * 2. Clean URL: read each dimension's cookie via resolveVariant so the set of cookies stays
+ *    in sync with the registry. This is the path taken for all real browser navigations.
  */
 function getActiveVariantHeaders(
   pathname: string
@@ -74,7 +63,9 @@ function getActiveVariantHeaders(
   const cookieString = document.cookie
   return variantHeaders(
     resolveVariant(
-      (name) => cookieString.match(DIMENSION_COOKIE_REGEXES.get(name)!)?.[1]
+      // /(?!)/ is a no-match fallback; see active-variant-client.ts for rationale.
+      (name) =>
+        cookieString.match(DIMENSION_COOKIE_REGEXES.get(name) ?? /(?!)/)?.[1]
     )
   )
 }

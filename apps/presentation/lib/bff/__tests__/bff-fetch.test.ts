@@ -75,6 +75,31 @@ describe('bffFetch', () => {
       await bffFetch('http://bff', '/nav')
       expect(lastCallUrl()).toBe('http://bff/nav')
     })
+
+    it('does not modify the URL when locale is provided', async () => {
+      await bffFetch('http://bff', '/content/footer', {}, 'de')
+      expect(lastCallUrl()).toBe('http://bff/content/footer')
+    })
+
+    it('does not modify the URL when next.revalidate is set', async () => {
+      await bffFetch(
+        'http://bff',
+        '/content/footer',
+        { next: { revalidate: 3600 } } as RequestInit,
+        'de'
+      )
+      expect(lastCallUrl()).toBe('http://bff/content/footer')
+    })
+
+    it('preserves existing query params', async () => {
+      await bffFetch(
+        'http://bff',
+        '/content/page?slug=foo',
+        { next: { revalidate: 3600 } } as RequestInit,
+        'en'
+      )
+      expect(lastCallUrl()).toBe('http://bff/content/page?slug=foo')
+    })
   })
 
   describe('Accept-Language header', () => {

@@ -13,7 +13,7 @@ import { variantHeaders } from '@/lib/variant/variant-key'
  * Provides a fetch wrapper that:
  * - Uses the internal BFF URL (NEXT_BFF_INTERNAL_URL)
  * - Automatically gets the current locale from next-intl server context
- * - Handles server-side cookie access
+ * - Reads variant from request context (set by initRouteContext in the [variant]/[locale] layout)
  * - Logs network errors only (BFF never sees these: connection refused, timeout, etc.).
  *   For 4xx/5xx the BFF already logs; callers can throw or handle as needed.
  *
@@ -38,14 +38,6 @@ export async function createBffFetchServer(opts?: {
     getBffServerUrl(),
   ])
   return {
-    // getRequestVariant() is read lazily on each fetch so it reflects the context
-    // set by initRouteContext() in the current segment even if createBffFetchServer
-    // was called before that. Every server page/layout under [variant]/[locale]
-    // calls initRouteContext({ variant, locale }) so the variant is always set for
-    // in-tree renders. Outside the route tree (e.g. i18n/request.ts, server actions
-    // like resolveLocalizedPath) callers must call setRequestVariant() themselves
-    // before invoking any loader, otherwise getRequestVariant() returns undefined
-    // and the BFF falls back to its default data source.
     fetch: async (path: string, options?: RequestInit) => {
       try {
         const requestVariant = getRequestVariant()
