@@ -1,7 +1,7 @@
 'use client'
 
 import Image from 'next/image'
-import Link from 'next/link'
+import { Link } from '@/lib/navigation'
 import type { LineItemResponse } from '@core/contracts/cart/cart'
 import { CartItemActions } from './cart-item-actions'
 import { CartItemQuantitySwitcher } from './cart-item-quantity-switcher'

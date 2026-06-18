@@ -1,6 +1,6 @@
 import React from 'react'
 import Image from 'next/image'
-import Link from 'next/link'
+import { Link } from '@/lib/navigation'
 import type { LinkProps } from 'next/link'
 import { cn } from '@/lib/utils'
 import type { ProductCardResponse } from '@core/contracts/product-collection/product-card'
