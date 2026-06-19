@@ -18,7 +18,6 @@ import {
   mintPreviewToken,
   buildDirectPreviewUrl,
   resetRequests,
-  requestsFor,
   waitForBffRequest,
 } from '../../helpers'
 import { APP_BASE, E2E_DRAFT_SECRET, FAKE_CMS_BASE } from '../../config'
