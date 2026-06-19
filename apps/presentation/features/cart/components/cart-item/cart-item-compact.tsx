@@ -2,6 +2,7 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
+import { productImageLoader } from '@/lib/product-image-loader'
 import type { LineItemResponse } from '@core/contracts/cart/cart'
 import { CartItemActions } from './cart-item-actions'
 import { CartItemQuantitySwitcher } from './cart-item-quantity-switcher'
@@ -40,6 +41,7 @@ export function CartItemCompact({
             {item.imageUrl && (
               <div className='relative h-28 w-24 shrink-0 overflow-hidden'>
                 <Image
+                  loader={productImageLoader(item.imageUrl)}
                   src={item.imageUrl}
                   alt={item.name}
                   fill

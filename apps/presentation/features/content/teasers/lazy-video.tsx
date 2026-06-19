@@ -2,6 +2,7 @@
 
 import { useRef, useState, useEffect } from 'react'
 import Image from 'next/image'
+import { contentImageLoader } from '../lib/content-image-loader'
 import PlayIcon from '@/public/icons/play.svg'
 import { cn } from '@/lib/utils'
 import { useTranslations } from 'next-intl'
@@ -105,6 +106,7 @@ export function LazyVideo({
               aria-label={t('video.play')}
             >
               <Image
+                loader={contentImageLoader}
                 src={poster}
                 alt=''
                 fill

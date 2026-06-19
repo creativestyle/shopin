@@ -43,5 +43,8 @@ export * from './cache'
 // Re-export content-image constants
 export * from './content-image'
 
+// Re-export product-image constants
+export * from './product-image'
+
 // Re-export search constants
 export * from './search'
