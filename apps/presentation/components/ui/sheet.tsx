@@ -98,7 +98,7 @@ function SheetContent({
         {...props}
       >
         {showCloseButton && (
-          <SheetPrimitive.Close className='absolute top-3 right-3 flex size-8 cursor-pointer items-center justify-center rounded-full text-gray-700 transition-colors hover:bg-white hover:text-primary focus:bg-white focus:text-primary focus:ring-3 focus:ring-white/20 focus:outline-hidden'>
+          <SheetPrimitive.Close className='absolute top-3 right-3 flex size-8 cursor-pointer items-center justify-center rounded-full text-gray-700 transition-colors hover:bg-white hover:text-primary focus:bg-white focus:text-primary focus:outline-hidden focus-visible:ring-2 focus-visible:ring-gray-950'>
             <CloseIcon
               className='pointer-events-none size-7 shrink-0'
               aria-hidden='true'
