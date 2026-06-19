@@ -43,6 +43,7 @@ export const ProductGallery: React.FC<ProductGalleryProps> = ({
       src={img.src}
       alt={img.alt}
       onZoom={() => openDialog(idx)}
+      sizes='(max-width: 1023px) 80vw, 50vw'
       loading={idx < visibleCount ? 'eager' : undefined}
     />
   ))
@@ -60,6 +61,7 @@ export const ProductGallery: React.FC<ProductGalleryProps> = ({
         src={img.src}
         alt={img.alt}
         onZoom={() => openDialog(idx)}
+        sizes='(max-width: 1023px) 80vw, 50vw'
         className='h-full lg:aspect-square lg:h-auto'
         loading={idx === 0 ? 'eager' : undefined}
       />

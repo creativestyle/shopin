@@ -4,6 +4,7 @@
 import React from 'react'
 import Image from 'next/image'
 import { cn } from '@/lib/utils'
+import { productImageLoader } from '@/lib/product-image-loader'
 import type { ImageOptionItemResponse } from '@core/contracts/product/option-item'
 import type { SelectorComponentProps } from './selector-registry'
 import { getSelectorLayoutClass } from './selector-utils'
@@ -53,6 +54,7 @@ export const ThumbnailSelector: React.FC<ThumbnailSelectorProps> = ({
               )}
             >
               <Image
+                loader={productImageLoader}
                 src={opt.imageSrc}
                 alt={opt.label}
                 width={layout === 'grid' ? 200 : 60}
