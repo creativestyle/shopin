@@ -39,7 +39,7 @@ export const LineItemImages: FC<LineItemImagesProps> = ({
             )}
           >
             <Image
-              loader={productImageLoader}
+              loader={productImageLoader(img.url)}
               src={img.url}
               alt={img.alt || ''}
               fill

@@ -47,7 +47,7 @@ export const GalleryImage: React.FC<GalleryImageProps> = ({
       })}
     >
       <Image
-        loader={productImageLoader}
+        loader={productImageLoader(src)}
         src={src}
         alt={alt}
         fill

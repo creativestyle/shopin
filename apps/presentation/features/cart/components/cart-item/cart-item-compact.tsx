@@ -41,7 +41,7 @@ export function CartItemCompact({
             {item.imageUrl && (
               <div className='relative h-28 w-24 shrink-0 overflow-hidden'>
                 <Image
-                  loader={productImageLoader}
+                  loader={productImageLoader(item.imageUrl)}
                   src={item.imageUrl}
                   alt={item.name}
                   fill

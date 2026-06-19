@@ -23,7 +23,7 @@ export const OrderDetailLineItem: FC<OrderDetailLineItemProps> = ({
       {item.imageUrl ? (
         <div className='relative h-28 w-28 shrink-0 overflow-hidden rounded border border-gray-200 bg-gray-50'>
           <Image
-            loader={productImageLoader}
+            loader={productImageLoader(item.imageUrl)}
             src={item.imageUrl}
             alt={item.name}
             fill

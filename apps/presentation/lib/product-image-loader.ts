@@ -6,6 +6,7 @@
  */
 
 import { PRODUCT_IMAGE_HOSTS } from '@config/constants'
+import { isHostSupported } from './image-host-utils'
 
 const SIZE_BREAKPOINTS = [
   { maxWidth: 50, suffix: '-thumb' },
@@ -14,19 +15,9 @@ const SIZE_BREAKPOINTS = [
   { maxWidth: 700, suffix: '-large' },
 ] as const
 
-export type ProductImageLoaderParams = {
+type ProductImageLoaderParams = {
   src: string
   width: number
-}
-
-function productHostSupported(url: string): boolean {
-  try {
-    const absolute = url.startsWith('//') ? `https:${url}` : url
-    const host = new URL(absolute).hostname
-    return PRODUCT_IMAGE_HOSTS.some((h) => host === h || host.endsWith('.' + h))
-  } catch {
-    return false
-  }
 }
 
 function getSizeSuffix(width: number): string {
@@ -38,13 +29,20 @@ function getSizeSuffix(width: number): string {
   return '-zoom'
 }
 
-export function productImageLoader({
+function buildProductImageUrl({
   src,
   width,
 }: ProductImageLoaderParams): string {
-  if (!src || !productHostSupported(src)) {
-    return src
-  }
   const suffix = getSizeSuffix(width)
-  return src.replace(/(\.[^./?#]+)(\?.*)?$/, `${suffix}$1$2`)
+  // Captures extension, optional query string, and optional fragment separately
+  // so each is preserved after suffix insertion. No-op for extensionless URLs.
+  return src.replace(/(\.[^./?#]+)(\?[^#]*)?(#.*)?$/, `${suffix}$1$2$3`)
+}
+
+export function productImageLoader(
+  src: string
+): typeof buildProductImageUrl | undefined {
+  return isHostSupported(src, PRODUCT_IMAGE_HOSTS)
+    ? buildProductImageUrl
+    : undefined
 }

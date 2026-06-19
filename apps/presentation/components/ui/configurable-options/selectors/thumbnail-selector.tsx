@@ -54,7 +54,7 @@ export const ThumbnailSelector: React.FC<ThumbnailSelectorProps> = ({
               )}
             >
               <Image
-                loader={productImageLoader}
+                loader={productImageLoader(opt.imageSrc)}
                 src={opt.imageSrc}
                 alt={opt.label}
                 width={layout === 'grid' ? 200 : 60}

@@ -87,7 +87,7 @@ export const GalleryDialog: React.FC<GalleryDialogProps> = ({
       >
         <div className='flex h-full max-h-screen w-full items-center justify-center p-4'>
           <Image
-            loader={productImageLoader}
+            loader={productImageLoader(item.src)}
             src={item.src}
             alt={item.alt || ''}
             width={imageWidth}

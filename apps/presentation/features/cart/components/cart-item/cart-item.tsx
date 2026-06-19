@@ -35,7 +35,7 @@ export function CartItem({ item }: CartItemProps) {
         {item.imageUrl && (
           <div className='relative h-28 w-24 shrink-0 overflow-hidden md:row-span-3 md:h-56 md:w-44'>
             <Image
-              loader={productImageLoader}
+              loader={productImageLoader(item.imageUrl)}
               src={item.imageUrl}
               alt={item.name}
               fill

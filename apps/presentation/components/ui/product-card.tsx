@@ -58,7 +58,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           </div>
         )}
         <Image
-          loader={productImageLoader}
+          loader={productImageLoader(data.image.src)}
           src={data.image.src}
           alt={data.image.alt || data.name}
           fill

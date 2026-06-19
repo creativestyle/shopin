@@ -192,7 +192,9 @@ export const MainNavigation: React.FC<MainNavigationProps> = ({
                   >
                     <div className='relative aspect-square w-full'>
                       <Image
-                        loader={productImageLoader}
+                        loader={productImageLoader(
+                          activeItem.featuredProduct.image.src
+                        )}
                         src={activeItem.featuredProduct.image.src}
                         alt={activeItem.featuredProduct.image.alt}
                         fill
