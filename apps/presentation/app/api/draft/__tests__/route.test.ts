@@ -206,39 +206,24 @@ describe('GET /api/draft', () => {
       const location = res.headers.get('location') ?? ''
       expect(new URL(location).searchParams.get('__pt')).toBe('my-signed-token')
     })
-
-    it('falls back to URL param + Lax cookie when FRONTEND_URL is https:// but request host does not match', () => {
-      // Set-Cookie is scoped to the responding host. If the CMS calls /api/draft on a different
-      // host than FRONTEND_URL, the secure cookie would land on the wrong host. The route falls
-      // back to URL-param delivery + Lax cookie when the hosts differ.
-      process.env.FRONTEND_URL = 'https://shop.example.com'
-      draftModeMocks().createPreviewToken.mockReturnValue('my-signed-token')
-      const res = GET(makeRequest(validParams(), 'http://localhost:3000'))
-      expect(
-        new URL(res.headers.get('location') ?? '').searchParams.get('__pt')
-      ).toBe('my-signed-token')
-      const cookie = res.headers.get('set-cookie') ?? ''
-      expect(cookie).toContain('preview_token=my-signed-token')
-      expect(cookie.toLowerCase()).toContain('samesite=lax')
-    })
   })
 
-  // ─── Host-matching for cookie delivery ───────────────────────────────
+  // ─── Delivery is keyed on the redirect base, not request headers ──────
 
-  describe('cookie delivery requires https redirect base AND matching request host', () => {
-    it('uses cookie when https FRONTEND_URL and x-forwarded-host matches', () => {
+  describe('token delivery is keyed on the https redirect base, not the request host', () => {
+    it('uses cookie (not URL param) when FRONTEND_URL is https:// even if the request is HTTP', () => {
+      // Security invariant: delivery mode is keyed on the redirect base (a server-controlled
+      // config value), not the incoming request's headers (which can be spoofed). A production
+      // deploy reached over an HTTP-only internal ingress must never leak the token into the URL.
       process.env.FRONTEND_URL = 'https://shop.example.com'
       draftModeMocks().createPreviewToken.mockReturnValue('my-signed-token')
-      const res = GET(
-        makeRequest(validParams(), 'http://internal-host', {
-          'x-forwarded-host': 'shop.example.com',
-        })
-      )
+      const res = GET(makeRequest(validParams(), 'http://internal-host'))
       expect(res.headers.get('set-cookie')).toContain('my-signed-token')
       expect(res.headers.get('location')).not.toContain('my-signed-token')
     })
 
-    it('uses URL param when https FRONTEND_URL but x-forwarded-host does not match', () => {
+    it('uses cookie regardless of a non-matching x-forwarded-host (the header is not trusted for delivery mode)', () => {
+      // The spoofable x-forwarded-host must not downgrade an HTTPS deploy to URL-param delivery.
       process.env.FRONTEND_URL = 'https://shop.example.com'
       draftModeMocks().createPreviewToken.mockReturnValue('my-signed-token')
       const res = GET(
@@ -246,31 +231,8 @@ describe('GET /api/draft', () => {
           'x-forwarded-host': 'other.example.com',
         })
       )
-      expect(
-        new URL(res.headers.get('location') ?? '').searchParams.get('__pt')
-      ).toBe('my-signed-token')
-      // Lax session cookie is still set (on the responding host, as a fallback)
-      expect(res.headers.get('set-cookie')).toContain(
-        'preview_token=my-signed-token'
-      )
-    })
-
-    it('x-forwarded-host takes precedence over the Host header for the match', () => {
-      process.env.FRONTEND_URL = 'https://shop.example.com'
-      draftModeMocks().createPreviewToken.mockReturnValue('my-signed-token')
-      // Host header matches, but x-forwarded-host disagrees — forwarded-host wins.
-      const res = GET(
-        makeRequest(validParams(), 'https://shop.example.com', {
-          'x-forwarded-host': 'proxy.internal',
-        })
-      )
-      expect(
-        new URL(res.headers.get('location') ?? '').searchParams.get('__pt')
-      ).toBe('my-signed-token')
-      // Lax session cookie is set on the fallback path
-      expect(res.headers.get('set-cookie')).toContain(
-        'preview_token=my-signed-token'
-      )
+      expect(res.headers.get('set-cookie')).toContain('my-signed-token')
+      expect(res.headers.get('location')).not.toContain('my-signed-token')
     })
 
     it('uses cookie when request origin host matches https FRONTEND_URL (no proxy headers)', () => {

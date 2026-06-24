@@ -13,20 +13,6 @@ import {
 const defaultLocalePrefix = getLocale(I18N_CONFIG.defaultLocale).urlPrefix
 
 /**
- * Resolves the public-facing host of the incoming request. Prefers the
- * x-forwarded-host header (set by a reverse proxy) over the raw Host header so
- * the comparison with redirectBase is correct even behind a proxy where
- * request.nextUrl reflects the internal host.
- */
-function getRequestPublicHost(request: NextRequest): string {
-  const forwarded = request.headers.get('x-forwarded-host')
-  if (forwarded) {
-    return forwarded.split(',')[0].trim()
-  }
-  return request.headers.get('host') ?? request.nextUrl.host
-}
-
-/**
  * Base URL for the draft redirect. Uses FRONTEND_URL so redirect always goes to the canonical site.
  * When unset (e.g. local dev), uses request origin and rewrites 0.0.0.0 → localhost.
  */
@@ -96,22 +82,13 @@ export function GET(request: NextRequest) {
       ? `/preview/${normalizedSlug}`
       : `/${locale}/preview/${normalizedSlug}`
 
-  // Cookie delivery requires two conditions: the redirect base must be HTTPS (SameSite=None;Secure
-  // is unavailable on plain HTTP), and the request's public host must match the redirect base host.
-  // The host check is necessary because Set-Cookie is scoped to the responding host — if the CMS
-  // calls /api/draft on an internal hostname the browser would store the cookie there, follow the
-  // 307 to the canonical host without it, and the preview page would fail to load. When the hosts
-  // differ the signed, short-lived URL param is used instead.
-  // SameSite=None is required for the Contentful cross-site iframe context.
-  // Note: Chrome's CHIPS proposal may eventually require adding `partitioned: true` for
-  // third-party iframe cookies; monitor browser compatibility if preview breaks on new Chrome.
+  // Delivery is keyed on the redirect-base protocol (server-controlled), not on request headers
+  // (x-forwarded-host/proto can be spoofed). On HTTPS we always use the SameSite=None;Secure
+  // cookie — never the URL — so the token can't leak to logs/Referer even behind an HTTP ingress.
   const redirectUrl = new URL(previewPath, redirectBase)
-  const parsedRedirectBase = new URL(redirectBase)
-  const redirectIsHttps = parsedRedirectBase.protocol === 'https:'
-  const hostMatchesRedirect =
-    getRequestPublicHost(request) === parsedRedirectBase.host
+  const redirectIsHttps = new URL(redirectBase).protocol === 'https:'
 
-  if (redirectIsHttps && hostMatchesRedirect) {
+  if (redirectIsHttps) {
     const response = NextResponse.redirect(redirectUrl, 307)
     response.cookies.set({
       name: PREVIEW_TOKEN_COOKIE,
