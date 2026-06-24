@@ -117,6 +117,9 @@ function buildRequestContext(
     !!draftCookieToken && isDraftTokenActiveByExp(draftCookieToken)
   const isPathPreview =
     firstSegment === 'preview' || (firstIsLocale && segments[1] === 'preview')
+  // Under an active draft cookie, every clean URL is funneled into the /preview subtree.
+  // Functional routes with no draft (CMS) representation (cart, account, …) resolve to no
+  // content there and render the 404 page — acceptable inside an editorial preview session.
   const isPreview = isPathPreview || isDraftActive
 
   // Preview always uses the default variant — no A/B testing in editorial preview sessions.

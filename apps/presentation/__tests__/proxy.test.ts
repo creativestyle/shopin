@@ -333,6 +333,65 @@ describe('cookie-driven preview — clean /locale/... path (isDraftActive=true)'
 })
 
 // ─────────────────────────────────────────────────────────────────────────────
+// 3c. Active draft cookie funnels every clean URL into the /preview subtree
+// ─────────────────────────────────────────────────────────────────────────────
+// Functional routes (cart, checkout, account, …) have no draft (CMS) representation, so they
+// resolve to no content in /preview and render the 404 page — acceptable inside an editorial
+// preview session. The proxy does not special-case them; previewable routes (content, p, c)
+// funnel the same way.
+
+describe('active draft cookie funnels clean URLs into preview', () => {
+  it.each(['cart', 'checkout', 'account', 'sign-in', 'wishlist', 'setup'])(
+    'funnels /en/%s into the /preview subtree',
+    (segment) => {
+      const res = proxy(
+        makeRequest(`/en/${segment}`, {
+          cookie: `preview_token=${ACTIVE_PREVIEW_TOKEN}`,
+        })
+      )
+      expect(rewritePath(res)).toBe(`/${DEFAULT_VARIANT}/en/preview/${segment}`)
+    }
+  )
+
+  it('funnels nested routes (account/orders) into preview', () => {
+    const res = proxy(
+      makeRequest('/en/account/orders', {
+        cookie: `preview_token=${ACTIVE_PREVIEW_TOKEN}`,
+      })
+    )
+    expect(rewritePath(res)).toBe(
+      `/${DEFAULT_VARIANT}/en/preview/account/orders`
+    )
+  })
+
+  it('funnels an unprefixed path (/cart) into preview under an active cookie', () => {
+    const res = proxy(
+      makeRequest('/cart', { cookie: `preview_token=${ACTIVE_PREVIEW_TOKEN}` })
+    )
+    expect(rewritePath(res)).toBe(`/${DEFAULT_VARIANT}/en/preview/cart`)
+  })
+
+  it('injects __pt when funnelling a clean URL into preview', () => {
+    const res = proxy(
+      makeRequest('/en/cart', {
+        cookie: `preview_token=${ACTIVE_PREVIEW_TOKEN}`,
+      })
+    )
+    const raw = res.headers.get('x-middleware-rewrite') ?? ''
+    expect(new URL(raw).searchParams.get('__pt')).toBe(ACTIVE_PREVIEW_TOKEN)
+  })
+
+  it('funnels previewable routes (/en/p/shoe) into preview under an active cookie', () => {
+    const res = proxy(
+      makeRequest('/en/p/shoe', {
+        cookie: `preview_token=${ACTIVE_PREVIEW_TOKEN}`,
+      })
+    )
+    expect(rewritePath(res)).toBe(`/${DEFAULT_VARIANT}/en/preview/p/shoe`)
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
 // 4. intlMiddleware fallthrough paths
 // ─────────────────────────────────────────────────────────────────────────────
 

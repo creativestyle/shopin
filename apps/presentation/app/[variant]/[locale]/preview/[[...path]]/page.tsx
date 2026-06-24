@@ -1,11 +1,15 @@
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
+import { cookies } from 'next/headers'
 import { initRouteContext } from '@/lib/request-context/route-context'
 import {
   isPreviewTokenValid,
+  PREVIEW_TOKEN_COOKIE,
   PREVIEW_TOKEN_INTERNAL_PARAM,
 } from '@/lib/draft-mode'
+import { getHomepageSlugForLocale } from '@/features/content/homepage-slug'
 import { parsePlpSearchParams } from '@/features/productCollection/parse-search-params'
 import { ContentPage } from '@/features/content/content-page'
+import { getContentPage } from '@/features/content/get-content-page'
 import { ProductPage } from '@/features/product/product-page'
 import { ProductCollectionPage } from '@/features/productCollection/product-collection-page'
 export const dynamic = 'force-dynamic'
@@ -26,12 +30,30 @@ export default async function PreviewPage({
   ])
   initRouteContext({ variant, locale })
 
-  if (!path.length) {
+  if (!isPreviewTokenValid(asString(search[PREVIEW_TOKEN_INTERNAL_PARAM]))) {
+    // The edge can only check the cookie's exp, not its HMAC signature (Node crypto can't
+    // run in the edge bundle), so a forged/stale preview_token cookie routes every page
+    // here. Tear the session down via /api/draft/exit — a Server Component can't clear an
+    // HttpOnly cookie — and fall through to normal routing instead of dead-ending in a 404
+    // the user can't escape until they clear cookies. With no cookie this is just a bad or
+    // expired preview link → 404.
+    const hasCookie = (await cookies()).has(PREVIEW_TOKEN_COOKIE)
+    if (hasCookie) {
+      const params = new URLSearchParams({ locale, slug: path.join('/') })
+      redirect(`/api/draft/exit?${params.toString()}`)
+    }
     notFound()
   }
 
-  if (!isPreviewTokenValid(asString(search[PREVIEW_TOKEN_INTERNAL_PARAM]))) {
-    notFound()
+  // Empty path = the homepage. Mirror the published homepage's slug resolution so an editor
+  // clicking the logo mid-preview sees the draft homepage rather than a 404.
+  if (!path.length) {
+    return (
+      <ContentPage
+        slug={getHomepageSlugForLocale(locale)}
+        isDraft
+      />
+    )
   }
 
   if (path[0] === 'p') {
@@ -71,9 +93,21 @@ export default async function PreviewPage({
     )
   }
 
+  // Any other path is a content slug. Functional routes (cart, account, …) get funneled here
+  // under an active draft cookie but have no CMS entry, so resolve them to the 404 page rather
+  // than rendering a soft "no content" message in the site chrome. Mirrors the published
+  // catch-all guard in [...page]/page.tsx. getContentPage is request-cached, so ContentPage's
+  // own fetch reuses this result.
+  const slug = path.join('/')
+  try {
+    await getContentPage(slug, true)
+  } catch {
+    notFound()
+  }
+
   return (
     <ContentPage
-      slug={path.join('/')}
+      slug={slug}
       isDraft
     />
   )
