@@ -16,7 +16,7 @@ async function Breadcrumbs({
   }
   const allCrumbs = [homeCrumb, ...crumbs]
 
-  if (allCrumbs.length <= 2) {
+  if (allCrumbs.length <= 1) {
     return null
   }
 
