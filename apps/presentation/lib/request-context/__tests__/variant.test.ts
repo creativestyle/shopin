@@ -73,6 +73,7 @@ describe('runWithRequestVariant / ALS context', () => {
             segment: string,
             fn: () => T
           ) => T
+          setRequestVariantFromSegment: (segment: string) => void
         }
       | undefined
 
@@ -84,11 +85,16 @@ describe('runWithRequestVariant / ALS context', () => {
           return () => cached
         },
       }))
-      jest.mock('@/lib/variant/variant-key', () => ({
-        decodeVariant: (segment: string) => ({
-          dataSource: segment.replace(/^~/, ''),
-        }),
-      }))
+      jest.mock('@/lib/variant/variant-key', () => {
+        const ALLOWED = ['commercetools-set', 'commercetools-algolia-set']
+        return {
+          decodeVariant: (segment: string) => ({
+            dataSource: segment.replace(/^~/, ''),
+          }),
+          isVariantSegment: (segment: string) =>
+            segment.startsWith('~') && ALLOWED.includes(segment.slice(1)),
+        }
+      })
 
       result = require('../variant') as typeof result
     })
@@ -144,5 +150,20 @@ describe('runWithRequestVariant / ALS context', () => {
       captured = getRequestVariant()
     })
     expect(captured).toEqual({ dataSource: 'commercetools-algolia-set' })
+  })
+
+  it('runWithRequestVariantFromSegment runs fn without variant context for an invalid segment', () => {
+    const { getRequestVariant, runWithRequestVariantFromSegment } = loadModule()
+    let captured: Record<string, string> | undefined = { sentinel: 'set' }
+    runWithRequestVariantFromSegment('~bogus', () => {
+      captured = getRequestVariant()
+    })
+    expect(captured).toBeUndefined()
+  })
+
+  it('setRequestVariantFromSegment leaves the holder untouched for an invalid segment', () => {
+    const { getRequestVariant, setRequestVariantFromSegment } = loadModule()
+    setRequestVariantFromSegment('commercetools-set')
+    expect(getRequestVariant()).toBeUndefined()
   })
 })

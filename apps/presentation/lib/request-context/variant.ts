@@ -1,6 +1,6 @@
 import { cache } from 'react'
 import { AsyncLocalStorage } from 'node:async_hooks'
-import { decodeVariant } from '@/lib/variant/variant-key'
+import { decodeVariant, isVariantSegment } from '@/lib/variant/variant-key'
 
 const getHolder = cache((): { value: Record<string, string> | undefined } => ({
   value: undefined,
@@ -13,6 +13,9 @@ export function setRequestVariant(resolved: Record<string, string>): void {
 }
 
 export function setRequestVariantFromSegment(segment: string): void {
+  if (!isVariantSegment(segment)) {
+    return
+  }
   setRequestVariant(decodeVariant(segment))
 }
 
@@ -31,5 +34,8 @@ export function runWithRequestVariantFromSegment<T>(
   segment: string,
   fn: () => T
 ): T {
+  if (!isVariantSegment(segment)) {
+    return fn()
+  }
   return runWithRequestVariant(decodeVariant(segment), fn)
 }
