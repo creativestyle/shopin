@@ -1,6 +1,7 @@
 import React from 'react'
 import Image from 'next/image'
 import { Link } from '@/lib/navigation'
+import { productImageLoader } from '@/lib/product-image-loader'
 import type { LinkProps } from 'next/link'
 import { cn } from '@/lib/utils'
 import type { ProductCardResponse } from '@core/contracts/product-collection/product-card'
@@ -57,6 +58,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           </div>
         )}
         <Image
+          loader={productImageLoader(data.image.src)}
           src={data.image.src}
           alt={data.image.alt || data.name}
           fill

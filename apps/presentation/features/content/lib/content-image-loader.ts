@@ -11,17 +11,10 @@ import {
   CONTENT_IMAGE_API_HOSTS,
   CONTENT_IMAGE_DEFAULT_QUALITY,
 } from '@config/constants'
+import { isHostSupported } from '@/lib/image-host-utils'
 
 function contentHostSupportsImageApi(url: string): boolean {
-  try {
-    const absolute = url.startsWith('//') ? `https:${url}` : url
-    const host = new URL(absolute).hostname
-    return CONTENT_IMAGE_API_HOSTS.some(
-      (h) => host === h || host.endsWith('.' + h)
-    )
-  } catch {
-    return false
-  }
+  return isHostSupported(url, CONTENT_IMAGE_API_HOSTS)
 }
 
 export type ContentImageLoaderParams = {

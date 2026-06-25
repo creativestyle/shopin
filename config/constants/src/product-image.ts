@@ -1,6 +1,6 @@
 /**
- * Product/commerce image CDN hostnames. Used by next.config images.remotePatterns
- * and by the locale layout preconnect hints.
+ * Product/commerce image CDN hostnames. Used by next.config images.remotePatterns,
+ * the locale layout preconnect hints, and the presentation product image loader.
  */
 
 export const PRODUCT_IMAGE_HOSTS = [
