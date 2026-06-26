@@ -60,7 +60,7 @@ test.describe('Locale switch on alt-data-source page resolves correct catalog', 
       // INTENDED-CORRECT: land on the German alt-catalog slug
       expect(page.url()).toMatch(/\/de\/p\/rote-schuhe/)
       await expect(page.locator('html')).toHaveAttribute('lang', /^de/)
-      await expect(page.getByText('Rote Schuhe')).toBeVisible()
+      await expect(page.getByRole('heading', { name: 'Rote Schuhe' })).toBeVisible()
     })
 
     test('locale switch from alt-catalog product also works for probe slugs', async ({

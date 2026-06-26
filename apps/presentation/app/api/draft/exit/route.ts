@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { I18N_CONFIG, getLocale } from '@config/constants'
-import { isSafeDraftRedirectPath, PREVIEW_TOKEN_COOKIE } from '@/lib/draft-mode'
+import {
+  isSafeDraftRedirectPath,
+  PREVIEW_TOKEN_COOKIE,
+  PREVIEW_TOKEN_INTERNAL_PARAM,
+} from '@/lib/draft-mode'
 
 const defaultLocalePrefix = getLocale(I18N_CONFIG.defaultLocale).urlPrefix
 
@@ -13,10 +17,14 @@ const defaultLocalePrefix = getLocale(I18N_CONFIG.defaultLocale).urlPrefix
  * HttpOnly cookie, only a route handler can. Once the cookie is gone, the redirected clean URL
  * routes normally. Also usable as an explicit "exit preview" action for editors.
  *
- * Query params: `locale` and `slug` describe where to return. The target is validated with
- * isSafeDraftRedirectPath to block open-redirect/path-traversal; anything unsafe falls back to
- * the site root. The default locale prefix is omitted to match intlMiddleware's
+ * Query params: `locale` and `slug` are control params describing where to return. The target is
+ * validated with isSafeDraftRedirectPath to block open-redirect/path-traversal; anything unsafe
+ * falls back to the site root. The default locale prefix is omitted to match intlMiddleware's
  * localePrefix:'as-needed' and avoid a needless extra redirect hop.
+ *
+ * Any other query params are content state (collection page/sort/filter, product variantId) and
+ * are preserved on the returned URL so a broken preview session drops the user back at the same
+ * non-preview location. The preview token param is never echoed back onto a published URL.
  */
 export function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl
@@ -32,9 +40,15 @@ export function GET(request: NextRequest) {
     }
   }
 
+  // Carry through the original content query params, dropping our control params and the token.
+  const forwarded = new URLSearchParams(searchParams)
+  forwarded.delete('locale')
+  forwarded.delete('slug')
+  forwarded.delete(PREVIEW_TOKEN_INTERNAL_PARAM)
+
   const redirectUrl = request.nextUrl.clone()
   redirectUrl.pathname = target
-  redirectUrl.search = ''
+  redirectUrl.search = forwarded.toString()
 
   const response = NextResponse.redirect(redirectUrl, 307)
   // Clear with the same name/path the cookie was set with (path:'/').

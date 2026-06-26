@@ -216,6 +216,26 @@ describe('preview path routing — default locale', () => {
     expect(rewritten.searchParams.get('__pt')).toBe('signed-abc')
   })
 
+  it('establishes a draft session cookie from a valid (exp-active) URL token', () => {
+    const res = proxy(makeRequest(`/preview/slug?__pt=${ACTIVE_PREVIEW_TOKEN}`))
+    expect(res.cookies.get('preview_token')?.value).toBe(ACTIVE_PREVIEW_TOKEN)
+  })
+
+  it('does NOT establish a session from a structurally-invalid URL token', () => {
+    // Regression guard: the preview page reads the session cookie back and, finding
+    // one, runs its recovery flow — which serves the live page. An invalid preview
+    // link must instead 404, so the proxy must not mint a session from a bad ?__pt=.
+    const res = proxy(makeRequest('/preview/slug?__pt=not-a-real-token'))
+    expect(res.cookies.get('preview_token')).toBeUndefined()
+  })
+
+  it('does NOT establish a session from an expired URL token', () => {
+    const res = proxy(
+      makeRequest(`/preview/slug?__pt=${EXPIRED_PREVIEW_TOKEN}`)
+    )
+    expect(res.cookies.get('preview_token')).toBeUndefined()
+  })
+
   it('injects __pt from the preview_token cookie (HTTPS production path)', () => {
     // Token must pass isDraftTokenActiveByExp: "${exp}.${sig}" format with future exp.
     const res = proxy(

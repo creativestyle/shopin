@@ -73,14 +73,14 @@ test.describe('Leaked ~variant URL guard', () => {
     // Address bar must be clean (no ~ segment)
     await expect(page).not.toHaveURL(/\/~/)
     await expect(page.locator('body')).toBeVisible()
-    await expect(page.getByText('About Us')).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'About Us' })).toBeVisible()
   })
 
   test('following a leaked alt URL also renders with clean address bar', async ({ page }) => {
     await page.goto('/~commercetools-algolia-set/en/about-us')
     await expect(page).not.toHaveURL(/\/~/)
     await expect(page.locator('body')).toBeVisible()
-    await expect(page.getByText('About Us')).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'About Us' })).toBeVisible()
   })
 
   test('~variant with only the root path (no slug) 308-redirects to /', async ({ request }) => {

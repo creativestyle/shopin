@@ -214,8 +214,18 @@ function handlePreviewPath(
   // param so that a fresh CMS preview link works even when the browser holds a
   // stale (expired) cookie. Without this check an expired cookie silently wins
   // over a fresh URL token and every preview link 404s until cookies are cleared.
-  const urlParamToken =
+  //
+  // Both sources are exp-validated before they can establish a session. The URL
+  // token must be checked too: an unvalidated bad/expired ?__pt= would otherwise
+  // set the session cookie below, which the preview page reads back and treats as
+  // a recovery-worthy session — silently serving the live page instead of the 404
+  // an invalid preview link must produce.
+  const urlParamRaw =
     request.nextUrl.searchParams.get(PREVIEW_TOKEN_INTERNAL_PARAM) ?? undefined
+  const urlParamToken =
+    urlParamRaw && isDraftTokenActiveByExp(urlParamRaw)
+      ? urlParamRaw
+      : undefined
   const activeCookieToken =
     draftCookieToken && isDraftTokenActiveByExp(draftCookieToken)
       ? draftCookieToken

@@ -49,7 +49,11 @@ for (const { locale, langPattern, product, collection, content } of LOCALES) {
       await page.waitForLoadState('networkidle')
 
       await expect(page.locator('html')).toHaveAttribute('lang', langPattern)
-      await expect(page.getByText(product.name)).toBeVisible()
+      // Target the page heading specifically — the title also appears as the
+      // current-page breadcrumb crumb, so a bare getByText() matches two elements.
+      await expect(
+        page.getByRole('heading', { name: product.name })
+      ).toBeVisible()
 
       const calls = await requestsFor(product.bffPrefix)
       expect(calls.length, `Expected BFF call for ${product.bffPrefix}`).toBeGreaterThan(0)
@@ -62,7 +66,11 @@ for (const { locale, langPattern, product, collection, content } of LOCALES) {
       await page.waitForLoadState('networkidle')
 
       await expect(page.locator('html')).toHaveAttribute('lang', langPattern)
-      await expect(page.getByText(collection.category)).toBeVisible()
+      // Category heading (sr-only h1) — matched by role to avoid the duplicate
+      // breadcrumb crumb of the same name.
+      await expect(
+        page.getByRole('heading', { name: collection.category })
+      ).toBeVisible()
       // Product item visible → confirms the product grid is populated, not the empty state
       await expect(page.getByText(collection.item)).toBeVisible()
 
@@ -75,7 +83,9 @@ for (const { locale, langPattern, product, collection, content } of LOCALES) {
       await page.waitForLoadState('networkidle')
 
       await expect(page.locator('html')).toHaveAttribute('lang', langPattern)
-      await expect(page.getByText(content.title)).toBeVisible()
+      await expect(
+        page.getByRole('heading', { name: content.title })
+      ).toBeVisible()
       // No BFF call count assertion: Next.js <Link> prefetching in production warms named content
       // slugs (about-us, ueber-uns) whenever a page with the nav bar is loaded earlier in the
       // spec run, making the count unreliably 0. Lang + title are the meaningful assertions here.

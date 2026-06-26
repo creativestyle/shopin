@@ -6,6 +6,7 @@ import {
   PREVIEW_TOKEN_COOKIE,
   PREVIEW_TOKEN_INTERNAL_PARAM,
 } from '@/lib/draft-mode'
+import { HttpError } from '@/lib/error-utils'
 import { getHomepageSlugForLocale } from '@/features/content/homepage-slug'
 import { parsePlpSearchParams } from '@/features/productCollection/parse-search-params'
 import { ContentPage } from '@/features/content/content-page'
@@ -101,8 +102,14 @@ export default async function PreviewPage({
   const slug = path.join('/')
   try {
     await getContentPage(slug, true)
-  } catch {
-    notFound()
+  } catch (error) {
+    // Only a genuine "no such page" (BFF 404) maps to notFound(). Transient BFF/Contentful
+    // failures and schema-validation errors propagate to the error boundary so an editor sees a
+    // diagnosable error rather than a misleading "page doesn't exist".
+    if (HttpError.hasStatusCode(error, 404)) {
+      notFound()
+    }
+    throw error
   }
 
   return (

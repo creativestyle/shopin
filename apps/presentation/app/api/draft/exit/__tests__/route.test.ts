@@ -13,6 +13,7 @@ import { NextRequest } from 'next/server'
 jest.mock('@/lib/draft-mode', () => ({
   isSafeDraftRedirectPath: jest.fn(),
   PREVIEW_TOKEN_COOKIE: 'preview_token',
+  PREVIEW_TOKEN_INTERNAL_PARAM: '__pt',
 }))
 
 import { GET } from '../route'
@@ -33,6 +34,10 @@ function makeRequest(params: Record<string, string>): NextRequest {
 
 function locationPath(res: Response): string {
   return new URL(res.headers.get('location') ?? '').pathname
+}
+
+function locationParams(res: Response): URLSearchParams {
+  return new URL(res.headers.get('location') ?? '').searchParams
 }
 
 describe('GET /api/draft/exit', () => {
@@ -88,5 +93,54 @@ describe('GET /api/draft/exit', () => {
   it('falls back to / when locale is missing', () => {
     const res = GET(makeRequest({ slug: 'about' }))
     expect(locationPath(res)).toBe('/')
+  })
+
+  // ─── Content query state is preserved on the returned URL ──────────────
+
+  it('preserves collection content params (page/sort/filter) on the returned URL', () => {
+    const res = GET(
+      makeRequest({
+        locale: 'de',
+        slug: 'c/shoes',
+        page: '2',
+        sort: 'price-asc',
+        filter: 'color:black',
+      })
+    )
+    expect(locationPath(res)).toBe('/de/c/shoes')
+    const params = locationParams(res)
+    expect(params.get('page')).toBe('2')
+    expect(params.get('sort')).toBe('price-asc')
+    expect(params.get('filter')).toBe('color:black')
+  })
+
+  it('preserves a product variantId on the returned URL', () => {
+    const res = GET(
+      makeRequest({ locale: 'en', slug: 'p/sneaker', variantId: '42' })
+    )
+    expect(locationPath(res)).toBe('/p/sneaker')
+    expect(locationParams(res).get('variantId')).toBe('42')
+  })
+
+  it('strips the control params (locale, slug) from the preserved query string', () => {
+    const res = GET(makeRequest({ locale: 'de', slug: 'about', page: '3' }))
+    const params = locationParams(res)
+    expect(params.has('locale')).toBe(false)
+    expect(params.has('slug')).toBe(false)
+    expect(params.get('page')).toBe('3')
+  })
+
+  it('never echoes the preview token param back onto the published URL', () => {
+    const res = GET(
+      makeRequest({
+        locale: 'de',
+        slug: 'about',
+        __pt: 'stale-token',
+        page: '1',
+      })
+    )
+    const params = locationParams(res)
+    expect(params.has('__pt')).toBe(false)
+    expect(params.get('page')).toBe('1')
   })
 })

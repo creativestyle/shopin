@@ -56,7 +56,7 @@ for (const { label, value } of MALFORMED_CASES) {
     await expect(page.locator('body')).toBeVisible()
 
     // Page content must render (not an error boundary)
-    await expect(page.getByText('About Us')).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'About Us' })).toBeVisible()
 
     // BFF calls must use the default data source (or carry no X-Data-Source, which also means default)
     const allCalls = await requestsFor('/')
