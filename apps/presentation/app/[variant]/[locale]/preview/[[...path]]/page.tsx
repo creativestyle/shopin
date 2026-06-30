@@ -96,20 +96,22 @@ export default async function PreviewPage({
 
   // Any other path is a content slug. Functional routes (cart, account, …) get funneled here
   // under an active draft cookie but have no CMS entry, so resolve them to the 404 page rather
-  // than rendering a soft "no content" message in the site chrome. Mirrors the published
-  // catch-all guard in [...page]/page.tsx. getContentPage is request-cached, so ContentPage's
-  // own fetch reuses this result.
+  // than rendering a soft "no content" message in the site chrome. getContentPage is
+  // request-cached, so ContentPage's own fetch reuses this result (or this rejection).
   const slug = path.join('/')
   try {
     await getContentPage(slug, true)
   } catch (error) {
-    // Only a genuine "no such page" (BFF 404) maps to notFound(). Transient BFF/Contentful
-    // failures and schema-validation errors propagate to the error boundary so an editor sees a
-    // diagnosable error rather than a misleading "page doesn't exist".
+    // Only a genuine "no such page" (BFF 404) maps to notFound() — matching the published
+    // catch-all in [...page]/page.tsx. Non-404 errors (transient BFF/Contentful failures,
+    // schema-validation errors) deliberately DON'T 404 here: we fall through to <ContentPage>,
+    // whose request-cached re-fetch hits the same rejection and renders its localized inline
+    // ErrorDisplay inside the editor chrome. This is an intentional preview-only divergence from
+    // the published page (which 404s on any error) so an editor sees a diagnosable error rather
+    // than the bare top-level global-error shell.
     if (HttpError.hasStatusCode(error, 404)) {
       notFound()
     }
-    throw error
   }
 
   return (
