@@ -69,7 +69,12 @@ export function createPreviewToken(): string {
   return createDraftToken(getSecret(), DRAFT_COOKIE_MAX_AGE_SEC)
 }
 
-/** Returns true iff the provided URL preview token is valid and not expired. Use in the preview route. */
+/**
+ * Returns true iff the preview token is validly signed, unexpired, and within the
+ * issued lifetime (DRAFT_COOKIE_MAX_AGE_SEC + slack). This is the proxy's verification
+ * gate before a preview session cookie is minted; the preview route uses it too as
+ * defense-in-depth.
+ */
 export function isPreviewTokenValid(token: string | null | undefined): boolean {
   if (!token) {
     return false
@@ -78,7 +83,7 @@ export function isPreviewTokenValid(token: string | null | undefined): boolean {
   if (!secret) {
     return false
   }
-  return verifyDraftToken(token, secret)
+  return verifyDraftToken(token, secret, DRAFT_COOKIE_MAX_AGE_SEC)
 }
 
 /** Short-lived signed token for x-next-draft-mode header. Secret never sent; BFF verifies signature. */

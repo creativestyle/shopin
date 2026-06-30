@@ -3,10 +3,12 @@
  */
 /**
  * GET /api/draft/exit tears down a draft preview session: it clears the preview_token
- * cookie and redirects to a clean path. The preview page redirects here when it detects a
- * forged/stale cookie whose HMAC signature fails (the edge can only check exp, not the
- * signature, and a Server Component cannot clear an HttpOnly cookie). isSafeDraftRedirectPath
- * guards the redirect target against open-redirect / path traversal.
+ * cookie and redirects to a clean path. The proxy fully verifies the token (HMAC + exp)
+ * before routing, so a forged/stale cookie no longer funnels clean URLs into /preview; but a
+ * leftover cookie can still surface on a direct /preview/… visit, where the preview page
+ * detects the missing/invalid token and redirects here to clear it (a Server Component cannot
+ * clear an HttpOnly cookie, only a route handler can). isSafeDraftRedirectPath guards the
+ * redirect target against open-redirect / path traversal.
  */
 import { NextRequest } from 'next/server'
 

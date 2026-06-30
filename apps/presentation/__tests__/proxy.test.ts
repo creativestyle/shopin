@@ -19,18 +19,22 @@ jest.mock('next-intl/middleware', () => {
 })
 
 // ─── Mock: draft-mode ────────────────────────────────────────────────────────
-// proxy.ts now verifies the full HMAC signature via isPreviewTokenValid (Node runtime).
-// Back the mock with the real verifyDraftToken so the proxy exercises genuine signature
-// checking; tokens below are minted with the same secret.
+// proxy.ts now verifies the full HMAC signature AND the exp upper bound via
+// isPreviewTokenValid (Node runtime). Back the mock with the real verifyDraftToken so the
+// proxy exercises genuine signature + max-age checking; tokens below are minted with the
+// same secret and capped at the same max-age as the real DRAFT_COOKIE_MAX_AGE_SEC.
 const mockDraftSecret = 'proxy-test-secret'
 jest.mock('@/lib/draft-mode', () => {
   const { verifyDraftToken } = require('@core/draft-token')
+  // Local to the factory: it runs at module-require time (before outer consts
+  // initialize), so the cap value cannot reference an outer `const` without a TDZ error.
+  const maxAge = 60 * 60 // 1h — mirrors DRAFT_COOKIE_MAX_AGE_SEC
   return {
     PREVIEW_TOKEN_COOKIE: 'preview_token',
     PREVIEW_TOKEN_INTERNAL_PARAM: '__pt',
-    DRAFT_COOKIE_MAX_AGE_SEC: 86400,
+    DRAFT_COOKIE_MAX_AGE_SEC: maxAge,
     isPreviewTokenValid: (token: string | null | undefined) =>
-      !!token && verifyDraftToken(token, mockDraftSecret),
+      !!token && verifyDraftToken(token, mockDraftSecret, maxAge),
   }
 })
 
@@ -50,10 +54,11 @@ const ALT_VARIANT = '~commercetools-algolia-set'
 const BASE = 'http://localhost'
 
 // Preview tokens used across preview tests, minted with the real signer so they pass
-// isPreviewTokenValid (HMAC + exp). ACTIVE/FRESH are future-dated and validly signed.
-// EXPIRED is validly signed but past-dated, so it fails the exp check.
+// isPreviewTokenValid (HMAC + exp + max-age cap). ACTIVE/FRESH are future-dated, validly
+// signed, and within the 1h cap. EXPIRED is validly signed but past-dated, so it fails the
+// exp check.
 const ACTIVE_PREVIEW_TOKEN = createDraftToken(mockDraftSecret, 3600)
-const FRESH_URL_TOKEN = createDraftToken(mockDraftSecret, 7200)
+const FRESH_URL_TOKEN = createDraftToken(mockDraftSecret, 1800)
 const expiredExp = String(Math.floor(Date.now() / 1000) - 1)
 const EXPIRED_PREVIEW_TOKEN = `${expiredExp}.${signDraftPayload(expiredExp, mockDraftSecret)}`
 
@@ -254,6 +259,15 @@ describe('preview path routing — default locale', () => {
     const res = proxy(
       makeRequest(`/preview/slug?__pt=${EXPIRED_PREVIEW_TOKEN}`)
     )
+    expect(res.cookies.get('preview_token')).toBeUndefined()
+  })
+
+  it('does NOT establish a session from a validly-signed token whose exp exceeds the max-age cap', () => {
+    // Defense-in-depth: even a correctly-signed token must not grant access beyond the
+    // lifetime we ever issue. A token minted a year out (e.g. leaked, misissued, or minted
+    // with an inflated TTL) is rejected by the exp upper bound, so no cookie is minted.
+    const overCap = createDraftToken(mockDraftSecret, 60 * 60 * 24 * 365)
+    const res = proxy(makeRequest(`/preview/slug?__pt=${overCap}`))
     expect(res.cookies.get('preview_token')).toBeUndefined()
   })
 
