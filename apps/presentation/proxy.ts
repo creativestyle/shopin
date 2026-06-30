@@ -21,6 +21,7 @@ import {
   PREVIEW_TOKEN_COOKIE,
   PREVIEW_TOKEN_INTERNAL_PARAM,
   DRAFT_COOKIE_MAX_AGE_SEC,
+  isPreviewTokenValid,
 } from '@/lib/draft-mode'
 
 const intlMiddleware = createMiddleware(routing)
@@ -37,33 +38,6 @@ function getSiteProtocol(): string {
   } catch {
     return 'http:'
   }
-}
-
-/**
- * Returns true when the draft token's exp claim is in the future and within
- * the maximum allowed window (DRAFT_COOKIE_MAX_AGE_SEC + 60s clock-drift slack).
- * Token format: "${exp}.${sig}" where exp is a Unix timestamp (seconds).
- * Does NOT verify the HMAC signature — that stays in the preview page to keep
- * Node.js crypto out of the edge bundle. Expired or forged far-future tokens
- * are treated as absent.
- */
-function isDraftTokenActiveByExp(token: string): boolean {
-  const dotIdx = token.indexOf('.')
-  if (dotIdx < 0) {
-    return false
-  }
-  const exp = parseInt(token.slice(0, dotIdx), 10)
-  if (!Number.isFinite(exp)) {
-    return false
-  }
-  const nowSec = Math.floor(Date.now() / 1000)
-  // Reject tokens whose exp is beyond what we ever issue — a legitimately minted
-  // token cannot expire more than DRAFT_COOKIE_MAX_AGE_SEC seconds from now.
-  // The +60 slack absorbs clock skew between the issuing server and this edge node.
-  if (exp > nowSec + DRAFT_COOKIE_MAX_AGE_SEC + 60) {
-    return false
-  }
-  return nowSec < exp
 }
 
 function resolveCorrelationId(request: NextRequest): string {
@@ -113,8 +87,10 @@ function buildRequestContext(
 
   const firstIsLocale = !!firstSegment && knownLocalePrefixes.has(firstSegment)
   const draftCookieToken = request.cookies.get(PREVIEW_TOKEN_COOKIE)?.value
-  const isDraftActive =
-    !!draftCookieToken && isDraftTokenActiveByExp(draftCookieToken)
+  // proxy.ts runs in the Node.js runtime (Next 16 Proxy), so we verify the full
+  // HMAC signature here — not just the exp claim. A forged or expired cookie is
+  // treated as absent and never establishes a preview session.
+  const isDraftActive = isPreviewTokenValid(draftCookieToken)
   const isPathPreview =
     firstSegment === 'preview' || (firstIsLocale && segments[1] === 'preview')
   // Under an active draft cookie, every clean URL is funneled into the /preview subtree.
@@ -215,21 +191,18 @@ function handlePreviewPath(
   // stale (expired) cookie. Without this check an expired cookie silently wins
   // over a fresh URL token and every preview link 404s until cookies are cleared.
   //
-  // Both sources are exp-validated before they can establish a session. The URL
-  // token must be checked too: an unvalidated bad/expired ?__pt= would otherwise
-  // set the session cookie below, which the preview page reads back and treats as
-  // a recovery-worthy session — silently serving the live page instead of the 404
-  // an invalid preview link must produce.
+  // Both sources are fully verified (HMAC signature + exp) before they can establish
+  // a session — proxy.ts runs in the Node.js runtime, so node:crypto is available here.
+  // A forged token (valid-looking exp, bad signature) is rejected and never mints the
+  // session cookie below, so a tampered preview link cannot establish preview state.
   const urlParamRaw =
     request.nextUrl.searchParams.get(PREVIEW_TOKEN_INTERNAL_PARAM) ?? undefined
-  const urlParamToken =
-    urlParamRaw && isDraftTokenActiveByExp(urlParamRaw)
-      ? urlParamRaw
-      : undefined
-  const activeCookieToken =
-    draftCookieToken && isDraftTokenActiveByExp(draftCookieToken)
-      ? draftCookieToken
-      : undefined
+  const urlParamToken = isPreviewTokenValid(urlParamRaw)
+    ? urlParamRaw
+    : undefined
+  const activeCookieToken = isPreviewTokenValid(draftCookieToken)
+    ? draftCookieToken
+    : undefined
   const activeToken = activeCookieToken ?? urlParamToken
 
   if (

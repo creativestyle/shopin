@@ -32,12 +32,12 @@ export default async function PreviewPage({
   initRouteContext({ variant, locale })
 
   if (!isPreviewTokenValid(asString(search[PREVIEW_TOKEN_INTERNAL_PARAM]))) {
-    // The edge can only check the cookie's exp, not its HMAC signature (Node crypto can't
-    // run in the edge bundle), so a forged/stale preview_token cookie routes every page
-    // here. Tear the session down via /api/draft/exit — a Server Component can't clear an
-    // HttpOnly cookie — and fall through to normal routing instead of dead-ending in a 404
-    // the user can't escape until they clear cookies. With no cookie this is just a bad or
-    // expired preview link → 404.
+    // The proxy already verifies the token (HMAC + exp) before routing here, so this branch
+    // is normally reached only by a direct /preview/… visit without a valid token. If a stale
+    // or forged preview_token cookie is still in the browser on such a visit, tear the session
+    // down via /api/draft/exit — a Server Component can't clear an HttpOnly cookie — and fall
+    // through to normal routing instead of dead-ending in a 404 the user can't escape until
+    // they clear cookies. With no cookie this is just a bad or expired preview link → 404.
     const hasCookie = (await cookies()).has(PREVIEW_TOKEN_COOKIE)
     if (hasCookie) {
       const params = new URLSearchParams({ locale, slug: path.join('/') })

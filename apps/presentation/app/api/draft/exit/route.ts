@@ -11,11 +11,12 @@ const defaultLocalePrefix = getLocale(I18N_CONFIG.defaultLocale).urlPrefix
 /**
  * Exit draft preview: clears the preview_token cookie and 307-redirects to a clean path.
  *
- * The edge proxy can only check the cookie's exp, not its HMAC signature (no Node crypto in
- * the edge bundle), so a forged/stale cookie funnels every request into /preview. The preview
- * page detects the bad signature and redirects here — a Server Component cannot clear an
- * HttpOnly cookie, only a route handler can. Once the cookie is gone, the redirected clean URL
- * routes normally. Also usable as an explicit "exit preview" action for editors.
+ * The proxy verifies the preview token (HMAC + exp) before routing, so a forged/stale cookie
+ * no longer funnels clean URLs into /preview. But a leftover cookie can still surface on a direct
+ * /preview/… visit; the preview page detects the missing/invalid token and redirects here to clear
+ * it — a Server Component cannot clear an HttpOnly cookie, only a route handler can. Once the cookie
+ * is gone, the redirected clean URL routes normally. Also usable as an explicit "exit preview"
+ * action for editors.
  *
  * Query params: `locale` and `slug` are control params describing where to return. The target is
  * validated with isSafeDraftRedirectPath to block open-redirect/path-traversal; anything unsafe

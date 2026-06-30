@@ -8,6 +8,7 @@
  *  4. Falls through to next-intl for locale-detection redirects
  */
 import { NextRequest, NextResponse } from 'next/server'
+import { createDraftToken, signDraftPayload } from '@core/draft-token'
 
 // ─── Mock: next-intl/middleware ───────────────────────────────────────────────
 // createMiddleware is called at proxy module-load time and returns intlMiddleware.
@@ -18,11 +19,20 @@ jest.mock('next-intl/middleware', () => {
 })
 
 // ─── Mock: draft-mode ────────────────────────────────────────────────────────
-jest.mock('@/lib/draft-mode', () => ({
-  PREVIEW_TOKEN_COOKIE: 'preview_token',
-  PREVIEW_TOKEN_INTERNAL_PARAM: '__pt',
-  DRAFT_COOKIE_MAX_AGE_SEC: 86400,
-}))
+// proxy.ts now verifies the full HMAC signature via isPreviewTokenValid (Node runtime).
+// Back the mock with the real verifyDraftToken so the proxy exercises genuine signature
+// checking; tokens below are minted with the same secret.
+const mockDraftSecret = 'proxy-test-secret'
+jest.mock('@/lib/draft-mode', () => {
+  const { verifyDraftToken } = require('@core/draft-token')
+  return {
+    PREVIEW_TOKEN_COOKIE: 'preview_token',
+    PREVIEW_TOKEN_INTERNAL_PARAM: '__pt',
+    DRAFT_COOKIE_MAX_AGE_SEC: 86400,
+    isPreviewTokenValid: (token: string | null | undefined) =>
+      !!token && verifyDraftToken(token, mockDraftSecret),
+  }
+})
 
 // ─── Mock: logger-config ─────────────────────────────────────────────────────
 jest.mock('@core/logger-config', () => ({
@@ -39,11 +49,13 @@ const DEFAULT_VARIANT = '~commercetools-set'
 const ALT_VARIANT = '~commercetools-algolia-set'
 const BASE = 'http://localhost'
 
-// Preview tokens used across preview tests. Computed once at module load time;
-// ACTIVE has a 1-hour future exp so isDraftTokenActiveByExp returns true.
-// EXPIRED has a past exp so isDraftTokenActiveByExp returns false.
-const ACTIVE_PREVIEW_TOKEN = `${Math.floor(Date.now() / 1000) + 3600}.fakesig`
-const EXPIRED_PREVIEW_TOKEN = `${Math.floor(Date.now() / 1000) - 1}.fakesig`
+// Preview tokens used across preview tests, minted with the real signer so they pass
+// isPreviewTokenValid (HMAC + exp). ACTIVE/FRESH are future-dated and validly signed.
+// EXPIRED is validly signed but past-dated, so it fails the exp check.
+const ACTIVE_PREVIEW_TOKEN = createDraftToken(mockDraftSecret, 3600)
+const FRESH_URL_TOKEN = createDraftToken(mockDraftSecret, 7200)
+const expiredExp = String(Math.floor(Date.now() / 1000) - 1)
+const EXPIRED_PREVIEW_TOKEN = `${expiredExp}.${signDraftPayload(expiredExp, mockDraftSecret)}`
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -216,7 +228,7 @@ describe('preview path routing — default locale', () => {
     expect(rewritten.searchParams.get('__pt')).toBe('signed-abc')
   })
 
-  it('establishes a draft session cookie from a valid (exp-active) URL token', () => {
+  it('establishes a draft session cookie from a valid signed URL token', () => {
     const res = proxy(makeRequest(`/preview/slug?__pt=${ACTIVE_PREVIEW_TOKEN}`))
     expect(res.cookies.get('preview_token')?.value).toBe(ACTIVE_PREVIEW_TOKEN)
   })
@@ -229,6 +241,15 @@ describe('preview path routing — default locale', () => {
     expect(res.cookies.get('preview_token')).toBeUndefined()
   })
 
+  it('does NOT establish a session from a forged token (valid exp, bad signature)', () => {
+    // The reviewer's case: a well-formed token with a future exp but an invalid HMAC.
+    // Full signature verification in the proxy rejects it, so no cookie is minted and
+    // the forged link cannot establish preview state.
+    const forged = `${Math.floor(Date.now() / 1000) + 3600}.notavalidsignature`
+    const res = proxy(makeRequest(`/preview/slug?__pt=${forged}`))
+    expect(res.cookies.get('preview_token')).toBeUndefined()
+  })
+
   it('does NOT establish a session from an expired URL token', () => {
     const res = proxy(
       makeRequest(`/preview/slug?__pt=${EXPIRED_PREVIEW_TOKEN}`)
@@ -237,7 +258,7 @@ describe('preview path routing — default locale', () => {
   })
 
   it('injects __pt from the preview_token cookie (HTTPS production path)', () => {
-    // Token must pass isDraftTokenActiveByExp: "${exp}.${sig}" format with future exp.
+    // Token must pass isPreviewTokenValid: a validly signed "${exp}.${sig}" with future exp.
     const res = proxy(
       makeRequest('/preview/slug', {
         cookie: `preview_token=${ACTIVE_PREVIEW_TOKEN}`,
@@ -279,7 +300,7 @@ describe('preview path routing — explicit locale', () => {
 // When the user holds an active preview_token cookie and navigates to a clean
 // /locale/page URL (not explicitly a /preview/ path), the proxy injects /preview/
 // so they remain in draft mode during in-app navigation.
-// Token must pass isDraftTokenActiveByExp: format "${exp}.${sig}" with future exp.
+// Token must pass isPreviewTokenValid: a validly signed "${exp}.${sig}" with future exp.
 
 describe('cookie-driven preview — clean /locale/... path (isDraftActive=true)', () => {
   it('rewrites /en/about-us to /<variant>/en/preview/about-us when draft cookie is active', () => {
@@ -320,7 +341,9 @@ describe('cookie-driven preview — clean /locale/... path (isDraftActive=true)'
     expect(rewritePath(res)).toBe(`/${DEFAULT_VARIANT}/en/about-us`)
   })
 
-  it('does NOT route to preview for forged far-future exp tokens (self-DoS protection)', () => {
+  it('does NOT route to preview for forged far-future tokens (invalid signature)', () => {
+    // A far-future exp cannot smuggle a token past verification: the HMAC is invalid,
+    // so isPreviewTokenValid rejects it and the request routes normally (no preview funnel).
     const farFutureToken = '99999999999.fakedsig'
     const res = proxy(
       makeRequest('/en/about-us', { cookie: `preview_token=${farFutureToken}` })
@@ -340,15 +363,17 @@ describe('cookie-driven preview — clean /locale/... path (isDraftActive=true)'
   })
 
   it('prefers URL param over an expired session cookie (editor opens fresh CMS link)', () => {
-    // Fix 1 regression guard: expired cookie must not shadow a fresh ?__pt= link.
+    // Fix 1 regression guard: expired cookie must not shadow a fresh, valid ?__pt= link.
     const res = proxy(
-      makeRequest('/preview/slug?__pt=fresh-url-token', {
+      makeRequest(`/preview/slug?__pt=${FRESH_URL_TOKEN}`, {
         cookie: `preview_token=${EXPIRED_PREVIEW_TOKEN}`,
       })
     )
     const raw = res.headers.get('x-middleware-rewrite') ?? ''
     const rewritten = new URL(raw)
-    expect(rewritten.searchParams.get('__pt')).toBe('fresh-url-token')
+    expect(rewritten.searchParams.get('__pt')).toBe(FRESH_URL_TOKEN)
+    // The fresh URL token also (re)establishes the session cookie.
+    expect(res.cookies.get('preview_token')?.value).toBe(FRESH_URL_TOKEN)
   })
 })
 
