@@ -22,6 +22,8 @@ export interface CarouselProps {
   /** Stable ID for aria-controls; avoids hydration mismatch when multiple carousels exist */
   id?: string
   navigation?: boolean
+  /** Keep navigation arrows visible on touch devices for this carousel instance */
+  showNavigationOnTouch?: boolean
   /** Show scrollbar pagination */
   scrollbar?: boolean
   gridConfig?: Partial<CarouselColumnsConfig> | number
@@ -41,6 +43,7 @@ export interface CarouselNavigationProps {
   onSlideToPrev: () => void
   onSlideToNext: () => void
   carouselId: string
+  showOnTouch?: boolean
   prevIcon?: React.ReactNode
   nextIcon?: React.ReactNode
 }

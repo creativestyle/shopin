@@ -6,10 +6,12 @@ export async function TeaserProductCarouselBlock({
   teaser,
   carouselId,
   imagePreload,
+  showNavigationOnTouch,
 }: {
   teaser: ProductCarouselTeaser
   carouselId?: string
   imagePreload?: boolean
+  showNavigationOnTouch?: boolean
 }) {
   const [locale, t] = await Promise.all([
     getLocale(),
@@ -40,6 +42,7 @@ export async function TeaserProductCarouselBlock({
         locale={locale}
         imagePreload={imagePreload}
         carouselId={carouselId}
+        showNavigationOnTouch={showNavigationOnTouch}
       />
     </div>
   )

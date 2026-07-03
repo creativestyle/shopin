@@ -13,11 +13,13 @@ export function ProductCarouselSlider({
   locale,
   imagePreload,
   carouselId,
+  showNavigationOnTouch,
 }: {
   products: ProductCardResponse[]
   locale: string
   imagePreload?: boolean
   carouselId?: string
+  showNavigationOnTouch?: boolean
 }) {
   if (!products?.length) {
     return null
@@ -28,6 +30,7 @@ export function ProductCarouselSlider({
       id={carouselId}
       gridConfig={CONTENT_CAROUSEL_GRID_CONFIG}
       className='gap-4'
+      showNavigationOnTouch={showNavigationOnTouch}
     >
       {products.map((product, index) => (
         <CarouselSlide key={product.id}>

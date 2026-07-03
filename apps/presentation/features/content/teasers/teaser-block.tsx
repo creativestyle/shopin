@@ -19,7 +19,8 @@ import { TeaserVideoBlock } from './teaser-video-block'
 function renderTeaser(
   teaser: TeaserResponse,
   index?: number,
-  imagePreload?: boolean
+  imagePreload?: boolean,
+  isHomepage?: boolean
 ): ReactNode {
   if (isTeaserOfType(teaser, 'accordion')) {
     return (
@@ -68,6 +69,7 @@ function renderTeaser(
           index !== undefined ? `product-carousel-${index}` : undefined
         }
         imagePreload={imagePreload}
+        showNavigationOnTouch={isHomepage}
       />
     )
   }
@@ -131,10 +133,12 @@ export function TeaserBlock({
   teaser,
   index = 0,
   imagePreload = false,
+  isHomepage = false,
 }: {
   teaser: TeaserResponse
   index?: number
   imagePreload?: boolean
+  isHomepage?: boolean
 }) {
-  return renderTeaser(teaser, index, imagePreload)
+  return renderTeaser(teaser, index, imagePreload, isHomepage)
 }

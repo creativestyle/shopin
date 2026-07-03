@@ -15,6 +15,7 @@ export const Carousel = ({
   children,
   id: idProp,
   navigation = true,
+  showNavigationOnTouch = false,
   scrollbar = true,
   gridConfig,
   className,
@@ -140,6 +141,7 @@ export const Carousel = ({
             onSlideToPrev={slideToPrev}
             onSlideToNext={slideToNext}
             carouselId={carouselId}
+            showOnTouch={showNavigationOnTouch}
           />
         )}
 

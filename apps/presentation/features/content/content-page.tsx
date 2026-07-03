@@ -98,6 +98,7 @@ export async function ContentPage({ slug }: ContentPageProps) {
               teaser={teaser}
               index={i}
               imagePreload={i === 0}
+              isHomepage={isHomepage}
             />
           </StandardContainer>
         )
