@@ -7,6 +7,10 @@ import type { LineItemResponse } from '@core/contracts/cart/cart'
 
 const DEFAULT_DEBOUNCE_MS = 300
 
+function clampQuantity(value: number, max?: number): number {
+  return max !== undefined ? Math.min(value, max) : value
+}
+
 interface UseCartItemQuantityOptions {
   item: LineItemResponse
   debounceMs?: number
@@ -19,7 +23,10 @@ export function useCartItemQuantity({
   const { handleUpdate, isPending: isUpdatingCart } = useUpdateCartItem()
   const [isUpdating, setIsUpdating] = useState(false)
   const [optimisticQuantity, setOptimisticQuantity] = useState(item.quantity)
-  const max = item.maxQuantity
+  const max =
+    item.maxQuantity != null
+      ? Math.max(item.maxQuantity, item.quantity)
+      : undefined
 
   const stateRef = useRef({
     pendingDelta: 0,
@@ -59,8 +66,7 @@ export function useCartItemQuantity({
     if (newQuantity < 1) {
       return
     }
-    const clampedQuantity =
-      max !== undefined ? Math.min(newQuantity, max) : newQuantity
+    const clampedQuantity = clampQuantity(newQuantity, max)
     stateRef.current.expectedServerQuantity = clampedQuantity
     setIsUpdating(true)
     const result = await handleUpdate({
@@ -113,8 +119,7 @@ export function useCartItemQuantity({
     stateRef.current.pendingDelta += delta
     setOptimisticQuantity((prev) => {
       const newValue = prev + delta
-      const clampedValue =
-        max !== undefined ? Math.min(newValue, max) : newValue
+      const clampedValue = clampQuantity(newValue, max)
       stateRef.current.targetQuantity = clampedValue
       return clampedValue
     })
@@ -126,7 +131,7 @@ export function useCartItemQuantity({
   const handleDecrease = () => updateQuantityOptimistically(-1)
 
   const handleDirectInputChange = (newValue: number) => {
-    const clampedValue = max !== undefined ? Math.min(newValue, max) : newValue
+    const clampedValue = clampQuantity(newValue, max)
     stateRef.current.pendingDelta = 0
     setOptimisticQuantity(clampedValue)
     stateRef.current.targetQuantity = clampedValue
@@ -135,6 +140,7 @@ export function useCartItemQuantity({
 
   return {
     optimisticQuantity,
+    max,
     isUpdating: isUpdating || isUpdatingCart,
     handleIncrease,
     handleDecrease,

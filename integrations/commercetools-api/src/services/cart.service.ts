@@ -18,6 +18,7 @@ import { UserClientService } from '../client/user-client.service'
 import { ServerClientService } from '../client/server-client.service'
 import { mapCartToResponse } from '../mappers/cart'
 import { mapShippingMethodsToResponse } from '../mappers/shipping-method'
+import { buildInClause } from '../helpers/build-in-clause'
 import { CartApiResponseSchema } from '../schemas/cart'
 import {
   CartUpdateActionSchema,
@@ -50,9 +51,10 @@ export class CartService {
 
   private async updateCartWithAction(
     cartId: string,
-    actionData: unknown
+    actionData: unknown,
+    skipEnrichment = false
   ): Promise<CartResponse> {
-    return this.updateCartWithActions(cartId, [actionData])
+    return this.updateCartWithActions(cartId, [actionData], skipEnrichment)
   }
 
   private async getCartVersion(cartId: string): Promise<number> {
@@ -69,11 +71,14 @@ export class CartService {
 
   private async processCartResponse(
     responseBody: unknown,
-    currentLanguage: string
+    currentLanguage: string,
+    skipEnrichment = false
   ): Promise<CartResponse> {
     const validatedCart = CartApiResponseSchema.parse(responseBody)
     const mappedCart = mapCartToResponse(validatedCart, currentLanguage)
-    const enrichedCart = await this.enrichWithInventory(mappedCart)
+    const enrichedCart = skipEnrichment
+      ? mappedCart
+      : await this.enrichWithInventory(mappedCart)
     return CartResponseSchema.parse(enrichedCart)
   }
 
@@ -129,7 +134,7 @@ export class CartService {
         .inventory()
         .get({
           queryArgs: {
-            where: this.buildInventoryWhereClause(skus),
+            where: buildInClause('sku', skus),
             limit: CartService.INVENTORY_PAGE_LIMIT,
             offset,
           },
@@ -171,25 +176,14 @@ export class CartService {
 
     return {
       ...item,
-      maxQuantity: Math.max(item.quantity, availableQuantity),
+      maxQuantity: availableQuantity,
     }
-  }
-
-  private buildInventoryWhereClause(skus: string[]): string {
-    const escapedSkus = skus
-      .map((sku) => `"${this.escapeWhereStringValue(sku)}"`)
-      .join(', ')
-
-    return `sku in (${escapedSkus})`
-  }
-
-  private escapeWhereStringValue(value: string): string {
-    return value.replace(/\\/g, '\\\\').replace(/"/g, '\\"')
   }
 
   async updateCartWithActions(
     cartId: string,
-    actionsData: unknown[]
+    actionsData: unknown[],
+    skipEnrichment = false
   ): Promise<CartResponse> {
     const currentLanguage = await this.getCurrentLanguage()
     const client = await this.getClient()
@@ -215,7 +209,11 @@ export class CartService {
       })
       .execute()
 
-    return this.processCartResponse(response.body, currentLanguage)
+    return this.processCartResponse(
+      response.body,
+      currentLanguage,
+      skipEnrichment
+    )
   }
 
   async getCart(cartId: string, expand?: string[]): Promise<CartResponse> {
@@ -253,7 +251,7 @@ export class CartService {
       })
       .execute()
 
-    return this.processCartResponse(response.body, currentLanguage)
+    return this.processCartResponse(response.body, currentLanguage, true)
   }
 
   async addToCart(
@@ -315,7 +313,7 @@ export class CartService {
       address,
     }
 
-    return this.updateCartWithAction(cartId, actionData)
+    return this.updateCartWithAction(cartId, actionData, true)
   }
 
   async setShippingAddress(
@@ -329,7 +327,7 @@ export class CartService {
 
     try {
       // Try to set the shipping address first
-      return await this.updateCartWithAction(cartId, actionData)
+      return await this.updateCartWithAction(cartId, actionData, true)
     } catch (error) {
       // Check if error is about shipping method not having a rate for the zone
       if (this.isShippingMethodZoneError(error)) {
@@ -343,7 +341,7 @@ export class CartService {
           },
         ]
 
-        return this.updateCartWithActions(cartId, actions)
+        return this.updateCartWithActions(cartId, actions, true)
       }
 
       // Re-throw if it's not a shipping method zone error or if no shipping method exists
@@ -394,7 +392,7 @@ export class CartService {
       },
     }
 
-    return this.updateCartWithAction(cartId, actionData)
+    return this.updateCartWithAction(cartId, actionData, true)
   }
 
   /**
@@ -423,7 +421,8 @@ export class CartService {
       if (response.body.results && response.body.results.length > 0) {
         return this.processCartResponse(
           response.body.results[0],
-          currentLanguage
+          currentLanguage,
+          true
         )
       }
 

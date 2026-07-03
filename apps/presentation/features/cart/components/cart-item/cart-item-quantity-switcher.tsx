@@ -17,6 +17,7 @@ export function CartItemQuantitySwitcher({
   const t = useTranslations('cart')
   const {
     optimisticQuantity,
+    max,
     handleIncrease,
     handleDecrease,
     handleDirectInputChange,
@@ -28,7 +29,7 @@ export function CartItemQuantitySwitcher({
       onDecrease={handleDecrease}
       onIncrease={handleIncrease}
       onChange={handleDirectInputChange}
-      max={item.maxQuantity}
+      max={max}
       ariaLabel={t('item.quantity')}
       className={className}
     />
