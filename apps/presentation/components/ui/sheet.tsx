@@ -77,12 +77,22 @@ function SheetContent({
   showCloseButton?: boolean
 }) {
   const t = useTranslations('common')
+  const triggerRef = React.useRef<HTMLElement | null>(null)
 
   return (
     <SheetPortal>
       <SheetOverlay />
       <SheetPrimitive.Content
         data-slot='sheet-content'
+        onOpenAutoFocus={() => {
+          triggerRef.current = document.activeElement as HTMLElement | null
+        }}
+        onCloseAutoFocus={(event) => {
+          if (triggerRef.current && document.contains(triggerRef.current)) {
+            event.preventDefault()
+            triggerRef.current.focus()
+          }
+        }}
         className={cn(
           'group fixed z-(--z-modal) flex flex-col bg-white shadow-lg transition ease-in-out data-[state=closed]:animate-out data-[state=closed]:duration-300 data-[state=open]:animate-in data-[state=open]:duration-500',
           side === 'right' &&
