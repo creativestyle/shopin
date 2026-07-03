@@ -2,6 +2,7 @@
 
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
+import { productImageLoader } from '@/lib/product-image-loader'
 import { useTranslations } from 'next-intl'
 import CloseIcon from '@/public/icons/close.svg'
 import { Carousel, CarouselSlide } from '@/components/ui/carousel'
@@ -97,6 +98,7 @@ function GalleryDialogBody({
       >
         <div className='flex h-full max-h-screen w-full items-center justify-center p-4'>
           <Image
+            loader={productImageLoader(item.src)}
             src={item.src}
             alt={item.alt || ''}
             width={imageWidth}

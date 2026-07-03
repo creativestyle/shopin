@@ -136,7 +136,7 @@ export const Carousel = ({
         } as React.CSSProperties
       }
     >
-      <div className='relative row-start-1 [&:hover_button[type=button]]:opacity-100'>
+      <div className='relative row-start-1 focus-within:[&_button[type=button]]:opacity-100 [&:hover_button[type=button]]:opacity-100'>
         {/* Navigation arrows */}
         {navigation && needsNavigation && (
           <CarouselNavigation
