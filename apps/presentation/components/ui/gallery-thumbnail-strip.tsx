@@ -23,13 +23,8 @@ export function GalleryThumbnailStrip({
   onSelect,
 }: GalleryThumbnailStripProps) {
   const carouselRef = useRef<CarouselRef>(null)
-  const clickedRef = useRef(false)
 
   useEffect(() => {
-    if (clickedRef.current) {
-      clickedRef.current = false
-      return
-    }
     carouselRef.current?.scrollToSlide(selectedIndex)
   }, [selectedIndex])
 
@@ -58,10 +53,7 @@ export function GalleryThumbnailStrip({
                 <CarouselSlide key={idx}>
                   <button
                     type='button'
-                    onClick={() => {
-                      clickedRef.current = true
-                      onSelect(idx)
-                    }}
+                    onClick={() => onSelect(idx)}
                     className={cn(
                       'aspect-[50/65] w-full overflow-hidden border bg-white transition-all outline-none focus-visible:ring-1 focus-visible:ring-black/20 md:aspect-auto md:h-[65px]',
                       isSelected

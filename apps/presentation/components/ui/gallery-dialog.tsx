@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
 import { useTranslations } from 'next-intl'
 import CloseIcon from '@/public/icons/close.svg'
@@ -55,48 +55,41 @@ function GalleryDialogBody({
   imageHeight,
 }: GalleryDialogBodyProps) {
   const carouselRef = useRef<CarouselRef>(null)
-  const animationFrameRef = useRef<number | null>(null)
   const pendingIndexRef = useRef<number | null>(null)
   const [selectedIndex, setSelectedIndex] = useState(startIndex)
+  const [focusedIndex, setFocusedIndex] = useState(startIndex)
 
   const selectImage = (index: number) => {
     const nextIndex = clampGalleryIndex(index, images.length)
+    if (nextIndex === selectedIndex) {
+      return
+    }
     pendingIndexRef.current = nextIndex
     setSelectedIndex(nextIndex)
+    setFocusedIndex(nextIndex)
     carouselRef.current?.scrollToSlide(nextIndex)
   }
 
-  useEffect(() => {
-    if (startIndex < 0) {
-      return
-    }
-
-    if (animationFrameRef.current !== null) {
-      cancelAnimationFrame(animationFrameRef.current)
-    }
-
-    const attemptScroll = () => {
-      if (!carouselRef.current) {
-        animationFrameRef.current = requestAnimationFrame(attemptScroll)
+  const handleSlideChange = useCallback(
+    (currentIndex: number) => {
+      const newIndex = clampGalleryIndex(currentIndex - 1, images.length)
+      if (pendingIndexRef.current !== null) {
+        if (newIndex === pendingIndexRef.current) {
+          pendingIndexRef.current = null
+        }
         return
       }
+      setSelectedIndex(newIndex)
+    },
+    [images.length]
+  )
 
-      animationFrameRef.current = null
-      carouselRef.current.scrollToSlide(startIndex)
-    }
-
-    animationFrameRef.current = requestAnimationFrame(attemptScroll)
-
-    return () => {
-      if (animationFrameRef.current !== null) {
-        cancelAnimationFrame(animationFrameRef.current)
-        animationFrameRef.current = null
-      }
-    }
+  useEffect(() => {
+    carouselRef.current?.scrollToSlide(startIndex)
   }, [startIndex])
 
   const carouselSlides = images.map((item, idx) => {
-    const isSelectedImage = idx === selectedIndex
+    const isFocusedImage = idx === focusedIndex
     return (
       <CarouselSlide
         key={idx}
@@ -108,9 +101,9 @@ function GalleryDialogBody({
             alt={item.alt || ''}
             width={imageWidth}
             height={imageHeight}
-            preload={isSelectedImage}
-            loading={isSelectedImage ? 'eager' : 'lazy'}
-            fetchPriority={isSelectedImage ? 'high' : undefined}
+            preload={isFocusedImage}
+            loading={isFocusedImage ? 'eager' : 'lazy'}
+            fetchPriority={isFocusedImage ? 'high' : undefined}
             className='h-auto max-h-[calc(100vh-2rem)] w-auto max-w-full object-contain'
           />
         </div>
@@ -127,16 +120,7 @@ function GalleryDialogBody({
           navigation={images.length > 1}
           scrollbar={false}
           className='h-full w-full flex-1'
-          onSlideChange={(currentIndex) => {
-            const newIndex = clampGalleryIndex(currentIndex - 1, images.length)
-            if (pendingIndexRef.current !== null) {
-              if (newIndex === pendingIndexRef.current) {
-                pendingIndexRef.current = null
-              }
-              return
-            }
-            setSelectedIndex(newIndex)
-          }}
+          onSlideChange={handleSlideChange}
         >
           {carouselSlides}
         </Carousel>
@@ -185,7 +169,6 @@ export const GalleryDialog: React.FC<GalleryDialogProps> = ({
           <CloseIcon className='size-5' />
         </Button>
         <GalleryDialogBody
-          key={`${normalizedStartIndex}-${images.length}`}
           images={images}
           startIndex={normalizedStartIndex}
           imageWidth={imageWidth}
