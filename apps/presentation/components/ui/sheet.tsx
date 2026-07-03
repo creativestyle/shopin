@@ -7,6 +7,7 @@ import * as SheetPrimitive from '@radix-ui/react-dialog'
 import CloseIcon from '@/public/icons/close.svg'
 
 import { cn } from '@/lib/utils'
+import { useFocusRestore } from '@/hooks/use-focus-restore'
 
 function Sheet({ ...props }: React.ComponentProps<typeof SheetPrimitive.Root>) {
   return (
@@ -77,22 +78,15 @@ function SheetContent({
   showCloseButton?: boolean
 }) {
   const t = useTranslations('common')
-  const triggerRef = React.useRef<HTMLElement | null>(null)
+  const { onOpenAutoFocus, onCloseAutoFocus } = useFocusRestore()
 
   return (
     <SheetPortal>
       <SheetOverlay />
       <SheetPrimitive.Content
         data-slot='sheet-content'
-        onOpenAutoFocus={() => {
-          triggerRef.current = document.activeElement as HTMLElement | null
-        }}
-        onCloseAutoFocus={(event) => {
-          if (triggerRef.current && document.contains(triggerRef.current)) {
-            event.preventDefault()
-            triggerRef.current.focus()
-          }
-        }}
+        onOpenAutoFocus={onOpenAutoFocus}
+        onCloseAutoFocus={onCloseAutoFocus}
         className={cn(
           'group fixed z-(--z-modal) flex flex-col bg-white shadow-lg transition ease-in-out data-[state=closed]:animate-out data-[state=closed]:duration-300 data-[state=open]:animate-in data-[state=open]:duration-500',
           side === 'right' &&
