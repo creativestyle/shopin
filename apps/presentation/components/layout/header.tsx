@@ -3,19 +3,14 @@ import { NavigationDesktop } from '@/features/navigation/navigation-desktop'
 import { SearchBarWrapper } from './search-bar-wrapper'
 import { UserMenuWrapper } from './user-menu-wrapper'
 import { MobileAccountLink } from './mobile-account-link'
-import { getLocale, getTranslations } from 'next-intl/server'
+import { getTranslations } from 'next-intl/server'
 import { Logo } from '../ui/logo'
 import { HeaderSearchButton } from './header-search-button'
 import { HeaderCartButton } from './header-cart-button'
 import { StandardContainer } from '../ui/standard-container'
-import { rfcToUrlPrefix } from '@config/constants'
 
-export async function Header() {
-  const [t, locale] = await Promise.all([
-    getTranslations('userMenu'),
-    getLocale(),
-  ])
-  const homeHref = `/${rfcToUrlPrefix(locale)}`
+export async function Header({ isDraft = false }: { isDraft?: boolean } = {}) {
+  const t = await getTranslations('userMenu')
   return (
     <header className='relative shadow-card'>
       {/* Mobile Header */}
@@ -24,7 +19,7 @@ export async function Header() {
           <div className='flex h-full items-center justify-between px-4 py-2'>
             {/* Left side: Menu + Account */}
             <div className='flex items-center gap-2'>
-              <NavigationMobileMenu />
+              <NavigationMobileMenu isDraft={isDraft} />
               <MobileAccountLink
                 className='inline-flex items-center p-1 text-gray-900 hover:bg-gray-100 hover:text-primary'
                 aria-label={t('account')}
@@ -37,7 +32,7 @@ export async function Header() {
                 className='h-10 w-32 flex-shrink-0'
                 src='/logo.svg'
                 preload
-                href={homeHref}
+                href='/'
               />
             </div>
 
@@ -61,13 +56,13 @@ export async function Header() {
                 className='h-12 w-40 flex-shrink-0'
                 src='/logo.svg'
                 preload
-                href={homeHref}
+                href='/'
               />
             </div>
 
             {/* Navigation Menu */}
             <div className='flex h-full min-w-80 flex-1 items-center justify-start overflow-hidden'>
-              <NavigationDesktop />
+              <NavigationDesktop isDraft={isDraft} />
             </div>
 
             {/* Search Bar - Desktop */}

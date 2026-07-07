@@ -1,7 +1,7 @@
 'use client'
 
 import Image from 'next/image'
-import Link from 'next/link'
+import { Link } from '@/lib/navigation'
 import { productImageLoader } from '@/lib/product-image-loader'
 import type { LineItemResponse } from '@core/contracts/cart/cart'
 import { CartItemActions } from './cart-item-actions'

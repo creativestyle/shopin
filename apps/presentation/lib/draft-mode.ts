@@ -1,13 +1,28 @@
 /**
- * Draft mode: cookie + header for CMS preview.
+ * Draft mode: session-cookie + URL-token-based CMS preview.
  *
- * We set our own signed __prerender_bypass cookie (not only draftMode().enable()) because:
- * 1) Redirect responses can drop the cookie Next sets in enable(), so we set it on the response.
- * 2) We sign with NEXT_DRAFT_MODE_SECRET so the BFF can trust the same secret.
- * We only treat draft as on when this signed cookie is present and valid.
+ * Entry flow: /api/draft?secret=X&slug=Y&locale=Z validates the secret, generates a
+ * short-lived signed token, and redirects to /<locale>/preview/<slug>. The proxy then
+ * establishes a draft session cookie so in-app navigation continues in draft mode.
  *
- * Header x-next-draft-mode: we send a short-lived signed token (exp.signature), not the raw secret,
- * so the secret never travels and replay is limited to the token TTL.
+ * Token delivery:
+ * - HTTPS (production): HttpOnly SameSite=None;Secure cookie set by /api/draft. Works in
+ *   Contentful's cross-site iframe. The proxy reads the cookie and injects it as ?__pt=
+ *   in the internal rewrite URL. The token never appears in the public URL.
+ * - HTTP (local dev): URL param ?__pt= appended by /api/draft (SameSite=None;Secure is
+ *   unavailable without TLS). The preview page validates it. The proxy also establishes a
+ *   SameSite=Lax HttpOnly cookie on the first preview load so subsequent in-app navigation
+ *   stays in draft mode. The __pt param is stripped from the address bar by the preview
+ *   layout's client-side StripPreviewToken component after hydration; the session cookie
+ *   keeps the session alive for reloads.
+ *
+ * In-app draft navigation: the proxy checks for the preview_token cookie on every
+ * request and rewrites clean /en/… paths to the preview subtree when a valid session is
+ * active. Draft state therefore persists across Next.js router navigations, not just
+ * explicit /preview/ URL visits.
+ *
+ * Header x-next-draft-mode: a separate short-lived signed token (DRAFT_HEADER_TOKEN_MAX_AGE_SEC)
+ * is generated per BFF request so the raw secret never travels on the wire.
  */
 
 import {
@@ -17,12 +32,28 @@ import {
 } from '@core/draft-token'
 import {
   DRAFT_COOKIE_MAX_AGE_SEC,
-  DRAFT_COOKIE_NAME,
   DRAFT_HEADER_TOKEN_MAX_AGE_SEC,
   DRAFT_MODE_HEADER,
 } from '@config/constants'
 
-export { DRAFT_COOKIE_MAX_AGE_SEC, DRAFT_COOKIE_NAME, DRAFT_MODE_HEADER }
+export { DRAFT_COOKIE_MAX_AGE_SEC, DRAFT_MODE_HEADER }
+
+/**
+ * HttpOnly cookie carrying the signed preview token on HTTPS (production).
+ * On HTTPS, /api/draft sets this with SameSite=None;Secure so it is forwarded
+ * even inside Contentful's cross-site iframe. Not usable on plain HTTP.
+ */
+export const PREVIEW_TOKEN_COOKIE = 'preview_token'
+
+/**
+ * URL search param carrying the signed preview token on HTTP (local dev).
+ * On HTTP, SameSite=None;Secure is unavailable so the token travels via URL param.
+ * The proxy injects it into the internal rewrite URL (HTTPS: from cookie; HTTP: already
+ * present in the URL or injected from the session cookie). The preview page validates
+ * the token. The StripPreviewToken client component removes it from the address bar
+ * after hydration; the session cookie keeps the session alive for reloads.
+ */
+export const PREVIEW_TOKEN_INTERNAL_PARAM = '__pt'
 
 function getSecret(): string {
   return process.env.NEXT_DRAFT_MODE_SECRET ?? ''
@@ -33,33 +64,31 @@ export function isDraftSecretValid(secret: string | null | undefined): boolean {
   return timingSafeEqualSecrets(secret, getSecret())
 }
 
-/** Short-lived signed token for x-next-draft-mode header. Secret never sent; BFF verifies signature. */
-export function getDraftModeHeaderValue(): string {
-  return createDraftToken(getSecret(), DRAFT_HEADER_TOKEN_MAX_AGE_SEC)
-}
-
-/** Call from /api/draft only, after validating request secret. */
-export function createDraftCookieValue(): string {
+/** Generates a URL-safe preview token. Call from /api/draft after validating request secret. */
+export function createPreviewToken(): string {
   return createDraftToken(getSecret(), DRAFT_COOKIE_MAX_AGE_SEC)
 }
 
-export function isDraftCookieValid(value: string | undefined): boolean {
-  if (!value) {
+/**
+ * Returns true iff the preview token is validly signed, unexpired, and within the
+ * issued lifetime (DRAFT_COOKIE_MAX_AGE_SEC + slack). This is the proxy's verification
+ * gate before a preview session cookie is minted; the preview route uses it too as
+ * defense-in-depth.
+ */
+export function isPreviewTokenValid(token: string | null | undefined): boolean {
+  if (!token) {
     return false
   }
   const secret = getSecret()
   if (!secret) {
     return false
   }
-  return verifyDraftToken(value, secret)
+  return verifyDraftToken(token, secret, DRAFT_COOKIE_MAX_AGE_SEC)
 }
 
-/** Cookie store shape: object with get(name) returning { value?: string }. Use with Next.js cookies() or similar. */
-export function isDraftModeFromCookies(cookieStore: {
-  get(name: string): { value?: string } | undefined
-}): boolean {
-  const value = cookieStore.get(DRAFT_COOKIE_NAME)?.value
-  return isDraftCookieValid(value)
+/** Short-lived signed token for x-next-draft-mode header. Secret never sent; BFF verifies signature. */
+export function getDraftModeHeaderValue(): string {
+  return createDraftToken(getSecret(), DRAFT_HEADER_TOKEN_MAX_AGE_SEC)
 }
 
 /**
@@ -100,11 +129,4 @@ function safeDecodeUriComponent(s: string): string | null {
   } catch {
     return null
   }
-}
-
-/** Server-only: true iff the signed draft cookie is present and valid. */
-export async function isDraftModeEnabled(): Promise<boolean> {
-  const { cookies } = await import('next/headers')
-  const cookieStore = await cookies()
-  return isDraftModeFromCookies(cookieStore)
 }

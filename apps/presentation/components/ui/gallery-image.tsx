@@ -11,6 +11,7 @@ export interface GalleryImageProps {
   onZoom?: () => void
   className?: string
   loading?: 'lazy' | 'eager'
+  preload?: boolean
   sizes?: string
 }
 
@@ -20,6 +21,7 @@ export const GalleryImage: React.FC<GalleryImageProps> = ({
   onZoom,
   className,
   loading,
+  preload,
   sizes,
 }) => {
   const isInteractive = Boolean(onZoom)
@@ -54,6 +56,8 @@ export const GalleryImage: React.FC<GalleryImageProps> = ({
         sizes={sizes}
         className='object-contain'
         loading={loading}
+        preload={preload}
+        fetchPriority={preload ? 'high' : undefined}
       />
     </div>
   )

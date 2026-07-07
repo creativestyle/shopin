@@ -1,5 +1,5 @@
 import { FC } from 'react'
-import Link from 'next/link'
+import { Link } from '@/lib/navigation'
 
 import { useLocale, useTranslations } from 'next-intl'
 import { FormattedPrice } from '@/components/ui/price/formatted-price'

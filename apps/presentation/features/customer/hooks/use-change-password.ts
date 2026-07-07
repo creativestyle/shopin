@@ -4,7 +4,7 @@ import { addToast } from '@/components/ui/toast'
 import { useBffClientMutation } from '@/lib/bff/utils/mutations'
 import { useCustomerService } from './use-customer-service'
 import { useTranslations } from 'next-intl'
-import { useRouter } from 'next/navigation'
+import { useRouter } from '@/lib/navigation'
 
 export function useChangePassword() {
   const { customerService } = useCustomerService()

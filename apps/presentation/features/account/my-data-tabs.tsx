@@ -1,7 +1,7 @@
 'use client'
 
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
-import Link from 'next/link'
+import { Link } from '@/lib/navigation'
 import { FC, PropsWithChildren, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { useSelectedLayoutSegment } from 'next/navigation'

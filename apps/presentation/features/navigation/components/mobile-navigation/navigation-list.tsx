@@ -1,7 +1,7 @@
 'use client'
 
 import * as React from 'react'
-import Link from 'next/link'
+import { Link } from '@/lib/navigation'
 import { cn } from '@/lib/utils'
 import type { LinkResponse, SubcategoryLink } from '@core/contracts/core/link'
 import { NavigationFooter } from './navigation-footer'

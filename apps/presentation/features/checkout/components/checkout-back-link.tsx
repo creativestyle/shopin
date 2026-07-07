@@ -1,6 +1,6 @@
 'use client'
 
-import Link from 'next/link'
+import { Link } from '@/lib/navigation'
 import ChevronLeftIcon from '@/public/icons/chevron-left.svg'
 
 interface CheckoutBackLinkProps {

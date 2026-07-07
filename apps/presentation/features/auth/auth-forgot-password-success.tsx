@@ -2,7 +2,7 @@
 
 import { FC } from 'react'
 import { useTranslations } from 'next-intl'
-import Link from 'next/link'
+import { Link } from '@/lib/navigation'
 import { Button } from '@/components/ui/button'
 import { Toast } from '@/components/ui/toast'
 

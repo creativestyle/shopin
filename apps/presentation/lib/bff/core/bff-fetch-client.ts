@@ -1,20 +1,28 @@
 'use client'
 
+import { useMemo } from 'react'
 import { useLocale } from 'next-intl'
+import { usePathname } from 'next/navigation'
 import { generateCorrelationId } from '@core/logger-config'
-import {
-  CORRELATION_ID_COOKIE,
-  CORRELATION_ID_COOKIE_CONFIG,
-} from '@config/constants'
 import { bffFetch as baseBffFetch } from './bff-fetch'
 import { getBffClientUrl } from './bff-utils-client'
+import {
+  getVariantSegmentFromPathname,
+  variantHeadersFromSegment,
+  resolveVariant,
+  variantHeaders,
+} from '@/lib/variant/variant-key'
+import { DIMENSION_COOKIE_REGEXES } from '@/lib/variant/active-variant-client'
 
 const CLIENT_CORRELATION_ID_KEY = 'correlationId'
 
 /**
- * Gets or creates a correlation ID for the current tab. Stored in sessionStorage
- * and in a cookie so it survives refresh and is sent to Next on full page load
- * (so server-side BFF calls use the same ID).
+ * Gets or creates a correlation ID for the current browser tab (sessionStorage).
+ *
+ * This is the ONLY place where a user-scoped correlation ID enters the system.
+ * Server-side BFF calls (ISR renders, layout data fetching) intentionally do NOT
+ * forward a correlation ID — those are either cached responses or shared config
+ * fetches, not per-user operations. The BFF generates its own ID for those.
  */
 function getOrCreateClientCorrelationId(): string {
   if (typeof window === 'undefined') {
@@ -24,13 +32,42 @@ function getOrCreateClientCorrelationId(): string {
   if (!id) {
     id = generateCorrelationId()
     sessionStorage.setItem(CLIENT_CORRELATION_ID_KEY, id)
-    const { MAX_AGE_DAYS, SAME_SITE, PATH } = CORRELATION_ID_COOKIE_CONFIG
-    const maxAgeSec = 60 * 60 * 24 * MAX_AGE_DAYS
-    const secure =
-      typeof location !== 'undefined' && location.protocol === 'https:'
-    document.cookie = `${CORRELATION_ID_COOKIE}=${id}; path=${PATH}; max-age=${maxAgeSec}; SameSite=${SAME_SITE}${secure ? '; Secure' : ''}`
   }
   return id
+}
+
+/**
+ * Returns the variant headers for all dimensions so the BFF serves the correct variant.
+ *
+ * Two paths:
+ * 1. Alt-variant URL (pathname carries a `~` segment): decode all dimensions from the URL
+ *    segment directly. In practice this is unreachable from normal browser navigation because
+ *    the proxy uses NextResponse.rewrite() (not redirect), so usePathname() always returns the
+ *    clean browser URL — but the path is kept for completeness and direct SSR tool access.
+ * 2. Clean URL: read each dimension's cookie via resolveVariant so the set of cookies stays
+ *    in sync with the registry. This is the path taken for all real browser navigations.
+ */
+function getActiveVariantHeaders(
+  pathname: string
+): Record<string, string> | undefined {
+  const variantSegment = getVariantSegmentFromPathname(pathname)
+  if (variantSegment) {
+    return variantHeadersFromSegment(variantSegment)
+  }
+  if (typeof document === 'undefined') {
+    return undefined
+  }
+  // Build a cookie-reader and resolve all variant dimensions at once.
+  // resolveVariant reads dim.cookie for each dimension and validates against dim.allowed,
+  // so adding a new dimension to the registry is automatically covered here.
+  const cookieString = document.cookie
+  return variantHeaders(
+    resolveVariant(
+      // /(?!)/ is a no-match fallback; see active-variant-client.ts for rationale.
+      (name) =>
+        cookieString.match(DIMENSION_COOKIE_REGEXES.get(name) ?? /(?!)/)?.[1]
+    )
+  )
 }
 
 /**
@@ -39,22 +76,33 @@ function getOrCreateClientCorrelationId(): string {
  * Provides a fetch wrapper that:
  * - Uses the external BFF URL (NEXT_PUBLIC_BFF_EXTERNAL_URL)
  * - Automatically gets the current locale from next-intl client hook
- * - Sends a stable correlation ID (sessionStorage) so BFF logs stay consistent across refresh
- * - Handles client-side cookie access
+ * - Sends a stable per-tab correlation ID so BFF logs can be traced per user session
+ * - Forwards all active variant headers (X-Data-Source etc.) derived from the URL variant
+ *   segment (alt-variant) or the preference cookies (default variant / clean URL)
  */
 export function useBffFetchClient() {
   const locale = useLocale()
   const baseUrl = getBffClientUrl()
+  const pathname = usePathname()
+
+  const activeVariantHeaders = useMemo(
+    () => getActiveVariantHeaders(pathname),
+    [pathname]
+  )
 
   return {
-    /**
-     * Fetch wrapper that automatically includes the current locale and correlation ID
-     * @param path - API path (e.g., 'navigation/getNavigation')
-     * @param options - Fetch options (headers, body, etc.)
-     */
     fetch: async (path: string, options?: RequestInit) => {
       const correlationId = getOrCreateClientCorrelationId()
-      return baseBffFetch(baseUrl, path, options, locale, correlationId)
+      return baseBffFetch(
+        baseUrl,
+        path,
+        {
+          ...options,
+          ...(activeVariantHeaders && { variantHeaders: activeVariantHeaders }),
+        },
+        locale,
+        correlationId
+      )
     },
   }
 }
