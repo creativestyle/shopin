@@ -1,4 +1,5 @@
 import { initRouteContext } from '@/lib/request-context/route-context'
+import { ensureCheckoutStep } from '@/features/checkout/checkout-server-guard'
 import { CheckoutRouteGuard } from '@/features/checkout/checkout-route-guard'
 import { CheckoutStepsFrame } from '@/features/checkout/checkout-steps-frame'
 import { BillingActive } from '@/features/checkout/checkout-billing-active'
@@ -10,6 +11,8 @@ export default async function Page({
 }) {
   const { variant, locale } = await params
   initRouteContext({ variant, locale })
+
+  await ensureCheckoutStep('billing')
 
   return (
     <CheckoutRouteGuard currentStepId='billing'>
