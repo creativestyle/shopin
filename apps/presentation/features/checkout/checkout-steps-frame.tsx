@@ -34,12 +34,17 @@ export function CheckoutStepsFrame({
     <StandardContainer className='w-full py-6'>
       {pageTitle && <h1 className='sr-only'>{pageTitle}</h1>}
       <div
+        role='main'
         className={cn(
           'ui-checkout-max-width-container grid w-full grid-cols-1 gap-8 lg:grid-cols-[5fr_3fr]',
           className
         )}
       >
-        <div className='flex flex-col gap-6'>
+        <div
+          className='flex flex-col gap-6'
+          role='list'
+          aria-label={pageTitle}
+        >
           {previousSteps.map((step) => (
             <CheckoutStepPrevious
               key={step.id}
