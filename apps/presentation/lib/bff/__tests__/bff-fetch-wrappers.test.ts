@@ -3,6 +3,11 @@ import { createBffFetchServer } from '../core/bff-fetch-server'
 import * as BffFetchModule from '../core/bff-fetch'
 import { logger } from '../../logger'
 
+jest.mock('react', () => ({
+  ...jest.requireActual('react'),
+  useMemo: (fn: () => unknown) => fn(),
+}))
+
 jest.mock('../core/bff-fetch', () => ({
   bffFetch: jest.fn(() => Promise.resolve({ ok: true })),
 }))
@@ -13,6 +18,10 @@ jest.mock('../../logger', () => ({
 
 jest.mock('next-intl', () => ({
   useLocale: () => 'en-US',
+}))
+
+jest.mock('next/navigation', () => ({
+  usePathname: () => '/en-US/nav/path',
 }))
 
 jest.mock('../core/bff-utils-client', () => ({
@@ -40,15 +49,14 @@ describe('bff fetch wrappers', () => {
     )
   })
 
-  it('server wrapper calls bffFetch with server url, server locale, and correlation ID', async () => {
+  it('server wrapper calls bffFetch with server url and server locale', async () => {
     const server = await createBffFetchServer()
     await server.fetch('nav/path', { method: 'POST' })
     expect(BffFetchModule.bffFetch).toHaveBeenCalledWith(
       'http://server-bff',
       'nav/path',
       expect.objectContaining({ method: 'POST' }),
-      'de-DE',
-      expect.any(String)
+      'de-DE'
     )
   })
 
@@ -65,7 +73,6 @@ describe('bff fetch wrappers', () => {
     expect(logger.error).toHaveBeenCalledWith(
       {
         path: 'navigation/getNavigation',
-        correlationId: expect.any(String),
         error: 'Connection refused',
       },
       'BFF request failed'

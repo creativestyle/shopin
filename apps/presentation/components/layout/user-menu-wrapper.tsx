@@ -3,7 +3,7 @@
 import { cn } from '../../lib/utils'
 import { Button } from '../ui/button'
 import { useTranslations } from 'next-intl'
-import Link from 'next/link'
+import { Link } from '@/lib/navigation'
 import AccountIcon from '../../public/icons/account.svg'
 import HeartIcon from '../../public/icons/heart.svg'
 import CartIcon from '../../public/icons/cart.svg'

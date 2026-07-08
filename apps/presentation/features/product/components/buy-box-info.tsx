@@ -45,7 +45,7 @@ export const BuyBoxInfo: React.FC<BuyBoxInfoProps> = ({
             className='flex size-6 shrink-0 items-center justify-center text-gray-950'
             aria-hidden
           >
-            <ReturnsIcon />
+            <ReturnsIcon className='size-full' />
           </span>
           <span>{returnsPolicyLabel}</span>
         </div>
@@ -54,7 +54,7 @@ export const BuyBoxInfo: React.FC<BuyBoxInfoProps> = ({
             className='flex size-6 shrink-0 items-center justify-center text-gray-950'
             aria-hidden
           >
-            <DeliveryTruckIcon />
+            <DeliveryTruckIcon className='size-full' />
           </span>
           <span>{freeReturnLabel}</span>
         </div>
@@ -63,7 +63,7 @@ export const BuyBoxInfo: React.FC<BuyBoxInfoProps> = ({
             className='flex size-6 shrink-0 items-center justify-center text-gray-950'
             aria-hidden
           >
-            <CoinsIcon />
+            <CoinsIcon className='size-full' />
           </span>
           <span>{loyaltyBonusLabel}</span>
         </div>

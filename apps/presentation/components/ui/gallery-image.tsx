@@ -3,6 +3,7 @@
 import React from 'react'
 import Image from 'next/image'
 import { cn } from '@/lib/utils'
+import { productImageLoader } from '@/lib/product-image-loader'
 
 export interface GalleryImageProps {
   src: string
@@ -10,6 +11,8 @@ export interface GalleryImageProps {
   onZoom?: () => void
   className?: string
   loading?: 'lazy' | 'eager'
+  preload?: boolean
+  sizes?: string
 }
 
 export const GalleryImage: React.FC<GalleryImageProps> = ({
@@ -18,6 +21,8 @@ export const GalleryImage: React.FC<GalleryImageProps> = ({
   onZoom,
   className,
   loading,
+  preload,
+  sizes,
 }) => {
   const isInteractive = Boolean(onZoom)
 
@@ -44,11 +49,15 @@ export const GalleryImage: React.FC<GalleryImageProps> = ({
       })}
     >
       <Image
+        loader={productImageLoader(src)}
         src={src}
         alt={alt}
         fill
+        sizes={sizes}
         className='object-contain'
         loading={loading}
+        preload={preload}
+        fetchPriority={preload ? 'high' : undefined}
       />
     </div>
   )

@@ -1,5 +1,6 @@
 import { type FC } from 'react'
 import Image from 'next/image'
+import { productImageLoader } from '@/lib/product-image-loader'
 import { useTranslations } from 'next-intl'
 import type { OrderResponse } from '@core/contracts/order/order'
 import { FormattedPrice } from '@/components/ui/price/formatted-price'
@@ -22,6 +23,7 @@ export const OrderDetailLineItem: FC<OrderDetailLineItemProps> = ({
       {item.imageUrl ? (
         <div className='relative h-28 w-28 shrink-0 overflow-hidden rounded border border-gray-200 bg-gray-50'>
           <Image
+            loader={productImageLoader(item.imageUrl)}
             src={item.imageUrl}
             alt={item.name}
             fill

@@ -10,7 +10,7 @@ import { I18nService } from './i18n-service'
  *                 Pass this when calling from i18n/request.ts to avoid infinite loops.
  */
 export async function getServerBffClient(locale?: string) {
-  const bffFetch = await createBffFetchServer(locale)
+  const bffFetch = await createBffFetchServer({ locale })
 
   return {
     i18nService: new I18nService(bffFetch),

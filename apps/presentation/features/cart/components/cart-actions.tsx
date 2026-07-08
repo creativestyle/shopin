@@ -1,7 +1,7 @@
 'use client'
 
 import { Button } from '@/components/ui/button'
-import Link from 'next/link'
+import { Link } from '@/lib/navigation'
 import { useTranslations } from 'next-intl'
 import { cn } from '@/lib/utils'
 

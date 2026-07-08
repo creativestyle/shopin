@@ -1,6 +1,6 @@
 'use client'
 
-import Link from 'next/link'
+import { Link } from '@/lib/navigation'
 import CheckmarkIcon from '@/public/icons/checkmark.svg'
 import PencilIcon from '@/public/icons/pencil.svg'
 import { useTranslations } from 'next-intl'

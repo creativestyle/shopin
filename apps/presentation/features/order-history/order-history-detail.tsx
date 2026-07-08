@@ -1,7 +1,7 @@
 'use client'
 
 import { type FC, type MouseEvent } from 'react'
-import Link from 'next/link'
+import { Link } from '@/lib/navigation'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useLocale, useTranslations } from 'next-intl'
 import { useOrderDetail } from './hooks/use-order-detail'

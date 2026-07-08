@@ -1,6 +1,6 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
+import { useRouter } from '@/lib/navigation'
 import { getNextStep, type CheckoutStepId } from './checkout-steps-config'
 
 export function useCheckoutNavigation(currentStepId: CheckoutStepId) {

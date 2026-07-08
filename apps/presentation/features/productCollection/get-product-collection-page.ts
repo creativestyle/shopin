@@ -4,11 +4,13 @@ import type {
   Filters,
 } from '@core/contracts/product-collection/product-collection-page'
 import { createBffFetchServer } from '@/lib/bff/core/bff-fetch-server'
+import { getBffCacheOptions } from '@/lib/bff/bff-cache-options'
 import { ProductCollectionService } from './lib/product-collection-service'
 import {
   ITEMS_PER_PAGE,
   MIN_PAGE,
   DEFAULT_SORT_OPTION,
+  PRODUCT_COLLECTION_PAGE_REVALIDATE_SECONDS,
   type SortOption,
 } from '@config/constants'
 
@@ -21,19 +23,27 @@ export const getProductCollectionPage = cache(
     filters?: Filters,
     saleOnly: boolean = false,
     priceMin?: number,
-    priceMax?: number
+    priceMax?: number,
+    isDraft = false
   ): Promise<ProductCollectionPageResponse> => {
-    const bffFetch = await createBffFetchServer()
+    const bffFetch = await createBffFetchServer({ isDraft })
+    const cacheOptions = getBffCacheOptions(
+      PRODUCT_COLLECTION_PAGE_REVALIDATE_SECONDS,
+      { isDraft }
+    )
     const productCollectionService = new ProductCollectionService(bffFetch)
     return productCollectionService.getProductCollectionPage(
       slug,
-      page,
-      limit,
-      sort,
-      filters,
-      saleOnly,
-      priceMin,
-      priceMax
+      cacheOptions,
+      {
+        page,
+        limit,
+        sort,
+        filters,
+        saleOnly,
+        priceMin,
+        priceMax,
+      }
     )
   }
 )

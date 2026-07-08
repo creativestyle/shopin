@@ -1,0 +1,15 @@
+{
+  "name": "@test/e2e",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "e2e": "playwright test",
+    "e2e:headed": "playwright test --headed",
+    "e2e:ui": "playwright test --ui",
+    "report": "playwright show-report"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.51.0",
+    "@types/node": "^22.0.0"
+  }
+}

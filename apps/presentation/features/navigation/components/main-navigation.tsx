@@ -2,8 +2,9 @@
 
 import * as React from 'react'
 import { createPortal } from 'react-dom'
-import Link from 'next/link'
+import { Link } from '@/lib/navigation'
 import Image from 'next/image'
+import { productImageLoader } from '@/lib/product-image-loader'
 import { cn } from '@/lib/utils'
 import { HorizontalScroller } from '@/components/ui/horizontal-scroller'
 import type { MainNavigationResponse } from '@core/contracts/navigation/main-navigation'
@@ -191,6 +192,9 @@ export const MainNavigation: React.FC<MainNavigationProps> = ({
                   >
                     <div className='relative aspect-square w-full'>
                       <Image
+                        loader={productImageLoader(
+                          activeItem.featuredProduct.image.src
+                        )}
                         src={activeItem.featuredProduct.image.src}
                         alt={activeItem.featuredProduct.image.alt}
                         fill

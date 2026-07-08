@@ -1,7 +1,6 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
-import { useLocale } from 'next-intl'
+import { useRouter } from '@/lib/navigation'
 import { useTranslations } from 'next-intl'
 import { FC, ReactNode } from 'react'
 import { ACCOUNT_NAVIGATION_ITEMS } from './lib/account-navigation-items'
@@ -17,7 +16,6 @@ interface AccountOverviewProps {
 export const AccountOverview: FC<AccountOverviewProps> = ({ orderSlot }) => {
   const t = useTranslations('account.myAccount')
   const router = useRouter()
-  const locale = useLocale()
   const { customer, isLoading } = useCustomer()
 
   if (isLoading) {
@@ -62,7 +60,7 @@ export const AccountOverview: FC<AccountOverviewProps> = ({ orderSlot }) => {
       <div className='flex justify-end'>
         <LogoutButton
           className='w-full p-6 hover:text-primary max-lg:gap-8 lg:w-auto'
-          onAfterLogout={() => router.push(`/${locale}/sign-in`)}
+          onAfterLogout={() => router.push('/sign-in')}
         />
       </div>
     </>

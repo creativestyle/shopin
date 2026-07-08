@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter } from '@/lib/navigation'
 import { useCart } from '@/features/cart/cart-use-cart'
 import {
   getFirstIncompleteStep,
