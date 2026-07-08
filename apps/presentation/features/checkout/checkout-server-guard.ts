@@ -14,6 +14,8 @@ import {
 } from './components/checkout-steps-frame/checkout-steps-config'
 import type { BffFetchClient } from '@/lib/bff/types'
 
+export type { CheckoutStepId } from './components/checkout-steps-frame/checkout-steps-config'
+
 /** Local cart fetcher — avoids cross-feature import of CartService. */
 class CartFetchService extends BaseService {
   async getCart(): Promise<CartResponse | null> {
@@ -55,13 +57,7 @@ async function createBffFetchWithCookies(): Promise<BffFetchClient> {
 export async function ensureCheckoutStep(
   currentStepId: CheckoutStepId
 ): Promise<CartResponse> {
-  const bffFetch = await createBffFetchWithCookies()
-  const cartService = new CartFetchService(bffFetch)
-  const cart = await cartService.getCart()
-
-  if (!cart || cart.itemCount === 0) {
-    redirect('/cart')
-  }
+  const cart = await getCartOrRedirect()
 
   const incompleteStep = getFirstIncompleteStep(cart, currentStepId)
   if (incompleteStep) {
@@ -72,13 +68,7 @@ export async function ensureCheckoutStep(
 }
 
 export async function ensureCheckoutEntry(): Promise<void> {
-  const bffFetch = await createBffFetchWithCookies()
-  const cartService = new CartFetchService(bffFetch)
-  const cart = await cartService.getCart()
-
-  if (!cart || cart.itemCount === 0) {
-    redirect('/cart')
-  }
+  const cart = await getCartOrRedirect()
 
   if (!isStepComplete('billing', cart)) {
     return
@@ -93,4 +83,16 @@ export async function ensureCheckoutEntry(): Promise<void> {
   if (reviewStep) {
     redirect(reviewStep.route)
   }
+}
+
+async function getCartOrRedirect(): Promise<CartResponse> {
+  const bffFetch = await createBffFetchWithCookies()
+  const cartService = new CartFetchService(bffFetch)
+  const cart = await cartService.getCart()
+
+  if (!cart || cart.itemCount === 0) {
+    redirect('/cart')
+  }
+
+  return cart
 }
