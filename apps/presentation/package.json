@@ -7,7 +7,9 @@
   "scripts": {
     "dev": "dotenv -e ../../.env -- next dev",
     "build": "next build",
+    "build:e2e": "dotenv -e .env.e2e -- next build && cp -r public .next/standalone/apps/presentation/ && cp -r .next/static .next/standalone/apps/presentation/.next/",
     "start:local": "dotenv -e ../../.env -- next build && dotenv -e ../../.env -- next start",
+    "start:e2e": "dotenv -e .env.e2e -- node .next/standalone/apps/presentation/server.js",
     "lint": "eslint --fix .",
     "format": "prettier --write --ignore-unknown .",
     "format:check": "prettier --check --ignore-unknown .",
@@ -38,7 +40,6 @@
     "@radix-ui/react-tooltip": "1.2.8",
     "@tailwindcss/vite": "^4.1.11",
     "@tanstack/react-query": "^5.83.0",
-    "@tanstack/react-query-devtools": "5.91.1",
     "@vitejs/plugin-react": "^4.6.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
@@ -57,6 +58,13 @@
     "pino-pretty": "^13.1.3",
     "server-only": "^0.0.1"
   },
+  "browserslist": [
+    "chrome >= 110",
+    "edge >= 110",
+    "firefox >= 110",
+    "safari >= 16",
+    "not dead"
+  ],
   "devDependencies": {
     "@core/contracts": "*",
     "@core/eslint-config": "*",
@@ -65,6 +73,7 @@
     "@svgr/webpack": "^8.1.0",
     "@tailwindcss/postcss": "^4",
     "@tanstack/eslint-plugin-query": "5.91.2",
+    "@tanstack/react-query-devtools": "5.91.1",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^6.7.0",
     "@testing-library/react": "^16.3.0",
@@ -84,7 +93,7 @@
     "tailwindcss": "^4",
     "tw-animate-css": "^1.3.6",
     "typescript": "^5",
-    "vite": "8.0.8",
+    "vite": "8.0.16",
     "typescript-eslint": "^8.50.0"
   }
 }

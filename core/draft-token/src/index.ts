@@ -11,6 +11,9 @@
 
 import { createHmac, timingSafeEqual } from 'node:crypto'
 
+/** Clock-drift slack (seconds) allowed between the issuing server and the verifier. */
+const CLOCK_SKEW_SLACK_SEC = 60
+
 /** Compute signature for payload (e.g. exp string). */
 export function signDraftPayload(payload: string, secret: string): string {
   return createHmac('sha256', secret).update(payload).digest('base64url')
@@ -18,9 +21,22 @@ export function signDraftPayload(payload: string, secret: string): string {
 
 /**
  * Verify a token value "exp.signature" with the given secret.
- * Returns true only if the signature is valid and exp is in the future.
+ *
+ * Returns true only when the signature is valid AND exp falls inside the allowed
+ * window: in the future, and no further out than `maxAgeSec` (+ clock-skew slack)
+ * from now. The upper bound is defense-in-depth — a token is a bearer credential,
+ * so even a validly-signed one that escaped or was minted with an inflated TTL
+ * must not grant access beyond the lifetime we actually issue.
+ *
+ * @param maxAgeSec Maximum lifetime the caller ever issues for this token kind
+ *   (e.g. DRAFT_COOKIE_MAX_AGE_SEC for preview tokens). exp beyond now + maxAgeSec
+ *   + slack is rejected even if the signature checks out.
  */
-export function verifyDraftToken(value: string, secret: string): boolean {
+export function verifyDraftToken(
+  value: string,
+  secret: string,
+  maxAgeSec: number
+): boolean {
   const dot = value.indexOf('.')
   if (dot <= 0) {
     return false
@@ -28,7 +44,13 @@ export function verifyDraftToken(value: string, secret: string): boolean {
   const exp = value.slice(0, dot)
   const signature = value.slice(dot + 1)
   const expNum = parseInt(exp, 10)
-  if (Number.isNaN(expNum) || expNum <= Math.floor(Date.now() / 1000)) {
+  const nowSec = Math.floor(Date.now() / 1000)
+  if (Number.isNaN(expNum) || expNum <= nowSec) {
+    return false
+  }
+  // A legitimately minted token cannot expire more than maxAgeSec from now; reject
+  // anything further out (leaked/misissued/longer-TTL token) before checking the HMAC.
+  if (expNum > nowSec + maxAgeSec + CLOCK_SKEW_SLACK_SEC) {
     return false
   }
   const expected = signDraftPayload(exp, secret)

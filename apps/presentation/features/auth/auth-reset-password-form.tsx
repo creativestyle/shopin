@@ -3,7 +3,7 @@
 import { FC, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { useSearchParams } from 'next/navigation'
-import Link from 'next/link'
+import { Link } from '@/lib/navigation'
 import { Button } from '@/components/ui/button'
 import { FormField } from '@/components/ui/form-field'
 import { PasswordInput } from '@/components/ui/inputs/password-input'

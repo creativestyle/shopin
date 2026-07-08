@@ -37,6 +37,7 @@ export function BrandSearchInput({ value, onChange }: BrandSearchInputProps) {
         <button
           type='button'
           onClick={() => onChange('')}
+          aria-label={t('filters.clearSearchByName' as Parameters<typeof t>[0])}
           className='absolute top-1/2 right-3 -translate-y-1/2 text-gray-400 hover:text-gray-600'
         >
           <CloseIcon className='h-4 w-4' />

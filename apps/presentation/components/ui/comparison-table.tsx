@@ -108,6 +108,7 @@ function ComparisonTable({
 
 function ComparisonTableHead({
   className,
+  scope = 'col',
   ...props
 }: React.ComponentProps<'th'>) {
   return (
@@ -121,6 +122,7 @@ function ComparisonTableHead({
         'max-lg:flex-1 max-lg:border-gray-400',
         className
       )}
+      scope={scope}
       {...props}
     />
   )

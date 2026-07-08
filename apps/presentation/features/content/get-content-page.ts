@@ -12,9 +12,12 @@ import { ContentService } from './lib/content-service'
  * When draft mode is enabled (via /api/draft with valid secret), BFF uses preview API.
  */
 export const getContentPage = cache(
-  async (slug: string): Promise<ContentPageResponse> => {
-    const bffFetch = await createBffFetchServer()
+  async (slug: string, isDraft = false): Promise<ContentPageResponse> => {
+    const bffFetch = await createBffFetchServer({ isDraft })
     const contentService = new ContentService(bffFetch)
-    return contentService.getContentPage(slug, await getBffCacheOptions())
+    return contentService.getContentPage(
+      slug,
+      getBffCacheOptions(undefined, { isDraft })
+    )
   }
 )

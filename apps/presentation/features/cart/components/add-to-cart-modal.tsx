@@ -1,22 +1,20 @@
 'use client'
 
 import * as React from 'react'
-import { useEffect, useRef } from 'react'
 import { useTranslations } from 'next-intl'
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+} from '@/components/ui/sheet'
 import { CartItemCompact } from './cart-item/cart-item-compact'
 import { useCart } from '../cart-use-cart'
 import { CartSummary } from './cart-summary'
 import { CartActions } from './cart-actions'
 import { ShowMoreProducts } from './show-more-products'
-import CloseIcon from '@/public/icons/close.svg'
-import { Button } from '@/components/ui/button'
 
 interface AddToCartModalProps {
   open: boolean
@@ -25,14 +23,12 @@ interface AddToCartModalProps {
 
 export function AddToCartModal({ open, onOpenChange }: AddToCartModalProps) {
   const t = useTranslations('cart')
-  const tCommon = useTranslations('common')
   const { cart, refetch, error } = useCart()
   const productsScrollRef = React.useRef<HTMLDivElement>(null)
   const scrollSentinelRef = React.useRef<HTMLDivElement>(null)
-  const wasOpenRef = useRef(false)
+  const wasOpenRef = React.useRef(false)
 
-  // Refetch cart data when modal opens
-  useEffect(() => {
+  React.useEffect(() => {
     if (open && !wasOpenRef.current) {
       refetch()
     }
@@ -44,42 +40,24 @@ export function AddToCartModal({ open, onOpenChange }: AddToCartModalProps) {
   }
 
   return (
-    <Dialog
+    <Sheet
       open={open}
       onOpenChange={onOpenChange}
     >
-      <DialogContent
-        className='!inset-y-0 !top-0 !right-0 !left-auto flex h-full !max-h-full w-full max-w-full !translate-x-0 !translate-y-0 flex-col p-0 md:!inset-y-0 md:!top-0 md:!max-h-full md:w-112 md:max-w-112 md:!translate-y-0'
-        showCloseButton={false}
-      >
-        {/* Header - 55px height */}
-        <DialogHeader className='relative flex h-14 w-full items-center justify-between bg-white !px-4 py-4 md:w-112'>
-          <div className='relative h-6 w-6 shrink-0 opacity-0' />
-          <DialogTitle className='relative flex shrink-0 flex-col justify-center text-center text-base leading-none font-normal text-nowrap text-gray-950'>
-            <p className='leading-[1.1] whitespace-pre'>
-              {`${t('title')} (${cart.itemCount})`}
-            </p>
-          </DialogTitle>
-          <DialogDescription className='sr-only'>
+      <SheetContent className='md:max-w-md'>
+        <SheetHeader className='text-center'>
+          <SheetTitle className='font-normal'>
+            {`${t('title')} (${cart.itemCount})`}
+          </SheetTitle>
+          <SheetDescription className='sr-only'>
             {t('addToCartModal.dialogDescription')}
-          </DialogDescription>
-          <Button
-            size='icon-sm'
-            scheme='black'
-            variant='tertiary'
-            onClick={() => onOpenChange(false)}
-            aria-label={tCommon('close')}
-          >
-            <CloseIcon className='h-6 w-6 shrink-0 text-gray-700' />
-          </Button>
-        </DialogHeader>
+          </SheetDescription>
+        </SheetHeader>
 
-        {/* Scrollable Content Area - positioned at left-6 top-14 with width 409px */}
         <div
           ref={productsScrollRef}
-          className='absolute top-14 bottom-72 left-4 flex w-[calc(100%-2rem)] flex-col items-start overflow-x-clip overflow-y-auto md:left-6 md:w-102'
+          className='flex flex-1 flex-col overflow-y-auto p-4'
         >
-          {/* Toast Message */}
           <div className='flex w-full shrink-0 items-center gap-4 overflow-clip rounded-lg bg-green-100 p-4'>
             <div className='min-w-0 flex-1'>
               <p className='text-sm/[1.6] font-normal text-gray-700'>
@@ -88,7 +66,6 @@ export function AddToCartModal({ open, onOpenChange }: AddToCartModalProps) {
             </div>
           </div>
 
-          {/* Product List */}
           <div className='mt-0 w-full space-y-0 pb-10'>
             {[...cart.lineItems].reverse().map((item) => (
               <CartItemCompact
@@ -98,21 +75,17 @@ export function AddToCartModal({ open, onOpenChange }: AddToCartModalProps) {
             ))}
           </div>
 
-          {/* Sentinel element for IntersectionObserver */}
           <div
             ref={scrollSentinelRef}
             className='h-0 w-full'
           />
         </div>
 
-        {/* Footer - Fixed at bottom, centered */}
-        <div className='absolute bottom-0 left-1/2 flex w-full shrink-0 translate-x-[-50%] flex-col items-start overflow-clip bg-white px-0 pt-6 pb-4 shadow-[0px_-5px_10px_0px_rgba(0,0,0,0.1)] md:w-112'>
+        <SheetFooter className='flex-col items-start px-0 pt-6 pb-4'>
           <ShowMoreProducts
             scrollRef={productsScrollRef}
             sentinelRef={scrollSentinelRef}
           />
-
-          {/* Cart Summary Section */}
           <CartSummary
             cart={cart}
             variant='modal'
@@ -123,8 +96,8 @@ export function AddToCartModal({ open, onOpenChange }: AddToCartModalProps) {
               />
             }
           />
-        </div>
-      </DialogContent>
-    </Dialog>
+        </SheetFooter>
+      </SheetContent>
+    </Sheet>
   )
 }

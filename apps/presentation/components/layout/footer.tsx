@@ -7,8 +7,8 @@ import { PaymentMethodsBlock } from './footer/payment-methods-block'
 import { LegalBar } from './footer/legal-bar'
 import { CountryBlock } from './footer/country-block'
 
-export async function Footer() {
-  const layout = await getFooterLayout()
+export async function Footer({ isDraft = false }: { isDraft?: boolean } = {}) {
+  const layout = await getFooterLayout(isDraft)
   if (!layout) {
     return (
       <footer className='relative w-full bg-gray-100'>

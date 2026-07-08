@@ -105,6 +105,7 @@ export function ProductCollectionContent({
             <ProductGrid
               products={products}
               locale={locale}
+              eagerCount={4}
               renderCardActions={(product) => (
                 <AddToCart
                   productId={product.id}

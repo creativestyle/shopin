@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useTranslations } from 'next-intl'
-import Link from 'next/link'
+import { Link } from '@/lib/navigation'
 import { Button } from '@/components/ui/button'
 import { FormField } from '@/components/ui/form-field'
 import { TextInput } from '@/components/ui/inputs/text-input'

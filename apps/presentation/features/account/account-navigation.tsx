@@ -1,11 +1,10 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
-import { useLocale } from 'next-intl'
+import { useRouter } from '@/lib/navigation'
 import { useTranslations } from 'next-intl'
-import Link from 'next/link'
+import { Link } from '@/lib/navigation'
 import { FC } from 'react'
-import ChevronLeftIcon from '@/public/icons/chevronleft.svg'
+import ChevronLeftIcon from '@/public/icons/chevron-left.svg'
 import { cn } from '@/lib/utils'
 import { ACCOUNT_NAVIGATION_ITEMS } from './lib/account-navigation-items'
 import { Button } from '@/components/ui/button'
@@ -22,7 +21,6 @@ export const AccountNavigation: FC<AccountNavigationProps> = ({
 }) => {
   const t = useTranslations('account.myAccount')
   const router = useRouter()
-  const locale = useLocale()
 
   return (
     <nav
@@ -58,7 +56,7 @@ export const AccountNavigation: FC<AccountNavigationProps> = ({
         <li>
           <LogoutButton
             className='w-full border-b border-gray-100 px-4 py-2 text-gray-500 transition-colors hover:bg-gray-50 hover:text-gray-950 disabled:opacity-50'
-            onAfterLogout={() => router.push(`/${locale}/sign-in`)}
+            onAfterLogout={() => router.push('/sign-in')}
           />
         </li>
       </ul>

@@ -1,6 +1,6 @@
-import Link from 'next/link'
+import { Link } from '@/lib/navigation'
 import { FC, PropsWithChildren } from 'react'
-import ChevronRightIcon from '@/public/icons/chevronright.svg'
+import ChevronRightIcon from '@/public/icons/chevron-right.svg'
 import { IconComponent } from './lib/account-navigation-items'
 import { Card } from '@/components/ui/card'
 import { cn } from '@/lib/utils'

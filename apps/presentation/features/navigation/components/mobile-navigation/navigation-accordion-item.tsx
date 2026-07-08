@@ -1,13 +1,13 @@
 'use client'
 
-import Link from 'next/link'
+import { Link } from '@/lib/navigation'
 import {
   AccordionItem,
   AccordionTrigger,
   AccordionContent,
 } from '@/components/ui/accordion'
 import type { ThirdLevelLink } from '@core/contracts/core/link'
-import ChevronRightIcon from '@/public/icons/chevronright.svg'
+import ChevronRightIcon from '@/public/icons/chevron-right.svg'
 
 interface NavigationAccordionItemProps {
   item: ThirdLevelLink

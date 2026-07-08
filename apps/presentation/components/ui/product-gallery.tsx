@@ -18,6 +18,15 @@ export interface ProductGalleryProps extends ProductGalleryResponse {
   video?: { src: string; poster: string; alt?: string }
 }
 
+// Desktop grid is hidden below 1024px; 1px fallback tells the browser to pick the
+// smallest srcset entry for CSS-hidden tiles rather than defaulting to 100vw.
+const DESKTOP_GRID_SIZES =
+  '(min-width: 1920px) 708px, (min-width: 1024px) calc((100vw - 32rem) / 2), 1px'
+
+// Carousel is hidden at 1024px and above (lg:hidden); same rationale as above.
+const CAROUSEL_SIZES =
+  '(max-width: 639px) 83vw, (max-width: 767px) 67vw, (max-width: 1023px) 31vw, 1px'
+
 export const ProductGallery: React.FC<ProductGalleryProps> = ({
   images,
   className,
@@ -43,7 +52,9 @@ export const ProductGallery: React.FC<ProductGalleryProps> = ({
       src={img.src}
       alt={img.alt}
       onZoom={() => openDialog(idx)}
+      sizes={DESKTOP_GRID_SIZES}
       loading={idx < visibleCount ? 'eager' : undefined}
+      preload={idx === 0}
     />
   ))
 
@@ -60,8 +71,10 @@ export const ProductGallery: React.FC<ProductGalleryProps> = ({
         src={img.src}
         alt={img.alt}
         onZoom={() => openDialog(idx)}
+        sizes={CAROUSEL_SIZES}
         className='h-full lg:aspect-square lg:h-auto'
         loading={idx === 0 ? 'eager' : undefined}
+        preload={idx === 0}
       />
     </CarouselSlide>
   ))

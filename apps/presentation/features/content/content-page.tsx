@@ -12,6 +12,7 @@ import { TeaserHeroBlock } from './teasers/teaser-hero-block'
 
 interface ContentPageProps {
   slug: string
+  isDraft?: boolean
 }
 
 function resolvePageTitle(page: ContentPageResponse, slug: string): string {
@@ -25,13 +26,13 @@ function resolvePageTitle(page: ContentPageResponse, slug: string): string {
  * page title (h1), and teaser components. Homepage hides h1 (sr-only);
  * other pages respect pageTitleVisibility from API.
  */
-export async function ContentPage({ slug }: ContentPageProps) {
+export async function ContentPage({ slug, isDraft = false }: ContentPageProps) {
   let pageData: ContentPageResponse | null = null
   let error: string | null = null
   const t = await getTranslations('common')
 
   try {
-    pageData = await getContentPage(slug)
+    pageData = await getContentPage(slug, isDraft)
   } catch (err) {
     error = await getCommonErrorMessage(err, () => getTranslations('common'))
   }

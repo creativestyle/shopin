@@ -1,9 +1,9 @@
 'use client'
 
-import Link from 'next/link'
+import { Link } from '@/lib/navigation'
 import { cn } from '@/lib/utils'
 import type { LinkResponse, SubcategoryLink } from '@core/contracts/core/link'
-import ChevronRightIcon from '@/public/icons/chevronright.svg'
+import ChevronRightIcon from '@/public/icons/chevron-right.svg'
 
 type NavigationItemType = LinkResponse | SubcategoryLink
 
@@ -26,7 +26,7 @@ export function NavigationItem({
         className={cn(
           'flex h-11 w-full cursor-pointer items-center lord-of-the-focus-ring text-base font-normal',
           {
-            'text-red-400': isHighlighted,
+            'text-primary': isHighlighted,
             'text-gray-700': !isHighlighted,
           }
         )}

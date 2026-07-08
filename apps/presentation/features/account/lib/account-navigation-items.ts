@@ -1,6 +1,6 @@
 import AppIcon from '@/public/icons/app.svg'
 import CartIcon from '@/public/icons/cart.svg'
-import UserIdIcon from '@/public/icons/userid.svg'
+import UserIdIcon from '@/public/icons/user-id.svg'
 import { ComponentType, SVGProps } from 'react'
 
 type TranslationKey = 'overviewLabel' | 'ordersLabel' | 'myDataLabel'

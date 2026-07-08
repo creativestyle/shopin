@@ -1,9 +1,18 @@
 import type { NextConfig } from 'next'
 import createNextIntlPlugin from 'next-intl/plugin'
 import path from 'path'
-import { CONTENT_IMAGE_API_HOSTS } from '@config/constants'
+import { CONTENT_IMAGE_API_HOSTS, PRODUCT_IMAGE_HOSTS } from '@config/constants'
 
 const withNextIntl = createNextIntlPlugin()
+const svgLoader = {
+  loader: '@svgr/webpack',
+  options: {
+    svgProps: {
+      'aria-hidden': true,
+      'focusable': false,
+    },
+  },
+}
 
 const nextConfig: NextConfig = {
   // Pino and pino-pretty must be externalized for Next.js server (see pino docs)
@@ -14,7 +23,7 @@ const nextConfig: NextConfig = {
   turbopack: {
     rules: {
       '*.svg': {
-        loaders: ['@svgr/webpack'],
+        loaders: [svgLoader],
         as: '*.js',
       },
     },
@@ -27,11 +36,11 @@ const nextConfig: NextConfig = {
         hostname: 'storage.googleapis.com',
         pathname: '/**',
       },
-      {
-        protocol: 'https',
-        hostname: 'images.eu-central-1.aws.commercetools.com',
-        pathname: '/**',
-      },
+      ...PRODUCT_IMAGE_HOSTS.map((hostname) => ({
+        protocol: 'https' as const,
+        hostname,
+        pathname: '/**' as const,
+      })),
       ...CONTENT_IMAGE_API_HOSTS.map((hostname) => ({
         protocol: 'https' as const,
         hostname,

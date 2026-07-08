@@ -1,7 +1,6 @@
 'use client'
 
-import { useLocale, useTranslations } from 'next-intl'
-import { rfcToUrlPrefix } from '@config/constants'
+import { useTranslations } from 'next-intl'
 import { cn } from '@/lib/utils'
 import {
   Sheet,
@@ -14,7 +13,7 @@ import { VisuallyHidden } from '@radix-ui/react-visually-hidden'
 import type { MainNavigationResponse } from '@core/contracts/navigation/main-navigation'
 import type { LinkResponse, SubcategoryLink } from '@core/contracts/core/link'
 import CloseIcon from '@/public/icons/close.svg'
-import ChevronRightIcon from '@/public/icons/chevronright.svg'
+import ChevronRightIcon from '@/public/icons/chevron-right.svg'
 import { Logo } from '@/components/ui/logo'
 import { NavigationList } from './navigation-list'
 import { NavigationAccordion } from './navigation-accordion'
@@ -42,8 +41,6 @@ export function MobileNavigation({
   } = useNavigationState(open)
 
   const t = useTranslations('common')
-  const locale = useLocale()
-  const homeHref = `/${rfcToUrlPrefix(locale)}`
 
   function openSecondLevel(category: LinkResponse) {
     setCurrentLevel(2)
@@ -110,7 +107,7 @@ export function MobileNavigation({
           {currentLevel === 1 ? (
             <Logo
               src='/logo.svg'
-              href={homeHref}
+              href='/'
               alt={t('logoAlt')}
               className='h-10 w-32'
             />

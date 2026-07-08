@@ -1,6 +1,7 @@
 import { FC } from 'react'
 import Image from 'next/image'
 import { cn } from '@/lib/utils'
+import { productImageLoader } from '@/lib/product-image-loader'
 
 interface LineItemImagesProps {
   images: { url: string; alt?: string }[]
@@ -38,6 +39,7 @@ export const LineItemImages: FC<LineItemImagesProps> = ({
             )}
           >
             <Image
+              loader={productImageLoader(img.url)}
               src={img.url}
               alt={img.alt || ''}
               fill

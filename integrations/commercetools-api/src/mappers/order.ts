@@ -83,7 +83,7 @@ export function mapOrderToSummary(
   language: string
 ): OrderSummaryResponse {
   const orderNumber = order.orderNumber || order.id
-  const currency = order.currency || order.totalPrice.currencyCode
+  const currency = order.totalPrice.currencyCode
   const grandTotalCents =
     order.taxedPrice?.totalGross.centAmount ?? order.totalPrice.centAmount
 

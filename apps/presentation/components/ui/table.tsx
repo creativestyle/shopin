@@ -123,7 +123,11 @@ function TableRow({ className, ...props }: React.ComponentProps<'tr'>) {
   )
 }
 
-function TableHead({ className, ...props }: React.ComponentProps<'th'>) {
+function TableHead({
+  className,
+  scope = 'col',
+  ...props
+}: React.ComponentProps<'th'>) {
   return (
     <th
       data-slot='table-head'
@@ -131,6 +135,7 @@ function TableHead({ className, ...props }: React.ComponentProps<'th'>) {
         'p-4 text-left align-middle font-bold [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-0.5',
         className
       )}
+      scope={scope}
       {...props}
     />
   )
