@@ -1,6 +1,6 @@
 import React from 'react'
 import Image from 'next/image'
-import Link from 'next/link'
+import { Link } from '@/lib/navigation'
 import { useTranslations } from 'next-intl'
 import { cn } from '@/lib/utils'
 
@@ -38,9 +38,8 @@ export const Logo: React.FC<LogoProps> = ({
           fill
           sizes='200px'
           className='object-contain'
-          {...(preload
-            ? { preload: true, fetchPriority: 'high' as const }
-            : {})}
+          preload={preload}
+          fetchPriority={preload ? 'high' : undefined}
         />
       </Link>
     </div>

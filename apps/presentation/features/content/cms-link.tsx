@@ -1,4 +1,4 @@
-import Link from 'next/link'
+import { Link } from '@/lib/navigation'
 import * as React from 'react'
 import type { CmsLinkResponse } from '@core/contracts/content/cms-link'
 

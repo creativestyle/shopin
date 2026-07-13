@@ -7,27 +7,22 @@ interface TopBarProps {
   messages: string[]
 }
 
+function MessageList({ children }: { children: React.ReactNode }) {
+  return (
+    <StandardContainer className='flex items-center justify-center will-change-transform'>
+      <ul className='flex flex-wrap items-center justify-center gap-x-6 gap-y-1 text-center text-xs font-normal text-white'>
+        {children}
+      </ul>
+    </StandardContainer>
+  )
+}
+
 export async function TopBar({ className, messages }: TopBarProps) {
   if (messages.length === 0) {
     return null
   }
 
   const t = await getTranslations('topBar')
-
-  const content = (
-    <StandardContainer className='flex items-center justify-center will-change-transform'>
-      <ul className='flex flex-wrap items-center justify-center gap-x-6 gap-y-1 text-center text-xs font-normal text-white'>
-        {messages.map((msg, i) => (
-          <li
-            key={i}
-            className='leading-[1.6]'
-          >
-            {msg}
-          </li>
-        ))}
-      </ul>
-    </StandardContainer>
-  )
 
   return (
     <>
@@ -40,15 +35,33 @@ export async function TopBar({ className, messages }: TopBarProps) {
           className
         )}
       >
-        {content}
+        <MessageList>
+          {messages.map((msg, i) => (
+            <li
+              key={i}
+              className='leading-[1.6]'
+            >
+              {msg}
+            </li>
+          ))}
+        </MessageList>
       </aside>
-      {/* Invisible spacer — mirrors the bar's content so layout height matches
-          even when messages wrap to multiple lines */}
+      {/* Invisible spacer — mirrors the bar's height so layout below clears
+          the fixed bar. CSS ::before pseudo-elements (not DOM text nodes) are
+          used so Playwright's getByText cannot match the spacer text. */}
       <div
         aria-hidden
         className='container-type-inline-size invisible w-full bg-transparent py-1.5 text-xs text-white'
       >
-        {content}
+        <MessageList>
+          {messages.map((msg, i) => (
+            <li
+              key={i}
+              data-msg={msg}
+              className='leading-[1.6] before:block before:content-[attr(data-msg)]'
+            />
+          ))}
+        </MessageList>
       </div>
     </>
   )

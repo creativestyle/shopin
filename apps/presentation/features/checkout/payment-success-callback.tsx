@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter } from '@/lib/navigation'
 import { useCreateCheckoutOrder } from './hooks/use-create-checkout-order'
 import { useCart } from '@/features/cart/cart-use-cart'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
@@ -10,21 +10,13 @@ import { Toast } from '@/components/ui/toast'
 import { Button } from '@/components/ui/button'
 import { getErrorMessage } from '@/lib/error-utils'
 
-interface PaymentSuccessCallbackProps {
-  locale: string
-}
-
-export function PaymentSuccessCallback({
-  locale,
-}: PaymentSuccessCallbackProps) {
+export function PaymentSuccessCallback() {
   const router = useRouter()
   const t = useTranslations('checkout')
   const { cart } = useCart()
   const attemptedCartIdRef = useRef<string | null>(null)
 
-  const { createOrder, error, isPending } = useCreateCheckoutOrder({
-    locale,
-  })
+  const { createOrder, error, isPending } = useCreateCheckoutOrder()
 
   useEffect(() => {
     // Only attempt once per cart - if cart changes, retry with new cart
@@ -72,7 +64,7 @@ export function PaymentSuccessCallback({
           <Button
             variant='secondary'
             scheme='black'
-            onClick={() => router.push(`/${locale}/checkout/review`)}
+            onClick={() => router.push('/checkout/review')}
           >
             {t('backToCart')}
           </Button>

@@ -1,5 +1,5 @@
 import * as React from 'react'
-import Link from 'next/link'
+import { Link } from '@/lib/navigation'
 import type { RichTextDocumentNode } from '@core/contracts/content/rich-text-document'
 import { getLinkHref, isHyperlink } from '../lib/rich-text-utils'
 

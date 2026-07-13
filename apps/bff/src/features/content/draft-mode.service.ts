@@ -2,7 +2,10 @@ import { verifyDraftToken } from '@core/draft-token'
 import { Injectable } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import type { Request, Response } from 'express'
-import { DRAFT_MODE_HEADER } from '@config/constants'
+import {
+  DRAFT_MODE_HEADER,
+  DRAFT_HEADER_TOKEN_MAX_AGE_SEC,
+} from '@config/constants'
 
 const NO_CACHE_HEADERS = {
   'Cache-Control': 'no-store, no-cache, must-revalidate, private',
@@ -17,7 +20,11 @@ export class DraftModeService {
     try {
       const secret = this.config.get<string>('NEXT_DRAFT_MODE_SECRET')?.trim()
       const value = String(req.headers[DRAFT_MODE_HEADER] ?? '').trim()
-      return Boolean(secret && value && verifyDraftToken(value, secret))
+      return Boolean(
+        secret &&
+        value &&
+        verifyDraftToken(value, secret, DRAFT_HEADER_TOKEN_MAX_AGE_SEC)
+      )
     } catch {
       return false
     }

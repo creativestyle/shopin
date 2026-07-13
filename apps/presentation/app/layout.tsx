@@ -1,37 +1,14 @@
 import React from 'react'
 import type { Metadata, Viewport } from 'next'
 import './globals.css'
-import { I18N_CONFIG, urlPrefixToRfc } from '@config/constants'
-import { getLocale } from 'next-intl/server'
-import { QueryProvider } from './query-provider'
-import { DM_Sans } from 'next/font/google'
 
-const dmSans = DM_Sans({
-  subsets: ['latin'],
-  variable: '--font-dm-sans',
-  display: 'swap',
-})
-
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
-  const prefix = await getLocale()
-  const lang = prefix ? urlPrefixToRfc(prefix) : I18N_CONFIG.defaultLocale
-  return (
-    <html
-      lang={lang}
-      className={dmSans.variable}
-    >
-      <body>
-        <QueryProvider>{children}</QueryProvider>
-      </body>
-    </html>
-  )
+  return <>{children}</>
 }
-
-export const dynamic = 'force-dynamic'
 
 const siteTitle = 'SHOPin - E-commerce Platform'
 const siteDescription =
@@ -45,6 +22,7 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.FRONTEND_URL ?? 'https://localhost:3000'),
+  manifest: '/manifest.json',
   title: {
     default: siteTitle,
     template: '%s | SHOPin',
