@@ -21,9 +21,9 @@ async function renderBreadcrumbs(crumbs: CrumbResponse[], className?: string) {
   return render(BreadcrumbsComponent)
 }
 
-// Mock Next.js Link component
-jest.mock('next/link', () => {
-  return function MockLink({
+// Mock locale-aware Link — breadcrumbs imports from @/lib/navigation (next-intl wrapper)
+jest.mock('@/lib/navigation', () => ({
+  Link: function MockLink({
     children,
     href,
     ...props
@@ -40,8 +40,8 @@ jest.mock('next/link', () => {
         {children}
       </a>
     )
-  }
-})
+  },
+}))
 
 describe('Breadcrumbs', () => {
   const mockCrumbs: CrumbResponse[] = [
@@ -146,6 +146,18 @@ describe('Breadcrumbs', () => {
     it('returns null when only home crumb exists', async () => {
       const { container } = await renderBreadcrumbs([])
       expect(container.firstChild).toBeNull()
+    })
+
+    it('renders Home > crumb when a single real crumb is provided', async () => {
+      await renderBreadcrumbs([{ label: 'Category', path: '/category' }])
+
+      const nav = screen.getByRole('navigation')
+      expect(nav).toBeInTheDocument()
+      // Home stays a link; the single real crumb is the current page.
+      expect(within(nav).getByText('Home')).toBeInTheDocument()
+      const category = within(nav).getByText('Category')
+      expect(category.tagName).toBe('SPAN')
+      expect(category).toHaveAttribute('aria-current', 'page')
     })
   })
 })

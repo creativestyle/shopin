@@ -1,6 +1,6 @@
 'use client'
 
-import Link from 'next/link'
+import { Link } from '@/lib/navigation'
 import type { CategoryTreeNode } from '@core/contracts/product-collection/product-collection'
 import { cn } from '@/lib/utils'
 

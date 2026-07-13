@@ -1,0 +1,123 @@
+import { notFound, redirect } from 'next/navigation'
+import { cookies } from 'next/headers'
+import { initRouteContext } from '@/lib/request-context/route-context'
+import {
+  isPreviewTokenValid,
+  PREVIEW_TOKEN_COOKIE,
+  PREVIEW_TOKEN_INTERNAL_PARAM,
+} from '@/lib/draft-mode'
+import { HttpError } from '@/lib/error-utils'
+import { getHomepageSlugForLocale } from '@/features/content/homepage-slug'
+import { parsePlpSearchParams } from '@/features/productCollection/parse-search-params'
+import { ContentPage } from '@/features/content/content-page'
+import { getContentPage } from '@/features/content/get-content-page'
+import { ProductPage } from '@/features/product/product-page'
+import { ProductCollectionPage } from '@/features/productCollection/product-collection-page'
+export const dynamic = 'force-dynamic'
+
+const asString = (v: string | string[] | undefined) =>
+  typeof v === 'string' ? v : undefined
+
+export default async function PreviewPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ variant: string; locale: string; path?: string[] }>
+  searchParams: Promise<Record<string, string | string[] | undefined>>
+}) {
+  const [{ variant, locale, path = [] }, search] = await Promise.all([
+    params,
+    searchParams,
+  ])
+  initRouteContext({ variant, locale })
+
+  if (!isPreviewTokenValid(asString(search[PREVIEW_TOKEN_INTERNAL_PARAM]))) {
+    // The proxy already verifies the token (HMAC + exp) before routing here, so this branch
+    // is normally reached only by a direct /preview/… visit without a valid token. If a stale
+    // or forged preview_token cookie is still in the browser on such a visit, tear the session
+    // down via /api/draft/exit — a Server Component can't clear an HttpOnly cookie — and fall
+    // through to normal routing instead of dead-ending in a 404 the user can't escape until
+    // they clear cookies. With no cookie this is just a bad or expired preview link → 404.
+    const hasCookie = (await cookies()).has(PREVIEW_TOKEN_COOKIE)
+    if (hasCookie) {
+      const params = new URLSearchParams({ locale, slug: path.join('/') })
+      redirect(`/api/draft/exit?${params.toString()}`)
+    }
+    notFound()
+  }
+
+  // Empty path = the homepage. Mirror the published homepage's slug resolution so an editor
+  // clicking the logo mid-preview sees the draft homepage rather than a 404.
+  if (!path.length) {
+    return (
+      <ContentPage
+        slug={getHomepageSlugForLocale(locale)}
+        isDraft
+      />
+    )
+  }
+
+  if (path[0] === 'p') {
+    const slug = path.slice(1).join('/')
+    if (!slug) {
+      notFound()
+    }
+    return (
+      <ProductPage
+        slug={slug}
+        locale={locale}
+        variantId={asString(search.variantId)}
+        isDraft
+      />
+    )
+  }
+
+  if (path[0] === 'c') {
+    const slug = path.slice(1).join('/')
+    if (!slug) {
+      notFound()
+    }
+    const { page, sort, filters, saleOnly, priceMin, priceMax } =
+      parsePlpSearchParams(search)
+    return (
+      <ProductCollectionPage
+        slug={slug}
+        locale={locale}
+        page={page}
+        sort={sort}
+        filters={filters}
+        saleOnly={saleOnly}
+        priceMin={priceMin}
+        priceMax={priceMax}
+        isDraft
+      />
+    )
+  }
+
+  // Any other path is a content slug. Functional routes (cart, account, …) get funneled here
+  // under an active draft cookie but have no CMS entry, so resolve them to the 404 page rather
+  // than rendering a soft "no content" message in the site chrome. getContentPage is
+  // request-cached, so ContentPage's own fetch reuses this result (or this rejection).
+  const slug = path.join('/')
+  try {
+    await getContentPage(slug, true)
+  } catch (error) {
+    // Only a genuine "no such page" (BFF 404) maps to notFound() — matching the published
+    // catch-all in [...page]/page.tsx. Non-404 errors (transient BFF/Contentful failures,
+    // schema-validation errors) deliberately DON'T 404 here: we fall through to <ContentPage>,
+    // whose request-cached re-fetch hits the same rejection and renders its localized inline
+    // ErrorDisplay inside the editor chrome. This is an intentional preview-only divergence from
+    // the published page (which 404s on any error) so an editor sees a diagnosable error rather
+    // than the bare top-level global-error shell.
+    if (HttpError.hasStatusCode(error, 404)) {
+      notFound()
+    }
+  }
+
+  return (
+    <ContentPage
+      slug={slug}
+      isDraft
+    />
+  )
+}

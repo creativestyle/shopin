@@ -1,6 +1,6 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
+import { useRouter } from '@/lib/navigation'
 import { useTranslations } from 'next-intl'
 import { useEffect } from 'react'
 import { Button } from '@/components/ui/button'

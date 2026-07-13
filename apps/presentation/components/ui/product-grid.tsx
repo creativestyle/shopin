@@ -8,6 +8,7 @@ interface ProductGridProps {
   products: ProductCardResponse[]
   className?: string
   locale: string
+  eagerCount?: number
   renderCardActions?: (product: ProductCardResponse) => React.ReactNode
 }
 
@@ -15,6 +16,7 @@ export const ProductGrid: React.FC<ProductGridProps> = ({
   products,
   className,
   locale,
+  eagerCount = 0,
   renderCardActions,
 }) => {
   return (
@@ -34,11 +36,12 @@ export const ProductGrid: React.FC<ProductGridProps> = ({
         className
       )}
     >
-      {products.map((product) => (
+      {products.map((product, index) => (
         <ProductCard
           key={getProductVariantKey(product.id, product.variantId)}
           data={product}
           locale={locale}
+          imagePreload={index < eagerCount}
           actions={renderCardActions?.(product)}
         />
       ))}

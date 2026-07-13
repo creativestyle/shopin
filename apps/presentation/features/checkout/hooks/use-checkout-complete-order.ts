@@ -1,8 +1,7 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
-import { useRouter } from 'next/navigation'
-import { useLocale } from 'next-intl'
+import { useRouter } from '@/lib/navigation'
 import { useGetOrder } from './use-get-order'
 import { getStoredToken, isTokenValid, removeToken } from './use-order-token'
 
@@ -18,11 +17,8 @@ interface UseCheckoutCompleteOrderResult {
   isValid: boolean
 }
 
-function redirectToHomepage(
-  router: ReturnType<typeof useRouter>,
-  locale: string
-): void {
-  router.push(`/${locale}`)
+function redirectToHomepage(router: ReturnType<typeof useRouter>): void {
+  router.push('/')
 }
 
 export function useCheckoutCompleteOrder({
@@ -30,7 +26,6 @@ export function useCheckoutCompleteOrder({
   token,
 }: UseCheckoutCompleteOrderOptions): UseCheckoutCompleteOrderResult {
   const router = useRouter()
-  const locale = useLocale()
   const hasRedirectedRef = useRef(false)
   const isMountedRef = useRef(true)
 
@@ -59,14 +54,14 @@ export function useCheckoutCompleteOrder({
 
     if (!isTokenValidated) {
       hasRedirectedRef.current = true
-      redirectToHomepage(router, locale)
+      redirectToHomepage(router)
       return
     }
 
     if (order && orderId && isMountedRef.current) {
       removeToken(orderId)
     }
-  }, [orderId, token, isTokenValidated, order, router, locale])
+  }, [orderId, token, isTokenValidated, order, router])
 
   useEffect(() => {
     return () => {

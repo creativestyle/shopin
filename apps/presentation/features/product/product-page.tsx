@@ -22,6 +22,7 @@ interface ProductPageProps {
   slug: string
   locale: string
   variantId?: string
+  isDraft?: boolean
   /** Callback to render CTA buttons (e.g. Add to cart, Add to wishlist). Receives product so callers can pass product.id. */
   renderCtas?: (product: ProductDetailsResponse) => ReactNode
 }
@@ -33,6 +34,7 @@ export async function ProductPage({
   slug,
   locale,
   variantId,
+  isDraft = false,
   renderCtas,
 }: ProductPageProps) {
   const t = await getTranslations('product')
@@ -40,7 +42,7 @@ export async function ProductPage({
   let error: string | null = null
 
   try {
-    productData = await getProductPage(slug, variantId)
+    productData = await getProductPage(slug, variantId, isDraft)
   } catch (err) {
     if (HttpError.hasStatusCode(err, 404)) {
       notFound()

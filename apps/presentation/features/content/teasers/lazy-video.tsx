@@ -112,7 +112,7 @@ export function LazyVideo({
                 fill
                 className='object-cover'
                 sizes='(min-width: 1920px) 1920px, 100vw'
-                priority={eager}
+                preload={eager}
                 fetchPriority={eager ? 'high' : 'low'}
               />
               <span className='absolute inset-0 flex items-center justify-center'>
