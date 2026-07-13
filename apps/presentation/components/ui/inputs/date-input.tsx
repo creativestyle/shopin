@@ -5,15 +5,36 @@ import { IMaskInput } from 'react-imask'
 import IMask from 'imask'
 import { TextInput, type TextInputProps } from './text-input'
 
+type DateChangeEvent = {
+  target: { name: string; value: string; type: 'text' }
+  currentTarget: { value: string }
+}
+
+type DateInputProps = Omit<
+  TextInputProps,
+  'type' | 'inputMode' | 'pattern' | 'onChange'
+> & {
+  onChange?: (event: DateChangeEvent) => void
+}
+
 const MASK = 'dd-mm-yyyy'
+
+// Reorder segments between ISO (YYYY-MM-DD) and display (DD-MM-YYYY) formats.
+function isoToDisplay(v: string): string {
+  const [y, m, d] = v.split('-')
+  return d && m && y ? `${d}-${m}-${y}` : v
+}
+
+function displayToIso(v: string): string {
+  const [d, m, y] = v.split('-')
+  return d && m && y ? `${y}-${m}-${d}` : v
+}
 
 const DATE_BLOCKS = {
   dd: { mask: IMask.MaskedRange, from: 1, to: 31 },
   mm: { mask: IMask.MaskedRange, from: 1, to: 12 },
   yyyy: { mask: IMask.MaskedRange, from: 1900, to: 2099 },
 } as const
-
-type DateInputProps = Omit<TextInputProps, 'type' | 'inputMode' | 'pattern'>
 
 /** Masked date input (dd - mm - yyyy). */
 function buildOverlaySuffix(mask: string, val?: string) {
@@ -34,8 +55,27 @@ function DateInput({
   )
 
   const isControlled = value !== undefined
-  const currentValue = isControlled ? (value as string) : internalValue
+  const rawValue = isControlled ? (value as string) : internalValue
+  // Normalise to display format so IMask always receives dd-mm-yyyy.
+  const currentValue = rawValue.match(/^\d{4}-\d{2}-\d{2}$/)
+    ? isoToDisplay(rawValue)
+    : rawValue
   const overlayText = buildOverlaySuffix(MASK, currentValue)
+
+  // Synthetic event shape is RHF-compatible only (name + value); type:'text' satisfies RHF's text-input path.
+  const handleAccept = (val: string) => {
+    const emitVal = val.length === MASK.length ? displayToIso(val) : val
+    if (onChange) {
+      onChange({
+        target: { name: name ?? id, value: emitVal, type: 'text' },
+        currentTarget: { value: emitVal },
+      })
+    }
+    if (!isControlled) {
+      setInternalValue(emitVal)
+    }
+  }
+
   return (
     <TextInput
       id={id}
@@ -45,10 +85,10 @@ function DateInput({
         !!currentValue && (
           <div className='pointer-events-none absolute inset-0 top-4.5 flex items-center px-4'>
             {/* Invisible prefix to reserve exact width of typed value so suffix aligns */}
-            <span className='invisible text-base/[1.5] font-normal'>
+            <span className='invisible text-base/normal font-normal'>
               {currentValue}
             </span>
-            <span className='text-base/[1.5] font-normal text-gray-400'>
+            <span className='text-base/normal font-normal text-gray-400'>
               {overlayText}
             </span>
           </div>
@@ -58,22 +98,12 @@ function DateInput({
     >
       <IMaskInput
         id={id}
+        name={name}
         mask={MASK}
         blocks={DATE_BLOCKS}
         inputMode='numeric'
         value={currentValue}
-        onAccept={(val: unknown) => {
-          const stringVal = typeof val === 'string' ? val : String(val ?? '')
-          if (onChange) {
-            onChange({
-              target: { name: name ?? id, value: stringVal },
-              currentTarget: { value: stringVal },
-            } as unknown as React.ChangeEvent<HTMLInputElement>)
-          }
-          if (!isControlled) {
-            setInternalValue(stringVal)
-          }
-        }}
+        onAccept={handleAccept}
       />
     </TextInput>
   )

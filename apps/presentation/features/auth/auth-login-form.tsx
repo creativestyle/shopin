@@ -4,14 +4,14 @@ import { useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { Link } from '@/lib/navigation'
 import { Button } from '@/components/ui/button'
-import { Field, FieldError } from '@/components/ui/field'
+import { FormField } from '@/components/ui/form-field'
 import { TextInput } from '@/components/ui/inputs/text-input'
 import { PasswordInput } from '@/components/ui/inputs/password-input'
 import {
   LoginRequestSchema,
   type LoginRequest,
 } from '@core/contracts/auth/login'
-import { useForm, Controller } from 'react-hook-form'
+import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Toast, addToast } from '@/components/ui/toast'
 import { HttpError } from '@/lib/error-utils'
@@ -34,6 +34,7 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
   const [verifyEmailHref, setVerifyEmailHref] = useState<string | null>(null)
 
   const form = useForm<LoginRequest>({
+    mode: 'onTouched',
     resolver: zodResolver(LoginRequestSchema),
     defaultValues: {
       email: '',
@@ -147,41 +148,33 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
         className='flex w-full flex-col content-stretch gap-6'
         noValidate
       >
-        <Controller
+        <FormField
           name='email'
           control={form.control}
-          render={({ field, fieldState }) => (
-            <Field data-invalid={fieldState.invalid}>
-              <TextInput
-                {...field}
-                id='email'
-                label={t('emailLabel')}
-                required
-                autoComplete='email'
-              />
-              {fieldState.invalid && fieldState.error && (
-                <FieldError error={fieldState.error} />
-              )}
-            </Field>
+          render={({ field, validationState }) => (
+            <TextInput
+              {...field}
+              id='email'
+              label={t('emailLabel')}
+              required
+              autoComplete='email'
+              validationState={validationState}
+            />
           )}
         />
 
-        <Controller
+        <FormField
           name='password'
           control={form.control}
-          render={({ field, fieldState }) => (
-            <Field data-invalid={fieldState.invalid}>
-              <PasswordInput
-                {...field}
-                id='password'
-                label={t('passwordLabel')}
-                required
-                autoComplete='current-password'
-              />
-              {fieldState.invalid && fieldState.error && (
-                <FieldError error={fieldState.error} />
-              )}
-            </Field>
+          render={({ field, validationState }) => (
+            <PasswordInput
+              {...field}
+              id='password'
+              label={t('passwordLabel')}
+              required
+              autoComplete='current-password'
+              validationState={validationState}
+            />
           )}
         />
 
