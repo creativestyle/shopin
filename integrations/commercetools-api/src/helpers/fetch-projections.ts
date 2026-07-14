@@ -3,6 +3,7 @@ import {
   ProductProjectionPagedQueryApiResponseSchema,
   type ProductProjectionApiResponse,
 } from '../schemas/product-projection'
+import { buildInClause } from './build-in-clause'
 
 /**
  * Fetches Product Projections by product IDs.
@@ -22,7 +23,7 @@ export async function fetchProjectionsByIds(
     return []
   }
 
-  const wherePredicate = `id in (${ids.map((id) => `"${id}"`).join(',')})`
+  const wherePredicate = buildInClause('id', ids)
 
   const response = await client
     .productProjections()

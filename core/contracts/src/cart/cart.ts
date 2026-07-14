@@ -16,6 +16,7 @@ export const LineItemResponseSchema = z.object({
   name: z.string(),
   imageUrl: z.string().optional(),
   attributes: z.record(z.string(), z.string()).optional(),
+  maxQuantity: z.number().int().nonnegative().optional(),
 })
 
 export type LineItemResponse = z.infer<typeof LineItemResponseSchema>
