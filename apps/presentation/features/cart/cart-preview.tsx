@@ -3,6 +3,7 @@
 import * as React from 'react'
 import type { CartResponse } from '@core/contracts/cart/cart'
 import type { OrderResponse } from '@core/contracts/order/order'
+import { useMediaQuery } from '@/hooks/use-media-query'
 import { CartSummary } from './components/cart-summary'
 import { CartItemCompactList } from './components/cart-item-compact-list'
 import { ShowMoreProducts } from './components/show-more-products'
@@ -35,11 +36,12 @@ export function CartPreview({
   const lineItems = cart.lineItems ?? []
   const hasScroll = scrollable
   const [isExpanded, setIsExpanded] = React.useState(false)
+  const isDesktop = useMediaQuery('(min-width: 1024px)')
 
   const VISIBLE_COUNT = 2
   const hiddenCount = lineItems.length - VISIBLE_COUNT
   const hasHidden = hiddenCount > 0
-  const effectiveExpanded = isExpanded || !hasScroll
+  const effectiveExpanded = isExpanded || !hasScroll || !isDesktop
 
   return (
     <div className={className}>
@@ -71,7 +73,9 @@ export function CartPreview({
               scrollRef={scrollRef}
               sentinelRef={sentinelRef}
               onExpand={
-                hasHidden && !isExpanded ? () => setIsExpanded(true) : undefined
+                isDesktop && hasHidden && !isExpanded
+                  ? () => setIsExpanded(true)
+                  : undefined
               }
               hiddenCount={hiddenCount}
             />
