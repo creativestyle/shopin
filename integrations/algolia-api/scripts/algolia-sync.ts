@@ -393,7 +393,10 @@ program
       objects: allRecords,
     })
 
-    console.log(`Done! Index replaced with ${allRecords.length} records.`, result)
+    console.log(
+      `Done! Index replaced with ${allRecords.length} records.`,
+      result
+    )
 
     const facetAttributes = buildFacetAttributes(filterableAttributes)
 
