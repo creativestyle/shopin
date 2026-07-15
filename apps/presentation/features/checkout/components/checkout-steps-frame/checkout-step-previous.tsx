@@ -34,7 +34,6 @@ export function CheckoutStepPrevious({ step }: CheckoutStepPreviousProps) {
 
   return (
     <section
-      role='listitem'
       aria-labelledby={headingId}
       className='w-full rounded-lg border border-gray-200 bg-white px-8 pt-4 pb-6 opacity-75'
     >
