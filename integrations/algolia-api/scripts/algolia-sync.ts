@@ -132,7 +132,7 @@ async function fetchFilterableAttributes(
       if (!attr.isSearchable) {
         continue
       }
-      if (!FACETABLE_TYPES.has(attr.type.name)) {
+      if (!FACETABLE_TYPES.has(attr.type.name as FacetableFieldType)) {
         continue
       }
       if (EXCLUDED_ATTR_NAMES.has(attr.name)) {
@@ -388,12 +388,12 @@ program
       `\nPushing ${allRecords.length} records to Algolia index "${algoliaIndexName}"...`
     )
 
-    const result = await algoliaClient.saveObjects({
+    const result = await algoliaClient.replaceAllObjects({
       indexName: algoliaIndexName,
       objects: allRecords,
     })
 
-    console.log(`Done! Pushed ${allRecords.length} records.`, result)
+    console.log(`Done! Index replaced with ${allRecords.length} records.`, result)
 
     const facetAttributes = buildFacetAttributes(filterableAttributes)
 
