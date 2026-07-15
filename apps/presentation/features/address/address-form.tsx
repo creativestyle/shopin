@@ -201,6 +201,7 @@ export function AddressForm({
               {...field}
               id='streetNumber'
               label={t('fields.streetNumber')}
+              required
               autoComplete='address-line2'
               validationState={validationState}
             />
