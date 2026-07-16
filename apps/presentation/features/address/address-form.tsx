@@ -7,6 +7,7 @@ import { useTranslations, useLocale } from 'next-intl'
 import { urlPrefixToRfc } from '@config/constants'
 import { useStoreConfig } from '@/features/store-config/store-config-provider'
 import { Field, FieldError } from '@/components/ui/field'
+import { FormField } from '@/components/ui/form-field'
 import { TextInput } from '@/components/ui/inputs/text-input'
 import { Select } from '@/components/ui/select'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-button'
@@ -77,6 +78,7 @@ export function AddressForm({
   )
 
   const form = useForm<AddressRequest>({
+    mode: 'onTouched',
     resolver: zodResolver(AddressRequestSchema),
     defaultValues: defaultValues || {},
   })
@@ -141,91 +143,69 @@ export function AddressForm({
       </Field>
 
       {/* First Name */}
-      <Field>
-        <Controller
-          name='firstName'
-          control={form.control}
-          render={({ field, fieldState }) => (
-            <Field data-invalid={fieldState.invalid}>
-              <TextInput
-                {...field}
-                id='firstName'
-                label={t('fields.firstName')}
-                required
-                autoComplete='given-name'
-              />
-              {fieldState.invalid && fieldState.error && (
-                <FieldError error={fieldState.error} />
-              )}
-            </Field>
-          )}
-        />
-      </Field>
+      <FormField
+        name='firstName'
+        control={form.control}
+        render={({ field, validationState }) => (
+          <TextInput
+            {...field}
+            id='firstName'
+            label={t('fields.firstName')}
+            required
+            autoComplete='given-name'
+            validationState={validationState}
+          />
+        )}
+      />
 
       {/* Last Name */}
-      <Field>
-        <Controller
-          name='lastName'
-          control={form.control}
-          render={({ field, fieldState }) => (
-            <Field data-invalid={fieldState.invalid}>
-              <TextInput
-                {...field}
-                id='lastName'
-                label={t('fields.lastName')}
-                required
-                autoComplete='family-name'
-              />
-              {fieldState.invalid && fieldState.error && (
-                <FieldError error={fieldState.error} />
-              )}
-            </Field>
-          )}
-        />
-      </Field>
+      <FormField
+        name='lastName'
+        control={form.control}
+        render={({ field, validationState }) => (
+          <TextInput
+            {...field}
+            id='lastName'
+            label={t('fields.lastName')}
+            required
+            autoComplete='family-name'
+            validationState={validationState}
+          />
+        )}
+      />
 
       {/* Street Name and Number */}
       <div className='grid grid-cols-1 gap-y-4 sm:grid-cols-3 sm:gap-x-4'>
-        <Field className='col-span-2'>
-          <Controller
-            name='streetName'
-            control={form.control}
-            render={({ field, fieldState }) => (
-              <Field data-invalid={fieldState.invalid}>
-                <TextInput
-                  {...field}
-                  id='streetName'
-                  label={t('fields.streetName')}
-                  required
-                  autoComplete='street-address'
-                />
-                {fieldState.invalid && fieldState.error && (
-                  <FieldError error={fieldState.error} />
-                )}
-              </Field>
-            )}
-          />
-        </Field>
+        <FormField
+          name='streetName'
+          control={form.control}
+          className='col-span-2'
+          render={({ field, validationState }) => (
+            <TextInput
+              {...field}
+              id='streetName'
+              label={t('fields.streetName')}
+              required
+              autoComplete='street-address'
+              validationState={validationState}
+            />
+          )}
+        />
 
-        <Field className='col-span-1'>
-          <Controller
-            name='streetNumber'
-            control={form.control}
-            render={({ field, fieldState }) => (
-              <Field data-invalid={fieldState.invalid}>
-                <TextInput
-                  {...field}
-                  id='streetNumber'
-                  label={t('fields.streetNumber')}
-                  autoComplete='address-line2'
-                />
-                {fieldState.invalid && fieldState.error && (
-                  <FieldError error={fieldState.error} />
-                )}
-              </Field>
-            )}
-          />
-        </Field>
+        <FormField
+          name='streetNumber'
+          control={form.control}
+          className='col-span-1'
+          render={({ field, validationState }) => (
+            <TextInput
+              {...field}
+              id='streetNumber'
+              label={t('fields.streetNumber')}
+              autoComplete='address-line2'
+              validationState={validationState}
+            />
+          )}
+        />
       </div>
 
       {/* Additional Street Info - Expandable */}
@@ -241,94 +221,72 @@ export function AddressForm({
           {t('additionalAddressLine')}
         </Button>
       ) : (
-        <Field>
-          <Controller
-            name='additionalStreetInfo'
-            control={form.control}
-            render={({ field, fieldState }) => (
-              <Field data-invalid={fieldState.invalid}>
-                <TextInput
-                  {...field}
-                  id='additionalStreetInfo'
-                  label={t('fields.additionalStreetInfo')}
-                  autoComplete='address-line3'
-                />
-                {fieldState.invalid && fieldState.error && (
-                  <FieldError error={fieldState.error} />
-                )}
-              </Field>
-            )}
-          />
-        </Field>
+        <FormField
+          name='additionalStreetInfo'
+          control={form.control}
+          render={({ field, validationState }) => (
+            <TextInput
+              {...field}
+              id='additionalStreetInfo'
+              label={t('fields.additionalStreetInfo')}
+              autoComplete='address-line3'
+              validationState={validationState}
+            />
+          )}
+        />
       )}
 
       {/* Postal Code and City - Side by Side */}
       <div className='grid grid-cols-1 gap-y-4 sm:grid-cols-3 sm:gap-x-4'>
-        <Field className='col-span-1'>
-          <Controller
-            name='postalCode'
-            control={form.control}
-            render={({ field, fieldState }) => (
-              <Field data-invalid={fieldState.invalid}>
-                <TextInput
-                  {...field}
-                  id='postalCode'
-                  label={t('fields.postalCode')}
-                  required
-                  autoComplete='postal-code'
-                />
-                {fieldState.invalid && fieldState.error && (
-                  <FieldError error={fieldState.error} />
-                )}
-              </Field>
-            )}
-          />
-        </Field>
+        <FormField
+          name='postalCode'
+          control={form.control}
+          className='col-span-1'
+          render={({ field, validationState }) => (
+            <TextInput
+              {...field}
+              id='postalCode'
+              label={t('fields.postalCode')}
+              required
+              autoComplete='postal-code'
+              validationState={validationState}
+            />
+          )}
+        />
 
-        <Field className='col-span-2'>
-          <Controller
-            name='city'
-            control={form.control}
-            render={({ field, fieldState }) => (
-              <Field data-invalid={fieldState.invalid}>
-                <TextInput
-                  {...field}
-                  id='city'
-                  label={t('fields.city')}
-                  required
-                  autoComplete='address-level2'
-                />
-                {fieldState.invalid && fieldState.error && (
-                  <FieldError error={fieldState.error} />
-                )}
-              </Field>
-            )}
-          />
-        </Field>
+        <FormField
+          name='city'
+          control={form.control}
+          className='col-span-2'
+          render={({ field, validationState }) => (
+            <TextInput
+              {...field}
+              id='city'
+              label={t('fields.city')}
+              required
+              autoComplete='address-level2'
+              validationState={validationState}
+            />
+          )}
+        />
       </div>
 
       {/* Email Address */}
-      <Field>
-        <Controller
-          name='email'
-          control={form.control}
-          render={({ field, fieldState }) => (
-            <Field data-invalid={fieldState.invalid}>
-              <TextInput
-                {...field}
-                id='email'
-                label={t('fields.email')}
-                type='email'
-                required
-                autoComplete='email'
-              />
-              {fieldState.invalid && fieldState.error && (
-                <FieldError error={fieldState.error} />
-              )}
-            </Field>
-          )}
-        />
-      </Field>
+      <FormField
+        name='email'
+        control={form.control}
+        render={({ field, validationState }) => (
+          <TextInput
+            {...field}
+            id='email'
+            label={t('fields.email')}
+            type='email'
+            required
+            autoComplete='email'
+            validationState={validationState}
+          />
+        )}
+      />
 
       {/* Country */}
       <Field>

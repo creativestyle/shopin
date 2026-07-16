@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useRef } from 'react'
 import { cva, type VariantProps } from 'class-variance-authority'
 import { cn } from '@/lib/utils'
 import { Slot } from '@radix-ui/react-slot'
@@ -6,7 +6,7 @@ import { useFieldValidation } from '../field'
 import { TrailingElement } from './text-input-trailing-element'
 
 const inputVariants = cva(
-  'peer w-full rounded-lg border bg-white px-4 pt-6 pb-1.5 leading-[1.5] text-gray-950 placeholder-transparent caret-gray-950 transition-colors transition-normal outline-none focus:placeholder-gray-400 focus-visible:border-gray-950 disabled:cursor-not-allowed disabled:border-gray-200 disabled:bg-gray-100 disabled:text-gray-500 disabled:placeholder-gray-400',
+  'peer w-full rounded-lg border bg-white px-4 pt-6 pb-1.5 leading-[1.5] text-gray-950 placeholder-transparent caret-gray-950 transition-colors transition-normal outline-none focus:placeholder-gray-400 disabled:cursor-not-allowed disabled:border-gray-200 disabled:bg-gray-100 disabled:text-gray-500 disabled:placeholder-gray-400 data-[keyboard-focus]:ring-2 data-[keyboard-focus]:ring-gray-950 data-[keyboard-focus]:ring-offset-2',
   {
     variants: {
       state: {
@@ -65,10 +65,35 @@ function TextInput({
   asChild,
   children,
   placeholder = ' ',
+  onPointerDown,
+  onFocus,
+  onBlur,
   ...props
 }: TextInputProps) {
   const { isInvalid, isValid, describedBy } =
     useInputValidation(validationState)
+
+  const isPointerFocus = useRef(false)
+
+  const handlePointerDown: React.PointerEventHandler<HTMLInputElement> = (
+    e
+  ) => {
+    isPointerFocus.current = true
+    onPointerDown?.(e)
+  }
+
+  const handleFocus: React.FocusEventHandler<HTMLInputElement> = (e) => {
+    if (!isPointerFocus.current) {
+      e.currentTarget.setAttribute('data-keyboard-focus', '')
+    }
+    isPointerFocus.current = false
+    onFocus?.(e)
+  }
+
+  const handleBlur: React.FocusEventHandler<HTMLInputElement> = (e) => {
+    e.currentTarget.removeAttribute('data-keyboard-focus')
+    onBlur?.(e)
+  }
 
   // Add right padding if we will render any trailing element
   const hasEnd = Boolean(endAdornment || isValid || isInvalid)
@@ -83,6 +108,9 @@ function TextInput({
           aria-required={required || undefined}
           aria-invalid={isInvalid || undefined}
           aria-describedby={describedBy || undefined}
+          onPointerDown={handlePointerDown}
+          onFocus={handleFocus}
+          onBlur={handleBlur}
           className={cn(
             inputVariants({
               state: isInvalid ? 'error' : isValid ? 'valid' : 'none',
