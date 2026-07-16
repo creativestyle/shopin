@@ -19,6 +19,7 @@ interface ProductCollectionPageProps {
   saleOnly?: boolean
   priceMin?: number
   priceMax?: number
+  isDraft?: boolean
 }
 
 export async function ProductCollectionPage({
@@ -30,6 +31,7 @@ export async function ProductCollectionPage({
   saleOnly = false,
   priceMin,
   priceMax,
+  isDraft = false,
 }: ProductCollectionPageProps) {
   let productCollectionData = null
   let error: string | null = null
@@ -43,7 +45,8 @@ export async function ProductCollectionPage({
       filters,
       saleOnly,
       priceMin,
-      priceMax
+      priceMax,
+      isDraft
     )
   } catch (err) {
     if (HttpError.hasStatusCode(err, 404)) {

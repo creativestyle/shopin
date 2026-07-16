@@ -3,7 +3,7 @@
 import { useEffect, useRef } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { useTranslations } from 'next-intl'
-import Link from 'next/link'
+import { Link } from '@/lib/navigation'
 import { useConfirmEmail } from './hooks/use-confirm-email'
 import { getConfirmEmailErrorTranslationKey } from './lib/error-translations'
 import { ResendVerificationEmailForm } from './auth-resend-verification-email'

@@ -1,6 +1,6 @@
 'use client'
 
-import Link from 'next/link'
+import { Link } from '@/lib/navigation'
 import { useTranslations } from 'next-intl'
 import HeartIcon from '@/public/icons/heart.svg'
 import PinIcon from '@/public/icons/pin.svg'

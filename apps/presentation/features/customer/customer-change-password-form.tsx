@@ -2,14 +2,14 @@
 
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
-import { Field, FieldError } from '@/components/ui/field'
+import { FormField } from '@/components/ui/form-field'
 import { PasswordInput } from '@/components/ui/inputs/password-input'
 import { useChangePassword } from './hooks/use-change-password'
 import { ChangeCustomerPasswordRequestSchema } from '@core/contracts/customer/customer'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useTranslations } from 'next-intl'
 import { FC } from 'react'
-import { Controller, useForm } from 'react-hook-form'
+import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 
 const ChangePasswordFormSchema = ChangeCustomerPasswordRequestSchema.extend({
@@ -28,6 +28,7 @@ export const ChangePasswordForm: FC = () => {
   const { handlePasswordChange, isPasswordChangePending } = useChangePassword()
 
   const form = useForm<ChangePasswordFormData>({
+    mode: 'onTouched',
     resolver: zodResolver(ChangePasswordFormSchema),
     defaultValues: {
       currentPassword: '',
@@ -63,60 +64,48 @@ export const ChangePasswordForm: FC = () => {
         onSubmit={form.handleSubmit(onSubmit)}
         className='space-y-4'
       >
-        <Controller
+        <FormField
           name='currentPassword'
           control={form.control}
-          render={({ field, fieldState }) => (
-            <Field data-invalid={fieldState.invalid}>
-              <PasswordInput
-                {...field}
-                id='currentPassword'
-                label={t('currentPassword')}
-                required
-                autoComplete='current-password'
-              />
-              {fieldState.invalid && fieldState.error && (
-                <FieldError error={fieldState.error} />
-              )}
-            </Field>
+          render={({ field, validationState }) => (
+            <PasswordInput
+              {...field}
+              id='currentPassword'
+              label={t('currentPassword')}
+              required
+              autoComplete='current-password'
+              validationState={validationState}
+            />
           )}
         />
 
-        <Controller
+        <FormField
           name='newPassword'
           control={form.control}
-          render={({ field, fieldState }) => (
-            <Field data-invalid={fieldState.invalid}>
-              <PasswordInput
-                {...field}
-                id='newPassword'
-                label={t('newPassword')}
-                required
-                autoComplete='new-password'
-              />
-              {fieldState.invalid && fieldState.error && (
-                <FieldError error={fieldState.error} />
-              )}
-            </Field>
+          render={({ field, validationState }) => (
+            <PasswordInput
+              {...field}
+              id='newPassword'
+              label={t('newPassword')}
+              required
+              autoComplete='new-password'
+              validationState={validationState}
+            />
           )}
         />
 
-        <Controller
+        <FormField
           name='confirmNewPassword'
           control={form.control}
-          render={({ field, fieldState }) => (
-            <Field data-invalid={fieldState.invalid}>
-              <PasswordInput
-                {...field}
-                id='confirmNewPassword'
-                label={t('confirmNewPassword')}
-                required
-                autoComplete='new-password'
-              />
-              {fieldState.invalid && fieldState.error && (
-                <FieldError error={fieldState.error} />
-              )}
-            </Field>
+          render={({ field, validationState }) => (
+            <PasswordInput
+              {...field}
+              id='confirmNewPassword'
+              label={t('confirmNewPassword')}
+              required
+              autoComplete='new-password'
+              validationState={validationState}
+            />
           )}
         />
 

@@ -121,7 +121,7 @@ describe('PasswordInput', () => {
 })
 
 describe('DateInput', () => {
-  it('renders masked input and calls onChange with masked value', async () => {
+  it('renders masked input and calls onChange with ISO value when date is complete', async () => {
     const user = userEvent.setup()
     const handleChange = jest.fn()
 
@@ -143,7 +143,7 @@ describe('DateInput', () => {
     expect(handleChange).toHaveBeenCalled()
     const lastCall =
       handleChange.mock.calls[handleChange.mock.calls.length - 1][0]
-    expect(lastCall.target.value).toBe('08-03-2024')
+    expect(lastCall.target.value).toBe('2024-03-08')
   })
 
   it('ignores non-numeric characters', async () => {
@@ -191,7 +191,7 @@ describe('DateInput', () => {
     expect(input).toHaveValue('08-03-2024')
     const lastCall =
       handleChange.mock.calls[handleChange.mock.calls.length - 1][0]
-    expect(lastCall.target.value).toBe('08-03-2024')
+    expect(lastCall.target.value).toBe('2024-03-08')
   })
 
   it('shows “-mm-yyyy” after two digits', async () => {

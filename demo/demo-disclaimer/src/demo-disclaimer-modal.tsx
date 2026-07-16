@@ -91,8 +91,12 @@ function resolveLocale(locale: string): SupportedLocale {
 
 export function DemoDisclaimerModal() {
   const appLocale = useLocale()
+  const resolvedLocale = resolveLocale(appLocale)
   const [open, setOpen] = useState(false)
-  const [lang, setLang] = useState<SupportedLocale>(resolveLocale(appLocale))
+  const [lang, setLang] = useState<SupportedLocale>(resolvedLocale)
+  // Links follow the dialog's language toggle, not the page locale — so switching
+  // to the EN tab on a /de page links to /privacy (no prefix), not /de/privacy.
+  const localeHrefPrefix = lang === 'en' ? '' : `/${lang}`
   const [dontShowAgain, setDontShowAgain] = useState(false)
   const [showScrollHint, setShowScrollHint] = useState(false)
   const bodyRef = useRef<HTMLDivElement>(null)
@@ -156,13 +160,13 @@ export function DemoDisclaimerModal() {
       onOpenChange={handleDialogOpenChange}
     >
       <DialogPrimitive.Portal>
-        <DialogPrimitive.Overlay className='fixed inset-0 z-(--z-modal) bg-gray-950/50 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=closed]:animate-out data-[state=closed]:fade-out-0' />
+        <DialogPrimitive.Overlay className='fixed inset-0 z-(--z-modal) bg-gray-950/50' />
         <DialogPrimitive.Content
           onEscapeKeyDown={(e) => e.preventDefault()}
           onPointerDownOutside={(e) => e.preventDefault()}
           onInteractOutside={(e) => e.preventDefault()}
-          onAnimationEnd={updateScrollHint}
-          className='fixed top-[50dvh] left-[50vw] z-(--z-modal) flex max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] max-w-2xl -translate-x-1/2 -translate-y-1/2 flex-col rounded-lg bg-white shadow-card data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95'
+          onOpenAutoFocus={updateScrollHint}
+          className='fixed top-[50dvh] left-[50vw] z-(--z-modal) flex max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] max-w-2xl -translate-x-1/2 -translate-y-1/2 flex-col rounded-lg bg-white shadow-card'
         >
           {/* Header + Language toggle */}
           <div className='flex shrink-0 items-center justify-between gap-3 px-6 py-4'>
@@ -223,14 +227,14 @@ export function DemoDisclaimerModal() {
                 <p>
                   {t.furtherDetails}{' '}
                   <a
-                    href='/privacy'
+                    href={`${localeHrefPrefix}/privacy`}
                     className='underline hover:no-underline'
                   >
                     {t.privacy}
                   </a>{' '}
                   {t.and}{' '}
                   <a
-                    href='/imprint'
+                    href={`${localeHrefPrefix}/imprint`}
                     className='underline hover:no-underline'
                   >
                     {t.legal}

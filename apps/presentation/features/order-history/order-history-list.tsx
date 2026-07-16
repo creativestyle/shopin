@@ -1,7 +1,7 @@
 'use client'
 
 import { FC } from 'react'
-import Link from 'next/link'
+import { Link } from '@/lib/navigation'
 import { useSearchParams, useRouter, usePathname } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { useOrders } from './hooks/use-orders'

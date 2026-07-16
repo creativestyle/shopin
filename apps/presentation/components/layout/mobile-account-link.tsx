@@ -1,6 +1,6 @@
 'use client'
 
-import Link from 'next/link'
+import { Link } from '@/lib/navigation'
 import { cn } from '../../lib/utils'
 import AccountIcon from '../../public/icons/account.svg'
 import { AccountIconBadge } from './account-icon-badge'

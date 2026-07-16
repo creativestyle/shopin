@@ -3,12 +3,12 @@
 import { FC, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { useSearchParams } from 'next/navigation'
-import Link from 'next/link'
+import { Link } from '@/lib/navigation'
 import { Button } from '@/components/ui/button'
-import { Field, FieldError } from '@/components/ui/field'
+import { FormField } from '@/components/ui/form-field'
 import { PasswordInput } from '@/components/ui/inputs/password-input'
 import { ResetPasswordRequestSchema } from '@core/contracts/auth/reset-password'
-import { useForm, Controller } from 'react-hook-form'
+import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Toast, addToast } from '@/components/ui/toast'
 import { HttpError } from '@/lib/error-utils'
@@ -47,6 +47,7 @@ export const ResetPasswordForm: FC<ResetPasswordFormProps> = ({
   const token = searchParams.get('token')
 
   const form = useForm<ResetPasswordFormData>({
+    mode: 'onTouched',
     resolver: zodResolver(ResetPasswordFormSchema),
     defaultValues: {
       newPassword: '',
@@ -146,41 +147,33 @@ export const ResetPasswordForm: FC<ResetPasswordFormProps> = ({
         className='flex w-full flex-col content-stretch gap-6'
         noValidate
       >
-        <Controller
+        <FormField
           name='newPassword'
           control={form.control}
-          render={({ field, fieldState }) => (
-            <Field data-invalid={fieldState.invalid}>
-              <PasswordInput
-                {...field}
-                id='newPassword'
-                label={t('newPasswordLabel')}
-                required
-                autoComplete='new-password'
-              />
-              {fieldState.invalid && fieldState.error && (
-                <FieldError error={fieldState.error} />
-              )}
-            </Field>
+          render={({ field, validationState }) => (
+            <PasswordInput
+              {...field}
+              id='newPassword'
+              label={t('newPasswordLabel')}
+              required
+              autoComplete='new-password'
+              validationState={validationState}
+            />
           )}
         />
 
-        <Controller
+        <FormField
           name='confirmPassword'
           control={form.control}
-          render={({ field, fieldState }) => (
-            <Field data-invalid={fieldState.invalid}>
-              <PasswordInput
-                {...field}
-                id='confirmPassword'
-                label={t('confirmPasswordLabel')}
-                required
-                autoComplete='new-password'
-              />
-              {fieldState.invalid && fieldState.error && (
-                <FieldError error={fieldState.error} />
-              )}
-            </Field>
+          render={({ field, validationState }) => (
+            <PasswordInput
+              {...field}
+              id='confirmPassword'
+              label={t('confirmPasswordLabel')}
+              required
+              autoComplete='new-password'
+              validationState={validationState}
+            />
           )}
         />
 

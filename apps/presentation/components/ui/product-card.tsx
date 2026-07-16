@@ -1,6 +1,6 @@
 import React from 'react'
 import Image from 'next/image'
-import Link from 'next/link'
+import { Link } from '@/lib/navigation'
 import { productImageLoader } from '@/lib/product-image-loader'
 import type { LinkProps } from 'next/link'
 import { cn } from '@/lib/utils'
