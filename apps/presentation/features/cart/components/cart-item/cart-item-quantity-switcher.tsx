@@ -3,15 +3,18 @@
 import type { LineItemResponse } from '@core/contracts/cart/cart'
 import { QuantitySwitcher } from '@/components/ui/quantity-switcher/quantity-switcher'
 import { useCartItemQuantity } from './use-cart-item-quantity'
+import { useRemoveCartItem } from '../../hooks/use-remove-cart-item'
 import { useTranslations } from 'next-intl'
 
 interface CartItemQuantitySwitcherProps {
   item: LineItemResponse
+  itemName: string
   className?: string
 }
 
 export function CartItemQuantitySwitcher({
   item,
+  itemName,
   className,
 }: CartItemQuantitySwitcherProps) {
   const t = useTranslations('cart')
@@ -21,6 +24,12 @@ export function CartItemQuantitySwitcher({
     handleDecrease,
     handleDirectInputChange,
   } = useCartItemQuantity({ item })
+  const { handleRemove, isPending: isRemoving } = useRemoveCartItem()
+
+  // AC: decreasing quantity to zero removes the item automatically.
+  const handleRemoveAtZero = () => {
+    handleRemove({ lineItemId: item.id }).catch(() => {})
+  }
 
   return (
     <QuantitySwitcher
@@ -28,7 +37,10 @@ export function CartItemQuantitySwitcher({
       onDecrease={handleDecrease}
       onIncrease={handleIncrease}
       onChange={handleDirectInputChange}
-      ariaLabel={t('item.quantity')}
+      onRemove={handleRemoveAtZero}
+      removeLabel={t('item.removeNamed', { name: itemName })}
+      disabled={isRemoving}
+      ariaLabel={t('item.quantityFor', { name: itemName })}
       className={className}
     />
   )
