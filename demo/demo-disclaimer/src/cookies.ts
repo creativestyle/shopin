@@ -42,5 +42,8 @@ export function dismissDemoDisclaimerForSession(): void {
   }
   try {
     window.sessionStorage.setItem(SESSION_KEY, 'true')
-  } catch {}
+  } catch {
+    // sessionStorage unavailable (private mode / disabled) — dismissal simply
+    // won't persist across reloads; the cookie opt-in remains available.
+  }
 }
