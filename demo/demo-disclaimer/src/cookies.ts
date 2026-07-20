@@ -1,6 +1,7 @@
 const COOKIE_NAME = 'demo-disclaimer-acknowledged'
 const COOKIE_REGEX = new RegExp(`(?:^|; )${COOKIE_NAME}=true`)
 const EXPIRY_DAYS = 30
+const SESSION_KEY = 'demo-disclaimer-dismissed'
 
 function buildAcknowledgementCookie(): string {
   const expiryDate = new Date()
@@ -22,4 +23,24 @@ export function acknowledgeDemoDisclaimer(): void {
     return
   }
   document.cookie = buildAcknowledgementCookie()
+}
+
+export function hasDismissedDemoDisclaimerThisSession(): boolean {
+  if (typeof window === 'undefined') {
+    return false
+  }
+  try {
+    return window.sessionStorage.getItem(SESSION_KEY) === 'true'
+  } catch {
+    return false
+  }
+}
+
+export function dismissDemoDisclaimerForSession(): void {
+  if (typeof window === 'undefined') {
+    return
+  }
+  try {
+    window.sessionStorage.setItem(SESSION_KEY, 'true')
+  } catch {}
 }
