@@ -7,9 +7,6 @@ const LEGAL_SEGMENTS = new Set(['privacy', 'imprint', 'terms'])
 
 export function DemoDisclaimerModalWrapper() {
   const segments = useSelectedLayoutSegments()
-  if (process.env.NODE_ENV === 'production') {
-    return null
-  }
   // useSelectedLayoutSegments includes route groups (e.g. "(main)") — skip them
   const firstSegment = segments.find((s) => !s.startsWith('('))
   if (firstSegment && LEGAL_SEGMENTS.has(firstSegment)) {
