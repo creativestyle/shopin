@@ -168,8 +168,12 @@
     "continueShopping": "Weiter einkaufen",
     "item": {
       "quantity": "Menge",
+      "quantityFor": "Menge von {name}",
       "remove": "Entfernen",
       "removeAction": "Artikel entfernen",
+      "removeNamed": "{name} entfernen",
+      "unitPrice": "Stückpreis",
+      "perUnit": "pro Stück",
       "addToWishlist": "Zur Wunschliste hinzufügen",
       "artNumber": "Art.-Nr.",
       "color": "Farbe",
@@ -192,7 +196,8 @@
       "total": "Gesamtpreis",
       "totalInclTax": "Gesamt inkl. MwSt.",
       "taxNote": "inkl. MwSt.",
-      "promoCode": "Gutscheincode"
+      "promoCode": "Gutscheincode",
+      "totalAnnouncement": "Warenkorbsumme: {total}"
     },
     "errors": {
       "addToCart": "Fehler beim Hinzufügen zum Warenkorb",
