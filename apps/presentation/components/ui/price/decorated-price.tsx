@@ -34,6 +34,7 @@ function DecoratedPrice({
   originalPrice,
   taxNote,
   locale,
+  stacked = false,
   ...props
 }: React.ComponentProps<'span'> &
   VariantProps<typeof variants> & {
@@ -43,6 +44,9 @@ function DecoratedPrice({
     originalPrice?: number
     taxNote?: string
     locale: string
+    /** Stack the original and discounted prices vertically instead of inline. */
+    stacked?: boolean
+    /** Escape hatch to override the wrapper layout. */
     wrapperClassName?: string
     originalPriceClassName?: string
   }) {
@@ -54,7 +58,8 @@ function DecoratedPrice({
   return (
     <div
       className={cn(
-        'flex flex-wrap items-baseline justify-end gap-1',
+        'flex justify-end',
+        stacked ? 'flex-col items-end gap-0' : 'flex-wrap items-baseline gap-1',
         wrapperClassName
       )}
     >

@@ -96,7 +96,7 @@ export function CartItemCompact({
                   currency={item.price.currency}
                   fractionDigits={item.price.fractionDigits}
                   locale={locale}
-                  wrapperClassName='flex-col items-end gap-0'
+                  stacked
                   className={priceClassName}
                   originalPriceClassName={originalPriceClassName}
                 />
@@ -127,7 +127,7 @@ export function CartItemCompact({
                   currency={item.price.currency}
                   fractionDigits={item.price.fractionDigits}
                   locale={locale}
-                  wrapperClassName='flex-col items-end gap-0'
+                  stacked
                   className={priceClassName}
                   originalPriceClassName={originalPriceClassName}
                 />
