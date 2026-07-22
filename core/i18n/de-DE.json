@@ -696,6 +696,7 @@
     "removeError": "Entfernen aus der Wunschliste fehlgeschlagen"
   },
   "productCard": {
-    "linkAriaLabel": "{name} ansehen"
+    "linkAriaLabel": "{name} ansehen",
+    "omnibusPrice": "30-Tage Bestpreis"
   }
 }

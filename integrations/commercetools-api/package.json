@@ -8,10 +8,12 @@
   },
   "scripts": {
     "build": "tsc --build",
+    "build:all": "tsc --build tsconfig.json tsconfig.scripts.json",
     "dev": "tsc --build --watch",
-    "lint": "eslint --fix ./src --max-warnings=0",
-    "format": "prettier --write ./src",
-    "format:check": "prettier --check --ignore-unknown ./src",
+    "setup:omnibus": "npm run build:all && dotenv -e ../../.env -- node dist/scripts/setup-omnibus-price.js",
+    "lint": "eslint --fix ./src ./scripts --max-warnings=0",
+    "format": "prettier --write ./src ./scripts",
+    "format:check": "prettier --check --ignore-unknown ./src ./scripts",
     "check-types": "tsc --noEmit"
   },
   "dependencies": {
@@ -25,7 +27,8 @@
   "devDependencies": {
     "@core/eslint-config": "*",
     "@core/prettier-config": "*",
-    "@core/typescript-config": "*"
+    "@core/typescript-config": "*",
+    "@types/node": "^25.1.0"
   },
   "peerDependencies": {
     "@nestjs/common": "^11.1.3",
