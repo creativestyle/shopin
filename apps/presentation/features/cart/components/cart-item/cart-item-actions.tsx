@@ -25,7 +25,6 @@ export function CartItemActions({
 }: CartItemActionsProps) {
   const t = useTranslations('cart')
   const showText = variant === 'with-text'
-  // Visible label stays concise; the accessible name identifies the item.
   const removeLabel = showText ? t('item.removeAction') : t('item.remove')
   const removeAriaLabel = t('item.removeNamed', { name: itemName })
 

@@ -26,7 +26,6 @@ export function CartItemQuantitySwitcher({
   } = useCartItemQuantity({ item })
   const { handleRemove, isPending: isRemoving } = useRemoveCartItem()
 
-  // AC: decreasing quantity to zero removes the item automatically.
   const handleRemoveAtZero = () => {
     handleRemove({ lineItemId: item.id }).catch(() => {})
   }

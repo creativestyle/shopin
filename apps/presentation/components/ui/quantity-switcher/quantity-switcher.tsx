@@ -12,10 +12,6 @@ interface QuantitySwitcherProps {
   onDecrease: () => void
   onIncrease: () => void
   onChange?: (newValue: number) => void
-  /**
-   * When provided, the decrease control stays enabled at `min` and invokes this
-   * callback instead — e.g. removing a cart line when its quantity hits zero.
-   */
   onRemove?: () => void
   removeLabel?: string
   disabled?: boolean
