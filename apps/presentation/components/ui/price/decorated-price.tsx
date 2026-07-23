@@ -58,10 +58,7 @@ function DecoratedPrice({
         </span>
       )}
       <span
-        className={cn(
-          variants({ variant, size, className }),
-          'order-2 text-right'
-        )}
+        className={cn(variants({ variant, size, className }), 'text-right')}
         {...props}
       >
         <span>{formattedPrice}</span>
