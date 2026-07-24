@@ -44,6 +44,18 @@ export function useAddressSelection({
       ? defaultBillingAddressId
       : defaultShippingAddressId
 
+  const [previousDefaultAddressId, setPreviousDefaultAddressId] =
+    useState(defaultAddressId)
+  if (defaultAddressId !== previousDefaultAddressId) {
+    setPreviousDefaultAddressId(defaultAddressId)
+    if (
+      defaultAddressId &&
+      addresses.some((addr) => addr.id === defaultAddressId)
+    ) {
+      setUserSelectedAddressId(defaultAddressId)
+    }
+  }
+
   // Compute effective selected address ID: user selection, cart match, or default address
   const selectedAddressId =
     userSelectedAddressId ||
