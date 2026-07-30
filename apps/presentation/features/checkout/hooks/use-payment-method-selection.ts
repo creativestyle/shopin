@@ -23,8 +23,7 @@ function getInitialSelectedMethod(
     }
   }
 
-  const defaultMethod =
-    paymentMethods.find((m) => m.isDefault) || paymentMethods[0]
+  const defaultMethod = paymentMethods.find((m) => m.isDefault)
   return defaultMethod?.id || ''
 }
 

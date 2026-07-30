@@ -598,7 +598,13 @@
       "title": "Payment Method",
       "noMethodsAvailable": "No payment methods available. Please try again later.",
       "saveError": "Failed to save payment method. Please try again.",
-      "via": "via {interface}"
+      "via": "via {interface}",
+      "invoice": {
+        "description": "SHOPIN offers you the convenient option of paying by invoice. To allow you to thoroughly inspect the ordered goods, we grant you a payment term of 14 days from receipt of the goods.",
+        "birthdayLabel": "Date of birth",
+        "consent": "I agree to the transmission of the data required to process the invoice purchase and to carry out an identity and credit check.",
+        "privacyNotice": "Our <privacy>Privacy Policy</privacy> applies"
+      }
     },
     "paymentInitiationError": "Failed to initiate payment. Please try again.",
     "orderCreationError": "Failed to create order. Please try again.",

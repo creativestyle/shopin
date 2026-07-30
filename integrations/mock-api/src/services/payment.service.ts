@@ -15,17 +15,6 @@ export class PaymentService {
   async getPaymentMethods(): Promise<PaymentMethodsResponse> {
     const mockPaymentMethods = [
       {
-        id: 'invoice',
-        name: 'Invoice',
-        localizedDescription: {
-          de: 'Rechnung (Zahlung innerhalb von 14 Tagen)',
-          en: 'Invoice (Payment within 14 days)',
-        },
-        method: 'invoice',
-        paymentInterface: 'mocked',
-        isDefault: true,
-      },
-      {
         id: 'prepayment',
         name: 'Prepayment',
         localizedDescription: {
@@ -34,7 +23,46 @@ export class PaymentService {
         },
         method: 'bank-transfer',
         paymentInterface: 'mocked',
-        isDefault: false,
+      },
+      {
+        id: 'credit-card',
+        name: 'Credit Card',
+        localizedDescription: {
+          de: 'Kreditkarte',
+          en: 'Credit Card',
+        },
+        method: 'credit-card',
+        paymentInterface: 'mocked',
+      },
+      {
+        id: 'paypal',
+        name: 'PayPal',
+        localizedDescription: {
+          de: 'PayPal',
+          en: 'PayPal',
+        },
+        method: 'paypal',
+        paymentInterface: 'mocked',
+      },
+      {
+        id: 'invoice',
+        name: 'Kauf auf Rechnung',
+        localizedDescription: {
+          de: 'Kauf auf Rechnung',
+          en: 'Purchase on invoice',
+        },
+        method: 'invoice',
+        paymentInterface: 'mocked',
+      },
+      {
+        id: 'sofort',
+        name: 'Sofortüberweisung',
+        localizedDescription: {
+          de: 'Sofortüberweisung',
+          en: 'Sofortüberweisung',
+        },
+        method: 'sofort',
+        paymentInterface: 'mocked',
       },
     ]
 

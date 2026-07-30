@@ -597,7 +597,13 @@
       "title": "Zahlungsart",
       "noMethodsAvailable": "Keine Zahlungsarten verfügbar. Bitte versuchen Sie es später erneut.",
       "saveError": "Fehler beim Speichern der Zahlungsart. Bitte versuchen Sie es erneut.",
-      "via": "über {interface}"
+      "via": "über {interface}",
+      "invoice": {
+        "description": "SHOPIN bietet Ihnen die komfortable Zahlung per Rechnung an. Um Ihnen eine gründliche Prüfung der bestellten Ware zu ermöglichen, räumen wir Ihnen ein Zahlungsziel von 14 Tagen ab Erhalt der Ware ein.",
+        "birthdayLabel": "Geburtsdatum",
+        "consent": "Mit der Übermittlung der für die Abwicklung des Rechnungskaufs und einer Identitäts- und Bonitätsprüfung erforderlichen Daten bin ich einverstanden.",
+        "privacyNotice": "Es gelten unsere <privacy>Datenschutzbestimmungen</privacy>"
+      }
     },
     "paymentInitiationError": "Fehler beim Initiieren der Zahlung. Bitte versuchen Sie es erneut.",
     "orderCreationError": "Fehler beim Erstellen der Bestellung. Bitte versuchen Sie es erneut.",
