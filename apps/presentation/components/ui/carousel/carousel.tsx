@@ -15,8 +15,11 @@ export const Carousel = ({
   children,
   id: idProp,
   navigation = true,
+  navigationSize,
   scrollbar = true,
   gridConfig,
+  fullbleed = true,
+  navigationStep,
   className,
   style,
   onSlideChange,
@@ -57,6 +60,7 @@ export const Carousel = ({
     maxSlidesPerView,
     scrollBehaviorPreference,
     onSlideChange,
+    navigationStep,
   })
 
   // Track animation frame ID for cleanup
@@ -116,7 +120,8 @@ export const Carousel = ({
       aria-roledescription='carousel'
       aria-label={t('ariaLabel')}
       className={cn(
-        'ui-fullbleed grid grid-cols-1 gap-6',
+        fullbleed ? 'ui-fullbleed' : '',
+        'grid grid-cols-1 gap-6',
         {
           // Always reserve space for scrollbar to prevent CLS
           'grid-rows-[auto_1]': scrollbar,
@@ -140,6 +145,7 @@ export const Carousel = ({
             onSlideToPrev={slideToPrev}
             onSlideToNext={slideToNext}
             carouselId={carouselId}
+            size={navigationSize}
           />
         )}
 

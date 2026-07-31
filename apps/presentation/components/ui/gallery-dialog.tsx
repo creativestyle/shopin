@@ -1,12 +1,13 @@
 'use client'
 
-import React, { useEffect, useRef } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
 import { productImageLoader } from '@/lib/product-image-loader'
 import { useTranslations } from 'next-intl'
 import CloseIcon from '@/public/icons/close.svg'
 import { Carousel, CarouselSlide } from '@/components/ui/carousel'
 import type { CarouselRef } from '@/types/carousel'
+import { GalleryThumbnailStrip } from '@/components/ui/gallery-thumbnail-strip'
 import {
   Dialog,
   DialogContent,
@@ -33,53 +34,63 @@ export interface GalleryDialogProps {
 
 const DEFAULT_IMAGE_SIZE = 1200
 
-export const GalleryDialog: React.FC<GalleryDialogProps> = ({
-  images,
-  startIndex = 0,
-  isOpen,
-  onClose,
-  imageWidth = DEFAULT_IMAGE_SIZE,
-  imageHeight = DEFAULT_IMAGE_SIZE,
-}) => {
-  const t = useTranslations('product.gallery')
-  const carouselRef = useRef<CarouselRef>(null)
-  const animationFrameRef = useRef<number | null>(null)
+function clampGalleryIndex(index: number, imagesLength: number): number {
+  if (imagesLength <= 0) {
+    return 0
+  }
 
-  // Scroll to startIndex when dialog opens or startIndex changes
-  // Uses requestAnimationFrame to wait for slides to be rendered before scrolling
-  // This is necessary because the carousel uses progressive rendering
-  useEffect(() => {
-    if (!isOpen || startIndex < 0) {
+  return Math.max(0, Math.min(index, imagesLength - 1))
+}
+
+interface GalleryDialogBodyProps {
+  images: GalleryImage[]
+  startIndex: number
+  imageWidth: number
+  imageHeight: number
+}
+
+function GalleryDialogBody({
+  images,
+  startIndex,
+  imageWidth,
+  imageHeight,
+}: GalleryDialogBodyProps) {
+  const carouselRef = useRef<CarouselRef>(null)
+  const pendingIndexRef = useRef<number | null>(null)
+  const [selectedIndex, setSelectedIndex] = useState(startIndex)
+  const [focusedIndex, setFocusedIndex] = useState(startIndex)
+
+  const selectImage = (index: number) => {
+    const nextIndex = clampGalleryIndex(index, images.length)
+    if (nextIndex === selectedIndex) {
       return
     }
+    pendingIndexRef.current = nextIndex
+    setSelectedIndex(nextIndex)
+    setFocusedIndex(nextIndex)
+    carouselRef.current?.scrollToSlide(nextIndex)
+  }
 
-    // Cancel any pending animation frame
-    if (animationFrameRef.current !== null) {
-      cancelAnimationFrame(animationFrameRef.current)
-    }
-
-    const attemptScroll = () => {
-      if (!carouselRef.current) {
-        animationFrameRef.current = requestAnimationFrame(attemptScroll)
+  const handleSlideChange = useCallback(
+    (currentIndex: number) => {
+      const newIndex = clampGalleryIndex(currentIndex - 1, images.length)
+      if (pendingIndexRef.current !== null) {
+        if (newIndex === pendingIndexRef.current) {
+          pendingIndexRef.current = null
+        }
         return
       }
+      setSelectedIndex(newIndex)
+    },
+    [images.length]
+  )
 
-      animationFrameRef.current = null
-      carouselRef.current.scrollToSlide(startIndex)
-    }
-
-    animationFrameRef.current = requestAnimationFrame(attemptScroll)
-
-    return () => {
-      if (animationFrameRef.current !== null) {
-        cancelAnimationFrame(animationFrameRef.current)
-        animationFrameRef.current = null
-      }
-    }
-  }, [isOpen, startIndex])
+  useEffect(() => {
+    carouselRef.current?.scrollToSlide(startIndex)
+  }, [startIndex])
 
   const carouselSlides = images.map((item, idx) => {
-    const isStartImage = idx === startIndex
+    const isFocusedImage = idx === focusedIndex
     return (
       <CarouselSlide
         key={idx}
@@ -92,15 +103,49 @@ export const GalleryDialog: React.FC<GalleryDialogProps> = ({
             alt={item.alt || ''}
             width={imageWidth}
             height={imageHeight}
-            preload={isStartImage}
-            loading={isStartImage ? 'eager' : 'lazy'}
-            fetchPriority={isStartImage ? 'high' : undefined}
+            preload={isFocusedImage}
+            loading={isFocusedImage ? 'eager' : 'lazy'}
+            fetchPriority={isFocusedImage ? 'high' : undefined}
             className='h-auto max-h-[calc(100vh-2rem)] w-auto max-w-full object-contain'
           />
         </div>
       </CarouselSlide>
     )
   })
+
+  return (
+    <div className='relative flex h-full w-full flex-col'>
+      <div className='flex min-h-0 w-full flex-1 [&_[data-role=carousel]]:h-full [&_[data-role=carousel]_[role=group]]:h-full [&_[data-role=carousel]_div[role=group]]:h-full [&_[data-role=carousel]>div]:h-full [&_button[type=button]]:opacity-100'>
+        <Carousel
+          ref={carouselRef}
+          gridConfig={1}
+          navigation={images.length > 1}
+          scrollbar={false}
+          className='h-full w-full flex-1'
+          onSlideChange={handleSlideChange}
+        >
+          {carouselSlides}
+        </Carousel>
+      </div>
+      <GalleryThumbnailStrip
+        images={images}
+        selectedIndex={selectedIndex}
+        onSelect={selectImage}
+      />
+    </div>
+  )
+}
+
+export const GalleryDialog: React.FC<GalleryDialogProps> = ({
+  images,
+  startIndex = 0,
+  isOpen,
+  onClose,
+  imageWidth = DEFAULT_IMAGE_SIZE,
+  imageHeight = DEFAULT_IMAGE_SIZE,
+}) => {
+  const t = useTranslations('product.gallery')
+  const normalizedStartIndex = clampGalleryIndex(startIndex, images.length)
 
   return (
     <Dialog
@@ -125,17 +170,12 @@ export const GalleryDialog: React.FC<GalleryDialogProps> = ({
         >
           <CloseIcon className='size-5' />
         </Button>
-        <div className='flex h-full w-full flex-1 [&_[data-role=carousel]]:h-full [&_[data-role=carousel]_[role=group]]:h-full [&_[data-role=carousel]_div[role=group]]:h-full [&_[data-role=carousel]>div]:h-full [&_button[type=button]]:opacity-100'>
-          <Carousel
-            ref={carouselRef}
-            gridConfig={1}
-            navigation={images.length > 1}
-            scrollbar={false}
-            className='h-full w-full flex-1'
-          >
-            {carouselSlides}
-          </Carousel>
-        </div>
+        <GalleryDialogBody
+          images={images}
+          startIndex={normalizedStartIndex}
+          imageWidth={imageWidth}
+          imageHeight={imageHeight}
+        />
       </DialogContent>
     </Dialog>
   )

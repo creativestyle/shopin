@@ -22,9 +22,15 @@ export interface CarouselProps {
   /** Stable ID for aria-controls; avoids hydration mismatch when multiple carousels exist */
   id?: string
   navigation?: boolean
+  /** Size variant for navigation arrows. 'sm' renders smaller arrows outside the scroller area. */
+  navigationSize?: 'sm'
   /** Show scrollbar pagination */
   scrollbar?: boolean
   gridConfig?: Partial<CarouselColumnsConfig> | number
+  /** Apply ui-fullbleed negative margins. Defaults to true. Set false when rendering inside a constrained container. */
+  fullbleed?: boolean
+  /** Number of slides to scroll per arrow click. Defaults to slidesPerView. */
+  navigationStep?: number
   className?: string
   style?: React.CSSProperties
   onSlideChange?: (currentIndex: number) => void
@@ -41,6 +47,7 @@ export interface CarouselNavigationProps {
   onSlideToPrev: () => void
   onSlideToNext: () => void
   carouselId: string
+  size?: 'sm'
   prevIcon?: React.ReactNode
   nextIcon?: React.ReactNode
 }
