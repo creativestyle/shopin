@@ -201,6 +201,7 @@
       "removeItem": "Failed to remove item",
       "fetchCart": "Failed to fetch cart"
     },
+    "moreProductsCount": "More ({count}+)",
     "addToCartModal": {
       "toastMessage": "Good choice. Item has been added to cart.",
       "dialogDescription": "Review your cart contents after adding an item.",

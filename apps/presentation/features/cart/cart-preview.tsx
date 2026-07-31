@@ -3,6 +3,7 @@
 import * as React from 'react'
 import type { CartResponse } from '@core/contracts/cart/cart'
 import type { OrderResponse } from '@core/contracts/order/order'
+import { useMediaQuery } from '@/hooks/use-media-query'
 import { CartSummary } from './components/cart-summary'
 import { CartItemCompactList } from './components/cart-item-compact-list'
 import { ShowMoreProducts } from './components/show-more-products'
@@ -34,6 +35,13 @@ export function CartPreview({
   const sentinelRef = React.useRef<HTMLDivElement>(null)
   const lineItems = cart.lineItems ?? []
   const hasScroll = scrollable
+  const [isExpanded, setIsExpanded] = React.useState(false)
+  const isDesktop = useMediaQuery('(min-width: 1024px)')
+
+  const VISIBLE_COUNT = 2
+  const hiddenCount = lineItems.length - VISIBLE_COUNT
+  const hasHidden = hiddenCount > 0
+  const effectiveExpanded = isExpanded || !hasScroll || !isDesktop
 
   return (
     <div className={className}>
@@ -43,7 +51,11 @@ export function CartPreview({
           ref={scrollRef}
           className='flex-1 overflow-y-auto px-6'
         >
-          <CartItemCompactList items={lineItems} />
+          <CartItemCompactList
+            items={lineItems}
+            visibleCount={VISIBLE_COUNT}
+            isExpanded={effectiveExpanded}
+          />
           <div
             ref={sentinelRef}
             className='h-0 w-full'
@@ -55,12 +67,23 @@ export function CartPreview({
 
       {/* Show more products */}
       {hasScroll && scrollRef && sentinelRef && (
-        <div className='shrink-0 px-6'>
-          <ShowMoreProducts
-            scrollRef={scrollRef}
-            sentinelRef={sentinelRef}
-          />
-        </div>
+        <>
+          <div className='shrink-0 px-6'>
+            <ShowMoreProducts
+              scrollRef={scrollRef}
+              sentinelRef={sentinelRef}
+              onExpand={
+                isDesktop && hasHidden && !isExpanded
+                  ? () => setIsExpanded(true)
+                  : undefined
+              }
+              hiddenCount={hiddenCount}
+            />
+          </div>
+          <div className='shrink-0'>
+            <div className='h-px bg-gray-100' />
+          </div>
+        </>
       )}
 
       {/* Price summary */}

@@ -24,6 +24,8 @@ const variants = cva('inline-flex items-baseline font-normal', {
 
 function DecoratedPrice({
   className,
+  wrapperClassName,
+  originalPriceClassName,
   price,
   variant,
   size,
@@ -32,6 +34,7 @@ function DecoratedPrice({
   originalPrice,
   taxNote,
   locale,
+  stacked = false,
   ...props
 }: React.ComponentProps<'span'> &
   VariantProps<typeof variants> & {
@@ -41,6 +44,11 @@ function DecoratedPrice({
     originalPrice?: number
     taxNote?: string
     locale: string
+    /** Stack the original and discounted prices vertically instead of inline. */
+    stacked?: boolean
+    /** Escape hatch to override the wrapper layout. */
+    wrapperClassName?: string
+    originalPriceClassName?: string
   }) {
   const formattedPrice = formatPriceWithPrefix(price, locale, {
     currency,
@@ -48,9 +56,20 @@ function DecoratedPrice({
   })
 
   return (
-    <div className='flex flex-wrap items-baseline justify-end gap-1'>
+    <div
+      className={cn(
+        'flex justify-end',
+        stacked ? 'flex-col items-end gap-0' : 'flex-wrap items-baseline gap-1',
+        wrapperClassName
+      )}
+    >
       {originalPrice !== undefined && (
-        <span className='order-1 text-right text-sm/[1.6] text-gray-600 line-through'>
+        <span
+          className={cn(
+            'order-1 text-right text-sm/[1.6] text-gray-600 line-through',
+            originalPriceClassName
+          )}
+        >
           {formatPriceWithPrefix(originalPrice, locale, {
             currency,
             fractionDigits,
