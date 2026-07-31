@@ -169,8 +169,12 @@
     "continueShopping": "Continue shopping",
     "item": {
       "quantity": "Quantity",
+      "quantityFor": "Quantity of {name}",
       "remove": "Remove",
       "removeAction": "Remove item",
+      "removeNamed": "Remove {name}",
+      "unitPrice": "Unit price",
+      "perUnit": "each",
       "addToWishlist": "Add to wishlist",
       "artNumber": "Art. No.",
       "color": "Color",
@@ -193,7 +197,8 @@
       "total": "Total",
       "totalInclTax": "Total incl. tax",
       "taxNote": "incl. VAT",
-      "promoCode": "Promo code"
+      "promoCode": "Promo code",
+      "totalAnnouncement": "Cart total: {total}"
     },
     "errors": {
       "addToCart": "Failed to add to cart",

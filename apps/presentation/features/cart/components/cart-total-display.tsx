@@ -22,7 +22,7 @@ export function CartTotalDisplay({
   return (
     <div className='relative flex w-full shrink-0 flex-wrap content-center items-center justify-between gap-2'>
       <div className='relative flex min-h-px min-w-px shrink-0 grow basis-0 flex-wrap content-center items-center gap-1 text-sm text-nowrap whitespace-pre'>
-        <p className='relative shrink-0 leading-[1.1] font-bold text-gray-950'>
+        <p className='relative shrink-0 leading-[1.1] font-bold text-gray-950 uppercase'>
           {displayLabel}
         </p>
         <p className='relative shrink-0 leading-[1.6] font-normal text-gray-500'>
