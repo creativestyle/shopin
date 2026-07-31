@@ -5,6 +5,7 @@ import { Card } from '@/components/ui/card'
 import { FormField } from '@/components/ui/form-field'
 import { PasswordInput } from '@/components/ui/inputs/password-input'
 import { useChangePassword } from './hooks/use-change-password'
+import { isInvalidCurrentPasswordError } from './lib/invalid-current-password-error'
 import { ChangeCustomerPasswordRequestSchema } from '@core/contracts/customer/customer'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useTranslations } from 'next-intl'
@@ -38,7 +39,7 @@ export const ChangePasswordForm: FC = () => {
   })
 
   async function onSubmit(data: ChangePasswordFormData) {
-    await handlePasswordChange(
+    const result = await handlePasswordChange(
       {
         currentPassword: data.currentPassword,
         newPassword: data.newPassword,
@@ -49,6 +50,21 @@ export const ChangePasswordForm: FC = () => {
         },
       }
     )
+
+    if (!result.success && isInvalidCurrentPasswordError(result.error)) {
+      form.setError('currentPassword', {
+        type: 'server',
+        message: 'account.myAccount.changePassword.errors.wrongCurrentPassword',
+      })
+      form.setFocus('currentPassword')
+    }
+  }
+
+  /** Keep the "passwords do not match" error on the confirm field in sync while the new password is edited. */
+  function revalidateConfirmPassword() {
+    if (form.getValues('confirmNewPassword')) {
+      void form.trigger('confirmNewPassword')
+    }
   }
 
   return (
@@ -85,6 +101,10 @@ export const ChangePasswordForm: FC = () => {
           render={({ field, validationState }) => (
             <PasswordInput
               {...field}
+              onChange={(e) => {
+                field.onChange(e)
+                revalidateConfirmPassword()
+              }}
               id='newPassword'
               label={t('newPassword')}
               required

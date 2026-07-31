@@ -1,5 +1,6 @@
 import {
   ArgumentsHost,
+  HttpException,
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common'
@@ -97,6 +98,42 @@ describe('HttpErrorFilter', () => {
       name: 'UnauthorizedException',
       message: 'Unauthorized',
     })
+  })
+
+  it('forwards a machine-readable code from our own exceptions', () => {
+    const { host, getStatus, getJson } = createHttpHostMock()
+    const filter = new HttpErrorFilter()
+
+    filter.catch(
+      new HttpException(
+        {
+          statusCode: 401,
+          message: 'Invalid current password',
+          code: 'INVALID_CURRENT_PASSWORD',
+        },
+        401
+      ),
+      host
+    )
+
+    expect(getStatus()).toBe(401)
+    expect(getJson()).toEqual({
+      statusCode: 401,
+      message: 'Unauthorized',
+      code: 'INVALID_CURRENT_PASSWORD',
+    })
+  })
+
+  it('does not forward non-string codes or exception messages', () => {
+    const { host, getJson } = createHttpHostMock()
+    const filter = new HttpErrorFilter()
+
+    filter.catch(
+      new HttpException({ message: 'internals leak', code: 42 }, 401),
+      host
+    )
+
+    expect(getJson()).toEqual({ statusCode: 401, message: 'Unauthorized' })
   })
 
   it('returns 404 for NotFoundException', () => {

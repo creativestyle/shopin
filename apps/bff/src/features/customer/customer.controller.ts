@@ -47,6 +47,7 @@ import {
   AuthLoggerService,
   authLogContextFromRequest,
 } from '../../common/auth-logging'
+import { InvalidCurrentPasswordException } from '@integrations/commercetools-api'
 
 @Controller('customer')
 @ApiTags('customer')
@@ -140,7 +141,10 @@ export class CustomerController {
       this.authLogger.log({
         action: 'password_change',
         outcome: 'failure',
-        reason: 'invalid_credentials',
+        reason:
+          err instanceof InvalidCurrentPasswordException
+            ? 'invalid_credentials'
+            : 'error',
         ...authLogContextFromRequest(req),
       })
       throw err

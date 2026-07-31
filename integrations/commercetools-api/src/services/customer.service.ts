@@ -8,6 +8,8 @@ import { UserClientService } from '../client/user-client.service'
 import { MyCustomerApiResponseSchema } from '../schemas/customer'
 import { mapUpdateCustomerRequestToActions } from '../helpers/customer-update-actions'
 import { mapCustomerToResponse } from '../mappers/customer'
+import { isInvalidCurrentPasswordError } from '../helpers/is-invalid-current-password-error'
+import { InvalidCurrentPasswordException } from '../exceptions/invalid-current-password.exception'
 
 @Injectable({ scope: Scope.REQUEST })
 export class CommercetoolsCustomerService {
@@ -53,16 +55,23 @@ export class CommercetoolsCustomerService {
     const client = await this.userClientService.getClient()
     const currentCustomer = await this.getCurrentCustomer()
 
-    await client
-      .me()
-      .password()
-      .post({
-        body: {
-          currentPassword: changeCustomerPasswordRequest.currentPassword,
-          newPassword: changeCustomerPasswordRequest.newPassword,
-          version: currentCustomer.version,
-        },
-      })
-      .execute()
+    try {
+      await client
+        .me()
+        .password()
+        .post({
+          body: {
+            currentPassword: changeCustomerPasswordRequest.currentPassword,
+            newPassword: changeCustomerPasswordRequest.newPassword,
+            version: currentCustomer.version,
+          },
+        })
+        .execute()
+    } catch (error: unknown) {
+      if (isInvalidCurrentPasswordError(error)) {
+        throw new InvalidCurrentPasswordException()
+      }
+      throw error
+    }
   }
 }

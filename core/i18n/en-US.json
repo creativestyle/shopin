@@ -402,7 +402,7 @@
       },
       "changePassword": {
         "changePasswordTitle": "Password",
-        "changePasswordDescription": "Here you can set a new password (min. 8 characters including at least 1 letter/max 18 characters, no special characters). For security reasons, you need to enter your old password.",
+        "changePasswordDescription": "Here you can set a new password (8-18 characters, including at least 1 letter). For security reasons, you need to enter your old password.",
         "currentPassword": "Current Password",
         "newPassword": "New Password",
         "confirmNewPassword": "Confirm New Password",
@@ -412,7 +412,10 @@
         "submitButtonLabel": "Change Password",
         "errors": {
           "currentPasswordRequired": "Current password is required",
+          "wrongCurrentPassword": "That is not your current password. Please try again.",
           "newPasswordMinLength": "New password must be at least 8 characters",
+          "newPasswordMaxLength": "New password must be at most 18 characters",
+          "newPasswordRequiresLetter": "New password must contain at least 1 letter",
           "confirmPasswordRequired": "Please confirm your new password",
           "passwordsDoNotMatch": "Passwords do not match"
         }
