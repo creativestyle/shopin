@@ -1,4 +1,35 @@
 {
+  "cookieConsent": {
+    "banner": {
+      "title": "Ihre Privatsphäre ist uns wichtig",
+      "description": "Wir verwenden Cookies für den Betrieb des Shops und – mit Ihrer Einwilligung – zur Analyse des Datenverkehrs und zur Personalisierung von Inhalten. Sie können alle Cookies akzeptieren, nicht notwendige ablehnen oder auswählen, welche Kategorien Sie zulassen möchten."
+    },
+    "actions": {
+      "acceptAll": "Alle akzeptieren",
+      "essentialOnly": "Nur notwendige",
+      "customise": "Anpassen",
+      "savePreferences": "Einstellungen speichern"
+    },
+    "preferences": {
+      "title": "Cookie-Einstellungen",
+      "description": "Wählen Sie aus, welche Cookie-Kategorien Sie zulassen. Notwendige Cookies sind immer aktiv, da der Shop ohne sie nicht funktioniert."
+    },
+    "categories": {
+      "essential": {
+        "name": "Notwendig",
+        "description": "Erforderlich für Kernfunktionen wie Warenkorb, Kasse und Sicherheit. Diese können nicht deaktiviert werden."
+      },
+      "analytics": {
+        "name": "Analyse",
+        "description": "Helfen uns zu verstehen, wie der Shop genutzt wird, damit wir ihn verbessern können. Ohne Ihre Einwilligung werden keine Daten erfasst."
+      },
+      "marketing": {
+        "name": "Marketing",
+        "description": "Werden verwendet, um Ihnen relevante Angebote zu zeigen und die Leistung unserer Kampagnen zu messen."
+      }
+    },
+    "footerLink": "Cookie-Einstellungen"
+  },
   "legalBar": {
     "copyright": "© 2026 SHOPin storefront accelerator."
   },
