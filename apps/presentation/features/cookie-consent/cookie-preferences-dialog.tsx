@@ -74,7 +74,9 @@ function PreferencesForm({
       <DialogHeader>
         <DialogTitle>{t('preferences.title')}</DialogTitle>
       </DialogHeader>
-      <DialogBody>
+      {/* tabIndex -1: content is short and fully reachable via the toggles/buttons,
+          so the scrollable-region tab stop is unnecessary noise here. */}
+      <DialogBody tabIndex={-1}>
         <DialogDescription>{t('preferences.description')}</DialogDescription>
 
         <ul className='flex flex-col gap-6'>

@@ -20,20 +20,35 @@ jest.mock('next/script', () => ({
 }))
 
 const CASES = [
-  { name: 'analytics', Gate: AnalyticsGate, scriptId: 'mock-analytics' },
-  { name: 'marketing', Gate: MarketingGate, scriptId: 'mock-marketing' },
+  {
+    name: 'analytics',
+    Gate: AnalyticsGate,
+    scriptId: 'mock-analytics',
+    cookie: '_analytics_id',
+  },
+  {
+    name: 'marketing',
+    Gate: MarketingGate,
+    scriptId: 'mock-marketing',
+    cookie: '_mkt_id',
+  },
 ] as const
+
+function hasCookie(name: string) {
+  return new RegExp(`(?:^|; )${name}=`).test(document.cookie)
+}
 
 function seedConsent(categories: ConsentCategories) {
   writeConsent(categories)
   emitConsentChange()
 }
 
-describe.each(CASES)('$name gate', ({ name, Gate, scriptId }) => {
+describe.each(CASES)('$name gate', ({ name, Gate, scriptId, cookie }) => {
   const other = name === 'analytics' ? 'marketing' : 'analytics'
 
   beforeEach(() => {
     clearConsent()
+    document.cookie = `${cookie}=; max-age=0; path=/`
   })
 
   it('renders no script tag before a choice is made', () => {
@@ -68,5 +83,18 @@ describe.each(CASES)('$name gate', ({ name, Gate, scriptId }) => {
     )
 
     expect(document.getElementById(scriptId)).toBeInTheDocument()
+  })
+
+  it('removes a leftover cookie when its category is not consented', () => {
+    document.cookie = `${cookie}=stale; path=/`
+    seedConsent({ analytics: false, marketing: false })
+
+    render(
+      <ConsentProvider>
+        <Gate />
+      </ConsentProvider>
+    )
+
+    expect(hasCookie(cookie)).toBe(false)
   })
 })
