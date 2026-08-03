@@ -47,3 +47,25 @@ export function parsePlpSearchParams(
 
   return { page, sort, filters, saleOnly, priceMin, priceMax }
 }
+
+/**
+ * True when the URL refines the collection (filters, non-default sort, price range
+ * or sale-only). Such URLs show a subset of the same products under a different
+ * address, so they are excluded from the index — see
+ * buildProductCollectionPageMetadata. Pagination is not a refinement.
+ */
+export function hasActiveRefinements({
+  sort,
+  filters,
+  saleOnly,
+  priceMin,
+  priceMax,
+}: PlpSearchParams): boolean {
+  return (
+    sort !== DEFAULT_SORT_OPTION ||
+    saleOnly ||
+    priceMin !== undefined ||
+    priceMax !== undefined ||
+    Object.values(filters ?? {}).some((values) => values.length > 0)
+  )
+}

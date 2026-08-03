@@ -1,6 +1,8 @@
 import type { Metadata } from 'next'
 import type { ContentPageResponse } from '@core/contracts/content/page'
 import { buildCanonicalUrl, buildHreflangLanguages } from '@/lib/site-url'
+import { DEFAULT_OG_IMAGE, SITE_NAME } from '@/features/seo/site-metadata'
+import { isHomepageSlug } from './homepage-slug'
 
 export interface BuildContentPageMetadataParams {
   pageData: ContentPageResponse
@@ -11,17 +13,25 @@ export interface BuildContentPageMetadataParams {
 /**
  * Build Next.js metadata from CMS content page (title, description, canonical, openGraph, twitter).
  * Shared by homepage and catch-all CMS route.
+ *
+ * The homepage renders at two URLs — the locale root and its CMS slug (/ and
+ * /homepage, /de and /de/startseite) — so canonical and hreflang always resolve
+ * to the locale root for it, whichever URL was requested.
  */
 export function buildContentPageMetadata({
   pageData,
   localePrefix,
   baseUrl,
 }: BuildContentPageMetadataParams): Metadata {
+  const isHomepage = isHomepageSlug(pageData.slug)
+  const canonicalSlug = isHomepage ? '' : pageData.slug
+  const slugByLocale = isHomepage ? undefined : pageData.slugByLocale
+
   const canonical = baseUrl
-    ? buildCanonicalUrl(baseUrl, localePrefix, pageData.slug)
+    ? buildCanonicalUrl(baseUrl, localePrefix, canonicalSlug)
     : undefined
   const languages = baseUrl
-    ? buildHreflangLanguages(baseUrl, pageData.slug, pageData.slugByLocale)
+    ? buildHreflangLanguages(baseUrl, canonicalSlug, slugByLocale)
     : undefined
 
   const title = pageData.seo?.metaTitle ?? pageData.pageTitle ?? pageData.slug
@@ -38,16 +48,17 @@ export function buildContentPageMetadata({
         : undefined,
     openGraph: {
       type: 'website',
+      siteName: SITE_NAME,
       title,
       description,
       url: canonical,
-      images: ogImage ? [{ url: ogImage }] : undefined,
+      images: ogImage ? [{ url: ogImage }] : [DEFAULT_OG_IMAGE],
     },
     twitter: {
       card: 'summary_large_image',
       title,
       description,
-      images: ogImage ? [ogImage] : undefined,
+      images: [ogImage ?? DEFAULT_OG_IMAGE.url],
     },
   }
 }
