@@ -1,9 +1,14 @@
-import { getLocale, I18N_CONFIG, listLocales } from '@config/constants'
+import { listLocales } from '@config/constants'
 
 /**
  * Paths that must stay out of the index: transactional flows, authenticated
  * areas, internal/demo routes and search result pages. Each entry covers the
  * whole subtree below it.
+ *
+ * Used to keep such URLs out of the sitemap. robots.txt itself is owned by the
+ * hosting configuration (Upsun serves it from the static web root, ahead of
+ * Next.js), so this list also serves as the reference for its Disallow entries —
+ * keep the two in sync when routes are added.
  *
  * Note these are *crawl* rules, not the only defence — faceted PLP URLs are kept
  * crawlable on purpose and handled with `noindex, follow` in page metadata, because
@@ -51,23 +56,4 @@ export function stripLocalePrefix(path: string): string {
   return firstSegment && LOCALE_URL_PREFIXES.has(firstSegment)
     ? `/${rest.join('/')}`
     : normalized
-}
-
-/**
- * robots.txt disallow list: every non-indexable path, plus its locale-prefixed
- * variants. The default locale is served without a prefix (next-intl
- * localePrefix: 'as-needed'), so only the other locales need prefixed entries.
- */
-export function buildDisallowedPaths(): string[] {
-  const defaultPrefix = getLocale(I18N_CONFIG.defaultLocale).urlPrefix
-  const prefixes = listLocales()
-    .map((l) => l.urlPrefix)
-    .filter((prefix) => prefix !== defaultPrefix)
-
-  // Plain prefixes (no trailing slash): "Disallow: /cart" covers both /cart and
-  // /cart/…, whereas "Disallow: /cart/" would leave /cart itself crawlable.
-  return NON_INDEXABLE_PATHS.flatMap((path) => [
-    path,
-    ...prefixes.map((prefix) => `/${prefix}${path}`),
-  ])
 }
