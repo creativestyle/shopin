@@ -8,7 +8,6 @@
     "no": "No",
     "description": "Your e-commerce platform with a modern design system.",
     "homepage": "Home",
-    "logoAlt": "SHOPIN",
     "logoHomeLink": "SHOPIN - Home",
     "close": "Close",
     "searchPlaceholder": "What are you looking for?",
@@ -395,6 +394,8 @@
         "updateSuccess": "Personal data updated successfully",
         "errors": {
           "general": "Failed to update personal data",
+          "emailInvalid": "Please enter a valid email address",
+          "emailInUse": "This email address is already in use",
           "firstNameRequired": "First name is required",
           "lastNameRequired": "Last name is required",
           "dateOfBirthInvalid": "Please enter a valid date in DD-MM-YYYY format"
