@@ -10,8 +10,6 @@ import {
   UpdateAddressRequest,
 } from '@core/contracts/customer/address'
 import { BaseService } from '@/lib/bff/services/base-service'
-import { RateLimitError } from '@/lib/bff/utils/rate-limit-error'
-import { DuplicateEmailError } from './duplicate-email-error'
 
 /**
  * Service for customer BFF operations.
@@ -41,22 +39,10 @@ export class CustomerService extends BaseService {
 
   /**
    * Update customer data
-   * Throws DuplicateEmailError when the email is taken, so the form can show it on the
-   * field instead of a generic toast. Matched on the status alone: the BFF also sends
-   * EMAIL_ALREADY_IN_USE_CODE, but the error filter only forwards `code` once #273 lands.
+   * Answers 409 when the email is taken - the form shows that on the field.
    */
   async updateCustomer(data: UpdateCustomerRequest): Promise<CustomerResponse> {
-    return await this.put<CustomerResponse>('/customer/me', data, {
-      onError: (res) => {
-        if (res.status === 409) {
-          throw new DuplicateEmailError()
-        }
-        if (res.status === 429) {
-          throw new RateLimitError()
-        }
-        throw new Error(`${res.status} ${res.statusText}`)
-      },
-    })
+    return await this.put<CustomerResponse>('/customer/me', data)
   }
 
   /**

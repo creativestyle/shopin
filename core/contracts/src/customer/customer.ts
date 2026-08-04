@@ -45,10 +45,3 @@ export const ChangeCustomerPasswordRequestSchema = z.object({
 export type ChangeCustomerPasswordRequest = z.infer<
   typeof ChangeCustomerPasswordRequestSchema
 >
-
-/**
- * Machine-readable code the BFF returns (with 409) when the submitted email already
- * belongs to another customer. Lets the client render a field-level error instead of
- * the generic failure toast.
- */
-export const EMAIL_ALREADY_IN_USE_CODE = 'EMAIL_ALREADY_IN_USE'

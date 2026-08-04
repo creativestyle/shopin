@@ -1,4 +1,4 @@
-import { Injectable, Scope } from '@nestjs/common'
+import { ConflictException, Injectable, Scope } from '@nestjs/common'
 import type {
   ChangeCustomerPasswordRequest,
   CustomerResponse,
@@ -9,7 +9,6 @@ import { MyCustomerApiResponseSchema } from '../schemas/customer'
 import { mapUpdateCustomerRequestToActions } from '../helpers/customer-update-actions'
 import { mapCustomerToResponse } from '../mappers/customer'
 import { isDuplicateEmailError } from '../helpers/is-duplicate-email-error'
-import { EmailAlreadyInUseException } from '../exceptions/email-already-in-use.exception'
 
 @Injectable({ scope: Scope.REQUEST })
 export class CommercetoolsCustomerService {
@@ -53,7 +52,7 @@ export class CommercetoolsCustomerService {
       return mapCustomerToResponse(updatedCustomer)
     } catch (error: unknown) {
       if (isDuplicateEmailError(error)) {
-        throw new EmailAlreadyInUseException()
+        throw new ConflictException('Email is already in use')
       }
       throw error
     }

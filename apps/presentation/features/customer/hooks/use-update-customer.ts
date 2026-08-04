@@ -7,7 +7,7 @@ import {
 } from '@/lib/bff/utils/mutations'
 import { useCustomerService } from './use-customer-service'
 import { customerKeys } from '../customer-keys'
-import { isDuplicateEmailError } from '../lib/duplicate-email-error'
+import { HttpError } from '@/lib/error-utils'
 import { UpdateCustomerRequest } from '@core/contracts/customer/customer'
 import { useQueryClient } from '@tanstack/react-query'
 import { useTranslations } from 'next-intl'
@@ -25,10 +25,10 @@ export function useUpdateCustomer({ onSuccess }: UseUpdateCustomerOptions) {
   const updateCustomerMutation = useBffClientMutation({
     mutationFn: (data: UpdateCustomerRequest) =>
       customerService.updateCustomer(data),
-    // A duplicate email is shown on the field by the form, not as a toast.
+    // A taken email (409) is shown on the field by the form, not as a toast.
     errorMessage: null,
     onError: (error) => {
-      if (isDuplicateEmailError(error)) {
+      if (HttpError.isConflictError(error)) {
         return
       }
       handleError(error, t('errors.general'))

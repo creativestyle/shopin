@@ -6,7 +6,7 @@ import { TextInput } from '@/components/ui/inputs/text-input'
 import { DateInput } from '@/components/ui/inputs/date-input'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-button'
 import { useUpdateCustomer } from '../hooks/use-update-customer'
-import { isDuplicateEmailError } from '../lib/duplicate-email-error'
+import { HttpError } from '@/lib/error-utils'
 import {
   getCustomerDataFormDefaultValues,
   cleanCustomerData,
@@ -48,7 +48,7 @@ export const CustomerDataForm: FC<ContactDataFormProps> = ({
   async function onSubmit(data: UpdateCustomerRequest) {
     const result = await updateCustomer(cleanCustomerData(data))
 
-    if (!result.success && isDuplicateEmailError(result.error)) {
+    if (!result.success && HttpError.isConflictError(result.error)) {
       form.setError('email', {
         type: 'server',
         message: 'account.myAccount.customerData.errors.emailInUse',
