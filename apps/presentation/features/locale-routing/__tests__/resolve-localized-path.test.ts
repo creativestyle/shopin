@@ -3,7 +3,11 @@
  */
 
 jest.mock('react', () => ({ cache: <T>(fn: T) => fn }))
+// Only the locale lookups are stubbed; everything else (e.g. the catalog route
+// helpers used to recognise /p/ and /c/ paths) keeps its real implementation, so
+// importing another constant here cannot silently make it undefined.
 jest.mock('@config/constants', () => ({
+  ...jest.requireActual('@config/constants'),
   listLocales: jest.fn(),
   urlPrefixToRfc: jest.fn(),
 }))

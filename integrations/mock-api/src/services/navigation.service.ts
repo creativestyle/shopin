@@ -3,6 +3,7 @@ import { MOCK_API, MockApi } from '../client/client.module'
 import type { MainNavigationResponse } from '@core/contracts/navigation/main-navigation'
 import type { LinkResponse } from '@core/contracts/core/link'
 import { generateSeed } from '../helpers/generateSeed'
+import { buildCategoryPath } from '@config/constants'
 
 function createMainNavigation(
   faker: ReturnType<MockApi['getFaker']>
@@ -43,7 +44,7 @@ function createMainNavigation(
                             .toLocaleLowerCase()}-${globalCounter++}`
                           return {
                             text: fourthText,
-                            href: `/c/${fourthSlug}`,
+                            href: buildCategoryPath(fourthSlug),
                           }
                         },
                         { count: { min: 2, max: 4 } }
@@ -52,7 +53,7 @@ function createMainNavigation(
 
                   return {
                     text: childText,
-                    href: `/c/${childSlug}`,
+                    href: buildCategoryPath(childSlug),
                     ...(fourthLevelChildren && {
                       children: fourthLevelChildren,
                     }),
@@ -63,7 +64,7 @@ function createMainNavigation(
 
               return {
                 text: subcategoryText,
-                href: `/c/${subcategorySlug}`,
+                href: buildCategoryPath(subcategorySlug),
                 children: thirdLevelChildren,
               }
             },
@@ -96,7 +97,7 @@ function createMainNavigation(
 
           return {
             text,
-            href: `/c/${slug}`,
+            href: buildCategoryPath(slug),
             children,
             featuredProduct,
           }
@@ -105,7 +106,7 @@ function createMainNavigation(
       ),
       {
         text: 'Sale',
-        href: '/c/sale',
+        href: buildCategoryPath('sale'),
         isHighlighted: true,
       } as LinkResponse,
     ],

@@ -5,6 +5,7 @@ import type { LanguageProvider } from '@apps/bff/src/common/language/language.pr
 import type { ProductCollectionResponse } from '@core/contracts/product-collection/product-collection'
 import type { Filters } from '@core/contracts/product-collection/product-collection-page'
 import {
+  buildCategoryPath,
   ITEMS_PER_PAGE,
   MIN_PAGE,
   DEFAULT_SORT_OPTION,
@@ -145,7 +146,9 @@ export class ProductCollectionService {
 
     return {
       productList,
-      breadcrumb: [{ label: category, path: `/c/${generatedCategorySlug}` }],
+      breadcrumb: [
+        { label: category, path: buildCategoryPath(generatedCategorySlug) },
+      ],
       total,
       facets,
       priceRange,

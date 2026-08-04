@@ -1,6 +1,13 @@
 'use server'
 
-import { listLocales, urlPrefixToRfc } from '@config/constants'
+import {
+  buildCategoryPath,
+  buildProductPath,
+  getCategorySlugFromPath,
+  getProductSlugFromPath,
+  listLocales,
+  urlPrefixToRfc,
+} from '@config/constants'
 import { getProductPage } from '@/features/product/get-product-page'
 import { getProductCollectionPage } from '@/features/productCollection/get-product-collection-page'
 import { getContentPage } from '@/features/content/get-content-page'
@@ -28,16 +35,18 @@ async function resolveTargetPath(
     return ''
   }
 
-  if (rest.startsWith('/p/')) {
-    const data = await getProductPage(rest.slice('/p/'.length))
+  const productSlug = getProductSlugFromPath(rest)
+  if (productSlug !== null) {
+    const data = await getProductPage(productSlug)
     const slug = data.product.slugByLocale?.[targetRfc]
-    return slug ? `/p/${slug}` : null
+    return slug ? buildProductPath(slug) : null
   }
 
-  if (rest.startsWith('/c/')) {
-    const data = await getProductCollectionPage(rest.slice('/c/'.length))
+  const categorySlug = getCategorySlugFromPath(rest)
+  if (categorySlug !== null) {
+    const data = await getProductCollectionPage(categorySlug)
     const slug = data.slugByLocale?.[targetRfc]
-    return slug ? `/c/${slug}` : null
+    return slug ? buildCategoryPath(slug) : null
   }
 
   const data = await getContentPage(rest.slice(1))

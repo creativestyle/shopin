@@ -1,6 +1,10 @@
 import type { Metadata } from 'next'
 import type { ProductCollectionPageResponse } from '@core/contracts/product-collection/product-collection-page'
-import { SEARCH_PARAM_PAGE, MIN_PAGE } from '@config/constants'
+import {
+  CATEGORY_PATH_PREFIX,
+  SEARCH_PARAM_PAGE,
+  MIN_PAGE,
+} from '@config/constants'
 import { buildCanonicalUrl, buildHreflangLanguages } from '@/lib/site-url'
 import { DEFAULT_OG_IMAGE, SITE_NAME } from '@/features/seo/site-metadata'
 
@@ -49,7 +53,7 @@ export function buildProductCollectionPageMetadata({
   const isIndexableUrl = !hasRefinements && !isOutOfRangePage
 
   const categoryUrl = baseUrl
-    ? buildCanonicalUrl(baseUrl, localePrefix, 'c', slug)
+    ? buildCanonicalUrl(baseUrl, localePrefix, CATEGORY_PATH_PREFIX, slug)
     : undefined
   const canonical =
     categoryUrl && isIndexableUrl && page > MIN_PAGE
@@ -57,7 +61,12 @@ export function buildProductCollectionPageMetadata({
       : categoryUrl
   const languages =
     baseUrl && isIndexableUrl && page === MIN_PAGE
-      ? buildHreflangLanguages(baseUrl, slug, pageData.slugByLocale, 'c')
+      ? buildHreflangLanguages(
+          baseUrl,
+          slug,
+          pageData.slugByLocale,
+          CATEGORY_PATH_PREFIX
+        )
       : undefined
 
   const baseTitle = seo?.metaTitle ?? pageData.categoryName ?? slug

@@ -1,4 +1,5 @@
 import type { LineItemResponse } from '@core/contracts/cart/cart'
+import { buildProductPath } from '@config/constants'
 
 /**
  * Calculate item prices (total and original if discounted).
@@ -24,5 +25,5 @@ export function calculateItemPrices(item: LineItemResponse): {
  * Generate product href from line item
  */
 export function getProductHref(productSlug: string | undefined): string {
-  return productSlug ? `/p/${productSlug}` : '#'
+  return productSlug ? buildProductPath(productSlug) : '#'
 }

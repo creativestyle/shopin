@@ -1,5 +1,7 @@
 import type { MetadataRoute } from 'next'
 import {
+  buildProductPath,
+  getCategorySlugFromPath,
   listLocales,
   SITEMAP_CATEGORY_CONCURRENCY,
   SITEMAP_COLLECTION_PAGE_SIZE,
@@ -104,8 +106,20 @@ async function collectLocaleEntries(
     service.getFooter(cacheOptions),
   ])
 
-  const categoryPaths = collectCategoryPaths(navigation)
-  const contentPaths = collectContentPaths(footer)
+  const categoryPaths = collectCategoryPaths(navigation, baseUrl)
+  const contentPaths = collectContentPaths(footer, baseUrl)
+
+  // Zero categories means discovery found nothing to walk, so the sitemap will
+  // contain little more than the homepage. That is almost always a wiring problem
+  // rather than a real storefront — categories missing from the main navigation, or
+  // navigation hrefs that no longer match CATEGORY_PATH_PREFIX after a URL rename.
+  // Say so loudly: a short sitemap is otherwise indistinguishable from a correct one.
+  if (categoryPaths.length === 0) {
+    logger.warn(
+      { urlPrefix, navigationItems: navigation?.items.length ?? 0 },
+      'Sitemap: no category URLs discovered — check that main navigation links to categories and that its hrefs use the configured catalog route prefixes'
+    )
+  }
 
   // Static and link-derived URLs are cheap and known up front, so they claim
   // their share of the budget first; products get whatever is left.
@@ -131,7 +145,8 @@ async function collectLocaleEntries(
     service,
     categoryPaths: collectProductDiscoveryPaths(
       navigation,
-      SITEMAP_DISCOVER_SUBCATEGORY_PRODUCTS
+      SITEMAP_DISCOVER_SUBCATEGORY_PRODUCTS,
+      baseUrl
     ),
     cacheOptions,
     urlBudget: urlBudget - entries.length,
@@ -139,10 +154,21 @@ async function collectLocaleEntries(
     concurrency,
   })
 
+  // Same reasoning as the category warning: a catalog that yields no product URLs
+  // points at a broken assumption (route prefixes, or a data source that scopes
+  // collections to the exact category — see SITEMAP_DISCOVER_SUBCATEGORY_PRODUCTS),
+  // not at an empty shop.
+  if (categoryPaths.length > 0 && productSlugs.length === 0) {
+    logger.warn(
+      { urlPrefix, categories: categoryPaths.length },
+      'Sitemap: categories found but no product URLs — verify the collection endpoint and SITEMAP_DISCOVER_SUBCATEGORY_PRODUCTS for this data source'
+    )
+  }
+
   return [
     ...entries,
     ...productSlugs.map((slug) => ({
-      url: url('p', slug),
+      url: url(buildProductPath(slug)),
       priority: PRIORITY.product,
       changeFrequency: 'weekly' as const,
     })),
@@ -222,7 +248,10 @@ async function collectCategoryProductSlugs(
   cacheOptions: ReturnType<typeof getBffCacheOptions>,
   urlBudget: number
 ): Promise<string[]> {
-  const categorySlug = categoryPath.replace(/^\/c\//, '')
+  const categorySlug = getCategorySlugFromPath(categoryPath)
+  if (!categorySlug) {
+    return []
+  }
   const maxPages = Math.ceil(urlBudget / SITEMAP_COLLECTION_PAGE_SIZE)
   const slugs: string[] = []
 

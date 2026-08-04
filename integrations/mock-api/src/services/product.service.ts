@@ -5,6 +5,7 @@ import type { LanguageProvider } from '@apps/bff/src/common/language/language.pr
 import type { ProductResponse } from '@core/contracts/product/product'
 import { generateSeed } from '../helpers/generateSeed'
 import { createShopinProductDetails } from '../generators'
+import { buildCategoryPath, buildProductPath } from '@config/constants'
 
 @Injectable()
 export class ProductService {
@@ -31,9 +32,13 @@ export class ProductService {
       breadcrumb: [
         {
           label: faker.commerce.department(),
-          path: `/c/${faker.helpers.slugify(faker.commerce.department()).toLocaleLowerCase()}`,
+          path: buildCategoryPath(
+            faker.helpers
+              .slugify(faker.commerce.department())
+              .toLocaleLowerCase()
+          ),
         },
-        { label: product.name, path: `/p/${product.slug}` },
+        { label: product.name, path: buildProductPath(product.slug) },
       ],
     }
   }

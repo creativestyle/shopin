@@ -2,6 +2,7 @@
 
 import { Link } from '@/lib/navigation'
 import type { CategoryTreeNode } from '@core/contracts/product-collection/product-collection'
+import { buildCategoryPath } from '@config/constants'
 import { cn } from '@/lib/utils'
 
 interface CategoryTreeProps {
@@ -44,7 +45,7 @@ function CategoryTreeItem({
   return (
     <li className='flex flex-col gap-4'>
       <Link
-        href={`/c/${category.slug}`}
+        href={buildCategoryPath(category.slug)}
         className={cn(
           'block font-bold transition-colors',
           level === 0 ? 'text-base' : 'text-sm',

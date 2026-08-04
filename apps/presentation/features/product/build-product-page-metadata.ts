@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import type { ProductPageResponse } from '@core/contracts/product/product-page'
+import { PRODUCT_PATH_PREFIX } from '@config/constants'
 import { buildCanonicalUrl, buildHreflangLanguages } from '@/lib/site-url'
 import { buildMetaDescription } from '@/features/seo/plain-text'
 import { DEFAULT_OG_IMAGE, SITE_NAME } from '@/features/seo/site-metadata'
@@ -29,10 +30,20 @@ export function buildProductPageMetadata({
   const { product, seo } = pageData
 
   const canonical = baseUrl
-    ? buildCanonicalUrl(baseUrl, localePrefix, 'p', product.slug)
+    ? buildCanonicalUrl(
+        baseUrl,
+        localePrefix,
+        PRODUCT_PATH_PREFIX,
+        product.slug
+      )
     : undefined
   const languages = baseUrl
-    ? buildHreflangLanguages(baseUrl, product.slug, product.slugByLocale, 'p')
+    ? buildHreflangLanguages(
+        baseUrl,
+        product.slug,
+        product.slugByLocale,
+        PRODUCT_PATH_PREFIX
+      )
     : undefined
 
   const title = seo?.metaTitle ?? product.name
