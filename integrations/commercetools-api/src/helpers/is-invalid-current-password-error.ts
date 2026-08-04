@@ -1,19 +1,9 @@
-interface CommercetoolsHttpError {
-  statusCode: number
+import { hasStatusCode } from './is-not-found-error'
+
+interface CommercetoolsErrorBody {
   body?: {
     errors?: Array<{ code: string }>
   }
-}
-
-function isCommercetoolsHttpError(
-  error: unknown
-): error is CommercetoolsHttpError {
-  return (
-    error !== null &&
-    typeof error === 'object' &&
-    'statusCode' in error &&
-    typeof (error as CommercetoolsHttpError).statusCode === 'number'
-  )
 }
 
 /**
@@ -21,13 +11,11 @@ function isCommercetoolsHttpError(
  * Commercetools answers with 400 and an `InvalidCurrentPassword` error code.
  */
 export function isInvalidCurrentPasswordError(error: unknown): boolean {
-  if (!isCommercetoolsHttpError(error)) {
+  if (!hasStatusCode(error) || error.statusCode !== 400) {
     return false
   }
 
-  return (
-    error.statusCode === 400 &&
-    (error.body?.errors?.some((e) => e.code === 'InvalidCurrentPassword') ??
-      false)
-  )
+  const errors = (error as CommercetoolsErrorBody).body?.errors
+
+  return errors?.some((e) => e.code === 'InvalidCurrentPassword') ?? false
 }

@@ -67,7 +67,7 @@ export class CommercetoolsCustomerService {
           },
         })
         .execute()
-    } catch (error: unknown) {
+    } catch (error) {
       if (isInvalidCurrentPasswordError(error)) {
         throw new InvalidCurrentPasswordException()
       }

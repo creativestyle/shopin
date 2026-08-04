@@ -2,6 +2,7 @@ import {
   CustomerResponse,
   UpdateCustomerRequest,
   ChangeCustomerPasswordRequest,
+  INVALID_CURRENT_PASSWORD_CODE,
 } from '@core/contracts/customer/customer'
 import {
   AddAddressRequest,
@@ -10,11 +11,8 @@ import {
   UpdateAddressRequest,
 } from '@core/contracts/customer/address'
 import { BaseService } from '@/lib/bff/services/base-service'
-import { RateLimitError } from '@/lib/bff/utils/rate-limit-error'
-import {
-  hasInvalidCurrentPasswordCode,
-  InvalidCurrentPasswordError,
-} from './invalid-current-password-error'
+import { parseErrorCode } from '@/lib/bff/utils/error-response'
+import { InvalidCurrentPasswordError } from './invalid-current-password-error'
 
 /**
  * Service for customer BFF operations.
@@ -59,13 +57,12 @@ export class CustomerService extends BaseService {
       // Endpoint answers 200 with an empty body on success
       allowEmpty: true,
       onError: async (res) => {
-        if (res.status === 401 && (await hasInvalidCurrentPasswordCode(res))) {
+        if (
+          res.status === 401 &&
+          (await parseErrorCode(res)) === INVALID_CURRENT_PASSWORD_CODE
+        ) {
           throw new InvalidCurrentPasswordError()
         }
-        if (res.status === 429) {
-          throw new RateLimitError()
-        }
-        throw new Error(`${res.status} ${res.statusText}`)
       },
     })
   }

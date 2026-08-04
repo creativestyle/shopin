@@ -278,6 +278,8 @@
         "emailInvalid": "Please enter a valid email address",
         "dateOfBirthInvalid": "Please enter a valid date in DD-MM-YYYY format",
         "passwordMinLength": "Password must be at least 8 characters",
+        "passwordMaxLength": "Password must be at most 18 characters",
+        "passwordRequiresLetter": "Password must contain at least 1 letter",
         "acceptTermsRequired": "You must accept the terms and conditions",
         "confirmPasswordRequired": "Please confirm your password",
         "passwordsDoNotMatch": "Passwords do not match",
@@ -352,6 +354,8 @@
         "confirmPasswordRequired": "Please confirm your password",
         "passwordsDoNotMatch": "Passwords do not match",
         "newPasswordMinLength": "Password must be at least 8 characters",
+        "newPasswordMaxLength": "Password must be at most 18 characters",
+        "newPasswordRequiresLetter": "Password must contain at least 1 letter",
         "tooManyRequests": "Too many requests. Please wait a moment and try again.",
         "internalServerError": "An error occurred. Please try again later"
       }

@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { SALUTATION_OPTIONS } from '@config/constants'
+import { createPasswordSchema } from '../core/password'
 
 export const CustomerResponseSchema = z.object({
   id: z.string(),
@@ -38,17 +39,12 @@ export const ChangeCustomerPasswordRequestSchema = z.object({
   currentPassword: z
     .string()
     .min(1, 'account.myAccount.changePassword.errors.currentPasswordRequired'),
-  // Rules mirror account.myAccount.changePassword.changePasswordDescription:
-  // 8-18 characters with at least one letter. Special characters are neither required
-  // nor rejected.
-  newPassword: z
-    .string()
-    .min(8, 'account.myAccount.changePassword.errors.newPasswordMinLength')
-    .max(18, 'account.myAccount.changePassword.errors.newPasswordMaxLength')
-    .regex(
-      /\p{L}/u,
-      'account.myAccount.changePassword.errors.newPasswordRequiresLetter'
-    ),
+  newPassword: createPasswordSchema({
+    minLength: 'account.myAccount.changePassword.errors.newPasswordMinLength',
+    maxLength: 'account.myAccount.changePassword.errors.newPasswordMaxLength',
+    requiresLetter:
+      'account.myAccount.changePassword.errors.newPasswordRequiresLetter',
+  }),
 })
 
 export type ChangeCustomerPasswordRequest = z.infer<

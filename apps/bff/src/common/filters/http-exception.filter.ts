@@ -10,14 +10,19 @@ import type { ZodError } from 'zod'
 import type { NestExceptionForLog } from '../logger/logger.config'
 import { FrontendInputValidationException } from '../validation/frontend-input-validation.exception'
 
-type ErrorBody =
-  | { statusCode: 400; message: string; issues: ZodError['issues'] }
-  | { statusCode: 401; message: string; code?: string }
-  | { statusCode: 403; message: string }
-  | { statusCode: 404; message: string }
-  | { statusCode: 409; message: string }
-  | { statusCode: 429; message: string }
-  | { statusCode: 500; message: string }
+/** Machine-readable discriminator our own exceptions may attach to any status. */
+type ErrorCode = { code?: string }
+
+type ErrorBody = ErrorCode &
+  (
+    | { statusCode: 400; message: string; issues: ZodError['issues'] }
+    | { statusCode: 401; message: string }
+    | { statusCode: 403; message: string }
+    | { statusCode: 404; message: string }
+    | { statusCode: 409; message: string }
+    | { statusCode: 429; message: string }
+    | { statusCode: 500; message: string }
+  )
 
 const STATUS_BODY_MAP: Record<number, ErrorBody> = {
   [HttpStatus.BAD_REQUEST]: {

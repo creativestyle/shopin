@@ -1,7 +1,7 @@
 /**
  * Type guard to check if an error has a statusCode property
  */
-function hasStatusCode(error: unknown): error is { statusCode: number } {
+export function hasStatusCode(error: unknown): error is { statusCode: number } {
   return (
     error !== null &&
     typeof error === 'object' &&
