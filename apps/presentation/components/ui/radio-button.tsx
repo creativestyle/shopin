@@ -5,6 +5,7 @@ import * as RadioGroupPrimitive from '@radix-ui/react-radio-group'
 import { cva, type VariantProps } from 'class-variance-authority'
 
 import { cn } from '@/lib/utils'
+import { useFieldValidation } from './field'
 
 const radioGroupVariants = cva('grid', {
   variants: {
@@ -21,12 +22,24 @@ const radioGroupVariants = cva('grid', {
 function RadioGroup({
   className,
   orientation,
+  invalid,
+  ariaDescribedBy,
   ...props
 }: React.ComponentProps<typeof RadioGroupPrimitive.Root> &
-  VariantProps<typeof radioGroupVariants>) {
+  VariantProps<typeof radioGroupVariants> & {
+    invalid?: boolean
+    ariaDescribedBy?: string
+  }) {
+  const { isInvalid, describedBy: effectiveDescribedBy } = useFieldValidation({
+    invalid,
+    ariaDescribedBy,
+  })
+
   return (
     <RadioGroupPrimitive.Root
       data-slot='radio-group'
+      aria-invalid={isInvalid || undefined}
+      aria-describedby={effectiveDescribedBy || undefined}
       className={cn(radioGroupVariants({ orientation }), className)}
       {...props}
     />

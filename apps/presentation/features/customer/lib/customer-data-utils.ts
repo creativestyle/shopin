@@ -32,6 +32,7 @@ export function getCustomerDataFormDefaultValues(
   customer: CustomerResponse
 ): Partial<UpdateCustomerRequest> {
   return {
+    email: customer.email || '',
     firstName: customer.firstName || '',
     lastName: customer.lastName || '',
     salutation: SALUTATION_OPTIONS.includes(customer.salutation as any)
@@ -50,6 +51,7 @@ export function cleanCustomerData(
   data: UpdateCustomerRequest
 ): UpdateCustomerRequest {
   return {
+    email: data.email,
     firstName: data.firstName,
     lastName: data.lastName,
     salutation: data.salutation || undefined,

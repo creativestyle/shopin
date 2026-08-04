@@ -1,4 +1,4 @@
-import { Injectable, Scope } from '@nestjs/common'
+import { ConflictException, Injectable, Scope } from '@nestjs/common'
 import type {
   ChangeCustomerPasswordRequest,
   CustomerResponse,
@@ -8,6 +8,7 @@ import { UserClientService } from '../client/user-client.service'
 import { MyCustomerApiResponseSchema } from '../schemas/customer'
 import { mapUpdateCustomerRequestToActions } from '../helpers/customer-update-actions'
 import { mapCustomerToResponse } from '../mappers/customer'
+import { isDuplicateEmailError } from '../helpers/is-duplicate-email-error'
 
 @Injectable({ scope: Scope.REQUEST })
 export class CommercetoolsCustomerService {
@@ -26,25 +27,35 @@ export class CommercetoolsCustomerService {
   ): Promise<CustomerResponse> {
     const client = await this.userClientService.getClient()
     const currentCustomer = await this.getCurrentCustomer()
-    const actions = mapUpdateCustomerRequestToActions(updateCustomerRequest)
+    const actions = mapUpdateCustomerRequestToActions(
+      updateCustomerRequest,
+      currentCustomer
+    )
 
     if (actions.length === 0) {
       return currentCustomer
     }
 
-    const response = await client
-      .me()
-      .post({
-        body: {
-          actions,
-          version: currentCustomer.version,
-        },
-      })
-      .execute()
+    try {
+      const response = await client
+        .me()
+        .post({
+          body: {
+            actions,
+            version: currentCustomer.version,
+          },
+        })
+        .execute()
 
-    const updatedCustomer = MyCustomerApiResponseSchema.parse(response.body)
+      const updatedCustomer = MyCustomerApiResponseSchema.parse(response.body)
 
-    return mapCustomerToResponse(updatedCustomer)
+      return mapCustomerToResponse(updatedCustomer)
+    } catch (error: unknown) {
+      if (isDuplicateEmailError(error)) {
+        throw new ConflictException('Email is already in use')
+      }
+      throw error
+    }
   }
 
   async changeCustomerPassword(
