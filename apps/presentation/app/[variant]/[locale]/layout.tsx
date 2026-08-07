@@ -57,6 +57,10 @@ export default async function LocaleLayout({
       className={dmSans.variable}
     >
       <head>
+        <meta
+          name='ahrefs-site-verification'
+          content='90389190e97c6aaf9a008b1a063130ba2260b9a4a1724e559bd2d8ed21f1f00d'
+        />
         {PRECONNECT_HOSTS.map((host) => (
           <link
             key={host}
