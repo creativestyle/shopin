@@ -192,7 +192,24 @@
       "total": "Gesamtpreis",
       "totalInclTax": "Gesamt inkl. MwSt.",
       "taxNote": "inkl. MwSt.",
-      "promoCode": "Gutscheincode"
+      "promoCode": "Haben Sie einen Aktionscode?"
+    },
+    "promoCode": {
+      "label": "Gutscheincode",
+      "placeholder": "Code eingeben",
+      "apply": "Einlösen",
+      "remove": "Entfernen",
+      "removeAriaLabel": "Gutscheincode {code} entfernen",
+      "applied": "Gutscheincode {code} eingelöst",
+      "success": "Gutscheincode eingelöst. Ihre Summe wurde aktualisiert.",
+      "removed": "Gutscheincode entfernt. Ihre Summe wurde aktualisiert.",
+      "errors": {
+        "invalid": "Dieser Gutscheincode ist ungültig. Bitte überprüfen Sie den Code und versuchen Sie es erneut.",
+        "expired": "Dieser Gutscheincode ist abgelaufen.",
+        "notApplicable": "Dieser Gutscheincode gilt nicht für die Artikel in Ihrem Warenkorb.",
+        "alreadyApplied": "Es ist bereits ein Gutscheincode eingelöst. Bitte entfernen Sie ihn, bevor Sie einen neuen eingeben.",
+        "generic": "Der Gutscheincode konnte nicht eingelöst werden. Bitte versuchen Sie es erneut."
+      }
     },
     "errors": {
       "addToCart": "Fehler beim Hinzufügen zum Warenkorb",

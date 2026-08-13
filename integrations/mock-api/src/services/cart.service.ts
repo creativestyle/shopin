@@ -3,9 +3,13 @@ import { PinoLogger } from 'nestjs-pino'
 import { LANGUAGE_TOKEN } from '@core/i18n'
 import { resolveCurrencyFromLanguage } from '@core/i18n/currency-utils'
 import type { LanguageProvider } from '@apps/bff/src/common/language/language.provider'
-import { CartResponseSchema } from '@core/contracts/cart/cart'
+import {
+  CartResponseSchema,
+  DiscountCodeError,
+} from '@core/contracts/cart/cart'
 import type {
   CartResponse,
+  DiscountCodeErrorReason,
   SetBillingAddressRequest,
   SetShippingAddressRequest,
 } from '@core/contracts/cart/cart'
@@ -18,7 +22,11 @@ import {
   SetShippingMethodRequestSchema,
 } from '@core/contracts/cart/shipping-method'
 import { randomUUID } from 'crypto'
-import { recalculateCartTotals, findLineItem } from '../helpers/cart-helpers'
+import {
+  recalculateCartTotals,
+  findLineItem,
+  applyDiscount,
+} from '../helpers/cart-helpers'
 import {
   createShopinPrice,
   createShopinLineItem,
@@ -27,6 +35,17 @@ import {
 // Simple in-memory store for mock carts
 // Cart IDs are stored in cookies, so we just need to persist cart data by ID
 export const cartStore = new Map<string, CartResponse>()
+
+/** Fixture codes covering each outcome. Anything unlisted is treated as invalid. */
+export const MOCK_DISCOUNT_CODES: Record<
+  string,
+  { discountInCents: number } | { reason: DiscountCodeErrorReason }
+> = {
+  SAVE10: { discountInCents: 1000 },
+  SAVE5: { discountInCents: 500 },
+  EXPIRED: { reason: 'expired' },
+  NOTYET: { reason: 'notApplicable' },
+}
 
 @Injectable()
 export class CartService {
@@ -140,6 +159,64 @@ export class CartService {
 
     cartStore.set(cartId, updatedCart)
     return updatedCart
+  }
+
+  async addDiscountCode(cartId: string, code: string): Promise<CartResponse> {
+    const cart = await this.getCart(cartId)
+    const normalizedCode = code.trim().toUpperCase()
+
+    if (cart.discountCodes?.length) {
+      throw new DiscountCodeError('alreadyApplied')
+    }
+
+    const fixture = MOCK_DISCOUNT_CODES[normalizedCode]
+    if (!fixture) {
+      throw new DiscountCodeError('invalid')
+    }
+    if ('reason' in fixture) {
+      throw new DiscountCodeError(fixture.reason)
+    }
+
+    const updatedCart: CartResponse = {
+      ...cart,
+      discountCodes: [
+        { id: `mock-discount-${normalizedCode}`, code: normalizedCode },
+      ],
+      discountAmount: createShopinPrice(fixture.discountInCents, cart.currency),
+      grandTotal: createShopinPrice(
+        applyDiscount(
+          cart.subtotal.regularPriceInCents,
+          fixture.discountInCents
+        ),
+        cart.currency
+      ),
+    }
+
+    cartStore.set(cartId, updatedCart)
+    return CartResponseSchema.parse(updatedCart)
+  }
+
+  async removeDiscountCode(
+    cartId: string,
+    discountCodeId: string
+  ): Promise<CartResponse> {
+    const cart = await this.getCart(cartId)
+    const remaining = (cart.discountCodes ?? []).filter(
+      (entry) => entry.id !== discountCodeId
+    )
+
+    const updatedCart: CartResponse = {
+      ...cart,
+      discountCodes: remaining.length > 0 ? remaining : undefined,
+      discountAmount: undefined,
+      grandTotal: createShopinPrice(
+        cart.subtotal.regularPriceInCents,
+        cart.currency
+      ),
+    }
+
+    cartStore.set(cartId, updatedCart)
+    return CartResponseSchema.parse(updatedCart)
   }
 
   async getActiveCart(): Promise<CartResponse | null> {

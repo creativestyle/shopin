@@ -23,6 +23,8 @@ import {
   SetBillingAddressRequestSchema,
   SetShippingAddressRequestSchema,
   CartResponseSchema,
+  ApplyDiscountCodeRequestSchema,
+  RemoveDiscountCodeRequestSchema,
 } from '@core/contracts/cart/cart'
 import {
   ShippingMethodsResponseSchema,
@@ -35,6 +37,8 @@ import type {
   RemoveCartItemRequest,
   SetBillingAddressRequest,
   SetShippingAddressRequest,
+  ApplyDiscountCodeRequest,
+  RemoveDiscountCodeRequest,
 } from '@core/contracts/cart/cart'
 import type {
   ShippingMethodsResponse,
@@ -123,6 +127,47 @@ export class CartController {
   ): Promise<CartResponse> {
     return CartResponseSchema.strip().parse(
       await this.cartService.removeCartItem(request)
+    )
+  }
+
+  @Post('discount-code')
+  @UseCsrfGuard()
+  @HttpCode(HttpStatus.OK)
+  @ApiOkResponse({
+    description: 'Discount code applied successfully',
+  })
+  @ApiBadRequestResponse({
+    description:
+      'Code rejected; body carries a reason of invalid, expired, notApplicable or alreadyApplied',
+  })
+  @ApiInternalServerErrorResponse({
+    description: 'Internal server error',
+  })
+  async applyDiscountCode(
+    @ZodBody(ApplyDiscountCodeRequestSchema) request: ApplyDiscountCodeRequest
+  ): Promise<CartResponse> {
+    return CartResponseSchema.strip().parse(
+      await this.cartService.applyDiscountCode(request)
+    )
+  }
+
+  @Delete('discount-code')
+  @UseCsrfGuard()
+  @HttpCode(HttpStatus.OK)
+  @ApiOkResponse({
+    description: 'Discount code removed successfully',
+  })
+  @ApiBadRequestResponse({
+    description: 'Invalid request data',
+  })
+  @ApiInternalServerErrorResponse({
+    description: 'Internal server error',
+  })
+  async removeDiscountCode(
+    @ZodBody(RemoveDiscountCodeRequestSchema) request: RemoveDiscountCodeRequest
+  ): Promise<CartResponse> {
+    return CartResponseSchema.strip().parse(
+      await this.cartService.removeDiscountCode(request)
     )
   }
 

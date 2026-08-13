@@ -3,6 +3,7 @@ import type {
   BillingAddressResponse,
   ShippingAddressResponse,
   LineItemResponse,
+  DiscountCodeResponse,
 } from '@core/contracts/cart/cart'
 import { AddressBaseSchema } from '@core/contracts/address/address-base'
 import type { LocalizedStringApiResponse } from '../schemas/localized-string'
@@ -210,6 +211,25 @@ export function mapPaymentInfo(
   }
 }
 
+/**
+ * Maps applied discount codes. Requires `discountCodes[*].discountCode` expansion —
+ * without it CT returns only a reference id and the shopper-facing code is unavailable.
+ */
+export function mapDiscountCodes(
+  discountCodes: CartApiResponse['discountCodes']
+): DiscountCodeResponse[] | undefined {
+  if (!discountCodes?.length) {
+    return undefined
+  }
+
+  const mapped = discountCodes.flatMap((info) => {
+    const code = info.discountCode.obj?.code
+    return code ? [{ id: info.discountCode.id, code }] : []
+  })
+
+  return mapped.length > 0 ? mapped : undefined
+}
+
 export function mapCartToResponse(
   cart: CartApiResponse,
   language: string
@@ -240,6 +260,7 @@ export function mapCartToResponse(
     subtotal: createBasicPrice(subtotalCents, { currency })!,
     tax: createBasicPrice(taxCents, { currency }),
     discountAmount: createBasicPrice(discountCents, { currency }),
+    discountCodes: mapDiscountCodes(cart.discountCodes),
     grandTotal: createBasicPrice(grandTotalCents, { currency })!,
     currency,
     itemCount,

@@ -9,9 +9,11 @@ import type { Request } from 'express'
 import type { ZodError } from 'zod'
 import type { NestExceptionForLog } from '../logger/logger.config'
 import { FrontendInputValidationException } from '../validation/frontend-input-validation.exception'
+import { FrontendSafeException } from '../errors/frontend-safe.exception'
 
 type ErrorBody =
   | { statusCode: 400; message: string; issues: ZodError['issues'] }
+  | { statusCode: 400; message: string; reason: string }
   | { statusCode: 401; message: string }
   | { statusCode: 403; message: string }
   | { statusCode: 404; message: string }
@@ -100,6 +102,15 @@ export class HttpErrorFilter implements ExceptionFilter {
         ...baseError,
         issues: exception.issues,
       } as ErrorBody
+    }
+
+    // Carries an explicit reason code the frontend maps to a specific message.
+    if (exception instanceof FrontendSafeException) {
+      return {
+        statusCode: 400,
+        message: 'Bad request',
+        reason: exception.reason,
+      }
     }
 
     return STATUS_BODY_MAP[status] ?? DEFAULT_ERROR_BODY
