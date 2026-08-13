@@ -15,6 +15,7 @@ interface ToastProps {
   id?: string | number
   type?: 'info' | 'infoLight' | 'success' | 'error' | 'warning'
   duration?: number
+  /** Announce assertively (role="alert"). Defaults to true for the error type. */
   critical?: boolean
   withIcon?: boolean
   withCloseButton?: boolean
@@ -110,7 +111,7 @@ const types = cva(
 function Toast({
   type = 'info',
   id,
-  critical = false,
+  critical,
   withIcon = true,
   withCloseButton = true,
   className,
@@ -118,13 +119,15 @@ function Toast({
 }: React.PropsWithChildren<ToastProps>) {
   const t = useTranslations('common')
   const { icon: IconComponent, iconColorClass } = toastConfig[type ?? 'info']
+  // Errors interrupt the screen reader, everything else waits its turn
+  const isCritical = critical ?? type === 'error'
 
   return (
     <div
       className={cn(types({ type }), className)}
-      aria-live={critical ? 'assertive' : 'polite'}
+      aria-live={isCritical ? 'assertive' : 'polite'}
       aria-atomic='true'
-      role={critical ? 'alert' : 'status'}
+      role={isCritical ? 'alert' : 'status'}
     >
       <div className='flex flex-1 items-center'>
         <div className='flex w-full items-center gap-3 text-sm/[1.6] font-normal not-italic'>

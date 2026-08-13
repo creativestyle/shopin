@@ -144,15 +144,11 @@ export function findMatchingAddressId(
  * Generates default values for address form fields.
  * @param address - Optional address to populate form fields (for editing)
  * @param customer - Optional customer data to populate default values
- * @param defaultShippingAddressId - Optional default shipping address ID
- * @param defaultBillingAddressId - Optional default billing address ID
  * @returns Default values object for the form
  */
 export function getAddressFormDefaultValues(
   address?: AddressResponse,
-  customer?: CustomerResponse,
-  defaultShippingAddressId?: string,
-  defaultBillingAddressId?: string
+  customer?: CustomerResponse
 ): Partial<AddAddressRequest | UpdateAddressRequest> {
   // Use customer defaults only when creating a new address (no address provided)
   const useCustomerDefaults = !address
@@ -177,11 +173,5 @@ export function getAddressFormDefaultValues(
     postalCode: address?.postalCode || '',
     city: address?.city || '',
     email: address?.email || customer?.email || '',
-    isDefaultShipping: address?.id
-      ? address.id === defaultShippingAddressId
-      : false,
-    isDefaultBilling: address?.id
-      ? address.id === defaultBillingAddressId
-      : false,
   }
 }
