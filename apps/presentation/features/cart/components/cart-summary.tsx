@@ -28,12 +28,16 @@ export function CartSummary({
   const locale = useLocale()
   const t = useTranslations('cart')
   const shippingCents = cart.shippingInfo?.price.regularPriceInCents || 0
+  const discountCents = cart.discountAmount?.regularPriceInCents ?? 0
 
   const content = (
     <>
       {showPromoCode && (
         <>
-          <PromoCodeSection label={t('summary.promoCode')} />
+          <PromoCodeSection
+            label={t('summary.promoCode')}
+            appliedCodes={cart.discountCodes}
+          />
           <Divider />
         </>
       )}
@@ -45,6 +49,15 @@ export function CartSummary({
           fractionDigits={cart.subtotal.fractionDigits ?? 2}
           locale={locale}
         />
+        {discountCents > 0 && (
+          <PriceRow
+            label={t('summary.discount')}
+            value={-discountCents}
+            currency={cart.discountAmount?.currency ?? cart.currency}
+            fractionDigits={cart.discountAmount?.fractionDigits ?? 2}
+            locale={locale}
+          />
+        )}
         <PriceRow
           label={t('summary.shipping')}
           value={shippingCents}

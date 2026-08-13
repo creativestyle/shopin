@@ -82,6 +82,14 @@ export const PaymentInfoResponseSchema = z
 
 export type PaymentInfoResponse = z.infer<typeof PaymentInfoResponseSchema>
 
+/** `id` is the reference needed to remove the code; `code` is what the shopper typed. */
+export const DiscountCodeResponseSchema = z.object({
+  id: z.string(),
+  code: z.string(),
+})
+
+export type DiscountCodeResponse = z.infer<typeof DiscountCodeResponseSchema>
+
 export const CartResponseSchema = z.object({
   id: z.string(),
   version: z.number(),
@@ -89,6 +97,8 @@ export const CartResponseSchema = z.object({
   subtotal: BasicPriceResponseSchema,
   tax: BasicPriceResponseSchema.optional(),
   discountAmount: BasicPriceResponseSchema.optional(),
+  // Array even though only one code may be active, so relaxing that is not a breaking change.
+  discountCodes: z.array(DiscountCodeResponseSchema).optional(),
   grandTotal: BasicPriceResponseSchema,
   currency: z.string(),
   itemCount: z.number().int().nonnegative(),
@@ -128,6 +138,43 @@ export const RemoveCartItemRequestSchema = z.object({
 })
 
 export type RemoveCartItemRequest = z.infer<typeof RemoveCartItemRequestSchema>
+
+export const ApplyDiscountCodeRequestSchema = z.object({
+  code: z.string().trim().min(1).max(100),
+})
+
+export type ApplyDiscountCodeRequest = z.infer<
+  typeof ApplyDiscountCodeRequestSchema
+>
+
+export const RemoveDiscountCodeRequestSchema = z.object({
+  discountCodeId: z.string(),
+})
+
+export type RemoveDiscountCodeRequest = z.infer<
+  typeof RemoveDiscountCodeRequestSchema
+>
+
+export const DISCOUNT_CODE_ERROR_REASONS = [
+  'invalid',
+  'expired',
+  'notApplicable',
+  'alreadyApplied',
+] as const
+
+export const DiscountCodeErrorReasonSchema = z.enum(DISCOUNT_CODE_ERROR_REASONS)
+
+export type DiscountCodeErrorReason = z.infer<
+  typeof DiscountCodeErrorReasonSchema
+>
+
+/** Thrown by data-source implementations when a code cannot be applied. */
+export class DiscountCodeError extends Error {
+  constructor(readonly reason: DiscountCodeErrorReason) {
+    super(`Discount code rejected: ${reason}`)
+    this.name = 'DiscountCodeError'
+  }
+}
 
 /**
  * Set billing address request schema - excludes isDefaultShipping and isDefaultBilling
