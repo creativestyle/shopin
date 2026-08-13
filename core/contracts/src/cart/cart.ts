@@ -82,10 +82,7 @@ export const PaymentInfoResponseSchema = z
 
 export type PaymentInfoResponse = z.infer<typeof PaymentInfoResponseSchema>
 
-/**
- * An applied discount (promo) code.
- * `id` is the reference id required to remove the code; `code` is what the shopper typed.
- */
+/** `id` is the reference needed to remove the code; `code` is what the shopper typed. */
 export const DiscountCodeResponseSchema = z.object({
   id: z.string(),
   code: z.string(),
@@ -158,7 +155,6 @@ export type RemoveDiscountCodeRequest = z.infer<
   typeof RemoveDiscountCodeRequestSchema
 >
 
-/** Reasons a code can be rejected, surfaced to the client for a specific message. */
 export const DISCOUNT_CODE_ERROR_REASONS = [
   'invalid',
   'expired',

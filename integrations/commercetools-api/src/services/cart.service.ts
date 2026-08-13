@@ -20,7 +20,7 @@ import type {
 import { UserClientService } from '../client/user-client.service'
 import { mapCartToResponse } from '../mappers/cart'
 import { mapShippingMethodsToResponse } from '../mappers/shipping-method'
-import { CartApiResponseSchema } from '../schemas/cart'
+import { CartApiResponseSchema, type CartApiResponse } from '../schemas/cart'
 import {
   CartUpdateActionSchema,
   type CartUpdateAction,
@@ -34,6 +34,42 @@ const DISCOUNT_CODE_STATE_REASONS: Record<string, DiscountCodeErrorReason> = {
   MaxApplicationReached: 'notApplicable',
   ApplicationStoppedByPreviousDiscount: 'notApplicable',
   ApplicationStoppedByGroupBestDeal: 'notApplicable',
+}
+
+/** CT can accept the action and still not grant the discount; the state says so. */
+function findRejectedDiscountCode(
+  cart: CartApiResponse,
+  code: string
+): { id: string; reason: DiscountCodeErrorReason } | undefined {
+  const info = cart.discountCodes?.find(
+    (entry) => entry.discountCode.obj?.code === code
+  )
+
+  if (!info || info.state === 'MatchesCart') {
+    return undefined
+  }
+
+  return {
+    id: info.discountCode.id,
+    reason: DISCOUNT_CODE_STATE_REASONS[info.state] ?? 'notApplicable',
+  }
+}
+
+function toDiscountCodeError(error: unknown): unknown {
+  const errors = (
+    error as { body?: { errors?: { code?: string; reason?: string }[] } }
+  ).body?.errors
+
+  const nonApplicable = errors?.find(
+    (entry) => entry.code === 'DiscountCodeNonApplicable'
+  )
+  if (!nonApplicable) {
+    return error
+  }
+
+  return new DiscountCodeError(
+    nonApplicable.reason === 'TimeRangeNonApplicable' ? 'expired' : 'invalid'
+  )
 }
 
 @Injectable({ scope: Scope.REQUEST })
@@ -71,16 +107,24 @@ export class CartService {
     responseBody: unknown,
     currentLanguage: string
   ): Promise<CartResponse> {
-    const validatedCart = CartApiResponseSchema.parse(responseBody)
-    const mappedCart = mapCartToResponse(validatedCart, currentLanguage)
-    return CartResponseSchema.parse(mappedCart)
+    return this.mapValidatedCart(
+      CartApiResponseSchema.parse(responseBody),
+      currentLanguage
+    )
   }
 
-  async updateCartWithActions(
+  private mapValidatedCart(
+    cart: CartApiResponse,
+    currentLanguage: string
+  ): CartResponse {
+    return CartResponseSchema.parse(mapCartToResponse(cart, currentLanguage))
+  }
+
+  /** Returns the raw CT response so callers can read fields the mapped shape drops. */
+  private async updateCartWithActionsRaw(
     cartId: string,
     actionsData: unknown[]
-  ): Promise<CartResponse> {
-    const currentLanguage = await this.getCurrentLanguage()
+  ): Promise<unknown> {
     const client = await this.getClient()
 
     // Get cart version from cartId
@@ -106,7 +150,19 @@ export class CartService {
       })
       .execute()
 
-    return this.processCartResponse(response.body, currentLanguage)
+    return response.body
+  }
+
+  async updateCartWithActions(
+    cartId: string,
+    actionsData: unknown[]
+  ): Promise<CartResponse> {
+    const currentLanguage = await this.getCurrentLanguage()
+    const responseBody = await this.updateCartWithActionsRaw(
+      cartId,
+      actionsData
+    )
+    return this.processCartResponse(responseBody, currentLanguage)
   }
 
   async getCart(cartId: string, expand?: string[]): Promise<CartResponse> {
@@ -288,33 +344,29 @@ export class CartService {
     return this.updateCartWithAction(cartId, actionData)
   }
 
-  /**
-   * Applies a discount code.
-   *
-   * CT rejects a code in two ways: a DiscountCodeNonApplicable error, or a 200 where the
-   * code is attached with a state other than MatchesCart and no discount is granted.
-   * The second case is rolled back so the cart is never left holding a code that does nothing.
-   */
+  /** A code CT accepts but does not apply is rolled back, so the cart never holds a dud. */
   async addDiscountCode(cartId: string, code: string): Promise<CartResponse> {
     const actionData: CartUpdateAction = {
       action: 'addDiscountCode',
       code,
     }
 
-    let cart: CartResponse
+    let responseBody: unknown
     try {
-      cart = await this.updateCartWithAction(cartId, actionData)
+      responseBody = await this.updateCartWithActionsRaw(cartId, [actionData])
     } catch (error) {
-      throw this.toDiscountCodeError(error)
+      throw toDiscountCodeError(error)
     }
 
-    const rejection = await this.findRejectedDiscountCode(cartId, code)
+    // The POST already expands discountCodes, so the state is in hand — no re-fetch needed.
+    const rawCart = CartApiResponseSchema.parse(responseBody)
+    const rejection = findRejectedDiscountCode(rawCart, code)
     if (rejection) {
       await this.removeDiscountCode(cartId, rejection.id).catch(() => undefined)
       throw new DiscountCodeError(rejection.reason)
     }
 
-    return cart
+    return this.mapValidatedCart(rawCart, await this.getCurrentLanguage())
   }
 
   async removeDiscountCode(
@@ -330,56 +382,6 @@ export class CartService {
     }
 
     return this.updateCartWithAction(cartId, actionData)
-  }
-
-  /**
-   * Re-reads the raw cart to inspect DiscountCodeState, which the mapped response drops.
-   * Returns the rejection for the just-added code, or undefined when it applied cleanly.
-   */
-  private async findRejectedDiscountCode(
-    cartId: string,
-    code: string
-  ): Promise<{ id: string; reason: DiscountCodeErrorReason } | undefined> {
-    const client = await this.getClient()
-    const response = await client
-      .me()
-      .carts()
-      .withId({ ID: cartId })
-      .get({ queryArgs: { expand: CartService.CART_EXPAND } })
-      .execute()
-
-    const rawCart = CartApiResponseSchema.parse(response.body)
-    const info = rawCart.discountCodes?.find(
-      (entry) => entry.discountCode.obj?.code === code
-    )
-
-    if (!info || info.state === 'MatchesCart') {
-      return undefined
-    }
-
-    return {
-      id: info.discountCode.id,
-      reason: DISCOUNT_CODE_STATE_REASONS[info.state] ?? 'notApplicable',
-    }
-  }
-
-  private toDiscountCodeError(error: unknown): unknown {
-    const body = (error as { body?: { errors?: { code?: string }[] } }).body
-    const isNonApplicable = body?.errors?.some(
-      (entry) => entry.code === 'DiscountCodeNonApplicable'
-    )
-
-    if (!isNonApplicable) {
-      return error
-    }
-
-    const reason = (
-      error as { body?: { errors?: { reason?: string }[] } }
-    ).body?.errors?.find((entry) => entry.reason)?.reason
-
-    return new DiscountCodeError(
-      reason === 'TimeRangeNonApplicable' ? 'expired' : 'invalid'
-    )
   }
 
   /**

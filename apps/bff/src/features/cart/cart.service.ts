@@ -121,10 +121,7 @@ export class CartService extends BaseAuthenticatedService {
     return await cartService.setShippingMethod(cartId, request)
   }
 
-  /**
-   * Applies a promo code. Only one may be active at a time, enforced here as well as in the
-   * UI because this endpoint is callable directly.
-   */
+  /** Single-code rule is enforced here too, since this endpoint is callable directly. */
   async applyDiscountCode(
     request: ApplyDiscountCodeRequest
   ): Promise<CartResponse> {

@@ -3,10 +3,7 @@ import {
   type DiscountCodeErrorReason,
 } from '@core/contracts/cart/cart'
 
-/**
- * Carries the BFF's rejection reason so the UI can show a specific message.
- * `reason` is null when the response had no recognisable reason (network, 500, unknown code).
- */
+/** `reason` is null when the response carried no recognisable one (network, 500, unknown code). */
 export class PromoCodeError extends Error {
   constructor(readonly reason: DiscountCodeErrorReason | null) {
     super(`Promo code rejected: ${reason ?? 'unknown'}`)
@@ -14,7 +11,6 @@ export class PromoCodeError extends Error {
   }
 }
 
-/** Reads the reason off a BFF error response; falls back to null when absent or unrecognised. */
 export async function toPromoCodeError(
   response: Response
 ): Promise<PromoCodeError> {

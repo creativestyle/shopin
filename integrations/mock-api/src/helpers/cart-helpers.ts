@@ -21,7 +21,6 @@ export function recalculateCartTotals(
   }
 }
 
-/** Discount never pushes the total below zero. */
 export function applyDiscount(
   subtotalInCents: number,
   discountInCents = 0

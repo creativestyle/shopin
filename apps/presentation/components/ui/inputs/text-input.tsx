@@ -38,7 +38,8 @@ function useInputValidation(validationState: ValidationState) {
 
 export type TextInputProps = React.InputHTMLAttributes<HTMLInputElement> & {
   id: string
-  label: string
+  /** Omit only when an external <Label htmlFor> names the input; never leave it unlabelled. */
+  label?: string
   validationState?: ValidationState
   required?: boolean
   /** Optional trailing adornment (e.g., button, icon). If absent, status icons render by state. */

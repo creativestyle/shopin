@@ -1,10 +1,6 @@
 import { BadRequestException } from '@nestjs/common'
 
-/**
- * A 400 whose `reason` code is safe to expose to the frontend.
- * The global filter strips unknown fields from error bodies, so use this when the
- * client needs to distinguish failure causes (e.g. an invalid vs. expired promo code).
- */
+/** A 400 whose `reason` survives the global filter, which otherwise strips unknown fields. */
 export class FrontendSafeException extends BadRequestException {
   public readonly reason: string
   public readonly errorType = 'frontend-safe'

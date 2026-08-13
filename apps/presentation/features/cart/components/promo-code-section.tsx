@@ -93,11 +93,9 @@ export function PromoCodeSection({
                 >
                   {t('label')}
                 </Label>
-                {/* label='' disables the floating label, which needs more height than 48px. */}
                 <TextInput
                   id={inputId}
                   name='promoCode'
-                  label=''
                   placeholder={t('placeholder')}
                   value={code}
                   autoComplete='off'
@@ -115,7 +113,6 @@ export function PromoCodeSection({
                   }}
                 />
               </div>
-              {/* Secondary styling so it doesn't read as the checkout CTA. */}
               <Button
                 type='submit'
                 variant='secondary'

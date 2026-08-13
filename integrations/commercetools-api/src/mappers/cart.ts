@@ -211,10 +211,7 @@ export function mapPaymentInfo(
   }
 }
 
-/**
- * Maps applied discount codes. Requires `discountCodes[*].discountCode` expansion —
- * without it CT returns only a reference id and the shopper-facing code is unavailable.
- */
+/** Needs `discountCodes[*].discountCode` expanded; CT returns only a reference id otherwise. */
 export function mapDiscountCodes(
   discountCodes: CartApiResponse['discountCodes']
 ): DiscountCodeResponse[] | undefined {

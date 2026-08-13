@@ -67,10 +67,7 @@ export class CartService extends BaseService {
     return CartResponseSchema.parse(data)
   }
 
-  /**
-   * Apply a promo code. Throws PromoCodeError carrying the rejection reason,
-   * since the default error handling discards the response body.
-   */
+  /** Custom onError because the default handling discards the body, and we need its reason. */
   async applyDiscountCode(request: { code: string }): Promise<CartResponse> {
     const validatedRequest = ApplyDiscountCodeRequestSchema.parse(request)
     const data = await this.post<CartResponse>(
