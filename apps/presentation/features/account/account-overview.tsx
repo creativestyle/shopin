@@ -22,13 +22,24 @@ export const AccountOverview: FC<AccountOverviewProps> = ({ orderSlot }) => {
     return <LoadingSpinner className='size-8' />
   }
 
+  const name = [customer?.firstName, customer?.lastName]
+    .filter(Boolean)
+    .join(' ')
+
   return (
     <>
-      <h1 className='my-8 text-center text-2xl font-semibold'>
-        {t('overviewWelcomeMessage', {
-          name: `${customer?.firstName} ${customer?.lastName}`.trim(),
-        })}
-      </h1>
+      <div className='my-8 text-center'>
+        <h1 className='text-2xl font-semibold'>
+          {t('overviewWelcomeMessage', { name })}
+        </h1>
+
+        {customer?.email && (
+          <p className='mt-2 text-sm text-gray-500'>
+            <span className='font-bold'>{t('customerData.email')}: </span>
+            {customer.email}
+          </p>
+        )}
+      </div>
 
       <div className='grid grid-cols-1 lg:mb-8 lg:grid-cols-2 lg:gap-8'>
         <div className='lg:col-span-2'>
@@ -39,7 +50,7 @@ export const AccountOverview: FC<AccountOverviewProps> = ({ orderSlot }) => {
             )}
             href='/account/orders'
             icon={ACCOUNT_NAVIGATION_ITEMS.orders.icon}
-            className='lg:grid lg:grid-cols-2 lg:items-center'
+            className='xl:grid xl:grid-cols-[max-content_minmax(0,1fr)] xl:items-center'
           >
             {orderSlot}
           </AccountOverviewItem>

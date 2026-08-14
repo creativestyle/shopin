@@ -16,7 +16,7 @@ export const LastOrderSummary: FC = () => {
 
   if (isLoading) {
     return (
-      <div className='hidden lg:flex lg:items-center lg:justify-center'>
+      <div className='flex items-center justify-center py-4'>
         <LoadingSpinner className='size-6' />
       </div>
     )
@@ -27,16 +27,44 @@ export const LastOrderSummary: FC = () => {
   }
 
   return (
-    <div className='hidden items-center gap-6 border-l border-gray-200 px-7 lg:flex'>
+    <div className='flex flex-wrap items-center gap-4 border-t border-gray-200 p-4 xl:border-t-0 xl:border-l xl:p-0 xl:pl-5'>
       <LineItemImages
         images={order.lineItemImages}
         size='sm'
       />
 
-      <div className='flex items-center gap-4 lg:gap-8'>
+      <div className='grid flex-1 grid-cols-1 gap-x-6 gap-y-3 md:grid-cols-2 xl:grid-cols-3 xl:gap-y-0'>
         <div>
           <div className='text-xs font-bold text-gray-500 uppercase'>
-            {t('lastOrder')}
+            {t('columns.orderNumber')}
+          </div>
+          <span className='block text-sm break-all text-gray-700'>
+            {order.orderNumber}
+          </span>
+        </div>
+
+        <div>
+          <div className='text-xs font-bold text-gray-500 uppercase'>
+            {t('columns.date')}
+          </div>
+          <time
+            dateTime={order.createdAt}
+            className='text-sm text-gray-700'
+          >
+            {new Date(order.createdAt).toLocaleDateString(locale)}
+          </time>
+        </div>
+
+        <div>
+          <div className='text-xs font-bold text-gray-500 uppercase'>
+            {t('columns.status')}
+          </div>
+          <OrderStateBadge state={order.orderState} />
+        </div>
+
+        <div>
+          <div className='text-xs font-bold text-gray-500 uppercase'>
+            {t('columns.price')}
           </div>
           <FormattedPrice
             value={order.grandTotal.regularPriceInCents}
@@ -45,13 +73,6 @@ export const LastOrderSummary: FC = () => {
             locale={locale}
             className='text-sm text-gray-700'
           />
-        </div>
-
-        <div>
-          <div className='text-xs font-bold text-gray-500 uppercase'>
-            {t('columns.status')}
-          </div>
-          <OrderStateBadge state={order.orderState} />
         </div>
 
         <div>
