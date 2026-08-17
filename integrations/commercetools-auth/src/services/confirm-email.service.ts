@@ -43,7 +43,7 @@ export class CommercetoolsConfirmEmailService {
       }
 
       if (this.errorMatcher.isInvalidTokenError(error)) {
-        return { success: false, statusCode: 400 }
+        return { success: false, statusCode: 400, message: 'token_invalid' }
       }
 
       this.logger.error({ err: error }, 'Error confirming email')
