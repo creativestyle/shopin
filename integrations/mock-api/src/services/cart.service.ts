@@ -1,6 +1,6 @@
 import { Injectable, Inject, NotFoundException } from '@nestjs/common'
 import { PinoLogger } from 'nestjs-pino'
-import { LANGUAGE_TOKEN } from '@core/i18n'
+import { LANGUAGE_TOKEN, getLocalizedString } from '@core/i18n'
 import { resolveCurrencyFromLanguage } from '@core/i18n/currency-utils'
 import type { LanguageProvider } from '@apps/bff/src/common/language/language.provider'
 import { CartResponseSchema } from '@core/contracts/cart/cart'
@@ -189,10 +189,13 @@ export class CartService {
     const mockShippingMethods = [
       {
         id: 'standard',
-        name: 'DHL Standardlieferung',
+        localizedName: {
+          'de-DE': 'DHL Standardlieferung',
+          'en-US': 'DHL Standard Delivery',
+        },
         localizedDescription: {
-          de: 'DHL Standardlieferung (2-3 Werktagen)',
-          en: 'DHL Standard Delivery (2-3 business days)',
+          'de-DE': 'DHL Standardlieferung (2-3 Werktage)',
+          'en-US': 'DHL Standard Delivery (2-3 business days)',
         },
         price: {
           centAmount: 0,
@@ -202,10 +205,13 @@ export class CartService {
       },
       {
         id: 'express',
-        name: 'DHL Expresslieferung',
+        localizedName: {
+          'de-DE': 'DHL Expresslieferung',
+          'en-US': 'DHL Express Delivery',
+        },
         localizedDescription: {
-          de: 'DHL Expresslieferung (1 Werktag)',
-          en: 'DHL Express Delivery (1 business day)',
+          'de-DE': 'DHL Expresslieferung (1 Werktag)',
+          'en-US': 'DHL Express Delivery (1 business day)',
         },
         price: {
           centAmount: 300,
@@ -215,10 +221,9 @@ export class CartService {
       },
       {
         id: 'packstation',
-        name: 'DHL Packstation',
-        localizedDescription: {
-          de: 'DHL Packstation',
-          en: 'DHL Packstation',
+        localizedName: {
+          'de-DE': 'DHL Packstation',
+          'en-US': 'DHL Packstation',
         },
         price: {
           centAmount: 0,
@@ -228,10 +233,13 @@ export class CartService {
       },
       {
         id: 'store',
-        name: 'Store Pickup',
+        localizedName: {
+          'de-DE': 'Abholung im Store',
+          'en-US': 'Store Pickup',
+        },
         localizedDescription: {
-          de: 'Kostenlos in einen SHOPIN Store',
-          en: 'Free to a SHOPIN Store',
+          'de-DE': 'Kostenlos in einen SHOPIN Store',
+          'en-US': 'Free to a SHOPIN Store',
         },
         price: {
           centAmount: 0,
@@ -242,7 +250,16 @@ export class CartService {
     ]
 
     return ShippingMethodsResponseSchema.parse({
-      shippingMethods: mockShippingMethods,
+      shippingMethods: mockShippingMethods.map(
+        ({ localizedName, localizedDescription, ...method }) => ({
+          ...method,
+          name: getLocalizedString(localizedName, currentLanguage),
+          description: getLocalizedString(
+            localizedDescription,
+            currentLanguage
+          ),
+        })
+      ),
     })
   }
 
@@ -296,6 +313,7 @@ export class CartService {
       shippingInfo: {
         shippingMethodId: selectedMethod.id,
         shippingMethodName: selectedMethod.name,
+        shippingMethodDescription: selectedMethod.description,
         price: {
           regularPriceInCents: selectedMethod.price.centAmount,
           currency: selectedMethod.price.currencyCode,

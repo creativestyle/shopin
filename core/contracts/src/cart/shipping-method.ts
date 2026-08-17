@@ -12,11 +12,13 @@ export type ShippingMethodPrice = z.infer<typeof ShippingMethodPriceSchema>
 
 /**
  * Shipping method response schema
+ *
+ * `name` and `description` are already resolved to the request's language.
  */
 export const ShippingMethodResponseSchema = z.object({
   id: z.string(),
   name: z.string(),
-  localizedDescription: z.record(z.string(), z.string()).optional(),
+  description: z.string().optional(),
   price: ShippingMethodPriceSchema,
   freeAbove: ShippingMethodPriceSchema.optional(),
   isDefault: z.boolean().optional(),

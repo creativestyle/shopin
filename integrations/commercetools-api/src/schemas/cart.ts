@@ -116,6 +116,12 @@ const ShippingInfoApiResponseSchema = z
       .object({
         typeId: z.literal('shipping-method'),
         id: z.string(),
+        // Only present when the request expands shippingInfo.shippingMethod
+        obj: z
+          .object({
+            localizedDescription: z.record(z.string(), z.string()).optional(),
+          })
+          .optional(),
       })
       .optional(),
   })

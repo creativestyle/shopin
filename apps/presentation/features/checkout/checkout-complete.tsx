@@ -86,9 +86,13 @@ export function CheckoutComplete({ orderId, token }: CheckoutCompleteProps) {
                 {t('orderNumber', { orderNumber: order.orderNumber })}
               </p>
             </div>
-            <div>
-              <p className='text-green-600'>{t('deliveryTime')}</p>
-            </div>
+            {order.shippingInfo?.shippingMethodDescription && (
+              <div>
+                <p className='text-green-600'>
+                  {order.shippingInfo.shippingMethodDescription}
+                </p>
+              </div>
+            )}
             <div>
               <p className='mb-2 font-semibold'>{t('delivery')}</p>
               {shippingAddressLines.length > 0 ? (
