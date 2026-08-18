@@ -24,6 +24,12 @@ import {
   createShopinLineItem,
 } from '../generators/shopin-cart'
 
+// Mirrors the commercetools `deliveryTime` custom field; pickup methods have none
+const MOCK_DELIVERY_TIMES: Record<string, Record<string, string>> = {
+  standard: { 'de-DE': '2-3 Werktage', 'en-US': '2-3 business days' },
+  express: { 'de-DE': '1 Werktag', 'en-US': '1 business day' },
+}
+
 // Simple in-memory store for mock carts
 // Cart IDs are stored in cookies, so we just need to persist cart data by ID
 export const cartStore = new Map<string, CartResponse>()
@@ -313,7 +319,10 @@ export class CartService {
       shippingInfo: {
         shippingMethodId: selectedMethod.id,
         shippingMethodName: selectedMethod.name,
-        shippingMethodDescription: selectedMethod.description,
+        deliveryTime: getLocalizedString(
+          MOCK_DELIVERY_TIMES[selectedMethod.id],
+          this.languageProvider.getCurrentLanguage()
+        ),
         price: {
           regularPriceInCents: selectedMethod.price.centAmount,
           currency: selectedMethod.price.currencyCode,

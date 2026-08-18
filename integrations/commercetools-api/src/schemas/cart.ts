@@ -120,6 +120,15 @@ const ShippingInfoApiResponseSchema = z
         obj: z
           .object({
             localizedDescription: z.record(z.string(), z.string()).optional(),
+            custom: z
+              .object({
+                fields: z
+                  .object({
+                    deliveryTime: z.record(z.string(), z.string()).optional(),
+                  })
+                  .optional(),
+              })
+              .optional(),
           })
           .optional(),
       })

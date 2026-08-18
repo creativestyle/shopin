@@ -155,8 +155,8 @@ function mapShippingInfo(
   return {
     shippingMethodId: shippingInfo.shippingMethod.id,
     shippingMethodName: shippingInfo.shippingMethodName,
-    shippingMethodDescription: getLocalizedString(
-      shippingInfo.shippingMethod.obj?.localizedDescription,
+    deliveryTime: getLocalizedString(
+      shippingInfo.shippingMethod.obj?.custom?.fields?.deliveryTime,
       language
     ),
     price: createBasicPrice(shippingInfo.price.centAmount, {
