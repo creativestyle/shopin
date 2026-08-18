@@ -7,6 +7,7 @@ import { CartPreview } from '@/features/cart/cart-preview'
 import { useFormatAddressLines } from '@/features/address/use-format-address-lines'
 import { getPaymentMethodName } from './lib/payment-utils'
 import { ErrorDisplay } from '@/components/ui/error-display'
+import { Divider } from '@/components/ui/divider'
 import CheckmarkIcon from '@/public/icons/checkmark.svg'
 
 interface CheckoutCompleteProps {
@@ -76,48 +77,59 @@ export function CheckoutComplete({ orderId, token }: CheckoutCompleteProps) {
       {/* Order Details - Two Column Layout */}
       <div className='grid w-full grid-cols-1 gap-8 lg:grid-cols-[5fr_3fr]'>
         {/* Left Column - Shipping and Payment Information */}
-        <div className='w-full rounded-lg border border-gray-200 bg-white p-6'>
+        <div className='w-full self-start rounded-lg border border-gray-200 bg-white p-6'>
           <h2 className='mb-6 text-lg/[1.1] font-bold text-gray-950'>
             {t('orderDetails')}
           </h2>
-          <div className='space-y-4 text-sm text-gray-700'>
-            <div>
-              <p className='font-semibold'>
-                {t('orderNumber', { orderNumber: order.orderNumber })}
+          <div className='text-sm font-normal text-gray-700'>
+            <p className='mb-4 text-sm font-bold text-gray-950'>
+              {t('orderNumber', { orderNumber: order.orderNumber })}
+            </p>
+            {order.shippingInfo?.deliveryTime && (
+              <p className='mb-6 text-sm font-bold text-green-700'>
+                {order.shippingInfo.deliveryTime}
               </p>
+            )}
+            <div className='mb-6'>
+              <Divider />
             </div>
-            <div>
-              <p className='text-green-600'>{t('deliveryTime')}</p>
-            </div>
-            <div>
-              <p className='mb-2 font-semibold'>{t('delivery')}</p>
-              {shippingAddressLines.length > 0 ? (
-                <div className='space-y-1 text-gray-600'>
-                  {shippingAddressLines.map((line, index) => (
-                    <p key={index}>{line}</p>
-                  ))}
-                </div>
-              ) : (
-                <p className='text-gray-600'>
-                  {t('deliveryAddress', {
-                    name: '',
-                    address: '',
-                    city: '',
-                    country: '',
-                  })}
+            <div className='grid grid-cols-1 gap-6 lg:grid-cols-3'>
+              <div>
+                <p className='mb-2 text-sm font-bold text-gray-950'>
+                  {t('delivery')}
                 </p>
-              )}
-            </div>
-            <div>
-              <p className='mb-2 font-semibold'>{t('deliveryMethod')}</p>
-              <p className='text-gray-600'>
-                {order.shippingInfo?.shippingMethodName ||
-                  t('deliveryMethodDetails')}
-              </p>
-            </div>
-            <div>
-              <p className='mb-2 font-semibold'>{t('payment')}</p>
-              <p className='text-gray-600'>{paymentMethodName}</p>
+                {shippingAddressLines.length > 0 ? (
+                  <div className='space-y-1'>
+                    {shippingAddressLines.map((line, index) => (
+                      <p key={index}>{line}</p>
+                    ))}
+                  </div>
+                ) : (
+                  <p>
+                    {t('deliveryAddress', {
+                      name: '',
+                      address: '',
+                      city: '',
+                      country: '',
+                    })}
+                  </p>
+                )}
+              </div>
+              <div>
+                <p className='mb-2 text-sm font-bold text-gray-950'>
+                  {t('deliveryMethod')}
+                </p>
+                <p>
+                  {order.shippingInfo?.shippingMethodName ||
+                    t('deliveryMethodDetails')}
+                </p>
+              </div>
+              <div>
+                <p className='mb-2 text-sm font-bold text-gray-950'>
+                  {t('payment')}
+                </p>
+                <p>{paymentMethodName}</p>
+              </div>
             </div>
           </div>
         </div>
