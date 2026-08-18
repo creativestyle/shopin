@@ -75,14 +75,14 @@ export const LastOrderSummary: FC = () => {
           />
         </div>
 
-        <div>
-          <div className='text-xs font-bold text-gray-500 uppercase'>
-            {t('deliveryTime')}
+        {order.deliveryTime && (
+          <div>
+            <div className='text-xs font-bold text-gray-500 uppercase'>
+              {t('deliveryTime')}
+            </div>
+            <span className='text-sm text-gray-700'>{order.deliveryTime}</span>
           </div>
-          <span className='text-sm text-gray-700'>
-            {t('deliveryTimeValue')}
-          </span>
-        </div>
+        )}
       </div>
     </div>
   )

@@ -38,6 +38,7 @@ export class OrderService {
   // Minimal expansion for list view - just need first item image
   private static readonly ORDER_LIST_EXPAND = [
     'lineItems[*].variant',
+    'shippingInfo.shippingMethod',
   ] satisfies string[]
 
   // Default pagination limit for order list
