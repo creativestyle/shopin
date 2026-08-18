@@ -188,6 +188,7 @@
       "title": "Order Summary",
       "subtotal": "Subtotal",
       "shipping": "Shipping",
+      "shippingAtCheckout": "Calculated at checkout",
       "tax": "Tax",
       "discount": "Discount",
       "total": "Total",

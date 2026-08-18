@@ -187,6 +187,7 @@
       "title": "Bestellübersicht",
       "subtotal": "Zwischensumme",
       "shipping": "Versand",
+      "shippingAtCheckout": "Wird an der Kasse berechnet",
       "tax": "MwSt.",
       "discount": "Rabatt",
       "total": "Gesamtpreis",
