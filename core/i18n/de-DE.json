@@ -405,7 +405,8 @@
       },
       "changePassword": {
         "changePasswordTitle": "Passwort",
-        "changePasswordDescription": "Hier können Sie ein neues Passwort (8-18 Zeichen, davon mindestens 1 Buchstabe) für sich festlegen. Dazu ist aus Sicherheitsgründen die Eingabe des alten Passworts erforderlich.",
+        "changePasswordDescription": "Hier können Sie ein neues Passwort für sich festlegen. Dazu ist aus Sicherheitsgründen die Eingabe des alten Passworts erforderlich.",
+        "passwordHint": "8-18 Zeichen, davon mindestens 1 Buchstabe.",
         "currentPassword": "Aktuelles Passwort",
         "newPassword": "Neues Passwort",
         "confirmNewPassword": "Neues Passwort bestätigen",

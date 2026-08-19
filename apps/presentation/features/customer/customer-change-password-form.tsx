@@ -95,6 +95,7 @@ export const ChangePasswordForm: FC = () => {
         <FormField
           name='newPassword'
           control={form.control}
+          description={t('passwordHint')}
           render={({ field, validationState }) => (
             <PasswordInput
               {...field}

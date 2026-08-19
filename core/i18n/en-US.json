@@ -406,7 +406,8 @@
       },
       "changePassword": {
         "changePasswordTitle": "Password",
-        "changePasswordDescription": "Here you can set a new password (8-18 characters, including at least 1 letter). For security reasons, you need to enter your old password.",
+        "changePasswordDescription": "Here you can set a new password. For security reasons, you need to enter your old password.",
+        "passwordHint": "8-18 characters, including at least 1 letter.",
         "currentPassword": "Current Password",
         "newPassword": "New Password",
         "confirmNewPassword": "Confirm New Password",
