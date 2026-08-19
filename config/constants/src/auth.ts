@@ -47,6 +47,12 @@ export const EMAIL_TOKEN_TTL_MINUTES = 60
 export const PASSWORD_RESET_TOKEN_TTL_MINUTES = 60
 
 /**
+ * Password length limits, shared by registration, reset and change password
+ */
+export const PASSWORD_MIN_LENGTH = 8
+export const PASSWORD_MAX_LENGTH = 18
+
+/**
  * JWT encryption and signing configuration
  */
 export const JWT_CONFIG = {

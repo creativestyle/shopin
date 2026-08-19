@@ -10,14 +10,19 @@ import type { ZodError } from 'zod'
 import type { NestExceptionForLog } from '../logger/logger.config'
 import { FrontendInputValidationException } from '../validation/frontend-input-validation.exception'
 
-type ErrorBody =
-  | { statusCode: 400; message: string; issues: ZodError['issues'] }
-  | { statusCode: 401; message: string }
-  | { statusCode: 403; message: string }
-  | { statusCode: 404; message: string }
-  | { statusCode: 409; message: string }
-  | { statusCode: 429; message: string }
-  | { statusCode: 500; message: string }
+/** Machine-readable discriminator our own exceptions may attach to any status. */
+type ErrorCode = { code?: string }
+
+type ErrorBody = ErrorCode &
+  (
+    | { statusCode: 400; message: string; issues: ZodError['issues'] }
+    | { statusCode: 401; message: string }
+    | { statusCode: 403; message: string }
+    | { statusCode: 404; message: string }
+    | { statusCode: 409; message: string }
+    | { statusCode: 429; message: string }
+    | { statusCode: 500; message: string }
+  )
 
 const STATUS_BODY_MAP: Record<number, ErrorBody> = {
   [HttpStatus.BAD_REQUEST]: {
@@ -102,7 +107,31 @@ export class HttpErrorFilter implements ExceptionFilter {
       } as ErrorBody
     }
 
-    return STATUS_BODY_MAP[status] ?? DEFAULT_ERROR_BODY
+    const body = STATUS_BODY_MAP[status] ?? DEFAULT_ERROR_BODY
+
+    // Our own exceptions may attach a machine-readable `code` so the client can tell
+    // apart two failures that share a status (e.g. wrong password vs expired session).
+    // Only the code is forwarded - never the exception message, which may leak internals.
+    const code = this.getSafeErrorCode(exception)
+    if (code) {
+      return { ...body, code } as ErrorBody
+    }
+
+    return body
+  }
+
+  private getSafeErrorCode(exception: unknown): string | undefined {
+    if (!(exception instanceof HttpException)) {
+      return undefined
+    }
+
+    const response = exception.getResponse()
+    if (response === null || typeof response !== 'object') {
+      return undefined
+    }
+
+    const code = (response as { code?: unknown }).code
+    return typeof code === 'string' ? code : undefined
   }
 
   /** Attach exception to request so pino-http can include it when it logs (warn/error level). */

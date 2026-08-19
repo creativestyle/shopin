@@ -2,6 +2,7 @@ import {
   CustomerResponse,
   UpdateCustomerRequest,
   ChangeCustomerPasswordRequest,
+  INVALID_CURRENT_PASSWORD_CODE,
 } from '@core/contracts/customer/customer'
 import {
   AddAddressRequest,
@@ -10,6 +11,8 @@ import {
   UpdateAddressRequest,
 } from '@core/contracts/customer/address'
 import { BaseService } from '@/lib/bff/services/base-service'
+import { parseErrorCode } from '@/lib/bff/utils/error-response'
+import { InvalidCurrentPasswordError } from './invalid-current-password-error'
 
 /**
  * Service for customer BFF operations.
@@ -46,9 +49,22 @@ export class CustomerService extends BaseService {
 
   /**
    * Change customer password
+   * Throws InvalidCurrentPasswordError when the current password is wrong, so the form
+   * can show it on the field instead of a generic toast.
    */
   async changePassword(data: ChangeCustomerPasswordRequest): Promise<void> {
-    await this.put('/customer/me/password', data)
+    await this.put('/customer/me/password', data, {
+      // Endpoint answers 200 with an empty body on success
+      allowEmpty: true,
+      onError: async (res) => {
+        if (
+          res.status === 401 &&
+          (await parseErrorCode(res)) === INVALID_CURRENT_PASSWORD_CODE
+        ) {
+          throw new InvalidCurrentPasswordError()
+        }
+      },
+    })
   }
 
   /**

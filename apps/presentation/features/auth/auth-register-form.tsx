@@ -17,6 +17,7 @@ import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Toast, addToast } from '@/components/ui/toast'
 import { HttpError } from '@/lib/error-utils'
+import { revalidateDependentField } from '@/lib/form-utils'
 import { z } from 'zod'
 import { SALUTATION_OPTIONS } from '@config/constants'
 
@@ -212,6 +213,10 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
           render={({ field, validationState }) => (
             <PasswordInput
               {...field}
+              onChange={(e) => {
+                field.onChange(e)
+                revalidateDependentField(form, 'confirmPassword')
+              }}
               id='password'
               label={t('passwordLabel')}
               required
