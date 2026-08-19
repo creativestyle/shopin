@@ -26,6 +26,8 @@ type FormFieldProps<
   control: Control<TFieldValues>
   render: (props: FormFieldRenderProps<TFieldValues, TName>) => React.ReactNode
   errorVariant?: ComponentProps<typeof FieldError>['variant']
+  /** Rendered next to the error message, inside the same alert region. */
+  errorContent?: React.ReactNode
 } & Omit<ComponentProps<typeof Field>, 'children'>
 
 export function FormField<
@@ -36,6 +38,7 @@ export function FormField<
   control,
   render,
   errorVariant = 'default',
+  errorContent,
   ...fieldProps
 }: FormFieldProps<TFieldValues, TName>) {
   return (
@@ -58,7 +61,9 @@ export function FormField<
               <FieldError
                 error={fieldState.error}
                 variant={errorVariant}
-              />
+              >
+                {errorContent}
+              </FieldError>
             )}
           </Field>
         )
