@@ -155,6 +155,10 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
             <TextInput
               {...field}
               id='email'
+              type='email'
+              inputMode='email'
+              autoCapitalize='none'
+              spellCheck={false}
               label={t('emailLabel')}
               required
               autoComplete='email'
@@ -194,8 +198,8 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
           className='w-full uppercase'
         >
           {form.formState.isSubmitting || loginMutation.isPending
-            ? t('submitting')
-            : t('submitButton')}
+            ? t('signingIn')
+            : t('signInButton')}
         </Button>
       </form>
     </div>
