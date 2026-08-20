@@ -19,9 +19,14 @@ import { ShowMoreProducts } from './show-more-products'
 interface AddToCartModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
+  restoreFocusRef?: React.RefObject<HTMLElement | null>
 }
 
-export function AddToCartModal({ open, onOpenChange }: AddToCartModalProps) {
+export function AddToCartModal({
+  open,
+  onOpenChange,
+  restoreFocusRef,
+}: AddToCartModalProps) {
   const t = useTranslations('cart')
   const { cart, refetch, error } = useCart()
   const productsScrollRef = React.useRef<HTMLDivElement>(null)
@@ -44,7 +49,10 @@ export function AddToCartModal({ open, onOpenChange }: AddToCartModalProps) {
       open={open}
       onOpenChange={onOpenChange}
     >
-      <SheetContent className='md:max-w-md'>
+      <SheetContent
+        className='md:max-w-md'
+        restoreFocusRef={restoreFocusRef}
+      >
         <SheetHeader className='text-center'>
           <SheetTitle className='font-normal'>
             {`${t('title')} (${cart.itemCount})`}

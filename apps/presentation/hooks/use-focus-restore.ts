@@ -21,8 +21,9 @@ if (typeof document !== 'undefined') {
  * Focus-restore handlers for Radix Dialog/Sheet Content. Uses a module-level
  * tracker that survives conditionally-mounted dialogs and disabled triggers.
  *
- * @param openerRef - Preferred restore target on touch (where tapping doesn't
- *   move focus). Falls back to the module-level tracker when omitted.
+ * @param openerRef - Explicit restore target; the only reliable one when the
+ *   opener is disabled mid-request, unmounts with its own dialog, or was tapped
+ *   on touch. Falls back to activeElement, then the module-level tracker.
  */
 export function useFocusRestore(
   openerRef?: React.RefObject<HTMLElement | null>
@@ -32,9 +33,8 @@ export function useFocusRestore(
   const onOpenAutoFocus = React.useCallback(() => {
     const active = document.activeElement as HTMLElement | null
     triggerRef.current =
-      active && active !== document.body
-        ? active
-        : (openerRef?.current ?? lastFocusedElement)
+      openerRef?.current ??
+      (active && active !== document.body ? active : lastFocusedElement)
   }, [openerRef])
 
   const onCloseAutoFocus = React.useCallback((event: Event) => {
