@@ -697,5 +697,27 @@
   },
   "productCard": {
     "linkAriaLabel": "{name} ansehen"
+  },
+  "dataSourceSelector": {
+    "title": "Datenquelle konfigurieren",
+    "intro": "Wählen Sie aus, welche Datenquelle die Anwendung für Produkte, Kategorien und Inhalte verwenden soll.",
+    "select": "Auswählen",
+    "selected": "Ausgewählt",
+    "selectAriaLabel": "{name} als Datenquelle auswählen",
+    "currentSelection": "Aktuelle Auswahl:",
+    "sources": {
+      "mock-set": {
+        "name": "Mock-API",
+        "description": "Mock-Daten für Entwicklung und Tests verwenden"
+      },
+      "commercetools-set": {
+        "name": "Commercetools-API",
+        "description": "Commercetools-API für Produktdaten verwenden"
+      },
+      "commercetools-algolia-set": {
+        "name": "Commercetools-API + Algolia",
+        "description": "Commercetools-API mit Algolia-Suche verwenden"
+      }
+    }
   }
 }

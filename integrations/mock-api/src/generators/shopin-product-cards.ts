@@ -27,6 +27,10 @@ const BRANDS = [
   'New Balance',
 ]
 
+// Cards only gate the variant picker; the modal refetches real variants from the PDP.
+const DEFAULT_VARIANT_ID = '1'
+const MAX_VARIANT_COUNT = 12
+
 export interface MockProductAttributes {
   color: string
   size: string
@@ -53,6 +57,8 @@ export function createShopinProductCardList(
         name,
         price,
         image: { src: '/images/product-image.png', alt: name },
+        variantId: DEFAULT_VARIANT_ID,
+        variantCount: faker.number.int({ min: 1, max: MAX_VARIANT_COUNT }),
         attributes: {
           color: faker.helpers.arrayElement(COLORS),
           size: faker.helpers.arrayElement(SIZES),
