@@ -50,6 +50,7 @@ interface FilterDrawerProps {
     rangeMin: number,
     rangeMax: number
   ) => void
+  restoreFocusRef?: React.RefObject<HTMLElement | null>
 }
 
 export function FilterDrawer({
@@ -67,6 +68,7 @@ export function FilterDrawer({
   onFilterToggle,
   onSaleOnlyToggle,
   onPriceRangeApply,
+  restoreFocusRef,
 }: FilterDrawerProps) {
   const router = useRouter()
   const pathname = usePathname()
@@ -101,6 +103,7 @@ export function FilterDrawer({
       <SheetContent
         id={id}
         className='md:max-w-96'
+        restoreFocusRef={restoreFocusRef}
       >
         <SheetHeader className='text-center'>
           <SheetTitle>{t('filters.drawerTitle')}</SheetTitle>

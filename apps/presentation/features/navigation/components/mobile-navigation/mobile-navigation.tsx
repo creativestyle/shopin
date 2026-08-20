@@ -24,12 +24,14 @@ interface MobileNavigationProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   navigation: MainNavigationResponse | null
+  restoreFocusRef?: React.RefObject<HTMLElement | null>
 }
 
 export function MobileNavigation({
   open,
   onOpenChange,
   navigation,
+  restoreFocusRef,
 }: MobileNavigationProps) {
   const {
     currentLevel,
@@ -79,6 +81,7 @@ export function MobileNavigation({
         showCloseButton={false}
         side='left'
         className='max-w-80'
+        restoreFocusRef={restoreFocusRef}
       >
         <VisuallyHidden>
           <SheetTitle>{t('navigation')}</SheetTitle>

@@ -4,6 +4,7 @@ import * as React from 'react'
 import { useTranslations } from 'next-intl'
 import { cn } from '@/lib/utils'
 import CloseIcon from '@/public/icons/close.svg'
+import { useFocusRestore } from '@/hooks/use-focus-restore'
 
 import * as DialogPrimitive from '@radix-ui/react-dialog'
 
@@ -81,17 +82,22 @@ function DialogContent({
   className,
   children,
   showCloseButton = true,
+  restoreFocusRef,
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Content> & {
   showCloseButton?: boolean
+  restoreFocusRef?: React.RefObject<HTMLElement | null>
 }) {
   const t = useTranslations('common')
+  const { onOpenAutoFocus, onCloseAutoFocus } = useFocusRestore(restoreFocusRef)
 
   return (
     <DialogPortal data-slot='dialog-portal'>
       <DialogOverlay />
       <DialogPrimitive.Content
         data-slot='dialog-content'
+        onOpenAutoFocus={onOpenAutoFocus}
+        onCloseAutoFocus={onCloseAutoFocus}
         className={cn(
           'group fixed inset-0 right-0 left-auto z-(--z-modal) flex max-h-full w-[calc(100%-(var(--spacing)*5))] max-w-120 flex-col bg-white shadow-lg',
           DIALOG_TRANSITION_DURATION_CLASS_NAME[DIALOG_TRANSITION_DURATION_MS],
