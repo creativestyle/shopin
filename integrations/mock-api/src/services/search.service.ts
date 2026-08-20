@@ -156,6 +156,8 @@ export class SearchService implements SearchProvider {
         name: p.name,
         price: { ...p.price, currency },
         image: p.image,
+        variantId: p.variantId,
+        variantCount: p.variantCount,
       })),
       facets,
       priceRange,

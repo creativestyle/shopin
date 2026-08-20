@@ -57,7 +57,7 @@ export function WishlistContent({ locale, page }: WishlistContentProps) {
                     variantId={item.product.variantId}
                     variantCount={item.product.variantCount}
                     variant='primary'
-                    className='z-2 w-full'
+                    className='w-full'
                     showLoadingText
                   />
                 }

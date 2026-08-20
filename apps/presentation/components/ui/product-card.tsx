@@ -95,7 +95,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           </div>
         </div>
         {actions && (
-          <div className='pointer-events-auto relative flex w-full shrink-0 flex-col gap-2'>
+          <div className='pointer-events-auto relative z-2 flex w-full shrink-0 flex-col gap-2'>
             {actions}
           </div>
         )}
