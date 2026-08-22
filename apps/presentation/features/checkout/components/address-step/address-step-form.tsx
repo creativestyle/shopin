@@ -56,11 +56,11 @@ export function AddressStepForm({
     }
 
     // For logged-in users for first address, also save the address to their account
+    // Best-effort: the cart address is already stored, so a failure here must not block the step
     if (isLoggedIn) {
       const addressWithDefaults = getDefaultFlag(data)
       const cleanData = cleanAddressData(addressWithDefaults, false)
-      await handleAddAddress(cleanData, handleNextStep)
-      return
+      await handleAddAddress(cleanData)
     }
 
     handleNextStep()

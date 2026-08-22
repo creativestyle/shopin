@@ -108,6 +108,7 @@ export function AddressForm({
               <div className='space-y-2'>
                 <RadioGroup
                   id='salutation'
+                  aria-label={t('fields.salutation')}
                   orientation='horizontal'
                   value={field.value || ''}
                   onValueChange={field.onChange}
@@ -298,7 +299,6 @@ export function AddressForm({
             return (
               <Field data-invalid={fieldState.invalid}>
                 <Select
-                  key={countryValue}
                   value={countryValue}
                   label={t('fields.country')}
                   options={countryOptions}

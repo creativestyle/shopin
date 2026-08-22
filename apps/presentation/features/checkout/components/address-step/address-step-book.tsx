@@ -40,6 +40,7 @@ export function AddressStepBook({
   isSetAddressPending,
 }: AddressStepBookProps) {
   const t = useTranslations('account.myAccount')
+  const tCheckout = useTranslations('checkout')
   const { handleNextStep } = useCheckoutNavigation(stepId)
   const { cart } = useCart()
   const [sheetOpen, setSheetOpen] = useState(false)
@@ -88,7 +89,15 @@ export function AddressStepBook({
           </Button>
         </div>
 
+        <p
+          id={`${addressType}-address-book-label`}
+          className='mb-4 text-sm text-gray-700'
+        >
+          {tCheckout(`${addressType}.selectAddress`)}
+        </p>
+
         <RadioGroup
+          aria-labelledby={`${addressType}-address-book-label`}
           value={selectedAddressId || ''}
           onValueChange={setUserSelectedAddressId}
           className='space-y-4'

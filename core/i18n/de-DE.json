@@ -573,6 +573,7 @@
     "shipping": {
       "title": "Versandadresse",
       "requiredFields": "* Pflichtfelder",
+      "selectAddress": "Versandadresse auswählen",
       "saving": "Wird gespeichert...",
       "noAddress": "Keine Versandadresse gesetzt",
       "sameAsBilling": "Die Lieferadresse entspricht der Rechnungsadresse",
@@ -589,6 +590,7 @@
     "billing": {
       "title": "Rechnungsadresse",
       "requiredFields": "* Pflichtfelder",
+      "selectAddress": "Rechnungsadresse auswählen",
       "saving": "Wird gespeichert...",
       "noAddress": "Keine Rechnungsadresse gesetzt",
       "saveError": "Fehler beim Speichern der Rechnungsadresse. Bitte versuchen Sie es erneut."
