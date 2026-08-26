@@ -31,7 +31,7 @@
     "@nestjs/config": "^4.0.2",
     "@nestjs/core": "^11.1.14",
     "@nestjs/platform-express": "^11.1.28",
-    "@nestjs/swagger": "^11.4.5",
+    "@nestjs/swagger": "^11.4.7",
     "@nestjs/throttler": "^6.0.0",
     "algoliasearch": "^5.25.0",
     "cookie-parser": "1.4.7",
