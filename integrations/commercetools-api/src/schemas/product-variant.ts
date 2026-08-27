@@ -6,6 +6,7 @@ import { AttributeApiResponseSchema } from './attribute'
 export const ProductVariantApiResponseSchema = z.object({
   id: z.number(),
   sku: z.string().optional(),
+  price: PriceApiResponseSchema.optional(),
   prices: z.array(PriceApiResponseSchema).optional(),
   attributes: z.array(AttributeApiResponseSchema).optional(),
   images: z.array(ImageApiResponseSchema).optional(),

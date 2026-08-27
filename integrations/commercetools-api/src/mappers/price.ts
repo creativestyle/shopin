@@ -13,8 +13,12 @@ export function mapVariantPriceToShopin(
     ? LanguageTagUtils.getCountry(currentLanguage)
     : undefined
 
+  // Use CT's pre-selected price (based on priceCurrency/priceCountry query params) when available.
+  // Fall back to manual country search and then first price for backward compatibility.
   const selectedPrice =
-    prices.find((p) => p.country === preferredCountry) ?? prices[0]
+    variant.price ??
+    prices.find((p) => p.country === preferredCountry) ??
+    prices[0]
 
   const regularPriceInCents = selectedPrice?.value.centAmount ?? 0
   const discountedPriceInCents = selectedPrice?.discounted?.value.centAmount
