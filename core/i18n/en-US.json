@@ -25,6 +25,7 @@
     "showPassword": "Show password",
 
     "viewAll": "View all",
+    "temporaryEmailServiceNotice": "Button and link are temporary until email service provider is set up",
     "logoAlt": "Shopin logo",
     "navigation": "Navigation",
     "mobileNavigationMenu": "Mobile navigation menu",
