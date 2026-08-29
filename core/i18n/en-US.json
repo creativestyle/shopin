@@ -19,6 +19,12 @@
     "noSuggestions": "<bold>0</bold> Results",
     "noSearchProducts": "Sorry - we couldn't find any results for <bold>\"{query}\"</bold>.",
     "scrollableDialogContent": "Scrollable dialog content",
+    "quantitySwitcher": {
+      "label": "Quantity",
+      "decreaseTo": "{label}: decrease to {value}",
+      "increaseTo": "{label}: increase to {value}",
+      "currentValue": "{label}: current value is {value}"
+    },
     "scrollLeft": "Scroll left",
     "scrollRight": "Scroll right",
     "hidePassword": "Hide password",
@@ -203,7 +209,6 @@
     },
     "addToCartModal": {
       "toastMessage": "Good choice. Item has been added to cart.",
-      "dialogDescription": "Review your cart contents after adding an item.",
       "moreProducts": "More products",
       "goToCart": "Go to cart"
     },

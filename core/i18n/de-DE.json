@@ -19,6 +19,12 @@
     "noSuggestions": "<bold>0</bold> Ergebnisse",
     "noSearchProducts": "Entschuldigung - wir konnten keine Ergebnisse f\u00fcr <bold>\"{query}\"</bold> finden.",
     "scrollableDialogContent": "Scrollbarer Dialoginhalt",
+    "quantitySwitcher": {
+      "label": "Menge",
+      "decreaseTo": "{label}: auf {value} verringern",
+      "increaseTo": "{label}: auf {value} erhöhen",
+      "currentValue": "{label}: aktueller Wert ist {value}"
+    },
     "scrollLeft": "Nach links scrollen",
     "scrollRight": "Nach rechts scrollen",
     "hidePassword": "Passwort ausblenden",
@@ -202,7 +208,6 @@
     },
     "addToCartModal": {
       "toastMessage": "Gute Wahl. Artikel wurde zum Warenkorb hinzugefügt.",
-      "dialogDescription": "Warenkorbinhalt nach dem Hinzufügen eines Artikels überprüfen.",
       "moreProducts": "Mehr Produkte",
       "goToCart": "Zum Warenkorb"
     },
