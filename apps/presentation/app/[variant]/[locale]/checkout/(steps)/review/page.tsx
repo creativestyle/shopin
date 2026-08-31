@@ -1,6 +1,5 @@
 import { initRouteContext } from '@/lib/request-context/route-context'
-import { CheckoutRouteGuard } from '@/features/checkout/checkout-route-guard'
-import { CheckoutStepsFrame } from '@/features/checkout/checkout-steps-frame'
+import { CheckoutStepPage } from '../checkout-step-page'
 import { ReviewActive } from '@/features/checkout/checkout-review-active'
 
 export default async function Page({
@@ -12,10 +11,8 @@ export default async function Page({
   initRouteContext({ variant, locale })
 
   return (
-    <CheckoutRouteGuard currentStepId='review'>
-      <CheckoutStepsFrame currentStepId='review'>
-        <ReviewActive />
-      </CheckoutStepsFrame>
-    </CheckoutRouteGuard>
+    <CheckoutStepPage stepId='review'>
+      <ReviewActive />
+    </CheckoutStepPage>
   )
 }
