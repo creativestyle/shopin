@@ -1,4 +1,5 @@
-import { redirect } from 'next/navigation'
+import { redirect } from '@/lib/navigation'
+import { getLocale } from 'next-intl/server'
 import { cookies } from 'next/headers'
 import { createBffFetchServer } from '@/lib/bff/core/bff-fetch-server'
 import { BaseService } from '@/lib/bff/services/base-service'
@@ -61,7 +62,8 @@ export async function ensureCheckoutStep(
 
   const incompleteStep = getFirstIncompleteStep(cart, currentStepId)
   if (incompleteStep) {
-    redirect(incompleteStep.route)
+    const locale = await getLocale()
+    redirect({ href: incompleteStep.route, locale })
   }
 
   return cart
@@ -74,14 +76,16 @@ export async function ensureCheckoutEntry(): Promise<void> {
     return
   }
 
+  const locale = await getLocale()
+
   const firstIncompleteStep = getFirstIncompleteStep(cart)
   if (firstIncompleteStep) {
-    redirect(firstIncompleteStep.route)
+    redirect({ href: firstIncompleteStep.route, locale })
   }
 
   const reviewStep = CHECKOUT_STEPS.find((s) => s.id === 'review')
   if (reviewStep) {
-    redirect(reviewStep.route)
+    redirect({ href: reviewStep.route, locale })
   }
 }
 
@@ -91,7 +95,8 @@ async function getCartOrRedirect(): Promise<CartResponse> {
   const cart = await cartService.getCart()
 
   if (!cart || cart.itemCount === 0) {
-    redirect('/cart')
+    const locale = await getLocale()
+    redirect({ href: '/cart', locale })
   }
 
   return cart
