@@ -1,6 +1,6 @@
 'use client'
 
-import { usePathname } from 'next/navigation'
+import { usePathname } from '@/lib/navigation'
 import { useCustomer } from '@/features/customer/customer-use-customer'
 import { RedirectWhen } from '@/components/redirect-when'
 import { setReturnTo } from '@/lib/return-to'

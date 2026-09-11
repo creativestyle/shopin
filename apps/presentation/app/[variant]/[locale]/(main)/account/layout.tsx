@@ -16,7 +16,7 @@ export default async function Layout({
   initRouteContext({ variant, locale })
 
   return (
-    <ProtectedPageGuard redirectTo={`/${locale}/sign-in`}>
+    <ProtectedPageGuard redirectTo='/sign-in'>
       <StandardContainer className='py-4'>{children}</StandardContainer>
     </ProtectedPageGuard>
   )
