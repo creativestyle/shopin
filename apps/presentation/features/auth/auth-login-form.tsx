@@ -191,7 +191,7 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
           type='submit'
           disabled={form.formState.isSubmitting || loginMutation.isPending}
           aria-busy={form.formState.isSubmitting || loginMutation.isPending}
-          className='w-full uppercase'
+          className='w-full'
         >
           {form.formState.isSubmitting || loginMutation.isPending
             ? t('submitting')
