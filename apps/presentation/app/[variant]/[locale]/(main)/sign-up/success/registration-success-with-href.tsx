@@ -2,7 +2,7 @@
 
 import { useSearchParams } from 'next/navigation'
 import { RegistrationSuccess } from '@/features/auth/auth-registration-success'
-import { setIsCheckoutFromSearchParams } from '@/features/checkout/checkout-param-utils'
+import { setReturnToFromSearchParams } from '@/lib/return-to'
 
 /**
  * Wraps RegistrationSuccess and builds verify-email URL from page context. Page owns the URL.
@@ -15,7 +15,7 @@ export function RegistrationSuccessWithHref() {
   if (token) {
     params.set('token', token)
   }
-  setIsCheckoutFromSearchParams(params, searchParams)
+  setReturnToFromSearchParams(params, searchParams)
   const verifyEmailHref = `/sign-up/verify-email?${params.toString()}`
 
   return <RegistrationSuccess verifyEmailHref={verifyEmailHref} />

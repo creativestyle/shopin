@@ -3,16 +3,23 @@ import { initRouteContext } from '@/lib/request-context/route-context'
 import { Link } from '@/lib/navigation'
 import { LoginForm } from '@/features/auth/auth-login-form'
 import { AuthPageGuard } from '../auth-page-guard'
+import { setReturnToFromSearchParams } from '@/lib/return-to'
 import { StandardContainer } from '@/components/ui/standard-container'
 
 export default async function Page({
   params,
+  searchParams,
 }: {
   params: Promise<{ variant: string; locale: string }>
+  searchParams: Promise<Record<string, string | string[] | undefined>>
 }) {
   const { variant, locale } = await params
   initRouteContext({ variant, locale })
   const t = await getTranslations('account.signIn')
+
+  const signUpParams = new URLSearchParams()
+  setReturnToFromSearchParams(signUpParams, await searchParams)
+  const signUpQuery = signUpParams.toString()
 
   return (
     <AuthPageGuard>
@@ -33,7 +40,7 @@ export default async function Page({
           <div className='text-center text-sm text-gray-700'>
             <span>{t('noAccount')} </span>
             <Link
-              href={`/sign-up`}
+              href={`/sign-up${signUpQuery ? `?${signUpQuery}` : ''}`}
               className='underline hover:text-gray-950'
             >
               {t('signUp')}

@@ -6,7 +6,7 @@ import { useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { LoginForm } from '@/features/auth/auth-login-form'
 import { useCustomer } from '@/features/customer/customer-use-customer'
-import { setIsCheckoutParam } from './checkout-param-utils'
+import { setReturnTo } from '@/lib/return-to'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 
 export function CheckoutAccountSelection() {
@@ -27,7 +27,7 @@ export function CheckoutAccountSelection() {
 
   function handleCreateAccount() {
     const params = new URLSearchParams()
-    setIsCheckoutParam(params)
+    setReturnTo(params, '/checkout')
     router.push(`/sign-up?${params.toString()}`)
   }
 

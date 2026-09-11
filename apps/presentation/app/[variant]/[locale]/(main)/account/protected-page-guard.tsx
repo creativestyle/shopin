@@ -1,7 +1,9 @@
 'use client'
 
+import { usePathname } from 'next/navigation'
 import { useCustomer } from '@/features/customer/customer-use-customer'
 import { RedirectWhen } from '@/components/redirect-when'
+import { setReturnTo } from '@/lib/return-to'
 
 interface ProtectedPageGuardProps {
   children: React.ReactNode
@@ -18,11 +20,16 @@ export function ProtectedPageGuard({
   redirectTo,
 }: ProtectedPageGuardProps) {
   const { isLoggedIn, isLoading } = useCustomer()
+  const pathname = usePathname()
+
+  const params = new URLSearchParams()
+  setReturnTo(params, pathname)
+  const query = params.toString()
 
   return (
     <RedirectWhen
       when={!isLoggedIn}
-      redirectTo={redirectTo}
+      redirectTo={query ? `${redirectTo}?${query}` : redirectTo}
       isLoading={isLoading}
     >
       {children}

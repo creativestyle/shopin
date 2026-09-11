@@ -4,7 +4,7 @@ import { Link } from '@/lib/navigation'
 import { SignUpFormWithRedirect } from './sign-up-form-with-redirect'
 import ChevronLeftIcon from '@/public/icons/chevron-left.svg'
 import { AuthPageGuard } from '../auth-page-guard'
-import { getIsCheckoutServer } from '@/features/checkout/checkout-param-utils'
+import { getReturnToServer, setReturnTo } from '@/lib/return-to'
 import { StandardContainer } from '@/components/ui/standard-container'
 
 export default async function Page({
@@ -19,7 +19,16 @@ export default async function Page({
   initRouteContext({ variant, locale })
   const t = await getTranslations('account.signUp')
 
-  const isCheckout = getIsCheckoutServer(resolvedSearchParams)
+  const returnTo = getReturnToServer(resolvedSearchParams)
+  const isCheckout = !!returnTo?.startsWith('/checkout')
+
+  const signInParams = new URLSearchParams()
+  setReturnTo(signInParams, returnTo)
+  const signInQuery = signInParams.toString()
+  const backHref =
+    isCheckout && returnTo
+      ? returnTo
+      : `/sign-in${signInQuery ? `?${signInQuery}` : ''}`
 
   return (
     <AuthPageGuard>
@@ -27,7 +36,7 @@ export default async function Page({
         <div className='mx-auto mt-2 flex w-full max-w-md flex-col items-start px-3 sm:px-6'>
           <div className='flex w-full flex-col items-center'>
             <Link
-              href={isCheckout ? '/checkout' : '/sign-in'}
+              href={backHref}
               className='mb-5 flex items-center gap-4 text-sm text-gray-700 underline'
             >
               <ChevronLeftIcon className='size-6' />

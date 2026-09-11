@@ -2,7 +2,7 @@
 
 import { useRouter, useSearchParams } from 'next/navigation'
 import { RegisterForm } from '@/features/auth/auth-register-form'
-import { setIsCheckoutFromSearchParams } from '@/features/checkout/checkout-param-utils'
+import { setReturnToFromSearchParams } from '@/lib/return-to'
 
 /**
  * Renders RegisterForm and redirects on success. Page owns the redirect destination.
@@ -16,7 +16,7 @@ export function SignUpFormWithRedirect() {
     if (emailToken) {
       params.set('token', emailToken)
     }
-    setIsCheckoutFromSearchParams(params, searchParams)
+    setReturnToFromSearchParams(params, searchParams)
     router.push(`/sign-up/success?${params.toString()}`)
   }
 
