@@ -251,6 +251,8 @@
       "title": "Registrieren",
       "backToSignIn": "Zurück zur Anmeldung",
       "backToCheckout": "Zurück zur Kasse",
+      "signInLink": "Anmelden",
+      "salutationLabel": "Anrede",
       "salutationOptions": {
         "Ms": "Frau",
         "Mr": "Herr",

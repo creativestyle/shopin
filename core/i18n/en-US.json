@@ -252,6 +252,8 @@
       "title": "Register",
       "backToSignIn": "Back to Sign In",
       "backToCheckout": "Back to checkout",
+      "signInLink": "Sign in",
+      "salutationLabel": "Salutation",
       "salutationOptions": {
         "Ms": "Ms.",
         "Mr": "Mr.",
