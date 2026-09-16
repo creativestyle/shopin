@@ -1,6 +1,9 @@
 import React from 'react'
 import { cn } from '@/lib/utils'
 
+/** Target of the global skip-to-content link. */
+export const MAIN_CONTENT_ID = 'main-content'
+
 export function PageShell({
   children,
   className,
@@ -18,5 +21,13 @@ export function PageContent({
   children: React.ReactNode
   className?: string
 }) {
-  return <main className={cn('flex-1', className)}>{children}</main>
+  return (
+    <main
+      id={MAIN_CONTENT_ID}
+      tabIndex={-1}
+      className={cn('flex-1 outline-none', className)}
+    >
+      {children}
+    </main>
+  )
 }
