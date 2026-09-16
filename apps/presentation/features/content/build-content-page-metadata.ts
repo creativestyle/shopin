@@ -17,9 +17,10 @@ export function buildContentPageMetadata({
   localePrefix,
   baseUrl,
 }: BuildContentPageMetadataParams): Metadata {
-  const canonical = baseUrl
+  const derivedCanonical = baseUrl
     ? buildCanonicalUrl(baseUrl, localePrefix, pageData.slug)
     : undefined
+  const canonical = pageData.seo?.canonicalUrl ?? derivedCanonical
   const languages = baseUrl
     ? buildHreflangLanguages(baseUrl, pageData.slug, pageData.slugByLocale)
     : undefined

@@ -85,6 +85,7 @@ export const PageBySlugQuery = gql`
           ...AssetFragment
         }
         noIndex
+        canonicalUrl
         componentsCollection(limit: ${QUERY_LIMITS.COMPONENTS_PER_PAGE}) {
           items {
             __typename
