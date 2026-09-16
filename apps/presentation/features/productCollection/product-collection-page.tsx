@@ -9,6 +9,9 @@ import { ITEMS_PER_PAGE, type SortOption } from '@config/constants'
 import { getTranslations } from 'next-intl/server'
 import { getCommonErrorMessage } from '@/lib/error-translation-keys'
 import { HttpError } from '@/lib/error-utils'
+import { JsonLd } from '@/features/seo/json-ld'
+import { buildBreadcrumbJsonLd } from '@/features/seo/build-breadcrumb-json-ld'
+import { tryGetSiteBaseUrl } from '@/lib/site-url'
 
 interface ProductCollectionPageProps {
   slug: string
@@ -69,9 +72,17 @@ export async function ProductCollectionPage({
 
   const totalPages = Math.ceil(productCollectionData.total / ITEMS_PER_PAGE)
   const pageTitle = productCollectionData.categoryName ?? slug
+  const tCommon = await getTranslations('common')
+  const breadcrumbJsonLd = buildBreadcrumbJsonLd({
+    crumbs: productCollectionData.breadcrumb,
+    baseUrl: tryGetSiteBaseUrl(),
+    localePrefix: locale,
+    homeLabel: tCommon('homepage'),
+  })
 
   return (
     <StandardContainer className='py-4'>
+      {breadcrumbJsonLd && <JsonLd data={breadcrumbJsonLd} />}
       <Breadcrumbs
         crumbs={productCollectionData.breadcrumb}
         className='pb-4'

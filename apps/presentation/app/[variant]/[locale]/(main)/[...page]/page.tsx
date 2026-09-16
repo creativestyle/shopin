@@ -4,7 +4,7 @@ import { initRouteContext } from '@/lib/request-context/route-context'
 import { ContentPage } from '@/features/content/content-page'
 import { buildContentPageMetadata } from '@/features/content/build-content-page-metadata'
 import { getContentPage } from '@/features/content/get-content-page'
-import { getSiteBaseUrl } from '@/lib/site-url'
+import { tryGetSiteBaseUrl } from '@/lib/site-url'
 
 /** Paths with a file extension (e.g. .html, .json) are not CMS pages — 404. */
 function hasFileExtension(slug: string): boolean {
@@ -37,7 +37,7 @@ export async function generateMetadata({
   try {
     const [pageData, baseUrl] = await Promise.all([
       getContentPage(cmsSlug),
-      getSiteBaseUrl(),
+      tryGetSiteBaseUrl(),
     ])
     return buildContentPageMetadata({
       pageData,

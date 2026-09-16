@@ -9,6 +9,7 @@ import { cn } from '@/lib/utils'
 import { HorizontalScroller } from '@/components/ui/horizontal-scroller'
 import type { MainNavigationResponse } from '@core/contracts/navigation/main-navigation'
 import type { LinkResponse } from '@core/contracts/core/link'
+import { buildProductPath } from '@config/constants'
 
 interface MainNavigationProps extends MainNavigationResponse {
   className?: string
@@ -187,7 +188,7 @@ export const MainNavigation: React.FC<MainNavigationProps> = ({
                 {/* Right side - Featured product */}
                 {activeItem.featuredProduct && (
                   <Link
-                    href={`/p/${activeItem.featuredProduct.slug}`}
+                    href={buildProductPath(activeItem.featuredProduct.slug)}
                     className='ml-auto flex w-full max-w-80 flex-shrink-0 flex-col items-center gap-4 hover:opacity-80'
                   >
                     <div className='relative aspect-square w-full'>

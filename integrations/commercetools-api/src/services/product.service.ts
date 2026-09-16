@@ -14,6 +14,7 @@ import { mapVariantToGallery } from '../mappers/gallery'
 import { mapVariantsToShopin, mapVariantsToResponse } from '../mappers/variants'
 import { ProductProjectionPagedQueryApiResponseSchema } from '../schemas/product-projection'
 import type { Category, LocalizedString } from '@commercetools/platform-sdk'
+import { buildCategoryPath, buildProductPath } from '@config/constants'
 
 @Injectable({ scope: Scope.REQUEST })
 export class ProductService {
@@ -147,7 +148,7 @@ export class ProductService {
           )?.obj,
           currentLanguage
         ),
-        { label: name, path: `/p/${slug}` },
+        { label: name, path: buildProductPath(slug) },
       ],
     }
   }
@@ -176,7 +177,7 @@ export class ProductService {
       return [
         {
           label: mapLocalized(cat.name as LocalizedString, language) || slug,
-          path: `/c/${slug}`,
+          path: buildCategoryPath(slug),
         },
       ]
     })
