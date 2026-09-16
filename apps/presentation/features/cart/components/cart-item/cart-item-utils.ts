@@ -21,6 +21,30 @@ export function calculateItemPrices(item: LineItemResponse): {
 }
 
 /**
+ * Get the per-unit price (discounted if present, otherwise regular).
+ */
+export function getUnitPrice(item: LineItemResponse): number {
+  return item.price.discountedPriceInCents ?? item.price.regularPriceInCents
+}
+
+/**
+ * Build a human-readable variant string from line item attributes
+ * (e.g. "Color: Blue · Size: M"). Known keys are translated via `labelFor`,
+ * unknown keys fall back to the raw key.
+ */
+export function formatItemAttributes(
+  attributes: LineItemResponse['attributes'],
+  labelFor: (key: string) => string
+): string {
+  if (!attributes) {
+    return ''
+  }
+  return Object.entries(attributes)
+    .map(([key, value]) => `${labelFor(key)}: ${value}`)
+    .join(' · ')
+}
+
+/**
  * Generate product href from line item
  */
 export function getProductHref(productSlug: string | undefined): string {

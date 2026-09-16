@@ -12,6 +12,8 @@ interface QuantitySwitcherProps {
   onDecrease: () => void
   onIncrease: () => void
   onChange?: (newValue: number) => void
+  onRemove?: () => void
+  removeLabel?: string
   disabled?: boolean
   min?: number
   max?: number
@@ -24,6 +26,8 @@ export function QuantitySwitcher({
   onDecrease,
   onIncrease,
   onChange,
+  onRemove,
+  removeLabel,
   disabled = false,
   min = 1,
   max,
@@ -43,11 +47,17 @@ export function QuantitySwitcher({
     max,
   })
 
-  const canDecrease = !disabled && value > min
+  const willRemoveOnDecrease = value <= min && !!onRemove
+  const canDecrease = !disabled && (value > min || willRemoveOnDecrease)
   const canIncrease = !disabled && (max === undefined || value < max)
 
   const decreaseValue = Math.max(min, value - 1)
   const increaseValue = max !== undefined ? Math.min(max, value + 1) : value + 1
+
+  const handleDecreaseClick = willRemoveOnDecrease ? onRemove : onDecrease
+  const decreaseAriaLabel = willRemoveOnDecrease
+    ? (removeLabel ?? `${ariaLabel}: remove`)
+    : `${ariaLabel}: decrease to ${decreaseValue}`
 
   return (
     <div
@@ -64,9 +74,9 @@ export function QuantitySwitcher({
       aria-label={ariaLabel}
     >
       <QuantityButton
-        onClick={onDecrease}
+        onClick={handleDecreaseClick}
         disabled={!canDecrease}
-        ariaLabel={`${ariaLabel}: decrease to ${decreaseValue}`}
+        ariaLabel={decreaseAriaLabel}
         position='left'
       >
         {!disabled && (

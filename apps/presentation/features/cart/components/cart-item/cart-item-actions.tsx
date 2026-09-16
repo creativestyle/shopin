@@ -10,6 +10,7 @@ interface CartItemActionsProps {
   variant?: 'icon-only' | 'with-text'
   productId: string
   variantId?: string
+  itemName: string
   onRemoveClick?: () => void
   isRemoving?: boolean
 }
@@ -18,12 +19,14 @@ export function CartItemActions({
   variant = 'icon-only',
   productId,
   variantId,
+  itemName,
   onRemoveClick,
   isRemoving = false,
 }: CartItemActionsProps) {
   const t = useTranslations('cart')
   const showText = variant === 'with-text'
   const removeLabel = showText ? t('item.removeAction') : t('item.remove')
+  const removeAriaLabel = t('item.removeNamed', { name: itemName })
 
   const buttons = (
     <>
@@ -40,7 +43,7 @@ export function CartItemActions({
           },
           'disabled:cursor-not-allowed disabled:opacity-50'
         )}
-        aria-label={removeLabel}
+        aria-label={removeAriaLabel}
       >
         <TrashBinIcon className='size-6 shrink-0 text-gray-700' />
         {showText && (

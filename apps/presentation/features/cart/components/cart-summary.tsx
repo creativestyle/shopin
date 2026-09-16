@@ -9,6 +9,7 @@ import { Divider } from '@/components/ui/divider'
 import { useTranslations, useLocale } from 'next-intl'
 import type { ReactNode } from 'react'
 import { cn } from '@/lib/utils'
+import { formatPriceWithPrefix } from '@/lib/price-formatter'
 
 interface CartSummaryProps {
   cart: CartResponse | OrderResponse
@@ -28,9 +29,23 @@ export function CartSummary({
   const locale = useLocale()
   const t = useTranslations('cart')
   const shippingCents = cart.shippingInfo?.price.regularPriceInCents || 0
+  const totalAnnouncement = t('summary.totalAnnouncement', {
+    total: formatPriceWithPrefix(cart.grandTotal.regularPriceInCents, locale, {
+      currency: cart.grandTotal.currency ?? cart.currency,
+      fractionDigits: cart.grandTotal.fractionDigits ?? 2,
+    }),
+  })
 
   const content = (
     <>
+      {/* Announce total changes to screen readers (updates as the cart changes) */}
+      <div
+        role='status'
+        aria-live='polite'
+        className='sr-only'
+      >
+        {totalAnnouncement}
+      </div>
       {showPromoCode && (
         <>
           <PromoCodeSection label={t('summary.promoCode')} />
