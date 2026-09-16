@@ -9,7 +9,7 @@ import {
 } from '@/features/productCollection/parse-search-params'
 import { getProductCollectionPage } from '@/features/productCollection/get-product-collection-page'
 import { buildProductCollectionPageMetadata } from '@/features/productCollection/build-product-collection-page-metadata'
-import { getSiteBaseUrl } from '@/lib/site-url'
+import { tryGetSiteBaseUrl } from '@/lib/site-url'
 import { logger } from '@/lib/logger'
 
 export async function generateMetadata({
@@ -50,7 +50,7 @@ export async function generateMetadata({
       pageData,
       slug: slugString,
       localePrefix: locale,
-      baseUrl: getSiteBaseUrl(),
+      baseUrl: tryGetSiteBaseUrl(),
       page: parsed.page,
       totalPages,
       hasRefinements: hasActiveRefinements(parsed),

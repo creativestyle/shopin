@@ -14,20 +14,11 @@ function trimSlashes(s: string): string {
   return s.replace(/^\/+|\/+$/g, '')
 }
 
-export function getSiteBaseUrl(): string {
-  const value = process.env[ENV_VAR]?.trim()
-  if (!value) {
-    throw new Error(
-      `${ENV_VAR} is required. Set it to the site origin (e.g. https://example.com).`
-    )
-  }
-  return value.replace(/\/$/, '')
-}
-
 /**
- * Same as getSiteBaseUrl() but returns undefined instead of throwing.
- * For callers that must not fail the render/build when the site origin is
- * unconfigured (robots.txt, sitemap.xml).
+ * Site origin, or undefined when FRONTEND_URL is unset.
+ * Never throws: every caller builds metadata inside a try/catch, so throwing here
+ * discarded the whole object — dropping noindex on CMS pages and forcing
+ * `noindex, follow` on every PLP, from a missing env var alone.
  */
 export function tryGetSiteBaseUrl(): string | undefined {
   const value = process.env[ENV_VAR]?.trim()

@@ -4,7 +4,7 @@ import { ContentPage } from '@/features/content/content-page'
 import { buildContentPageMetadata } from '@/features/content/build-content-page-metadata'
 import { getContentPage } from '@/features/content/get-content-page'
 import { getHomepageSlugForLocale } from '@/features/content/homepage-slug'
-import { getSiteBaseUrl, tryGetSiteBaseUrl } from '@/lib/site-url'
+import { tryGetSiteBaseUrl } from '@/lib/site-url'
 import { JsonLd } from '@/features/seo/json-ld'
 import { buildSiteJsonLd } from '@/features/seo/build-site-json-ld'
 import { logger } from '@/lib/logger'
@@ -20,7 +20,7 @@ export async function generateMetadata({
     const slug = getHomepageSlugForLocale(locale)
     const [pageData, baseUrl] = await Promise.all([
       getContentPage(slug),
-      getSiteBaseUrl(),
+      tryGetSiteBaseUrl(),
     ])
     return buildContentPageMetadata({
       pageData,

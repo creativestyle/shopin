@@ -5,7 +5,7 @@ import { getProductPage } from '@/features/product/get-product-page'
 import { buildProductPageMetadata } from '@/features/product/build-product-page-metadata'
 import { AddToCart } from '@/features/cart/cart-add-to-cart'
 import { AddToWishlist } from '@/features/wishlist/add-to-wishlist'
-import { getSiteBaseUrl } from '@/lib/site-url'
+import { tryGetSiteBaseUrl } from '@/lib/site-url'
 import { logger } from '@/lib/logger'
 
 export async function generateMetadata({
@@ -32,7 +32,7 @@ export async function generateMetadata({
     return buildProductPageMetadata({
       pageData,
       localePrefix: locale,
-      baseUrl: getSiteBaseUrl(),
+      baseUrl: tryGetSiteBaseUrl(),
     })
   } catch (error) {
     logger.error(
