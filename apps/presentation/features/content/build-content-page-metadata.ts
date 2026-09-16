@@ -1,13 +1,6 @@
 import type { Metadata } from 'next'
 import type { ContentPageResponse } from '@core/contracts/content/page'
 import { buildCanonicalUrl, buildHreflangLanguages } from '@/lib/site-url'
-import { SITE_NAME, DEFAULT_OG_IMAGE } from '@/lib/site-metadata'
-import { isHomepageSlug } from './homepage-slug'
-
-/** The homepage lives at the locale root, so its slug never appears in the URL. */
-function toPathSlug(slug: string): string {
-  return isHomepageSlug(slug) ? '' : slug
-}
 
 export interface BuildContentPageMetadataParams {
   pageData: ContentPageResponse
@@ -24,21 +17,12 @@ export function buildContentPageMetadata({
   localePrefix,
   baseUrl,
 }: BuildContentPageMetadataParams): Metadata {
-  const pathSlug = toPathSlug(pageData.slug)
-  const pathSlugByLocale = pageData.slugByLocale
-    ? Object.fromEntries(
-        Object.entries(pageData.slugByLocale).map(([locale, slug]) => [
-          locale,
-          toPathSlug(slug),
-        ])
-      )
-    : undefined
   const derivedCanonical = baseUrl
-    ? buildCanonicalUrl(baseUrl, localePrefix, pathSlug)
+    ? buildCanonicalUrl(baseUrl, localePrefix, pageData.slug)
     : undefined
   const canonical = pageData.seo?.canonicalUrl ?? derivedCanonical
   const languages = baseUrl
-    ? buildHreflangLanguages(baseUrl, pathSlug, pathSlugByLocale)
+    ? buildHreflangLanguages(baseUrl, pageData.slug, pageData.slugByLocale)
     : undefined
 
   const title = pageData.seo?.metaTitle ?? pageData.pageTitle ?? pageData.slug
@@ -55,17 +39,16 @@ export function buildContentPageMetadata({
         : undefined,
     openGraph: {
       type: 'website',
-      siteName: SITE_NAME,
       title,
       description,
       url: canonical,
-      images: [ogImage ? { url: ogImage } : DEFAULT_OG_IMAGE],
+      images: ogImage ? [{ url: ogImage }] : undefined,
     },
     twitter: {
       card: 'summary_large_image',
       title,
       description,
-      images: [ogImage ?? DEFAULT_OG_IMAGE.url],
+      images: ogImage ? [ogImage] : undefined,
     },
   }
 }

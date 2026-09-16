@@ -1,47 +1,30 @@
-import { I18N_CONFIG, listLocales, getDefaultLocale } from '@config/constants'
+import { I18N_CONFIG, listLocales } from '@config/constants'
 
 const ENV_VAR = 'FRONTEND_URL'
-
-let warnedMissingBaseUrl = false
 
 function trimSlashes(s: string): string {
   return s.replace(/^\/+|\/+$/g, '')
 }
 
-/**
- * Site origin from FRONTEND_URL, or undefined when unset.
- * Returns undefined rather than throwing so a missing origin only costs the canonical and
- * hreflang tags — callers build metadata in a try/catch, and throwing here would discard the
- * whole object, including the noIndex directive.
- */
-export function getSiteBaseUrl(): string | undefined {
+export function getSiteBaseUrl(): string {
   const value = process.env[ENV_VAR]?.trim()
   if (!value) {
-    if (!warnedMissingBaseUrl) {
-      warnedMissingBaseUrl = true
-      console.warn(
-        `${ENV_VAR} is not set — canonical and hreflang tags will be omitted.`
-      )
-    }
-    return undefined
+    throw new Error(
+      `${ENV_VAR} is required. Set it to the site origin (e.g. https://example.com).`
+    )
   }
   return value.replace(/\/$/, '')
 }
 
-/**
- * Absolute URL for a locale and slug. The default locale carries no URL prefix
- * (next-intl localePrefix: 'as-needed'), and an empty slug is the locale root.
- */
 export function buildCanonicalUrl(
   baseUrl: string,
   localePrefix: string,
   slug: string
 ): string {
-  const prefix =
-    localePrefix === getDefaultLocale().urlPrefix ? '' : localePrefix
-  const path = [prefix, slug].map(trimSlashes).filter(Boolean).join('/')
-  const origin = trimSlashes(baseUrl)
-  return path ? `${origin}/${path}` : `${origin}/`
+  const segments = [baseUrl, localePrefix, slug]
+    .map(trimSlashes)
+    .filter(Boolean)
+  return segments.join('/')
 }
 
 export function buildHreflangLanguages(

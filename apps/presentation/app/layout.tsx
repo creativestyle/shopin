@@ -1,6 +1,5 @@
 import React from 'react'
 import type { Metadata, Viewport } from 'next'
-import { SITE_NAME, DEFAULT_OG_IMAGE } from '@/lib/site-metadata'
 import './globals.css'
 
 export default function RootLayout({
@@ -26,7 +25,7 @@ export const metadata: Metadata = {
   manifest: '/manifest.json',
   title: {
     default: siteTitle,
-    template: `%s | ${SITE_NAME}`,
+    template: '%s | SHOPin',
   },
   description: siteDescription,
   keywords: ['e-commerce', 'shopping'],
@@ -37,15 +36,15 @@ export const metadata: Metadata = {
   },
   openGraph: {
     type: 'website',
-    siteName: SITE_NAME,
+    siteName: 'SHOPin',
     title: siteTitle,
     description: siteDescription,
-    images: [DEFAULT_OG_IMAGE],
+    images: [{ url: '/og-image.png', width: 1200, height: 630, alt: 'SHOPin' }],
   },
   twitter: {
     card: 'summary_large_image',
     title: siteTitle,
     description: siteDescription,
-    images: [DEFAULT_OG_IMAGE.url],
+    images: ['/og-image.png'],
   },
 }
