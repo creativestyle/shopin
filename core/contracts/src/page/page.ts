@@ -12,6 +12,8 @@ export const PageResponseSchema = z.object({
       metaDescription: z.string().optional(),
       ogImage: ContentImageSchema.optional(),
       noIndex: z.boolean().optional(),
+      /** Absolute URL overriding the derived canonical; unset means use the page's own URL. */
+      canonicalUrl: z.string().optional(),
     })
     .optional(),
 })
