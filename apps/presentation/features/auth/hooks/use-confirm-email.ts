@@ -9,7 +9,7 @@ import type {
 } from '@core/contracts/auth/confirm-email'
 
 export interface UseConfirmEmailOptions {
-  /** Called when email is verified (or already verified). Page is responsible for redirect/navigation. */
+  /** Called when email is verified. Page is responsible for redirect/navigation. */
   onVerified?: () => void
 }
 
@@ -29,7 +29,7 @@ export function useConfirmEmail(options?: UseConfirmEmailOptions) {
       return await authService.confirmEmail(request)
     },
     onSuccess: (response) => {
-      if (response.success || response.alreadyVerified) {
+      if (response.success) {
         options?.onVerified?.()
       }
     },

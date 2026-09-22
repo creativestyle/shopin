@@ -10,7 +10,7 @@ import { PasswordInput } from '@/components/ui/inputs/password-input'
 import { ResetPasswordRequestSchema } from '@core/contracts/auth/reset-password'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Toast, addToast } from '@/components/ui/toast'
+import { Toast } from '@/components/ui/toast'
 import { HttpError } from '@/lib/error-utils'
 import { useResetPassword } from './hooks/use-reset-password'
 import { z } from 'zod'
@@ -86,10 +86,6 @@ export const ResetPasswordForm: FC<ResetPasswordFormProps> = ({
       return
     }
 
-    addToast({
-      type: 'success',
-      children: t('success'),
-    })
     onSuccess?.()
   }
 

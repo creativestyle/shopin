@@ -229,6 +229,8 @@
       "noAccount": "Noch kein Konto?",
       "signUp": "Registrieren",
       "success": "Sie wurden erfolgreich angemeldet.",
+      "emailVerified": "Ihre E-Mail-Adresse wurde bestätigt. Sie können sich jetzt anmelden.",
+      "passwordReset": "Ihr Passwort wurde aktualisiert. Sie können sich jetzt anmelden.",
       "errors": {
         "emailRequired": "E-Mail ist erforderlich",
         "emailInvalid": "Bitte geben Sie eine gültige E-Mail-Adresse ein",
@@ -307,6 +309,7 @@
       "errors": {
         "tokenRequired": "E-Mail-Bestätigungstoken ist erforderlich. Bitte verwenden Sie den Link aus Ihrer E-Mail.",
         "tokenExpired": "Ihr Bestätigungslink ist abgelaufen. Geben Sie Ihre E-Mail-Adresse ein, um einen neuen zu erhalten.",
+        "tokenInvalid": "Dieser Bestätigungslink ist nicht mehr gültig. Wenn Sie Ihre E-Mail-Adresse bereits bestätigt haben, können Sie sich anmelden. Andernfalls geben Sie unten Ihre E-Mail-Adresse ein, um einen neuen Link zu erhalten.",
         "resendFailed": "Bestätigungs-E-Mail konnte nicht gesendet werden. Bitte versuchen Sie es erneut.",
         "confirmFailed": "E-Mail-Bestätigung fehlgeschlagen. Bitte versuchen Sie es erneut oder verwenden Sie den Link aus Ihrer E-Mail.",
         "validationFailed": "Bitte überprüfen Sie Ihre Eingabe",

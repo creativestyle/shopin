@@ -47,6 +47,13 @@ export class CommercetoolsErrorMatcher {
       return false
     }
 
+    // Spent and unknown password/email tokens return 404 ResourceNotFound.
+    if (error.statusCode === 404) {
+      return (
+        error.body?.errors?.some((e) => e.code === 'ResourceNotFound') ?? false
+      )
+    }
+
     return (
       error.statusCode === 400 &&
       (error.body?.errors?.some((e) => e.code === 'InvalidToken') ?? false)
