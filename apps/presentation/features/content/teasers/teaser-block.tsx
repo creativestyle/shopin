@@ -50,7 +50,12 @@ function renderTeaser(
     return <TeaserHeadlineBlock teaser={teaser} />
   }
   if (isTeaserOfType(teaser, 'hero')) {
-    return <TeaserHeroBlock teaser={teaser} />
+    return (
+      <TeaserHeroBlock
+        teaser={teaser}
+        imagePreload={imagePreload}
+      />
+    )
   }
   if (isTeaserOfType(teaser, 'image')) {
     return (

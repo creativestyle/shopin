@@ -3,7 +3,8 @@ import type { ContentfulImageApiResponse } from '../schemas/image'
 
 /**
  * Maps Contentful Asset fields to contract ContentImage.
- * Contentful has no "alt" field; we derive it from title (and description when requested) so the contract always has alt.
+ * Contentful has no "alt" field; description is the editorial alt text, title is the (auto-filled) asset name.
+ * Prefer description, fall back to title; empty description falls through, and a cleared title yields alt='' (decorative).
  * Passes the base asset URL; presentation uses next/image with a loader to build responsive URLs.
  * Returns undefined when url is missing.
  */
@@ -14,7 +15,7 @@ export function mapContentfulImageToContentImage(
   if (!url) {
     return undefined
   }
-  const alt = (asset?.title ?? asset?.description ?? '').trim() || ''
+  const alt = (asset?.description || asset?.title || '').trim()
   return {
     url,
     alt,
