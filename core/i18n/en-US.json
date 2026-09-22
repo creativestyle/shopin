@@ -698,5 +698,27 @@
   },
   "productCard": {
     "linkAriaLabel": "View details for {name}"
+  },
+  "dataSourceSelector": {
+    "title": "Data Source Configuration",
+    "intro": "Select which data source the application should use for fetching products, categories and content.",
+    "select": "Select",
+    "selected": "Selected",
+    "selectAriaLabel": "Select {name} as data source",
+    "currentSelection": "Current selection:",
+    "sources": {
+      "mock-set": {
+        "name": "Mock API",
+        "description": "Use mock data for development and testing"
+      },
+      "commercetools-set": {
+        "name": "Commercetools API",
+        "description": "Use Commercetools API for product data"
+      },
+      "commercetools-algolia-set": {
+        "name": "Commercetools API + Algolia",
+        "description": "Use Commercetools API with Algolia-powered search"
+      }
+    }
   }
 }

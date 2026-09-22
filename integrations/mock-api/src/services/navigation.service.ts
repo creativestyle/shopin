@@ -80,7 +80,7 @@ function createMainNavigation(
                   .slugify(faker.commerce.productName())
                   .toLocaleLowerCase()}-${globalCounter++}`,
                 image: {
-                  src: `https://picsum.photos/seed/${faker.string.uuid()}/400/400`,
+                  src: 'https://placehold.co/400x400/f3f4f6/6b7280?text=Image',
                   alt: faker.commerce.productName(),
                 },
                 price: {
