@@ -2,6 +2,7 @@
 
 import PlusIcon from '@/public/icons/plus.svg'
 import MinusIcon from '@/public/icons/minus.svg'
+import { useTranslations } from 'next-intl'
 import { cn } from '@/lib/utils'
 import { useQuantityInput } from './use-quantity-input'
 import { QuantityButton } from './quantity-button'
@@ -28,8 +29,10 @@ export function QuantitySwitcher({
   min = 1,
   max,
   className,
-  ariaLabel = 'Quantity',
+  ariaLabel,
 }: QuantitySwitcherProps) {
+  const t = useTranslations('common.quantitySwitcher')
+  const label = ariaLabel ?? t('label')
   const {
     inputValue,
     inputRef,
@@ -61,12 +64,12 @@ export function QuantitySwitcher({
         className
       )}
       role='group'
-      aria-label={ariaLabel}
+      aria-label={label}
     >
       <QuantityButton
         onClick={onDecrease}
         disabled={!canDecrease}
-        ariaLabel={`${ariaLabel}: decrease to ${decreaseValue}`}
+        ariaLabel={t('decreaseTo', { label, value: decreaseValue })}
         position='left'
       >
         {!disabled && (
@@ -97,7 +100,7 @@ export function QuantitySwitcher({
             'text-gray-700': !disabled,
           }
         )}
-        aria-label={`${ariaLabel}: current value is ${value}`}
+        aria-label={t('currentValue', { label, value })}
         aria-valuemin={min}
         aria-valuemax={max}
         aria-valuenow={value}
@@ -109,7 +112,7 @@ export function QuantitySwitcher({
       <QuantityButton
         onClick={onIncrease}
         disabled={!canIncrease}
-        ariaLabel={`${ariaLabel}: increase to ${increaseValue}`}
+        ariaLabel={t('increaseTo', { label, value: increaseValue })}
         position='right'
       >
         {!disabled && (
