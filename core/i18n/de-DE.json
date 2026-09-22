@@ -208,6 +208,7 @@
       "removeItem": "Fehler beim Entfernen des Artikels",
       "fetchCart": "Fehler beim Laden des Warenkorbs"
     },
+    "moreProductsCount": "Mehr ({count}+)",
     "addToCartModal": {
       "toastMessage": "Gute Wahl. Artikel wurde zum Warenkorb hinzugefügt.",
       "moreProducts": "Mehr Produkte",

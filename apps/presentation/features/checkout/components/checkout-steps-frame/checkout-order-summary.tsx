@@ -14,7 +14,7 @@ export function CheckoutOrderSummary() {
     <div className='lg:sticky lg:top-8 lg:h-fit'>
       <div className='flex h-full w-full flex-col rounded-lg border border-gray-200 bg-white lg:max-h-[calc(100vh-6rem-2rem)]'>
         <div className='shrink-0 p-6 pb-0'>
-          <h2 className='mb-6 text-lg/[1.1] font-bold text-gray-950'>
+          <h2 className='mb-6 text-base/[1.1] font-bold text-gray-950'>
             {t('summary.title')}
           </h2>
         </div>

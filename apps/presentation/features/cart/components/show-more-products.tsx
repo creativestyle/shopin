@@ -8,11 +8,17 @@ import { Button } from '@/components/ui/button'
 interface ShowMoreProductsProps {
   scrollRef: React.RefObject<HTMLDivElement | null>
   sentinelRef: React.RefObject<HTMLDivElement | null>
+  /** Number of hidden items. When > 0, shows "more products (X+)" on desktop. */
+  hiddenCount?: number
+  /** Called when the "more products (X+)" button is clicked. */
+  onExpand?: () => void
 }
 
 export function ShowMoreProducts({
   scrollRef,
   sentinelRef,
+  hiddenCount,
+  onExpand,
 }: ShowMoreProductsProps) {
   const t = useTranslations('cart')
   const [showMoreProducts, setShowMoreProducts] = React.useState(false)
@@ -70,6 +76,26 @@ export function ShowMoreProducts({
       resizeObserver.disconnect()
     }
   }, [scrollRef, sentinelRef])
+
+  const showCountButton =
+    hiddenCount !== undefined && hiddenCount > 0 && onExpand !== undefined
+
+  // Desktop count button takes priority over scroll-based button
+  if (showCountButton) {
+    return (
+      <div className='mb-6 hidden w-full shrink-0 items-center gap-3 md:flex'>
+        <div className='h-px flex-1 bg-gray-100' />
+        <button
+          type='button'
+          className='shrink-0 text-sm/[1.6] text-gray-700 underline'
+          onClick={onExpand}
+        >
+          {t('moreProductsCount', { count: hiddenCount })}
+        </button>
+        <div className='h-px flex-1 bg-gray-100' />
+      </div>
+    )
+  }
 
   if (!hasScrollableContent || isScrolledToBottom) {
     return null
