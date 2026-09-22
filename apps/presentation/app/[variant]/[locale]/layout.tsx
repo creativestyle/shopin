@@ -7,6 +7,7 @@ import { Toaster } from 'sonner'
 import { AddToCartModalProvider } from '@/features/cart/cart-add-to-cart-modal-provider'
 import { StoreConfigProvider } from '@/features/store-config/store-config-provider'
 import { getStoreConfig } from '@/features/store-config/get-store-config-server'
+import { SkipToContent } from '@/components/layout/skip-to-content'
 import { QueryProvider } from '../../query-provider'
 import { DemoDisclaimerModalWrapper } from './demo-disclaimer-modal-wrapper'
 import {
@@ -66,6 +67,7 @@ export default async function LocaleLayout({
         ))}
       </head>
       <body>
+        <SkipToContent />
         <QueryProvider>
           <NextIntlClientProvider
             locale={locale}
