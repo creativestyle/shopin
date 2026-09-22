@@ -51,6 +51,7 @@ export const AddressRequestSchema = AddressBaseSchema.required({
   email: true,
   country: true,
   streetName: true,
+  streetNumber: true,
   postalCode: true,
   city: true,
 })

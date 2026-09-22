@@ -4,14 +4,12 @@ import { Button } from '@/components/ui/button'
 import { useCustomerAddressOperations } from './customer-use-customer-address-operations'
 import { AddressResponse } from '@core/contracts/customer/address'
 import { useTranslations } from 'next-intl'
-import { FC, useState } from 'react'
+import { FC, useId, useState } from 'react'
 import PencilIcon from '@/public/icons/pencil.svg'
 import TrashIcon from '@/public/icons/trash-bin.svg'
-import TruckIcon from '@/public/icons/delivery-truck.svg'
-import CoinsIcon from '@/public/icons/coins.svg'
 import { cn } from '@/lib/utils'
-import { Badge } from '@/components/ui/badge/badge'
 import { CustomerAddressRemovalConfirmation } from './components/customer-address-removal-confirmation'
+import { CustomerAddressDefaultActions } from './customer-address-default-actions'
 import { useFormatAddressLines } from '@/features/address/use-format-address-lines'
 import { Card } from '@/components/ui/card'
 
@@ -30,14 +28,9 @@ export const CustomerAddressItem: FC<CustomerAddressItemProps> = ({
 }) => {
   const t = useTranslations('account.myAccount')
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false)
-  const {
-    handleDeleteConfirm,
-    handleSetDefaultShipping,
-    handleSetDefaultBilling,
-    isDeleteAddressPending,
-    isSetDefaultShippingPending,
-    isSetDefaultBillingPending,
-  } = useCustomerAddressOperations()
+  const addressLabelId = useId()
+  const { handleDeleteConfirm, isDeleteAddressPending } =
+    useCustomerAddressOperations()
 
   const handleDeleteClick = () => setShowDeleteConfirmation(true)
 
@@ -52,22 +45,12 @@ export const CustomerAddressItem: FC<CustomerAddressItemProps> = ({
 
   const handleDeleteCancel = () => setShowDeleteConfirmation(false)
 
-  const onSetDefaultShipping = async () => {
-    if (address.id) {
-      await handleSetDefaultShipping(address.id)
-    }
-  }
-
-  const onSetDefaultBilling = async () => {
-    if (address.id) {
-      await handleSetDefaultBilling(address.id)
-    }
-  }
-
   const addressLines = useFormatAddressLines(address)
 
   return (
     <Card
+      role='group'
+      aria-labelledby={addressLabelId}
       scheme={isDefaultShipping || isDefaultBilling ? 'gray' : 'white'}
       className={cn('relative flex flex-col justify-between border', {
         'border-transparent': isDefaultShipping || isDefaultBilling,
@@ -84,7 +67,10 @@ export const CustomerAddressItem: FC<CustomerAddressItemProps> = ({
       )}
 
       <div className='mb-4 flex flex-col gap-4 sm:mb-8 sm:flex-row sm:justify-between sm:gap-2'>
-        <div className='space-y-1 text-sm text-gray-900'>
+        <div
+          id={addressLabelId}
+          className='space-y-1 text-sm text-gray-900'
+        >
           {addressLines.map((line, index) => (
             <div
               key={index}
@@ -119,40 +105,12 @@ export const CustomerAddressItem: FC<CustomerAddressItemProps> = ({
         </div>
       </div>
 
-      <div className='flex flex-wrap items-center justify-between gap-2 border-t border-gray-200 pt-4'>
-        {isDefaultShipping ? (
-          <Badge variant='gray'>{t('addresses.defaultShipping')}</Badge>
-        ) : (
-          <Button
-            variant='tertiary'
-            scheme='black'
-            size='auto'
-            className='h-auto py-1 text-xs'
-            onClick={onSetDefaultShipping}
-            disabled={isSetDefaultShippingPending}
-            aria-label={t('addresses.setDefaultShipping')}
-          >
-            <TruckIcon className='size-4' />
-            {t('addresses.setDefaultShipping')}
-          </Button>
-        )}
-        {isDefaultBilling ? (
-          <Badge variant='gray'>{t('addresses.defaultBilling')}</Badge>
-        ) : (
-          <Button
-            variant='tertiary'
-            scheme='black'
-            size='auto'
-            className='h-auto py-1 text-xs'
-            onClick={onSetDefaultBilling}
-            disabled={isSetDefaultBillingPending}
-            aria-label={t('addresses.setDefaultBilling')}
-          >
-            <CoinsIcon className='size-4' />
-            {t('addresses.setDefaultBilling')}
-          </Button>
-        )}
-      </div>
+      <CustomerAddressDefaultActions
+        addressId={address.id}
+        isDefaultShipping={isDefaultShipping}
+        isDefaultBilling={isDefaultBilling}
+        className='border-t border-gray-200 pt-4'
+      />
     </Card>
   )
 }

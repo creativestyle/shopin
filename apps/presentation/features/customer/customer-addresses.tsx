@@ -19,6 +19,7 @@ import {
 } from '@/components/ui/sheet'
 import { AddressForm } from '@/features/address/address-form'
 import { CustomerAddressItem } from './customer-address-item'
+import { CustomerAddressDefaultActions } from './customer-address-default-actions'
 import {
   AddressResponse,
   UpdateAddressRequest,
@@ -71,8 +72,6 @@ export const CustomerAddresses: FC = () => {
     const isEditing = !!editingAddress
     const addressData = {
       ...data,
-      isDefaultShipping: data.isDefaultShipping ?? false,
-      isDefaultBilling: data.isDefaultBilling ?? false,
       ...(editingAddress && { id: editingAddress.id }),
     }
     const cleanedData = cleanAddressData(addressData, isEditing)
@@ -154,16 +153,25 @@ export const CustomerAddresses: FC = () => {
               <AddressForm
                 key={editingAddress?.id || 'new-address'}
                 formId='customer-address-form'
-                showDefaultAddressOptions={true}
                 defaultValues={getAddressFormDefaultValues(
                   editingAddress,
-                  customer,
-                  defaultShippingAddressId,
-                  defaultBillingAddressId
+                  customer
                 )}
                 onStateChange={setFormState}
                 onSubmit={handleFormSubmit}
               />
+              {editingAddress && (
+                <CustomerAddressDefaultActions
+                  addressId={editingAddress.id}
+                  isDefaultShipping={
+                    editingAddress.id === defaultShippingAddressId
+                  }
+                  isDefaultBilling={
+                    editingAddress.id === defaultBillingAddressId
+                  }
+                  className='mt-6 border-t border-gray-200 pt-4'
+                />
+              )}
             </SheetBody>
             <SheetFooter>
               <Button
