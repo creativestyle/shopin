@@ -585,7 +585,8 @@
       "free": "Free",
       "freeShippingThreshold": "Free shipping over {amount}",
       "noMethodsAvailable": "No shipping methods available for your shipping address. This may be due to your language/currency selection. Please try selecting a different language or currency.",
-      "saveError": "Failed to save shipping method. Please try again."
+      "saveError": "Failed to save shipping method. Please try again.",
+      "loadError": "Failed to load shipping methods. Please try again."
     },
     "billing": {
       "title": "Billing Address",

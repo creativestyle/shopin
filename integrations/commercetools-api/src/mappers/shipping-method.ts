@@ -15,6 +15,7 @@ const TypedMoneyApiResponseSchema = z.object({
 const ShippingRateApiResponseSchema = z.object({
   price: TypedMoneyApiResponseSchema,
   freeAbove: TypedMoneyApiResponseSchema.optional(),
+  isMatching: z.boolean().optional(),
 })
 
 const ZoneRateApiResponseSchema = z.object({
@@ -24,6 +25,7 @@ const ZoneRateApiResponseSchema = z.object({
 export const ShippingMethodApiResponseSchema = z.object({
   id: z.string(),
   name: z.string(),
+  localizedName: LocalizedStringApiResponseSchema.optional(),
   localizedDescription: LocalizedStringApiResponseSchema.optional(),
   zoneRates: z.array(ZoneRateApiResponseSchema),
   isDefault: z.boolean().optional(),
@@ -40,29 +42,35 @@ function mapShippingMethodToResponse(
   shippingMethod: ShippingMethodApiResponse,
   language: string,
   currency: string
-): ShippingMethodResponse {
-  // Get the first shipping rate from the first zone rate
-  // In a real scenario, you'd match the zone based on the cart's shipping address
-  const firstZoneRate = shippingMethod.zoneRates?.[0]
-  const firstShippingRate = firstZoneRate?.shippingRates?.[0]
+): ShippingMethodResponse | null {
+  // A zone can span several currencies, so pick the rate the cart actually matches
+  const rates = shippingMethod.zoneRates?.flatMap(
+    (zr) => zr.shippingRates ?? []
+  )
+  const rate =
+    rates?.find((r) => r.isMatching) ??
+    rates?.find((r) => r.price.currencyCode === currency)
 
-  const price = firstShippingRate?.price || {
-    centAmount: 0,
-    currencyCode: currency,
+  if (!rate) {
+    return null
   }
 
-  const freeAbove = firstShippingRate?.freeAbove
+  const price = rate.price
+  const freeAbove = rate.freeAbove
 
-  const localizedDescription = shippingMethod.localizedDescription
-    ? getLocalizedString(shippingMethod.localizedDescription, language)
-    : undefined
+  const name =
+    getLocalizedString(shippingMethod.localizedName, language) ??
+    shippingMethod.name
+
+  const description = getLocalizedString(
+    shippingMethod.localizedDescription,
+    language
+  )
 
   return {
     id: shippingMethod.id,
-    name: shippingMethod.name,
-    localizedDescription: localizedDescription
-      ? { [language]: localizedDescription }
-      : undefined,
+    name,
+    description,
     price: {
       centAmount: price.centAmount,
       currencyCode: price.currencyCode,

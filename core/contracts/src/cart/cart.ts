@@ -34,6 +34,7 @@ export const ShippingInfoResponseSchema = z
   .object({
     shippingMethodId: z.string(),
     shippingMethodName: z.string().min(1),
+    deliveryTime: z.string().optional(),
     price: BasicPriceResponseSchema,
     freeAbove: BasicPriceResponseSchema.optional(),
   })
