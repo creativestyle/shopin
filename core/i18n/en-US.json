@@ -193,7 +193,24 @@
       "total": "Total",
       "totalInclTax": "Total incl. tax",
       "taxNote": "incl. VAT",
-      "promoCode": "Promo code"
+      "promoCode": "Have a promo code?"
+    },
+    "promoCode": {
+      "label": "Promo code",
+      "placeholder": "Enter your code",
+      "apply": "Apply",
+      "remove": "Remove",
+      "removeAriaLabel": "Remove promo code {code}",
+      "applied": "Promo code {code} applied",
+      "success": "Promo code applied. Your total has been updated.",
+      "removed": "Promo code removed. Your total has been updated.",
+      "errors": {
+        "invalid": "This promo code is not valid. Please check the code and try again.",
+        "expired": "This promo code has expired.",
+        "notApplicable": "This promo code does not apply to the items in your cart.",
+        "alreadyApplied": "A promo code is already applied. Remove it before entering a new one.",
+        "generic": "We could not apply this promo code. Please try again."
+      }
     },
     "errors": {
       "addToCart": "Failed to add to cart",

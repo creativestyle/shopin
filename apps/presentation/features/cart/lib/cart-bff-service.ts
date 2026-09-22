@@ -3,9 +3,12 @@ import {
   UpdateCartItemRequestSchema,
   RemoveCartItemRequestSchema,
   CartResponseSchema,
+  ApplyDiscountCodeRequestSchema,
+  RemoveDiscountCodeRequestSchema,
   type CartResponse,
 } from '@core/contracts/cart/cart'
 import { BaseService } from '@/lib/bff/services/base-service'
+import { toPromoCodeError } from './promo-code-error'
 
 /**
  * Service for cart operations only (get cart, add/update/remove items).
@@ -59,6 +62,35 @@ export class CartService extends BaseService {
     const validatedRequest = RemoveCartItemRequestSchema.parse(request)
     const data = await this.delete<CartResponse>(
       '/cart/items',
+      validatedRequest
+    )
+    return CartResponseSchema.parse(data)
+  }
+
+  /** Custom onError because the default handling discards the body, and we need its reason. */
+  async applyDiscountCode(request: { code: string }): Promise<CartResponse> {
+    const validatedRequest = ApplyDiscountCodeRequestSchema.parse(request)
+    const data = await this.post<CartResponse>(
+      '/cart/discount-code',
+      validatedRequest,
+      {
+        onError: async (response) => {
+          throw await toPromoCodeError(response)
+        },
+      }
+    )
+    return CartResponseSchema.parse(data)
+  }
+
+  /**
+   * Remove an applied promo code
+   */
+  async removeDiscountCode(request: {
+    discountCodeId: string
+  }): Promise<CartResponse> {
+    const validatedRequest = RemoveDiscountCodeRequestSchema.parse(request)
+    const data = await this.delete<CartResponse>(
+      '/cart/discount-code',
       validatedRequest
     )
     return CartResponseSchema.parse(data)

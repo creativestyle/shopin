@@ -8,5 +8,9 @@ export const cartKeys = {
     add: () => [...cartKeys.all, 'mutations', 'add'] as const,
     remove: () => [...cartKeys.all, 'mutations', 'remove'] as const,
     update: () => [...cartKeys.all, 'mutations', 'update'] as const,
+    applyDiscountCode: () =>
+      [...cartKeys.all, 'mutations', 'applyDiscountCode'] as const,
+    removeDiscountCode: () =>
+      [...cartKeys.all, 'mutations', 'removeDiscountCode'] as const,
   },
 }

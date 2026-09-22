@@ -1,13 +1,17 @@
 import { Injectable } from '@nestjs/common'
 import { DataSourceFactory } from '../../data-source/data-source.factory'
 import type { CartResponse } from '@core/contracts/cart/cart'
+import { DiscountCodeError } from '@core/contracts/cart/cart'
 import type {
   AddToCartRequest,
   UpdateCartItemRequest,
   RemoveCartItemRequest,
   SetBillingAddressRequest,
   SetShippingAddressRequest,
+  ApplyDiscountCodeRequest,
+  RemoveDiscountCodeRequest,
 } from '@core/contracts/cart/cart'
+import { FrontendSafeException } from '../../common/errors/frontend-safe.exception'
 import type {
   ShippingMethodsResponse,
   SetShippingMethodRequest,
@@ -115,6 +119,36 @@ export class CartService extends BaseAuthenticatedService {
     const cartId = await this.getOrCreateCartId()
     const cartService = this.getCartService()
     return await cartService.setShippingMethod(cartId, request)
+  }
+
+  /** Single-code rule is enforced here too, since this endpoint is callable directly. */
+  async applyDiscountCode(
+    request: ApplyDiscountCodeRequest
+  ): Promise<CartResponse> {
+    const cartId = await this.getOrCreateCartId()
+    const cartService = this.getCartService()
+
+    const cart = await cartService.getCart(cartId)
+    if (cart.discountCodes?.length) {
+      throw new FrontendSafeException('alreadyApplied')
+    }
+
+    try {
+      return await cartService.addDiscountCode(cartId, request.code)
+    } catch (error) {
+      if (error instanceof DiscountCodeError) {
+        throw new FrontendSafeException(error.reason)
+      }
+      throw error
+    }
+  }
+
+  async removeDiscountCode(
+    request: RemoveDiscountCodeRequest
+  ): Promise<CartResponse> {
+    const cartId = await this.getOrCreateCartId()
+    const cartService = this.getCartService()
+    return await cartService.removeDiscountCode(cartId, request.discountCodeId)
   }
 
   /**

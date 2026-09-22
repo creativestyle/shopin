@@ -163,6 +163,11 @@ export interface CartService {
     cartId: string,
     request: SetShippingMethodRequest
   ): Promise<CartResponse>
+  addDiscountCode(cartId: string, code: string): Promise<CartResponse>
+  removeDiscountCode(
+    cartId: string,
+    discountCodeId: string
+  ): Promise<CartResponse>
   getActiveCart(): Promise<CartResponse | null>
 }
 

@@ -180,6 +180,24 @@ const PaymentInfoApiResponseSchema = z
   })
   .optional()
 
+/** `code` is only present when `discountCodes[*].discountCode` is expanded. */
+export const DiscountCodeInfoApiResponseSchema = z.object({
+  discountCode: z.object({
+    typeId: z.literal('discount-code'),
+    id: z.string(),
+    obj: z
+      .object({
+        code: z.string(),
+      })
+      .optional(),
+  }),
+  state: z.string(),
+})
+
+export type DiscountCodeInfoApiResponse = z.infer<
+  typeof DiscountCodeInfoApiResponseSchema
+>
+
 export const CartApiResponseSchema = z.object({
   id: z.string(),
   version: z.number(),
@@ -197,6 +215,7 @@ export const CartApiResponseSchema = z.object({
       discountedAmount: TypedMoneyApiResponseSchema,
     })
     .optional(),
+  discountCodes: z.array(DiscountCodeInfoApiResponseSchema).optional(),
   billingAddress: AddressApiResponseSchema.optional(),
   shippingAddress: AddressApiResponseSchema.optional(),
   shippingInfo: ShippingInfoApiResponseSchema,
