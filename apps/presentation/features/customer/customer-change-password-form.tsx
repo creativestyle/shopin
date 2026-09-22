@@ -5,6 +5,8 @@ import { Card } from '@/components/ui/card'
 import { FormField } from '@/components/ui/form-field'
 import { PasswordInput } from '@/components/ui/inputs/password-input'
 import { useChangePassword } from './hooks/use-change-password'
+import { InvalidCurrentPasswordError } from './lib/invalid-current-password-error'
+import { revalidateDependentField } from '@/lib/form-utils'
 import { ChangeCustomerPasswordRequestSchema } from '@core/contracts/customer/customer'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useTranslations } from 'next-intl'
@@ -38,7 +40,7 @@ export const ChangePasswordForm: FC = () => {
   })
 
   async function onSubmit(data: ChangePasswordFormData) {
-    await handlePasswordChange(
+    const result = await handlePasswordChange(
       {
         currentPassword: data.currentPassword,
         newPassword: data.newPassword,
@@ -49,6 +51,17 @@ export const ChangePasswordForm: FC = () => {
         },
       }
     )
+
+    if (
+      !result.success &&
+      result.error instanceof InvalidCurrentPasswordError
+    ) {
+      form.setError('currentPassword', {
+        type: 'server',
+        message: 'account.myAccount.changePassword.errors.wrongCurrentPassword',
+      })
+      form.setFocus('currentPassword')
+    }
   }
 
   return (
@@ -82,9 +95,14 @@ export const ChangePasswordForm: FC = () => {
         <FormField
           name='newPassword'
           control={form.control}
+          description={t('passwordHint')}
           render={({ field, validationState }) => (
             <PasswordInput
               {...field}
+              onChange={(e) => {
+                field.onChange(e)
+                revalidateDependentField(form, 'confirmNewPassword')
+              }}
               id='newPassword'
               label={t('newPassword')}
               required
