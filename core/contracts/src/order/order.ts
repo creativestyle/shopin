@@ -66,6 +66,7 @@ export const OrderSummaryResponseSchema = z.object({
   grandTotal: BasicPriceResponseSchema,
   currency: z.string(),
   itemCount: z.number().int().nonnegative(),
+  deliveryTime: z.string().optional(),
   lineItemImages: z.array(
     z.object({
       url: z.string(),
