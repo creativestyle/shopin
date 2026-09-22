@@ -1,4 +1,35 @@
 {
+  "cookieConsent": {
+    "banner": {
+      "title": "We value your privacy",
+      "description": "We use cookies to run the store and, with your permission, to analyse traffic and personalise content. You can accept all cookies, reject non-essential ones, or choose which categories to allow."
+    },
+    "actions": {
+      "acceptAll": "Accept all",
+      "essentialOnly": "Only essential",
+      "customise": "Customise",
+      "savePreferences": "Save preferences"
+    },
+    "preferences": {
+      "title": "Cookie preferences",
+      "description": "Choose which categories of cookies you allow. Essential cookies are always active because the store cannot function without them."
+    },
+    "categories": {
+      "essential": {
+        "name": "Essential",
+        "description": "Required for core features like your cart, checkout, and security. These cannot be turned off."
+      },
+      "analytics": {
+        "name": "Analytics",
+        "description": "Help us understand how the store is used so we can improve it. No data is collected without your consent."
+      },
+      "marketing": {
+        "name": "Marketing",
+        "description": "Used to show you relevant offers and measure the performance of our campaigns."
+      }
+    },
+    "footerLink": "Cookie preferences"
+  },
   "legalBar": {
     "copyright": "© 2026 SHOPin storefront accelerator."
   },
