@@ -90,6 +90,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
               price={data.price}
               locale={locale}
               size='small'
+              omnibusPriceLabel={t('omnibusPrice')}
               className='min-h-px min-w-px shrink-0 grow basis-0 text-center text-base/[1.6] font-bold text-gray-950'
             />
           </div>
