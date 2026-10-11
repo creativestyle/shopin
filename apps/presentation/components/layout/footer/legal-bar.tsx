@@ -1,5 +1,6 @@
 import type { CmsLinkResponse } from '@core/contracts/content/cms-link'
 import { CmsLink } from '@/features/content/cms-link'
+import { CookieFooterTrigger } from '@/features/cookie-consent/cookie-footer-trigger'
 import { StandardContainer } from '../../ui/standard-container'
 
 export interface LegalBarProps {
@@ -10,9 +11,6 @@ export interface LegalBarProps {
 /** Bottom legal strip from GET content/footer only (`legalLinks` + `copyright`). */
 export function LegalBar({ legalLinks, copyright }: LegalBarProps) {
   const text = copyright?.trim()
-  if (legalLinks.length === 0 && !text) {
-    return null
-  }
 
   return (
     <div className='bg-gray-950 py-6 text-white'>
@@ -26,6 +24,8 @@ export function LegalBar({ legalLinks, copyright }: LegalBarProps) {
                 className='transition-colors hover:text-white'
               />
             ))}
+            {/* Always available so visitors can review and change their consent. */}
+            <CookieFooterTrigger />
           </div>
           {text && <div className='text-sm font-bold text-white'>{text}</div>}
         </div>
