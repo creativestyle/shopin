@@ -17,7 +17,7 @@ export function RegistrationSuccess({
   return (
     <div className='flex w-full flex-col content-stretch gap-6'>
       <div className='flex w-full flex-col gap-4'>
-        <h2 className='text-xl font-normal text-gray-950'>{t('title')}</h2>
+        <h1 className='text-xl font-normal text-gray-950'>{t('title')}</h1>
         <p className='text-base text-gray-700'>{t('description')}</p>
       </div>
 

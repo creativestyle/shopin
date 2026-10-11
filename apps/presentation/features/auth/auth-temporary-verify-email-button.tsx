@@ -1,3 +1,6 @@
+'use client'
+
+import { useTranslations } from 'next-intl'
 import { Link } from '@/lib/navigation'
 import { Button } from '@/components/ui/button'
 import { Toast } from '@/components/ui/toast'
@@ -12,13 +15,15 @@ export function TemporaryVerifyEmailButton({
   href,
   label,
 }: TemporaryVerifyEmailButtonProps) {
+  const t = useTranslations('common')
+
   return (
     <>
       <Toast
         type='warning'
         withCloseButton={false}
       >
-        Button and link are temporary until email service provider is set up
+        {t('temporaryEmailServiceNotice')}
       </Toast>
       <Button
         asChild
