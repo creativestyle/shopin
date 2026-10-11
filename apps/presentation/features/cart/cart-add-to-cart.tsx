@@ -1,11 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import CartIcon from '@/public/icons/cart.svg'
 import { useTranslations } from 'next-intl'
 import { useSearchParams } from 'next/navigation'
 import { useAddToCart } from './hooks/use-add-to-cart'
+import { useAddToCartModal } from './cart-add-to-cart-modal-provider'
 import { VariantSelectorModal } from './components/variant-selector-modal'
 
 interface AddToCartProps {
@@ -32,7 +33,9 @@ export function AddToCart({
   const t = useTranslations('product.buyBox')
   const searchParams = useSearchParams()
   const { handleAddToCart, isPending } = useAddToCart()
+  const { setTrigger } = useAddToCartModal()
   const [showVariantSelector, setShowVariantSelector] = useState(false)
+  const buttonRef = useRef<HTMLButtonElement>(null)
 
   // Use prop variantId if provided, otherwise get from URL (PDP use case)
   const variantId = propVariantId || searchParams?.get('variantId') || undefined
@@ -40,6 +43,9 @@ export function AddToCart({
   const handleClick = async (e: React.MouseEvent | React.FormEvent) => {
     e.preventDefault()
     e.stopPropagation()
+
+    // Register before `isPending` disables the button and blurs it.
+    setTrigger(buttonRef.current)
 
     // If product has multiple variants and we need to select one, show modal
     const needsVariantSelection =
@@ -65,6 +71,7 @@ export function AddToCart({
   return (
     <>
       <Button
+        ref={buttonRef}
         onClick={handleClick}
         variant={variant}
         className={className}

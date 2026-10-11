@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { MainNavigationResponse } from '@core/contracts/navigation/main-navigation'
 import HamburgerMenuIcon from '@/public/icons/hamburger-menu.svg'
@@ -14,10 +14,12 @@ interface MobileMenuButtonProps {
 export function MobileMenuButton({ navigationItems }: MobileMenuButtonProps) {
   const t = useTranslations('common')
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const buttonRef = useRef<HTMLButtonElement>(null)
 
   return (
     <>
       <Button
+        ref={buttonRef}
         size='icon-sm'
         variant='tertiary'
         scheme='black'
@@ -34,6 +36,7 @@ export function MobileMenuButton({ navigationItems }: MobileMenuButtonProps) {
         open={isMobileMenuOpen}
         onOpenChange={setIsMobileMenuOpen}
         navigation={navigationItems}
+        restoreFocusRef={buttonRef}
       />
     </>
   )

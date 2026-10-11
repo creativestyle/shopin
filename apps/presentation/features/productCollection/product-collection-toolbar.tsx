@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import {
   SelectRoot,
@@ -57,6 +57,7 @@ export function ProductCollectionToolbar({
     applyPriceRange,
   } = useFilterParams()
   const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false)
+  const filterButtonRef = useRef<HTMLButtonElement>(null)
 
   const sortOptions = VALID_SORT_OPTIONS.map((option) => ({
     value: option,
@@ -118,6 +119,7 @@ export function ProductCollectionToolbar({
 
             {(facets.length > 0 || priceRange) && (
               <button
+                ref={filterButtonRef}
                 type='button'
                 onClick={() => setIsFilterDrawerOpen(true)}
                 aria-haspopup='dialog'
@@ -169,6 +171,7 @@ export function ProductCollectionToolbar({
         onFilterToggle={handleFilterToggle}
         onSaleOnlyToggle={handleSaleOnlyToggle}
         onPriceRangeApply={applyPriceRange}
+        restoreFocusRef={filterButtonRef}
       />
     </>
   )
