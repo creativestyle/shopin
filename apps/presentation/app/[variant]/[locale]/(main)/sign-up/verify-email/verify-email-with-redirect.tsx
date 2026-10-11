@@ -13,6 +13,7 @@ export function VerifyEmailWithRedirect() {
 
   const onVerified = () => {
     const params = new URLSearchParams()
+    params.set('verified', 'true')
     setIsCheckoutFromSearchParams(params, searchParams)
     router.replace(`/sign-in?${params.toString()}`)
   }

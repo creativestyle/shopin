@@ -10,7 +10,7 @@ export function ResetPasswordWithRedirect() {
   const router = useRouter()
 
   const onSuccess = () => {
-    router.replace('/sign-in')
+    router.replace('/sign-in?resetSuccess=true')
   }
 
   return <ResetPasswordForm onSuccess={onSuccess} />

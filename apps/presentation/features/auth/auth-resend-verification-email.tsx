@@ -47,7 +47,10 @@ export function ResendVerificationEmailForm() {
   if (success) {
     return (
       <div className='flex w-full flex-col gap-4'>
-        <p className='text-center text-sm text-gray-700'>
+        <p
+          role='status'
+          className='text-center text-sm text-gray-700'
+        >
           {t('resendSuccess')}
         </p>
         {verifyEmailHref && (
@@ -81,7 +84,12 @@ export function ResendVerificationEmailForm() {
         )}
       />
       {error && (
-        <p className='text-sm text-red-600'>{t('errors.resendFailed')}</p>
+        <p
+          role='alert'
+          className='text-sm text-red-600'
+        >
+          {t('errors.resendFailed')}
+        </p>
       )}
       <Button
         type='submit'
