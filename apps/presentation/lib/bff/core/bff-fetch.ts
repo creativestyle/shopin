@@ -78,13 +78,17 @@ export async function bffFetch(
 ): Promise<Response> {
   const base = baseUrl.replace(/\/+$/, '') // no trailing slash so base + path never has double slash
   const normalizedPath = path.startsWith('/') ? path : `/${path}`
-  const url = `${base}${normalizedPath}`
+  const basePath = `${base}${normalizedPath}`
 
   // Draft mode is explicit — never inferred from cookies or request context.
   const isDraftMode = options?.isDraft ?? false
 
   // Convert URL prefix back to RFC format for BFF
   const rfcLocale = locale ? urlPrefixToRfc(locale) : I18N_CONFIG.defaultLocale
+  // Append locale to URL so Next.js data cache varies per locale (cache keys on URL only, not headers)
+  const url = locale
+    ? `${basePath}${basePath.includes('?') ? '&' : '?'}_locale=${encodeURIComponent(rfcLocale)}`
+    : basePath
   // Build Accept-Language header using the utility
   const acceptLanguageHeader =
     AcceptLanguageUtils.buildClientAcceptLanguageHeader(rfcLocale)
