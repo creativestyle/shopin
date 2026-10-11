@@ -15,6 +15,7 @@ export const CustomerResponseSchema = z.object({
 export type CustomerResponse = z.infer<typeof CustomerResponseSchema>
 
 export const UpdateCustomerRequestSchema = z.object({
+  email: z.email('account.myAccount.customerData.errors.emailInvalid'),
   firstName: z
     .string()
     .min(1, 'account.myAccount.customerData.errors.firstNameRequired'),

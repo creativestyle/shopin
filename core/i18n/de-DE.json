@@ -9,7 +9,6 @@
     "description": "Ihre E-Commerce-Plattform mit einem modernen Design-System.",
     "skipToContent": "Zum Hauptinhalt springen",
     "homepage": "Startseite",
-    "logoAlt": "SHOPIN",
     "logoHomeLink": "SHOPIN - Startseite",
     "close": "Schließen",
     "searchPlaceholder": "Wonach suchen Sie?",
@@ -404,6 +403,8 @@
         "updateSuccess": "Persönliche Daten erfolgreich aktualisiert",
         "errors": {
           "general": "Fehler beim Aktualisieren der persönlichen Daten",
+          "emailInvalid": "Bitte geben Sie eine gültige E-Mail-Adresse ein",
+          "emailInUse": "Diese E-Mail-Adresse wird bereits verwendet",
           "firstNameRequired": "Vorname ist erforderlich",
           "lastNameRequired": "Nachname ist erforderlich",
           "dateOfBirthInvalid": "Bitte geben Sie ein gültiges Datum im Format TT-MM-JJJJ ein"

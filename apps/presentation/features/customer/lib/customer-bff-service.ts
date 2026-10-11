@@ -39,6 +39,7 @@ export class CustomerService extends BaseService {
 
   /**
    * Update customer data
+   * Answers 409 when the email is taken - the form shows that on the field.
    */
   async updateCustomer(data: UpdateCustomerRequest): Promise<CustomerResponse> {
     return await this.put<CustomerResponse>('/customer/me', data)
