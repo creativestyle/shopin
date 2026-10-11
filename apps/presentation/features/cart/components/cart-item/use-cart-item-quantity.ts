@@ -7,6 +7,10 @@ import type { LineItemResponse } from '@core/contracts/cart/cart'
 
 const DEFAULT_DEBOUNCE_MS = 300
 
+function clampQuantity(value: number, max?: number): number {
+  return max !== undefined ? Math.min(value, max) : value
+}
+
 interface UseCartItemQuantityOptions {
   item: LineItemResponse
   debounceMs?: number
@@ -19,6 +23,10 @@ export function useCartItemQuantity({
   const { handleUpdate, isPending: isUpdatingCart } = useUpdateCartItem()
   const [isUpdating, setIsUpdating] = useState(false)
   const [optimisticQuantity, setOptimisticQuantity] = useState(item.quantity)
+  const max =
+    item.maxQuantity != null
+      ? Math.max(item.maxQuantity, item.quantity)
+      : undefined
 
   const stateRef = useRef({
     pendingDelta: 0,
@@ -58,11 +66,12 @@ export function useCartItemQuantity({
     if (newQuantity < 1) {
       return
     }
-    stateRef.current.expectedServerQuantity = newQuantity
+    const clampedQuantity = clampQuantity(newQuantity, max)
+    stateRef.current.expectedServerQuantity = clampedQuantity
     setIsUpdating(true)
     const result = await handleUpdate({
       lineItemId: item.id,
-      quantity: newQuantity,
+      quantity: clampedQuantity,
     })
     if (!result.success) {
       syncQuantity(item.quantity)
@@ -100,11 +109,19 @@ export function useCartItemQuantity({
   }, [debounceMs])
 
   const updateQuantityOptimistically = (delta: number) => {
+    if (
+      delta > 0 &&
+      max !== undefined &&
+      stateRef.current.targetQuantity >= max
+    ) {
+      return
+    }
     stateRef.current.pendingDelta += delta
     setOptimisticQuantity((prev) => {
       const newValue = prev + delta
-      stateRef.current.targetQuantity = newValue
-      return newValue
+      const clampedValue = clampQuantity(newValue, max)
+      stateRef.current.targetQuantity = clampedValue
+      return clampedValue
     })
     debouncedApplyChangesRef.current?.()
   }
@@ -114,14 +131,16 @@ export function useCartItemQuantity({
   const handleDecrease = () => updateQuantityOptimistically(-1)
 
   const handleDirectInputChange = (newValue: number) => {
+    const clampedValue = clampQuantity(newValue, max)
     stateRef.current.pendingDelta = 0
-    setOptimisticQuantity(newValue)
-    stateRef.current.targetQuantity = newValue
-    handleQuantityChange(newValue).catch(() => {})
+    setOptimisticQuantity(clampedValue)
+    stateRef.current.targetQuantity = clampedValue
+    handleQuantityChange(clampedValue).catch(() => {})
   }
 
   return {
     optimisticQuantity,
+    max,
     isUpdating: isUpdating || isUpdatingCart,
     handleIncrease,
     handleDecrease,

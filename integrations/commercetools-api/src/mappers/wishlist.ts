@@ -6,6 +6,7 @@ import type { WishlistResponse } from '@core/contracts/wishlist/wishlist'
 import { WishlistResponseSchema } from '@core/contracts/wishlist/wishlist'
 import { resolveCurrencyFromLanguage } from '@core/i18n/currency-utils'
 import { getLocalizedString as mapLocalized } from '../helpers/get-localized-string'
+import { buildInClause } from '../helpers/build-in-clause'
 import { ProductProjectionPagedQueryApiResponseSchema } from '../schemas/product-projection'
 import type { ByProjectKeyRequestBuilder } from '@commercetools/platform-sdk'
 
@@ -39,7 +40,7 @@ export async function mapShoppingListToWishlist(
   const productSlugMap = new Map<string, string>()
 
   if (productIds.length > 0) {
-    const whereClause = productIds.map((id) => `id="${id}"`).join(' or ')
+    const whereClause = buildInClause('id', productIds)
 
     const productResponse = await client
       .productProjections()

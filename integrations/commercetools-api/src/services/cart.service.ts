@@ -1,10 +1,11 @@
-import { Injectable, Inject, Scope } from '@nestjs/common'
+import { Injectable, Inject, Logger, Scope } from '@nestjs/common'
 import { LANGUAGE_TOKEN } from '@core/i18n'
 import { resolveCurrencyFromLanguage } from '@core/i18n/currency-utils'
 import { resolveCountryFromLanguage } from '@core/i18n/language-tag-utils'
 import type { LanguageProvider } from '@apps/bff/src/common/language/language.provider'
 import type {
   CartResponse,
+  LineItemResponse,
   SetBillingAddressRequest,
   SetShippingAddressRequest,
 } from '@core/contracts/cart/cart'
@@ -14,8 +15,10 @@ import type {
   SetShippingMethodRequest,
 } from '@core/contracts/cart/shipping-method'
 import { UserClientService } from '../client/user-client.service'
+import { ServerClientService } from '../client/server-client.service'
 import { mapCartToResponse } from '../mappers/cart'
 import { mapShippingMethodsToResponse } from '../mappers/shipping-method'
+import { buildInClause } from '../helpers/build-in-clause'
 import { CartApiResponseSchema } from '../schemas/cart'
 import {
   CartUpdateActionSchema,
@@ -30,9 +33,11 @@ export class CartService {
     'lineItems[*].product.productType',
     'paymentInfo.payments[*]',
   ] satisfies string[]
+  private static readonly INVENTORY_PAGE_LIMIT = 500
 
   constructor(
     private readonly userClientService: UserClientService,
+    private readonly serverClientService: ServerClientService,
     @Inject(LANGUAGE_TOKEN) private readonly languageProvider: LanguageProvider
   ) {}
 
@@ -46,30 +51,144 @@ export class CartService {
 
   private async updateCartWithAction(
     cartId: string,
-    actionData: unknown
+    actionData: unknown,
+    skipEnrichment = false
   ): Promise<CartResponse> {
-    return this.updateCartWithActions(cartId, [actionData])
+    return this.updateCartWithActions(cartId, [actionData], skipEnrichment)
+  }
+
+  private async getCartVersion(cartId: string): Promise<number> {
+    const client = await this.getClient()
+    const response = await client
+      .me()
+      .carts()
+      .withId({ ID: cartId })
+      .get()
+      .execute()
+
+    return CartApiResponseSchema.parse(response.body).version
   }
 
   private async processCartResponse(
     responseBody: unknown,
-    currentLanguage: string
+    currentLanguage: string,
+    skipEnrichment = false
   ): Promise<CartResponse> {
     const validatedCart = CartApiResponseSchema.parse(responseBody)
     const mappedCart = mapCartToResponse(validatedCart, currentLanguage)
-    return CartResponseSchema.parse(mappedCart)
+    const enrichedCart = skipEnrichment
+      ? mappedCart
+      : await this.enrichWithInventory(mappedCart)
+    return CartResponseSchema.parse(enrichedCart)
+  }
+
+  private async enrichWithInventory(cart: CartResponse): Promise<CartResponse> {
+    const skus = this.getCartLineItemSkus(cart.lineItems)
+
+    if (skus.length === 0) {
+      return cart
+    }
+
+    try {
+      const inventoryBySku = await this.getInventoryBySku(skus)
+
+      if (inventoryBySku.size === 0) {
+        return cart
+      }
+
+      return {
+        ...cart,
+        lineItems: cart.lineItems.map((item) =>
+          this.applyInventoryLimit(item, inventoryBySku)
+        ),
+      }
+    } catch (error) {
+      Logger.warn(
+        'Failed to fetch inventory for cart line items',
+        error,
+        CartService.name
+      )
+      return cart
+    }
+  }
+
+  private getCartLineItemSkus(lineItems: LineItemResponse[]): string[] {
+    return [
+      ...new Set(
+        lineItems
+          .map((item) => item.sku)
+          .filter((sku): sku is string => sku != null)
+      ),
+    ]
+  }
+
+  private async getInventoryBySku(
+    skus: string[]
+  ): Promise<Map<string, number>> {
+    const client = this.serverClientService.getClient()
+    const inventoryBySku = new Map<string, number>()
+    let offset = 0
+
+    while (true) {
+      const response = await client
+        .inventory()
+        .get({
+          queryArgs: {
+            where: buildInClause('sku', skus),
+            limit: CartService.INVENTORY_PAGE_LIMIT,
+            offset,
+          },
+        })
+        .execute()
+
+      const results = response.body.results ?? []
+
+      for (const entry of results) {
+        if (entry.sku == null || entry.availableQuantity == null) {
+          continue
+        }
+
+        inventoryBySku.set(
+          entry.sku,
+          (inventoryBySku.get(entry.sku) ?? 0) + entry.availableQuantity
+        )
+      }
+
+      if (results.length < CartService.INVENTORY_PAGE_LIMIT) {
+        return inventoryBySku
+      }
+
+      offset += results.length
+    }
+  }
+
+  private applyInventoryLimit(
+    item: LineItemResponse,
+    inventoryBySku: Map<string, number>
+  ): LineItemResponse {
+    const availableQuantity = item.sku
+      ? inventoryBySku.get(item.sku)
+      : undefined
+
+    if (availableQuantity == null) {
+      return item
+    }
+
+    return {
+      ...item,
+      maxQuantity: availableQuantity,
+    }
   }
 
   async updateCartWithActions(
     cartId: string,
-    actionsData: unknown[]
+    actionsData: unknown[],
+    skipEnrichment = false
   ): Promise<CartResponse> {
     const currentLanguage = await this.getCurrentLanguage()
     const client = await this.getClient()
 
-    // Get cart version from cartId
-    const cartForVersion = await this.getCart(cartId, [])
-    const cartVersion = cartForVersion.version
+    const cartVersion = await this.getCartVersion(cartId)
 
     const validatedActions = actionsData.map((actionData) =>
       CartUpdateActionSchema.parse(actionData)
@@ -90,7 +209,11 @@ export class CartService {
       })
       .execute()
 
-    return this.processCartResponse(response.body, currentLanguage)
+    return this.processCartResponse(
+      response.body,
+      currentLanguage,
+      skipEnrichment
+    )
   }
 
   async getCart(cartId: string, expand?: string[]): Promise<CartResponse> {
@@ -128,7 +251,7 @@ export class CartService {
       })
       .execute()
 
-    return this.processCartResponse(response.body, currentLanguage)
+    return this.processCartResponse(response.body, currentLanguage, true)
   }
 
   async addToCart(
@@ -190,7 +313,7 @@ export class CartService {
       address,
     }
 
-    return this.updateCartWithAction(cartId, actionData)
+    return this.updateCartWithAction(cartId, actionData, true)
   }
 
   async setShippingAddress(
@@ -204,7 +327,7 @@ export class CartService {
 
     try {
       // Try to set the shipping address first
-      return await this.updateCartWithAction(cartId, actionData)
+      return await this.updateCartWithAction(cartId, actionData, true)
     } catch (error) {
       // Check if error is about shipping method not having a rate for the zone
       if (this.isShippingMethodZoneError(error)) {
@@ -218,7 +341,7 @@ export class CartService {
           },
         ]
 
-        return this.updateCartWithActions(cartId, actions)
+        return this.updateCartWithActions(cartId, actions, true)
       }
 
       // Re-throw if it's not a shipping method zone error or if no shipping method exists
@@ -269,7 +392,7 @@ export class CartService {
       },
     }
 
-    return this.updateCartWithAction(cartId, actionData)
+    return this.updateCartWithAction(cartId, actionData, true)
   }
 
   /**
@@ -298,7 +421,8 @@ export class CartService {
       if (response.body.results && response.body.results.length > 0) {
         return this.processCartResponse(
           response.body.results[0],
-          currentLanguage
+          currentLanguage,
+          true
         )
       }
 
