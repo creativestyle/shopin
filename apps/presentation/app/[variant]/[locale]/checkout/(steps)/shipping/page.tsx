@@ -1,6 +1,5 @@
 import { initRouteContext } from '@/lib/request-context/route-context'
-import { CheckoutRouteGuard } from '@/features/checkout/checkout-route-guard'
-import { CheckoutStepsFrame } from '@/features/checkout/checkout-steps-frame'
+import { CheckoutStepPage } from '../checkout-step-page'
 import { ShippingActive } from '@/features/checkout/checkout-shipping-active'
 
 export default async function Page({
@@ -12,10 +11,8 @@ export default async function Page({
   initRouteContext({ variant, locale })
 
   return (
-    <CheckoutRouteGuard currentStepId='shipping'>
-      <CheckoutStepsFrame currentStepId='shipping'>
-        <ShippingActive />
-      </CheckoutStepsFrame>
-    </CheckoutRouteGuard>
+    <CheckoutStepPage stepId='shipping'>
+      <ShippingActive />
+    </CheckoutStepPage>
   )
 }
