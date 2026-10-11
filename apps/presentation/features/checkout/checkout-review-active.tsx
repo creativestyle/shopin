@@ -82,6 +82,7 @@ export function ReviewActive() {
           <Checkbox
             id='accept-terms'
             aria-labelledby='accept-terms-label'
+            aria-describedby={hasError ? 'accept-terms-error' : undefined}
             checked={termsAccepted}
             onCheckedChange={handleTermsChange}
             invalid={hasError}
@@ -94,12 +95,18 @@ export function ReviewActive() {
             {t('acceptTerms')}
           </span>
         </label>
-        {hasError && (
-          <FieldError
-            error={{ message: 'checkout.steps.review.termsRequired' }}
-            variant='checkbox'
-          />
-        )}
+        <div
+          id='accept-terms-error'
+          aria-live='assertive'
+          role='alert'
+        >
+          {hasError && (
+            <FieldError
+              error={{ message: 'checkout.steps.review.termsRequired' }}
+              variant='checkbox'
+            />
+          )}
+        </div>
       </Field>
       <div className='mt-6 flex justify-end'>
         <Button
@@ -108,6 +115,7 @@ export function ReviewActive() {
           onClick={handlePlaceOrder}
           className='w-full'
           disabled={isPending}
+          aria-busy={isPending}
         >
           {isPending
             ? t('processing', { default: 'Processing...' })

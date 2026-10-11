@@ -29,15 +29,28 @@ export function CheckoutStepPrevious({ step }: CheckoutStepPreviousProps) {
   const t = useTranslations('checkout.complete')
   const stepTitle = useCheckoutStepTitle(step)
   const PreviewComponent = PREVIEW_COMPONENTS[step.id]
+  const headingId = `checkout-step-${step.id}-heading`
+  const previewId = `checkout-step-${step.id}-preview`
 
   return (
-    <div className='w-full rounded-lg border border-gray-200 bg-white px-8 pt-4 pb-6 opacity-75'>
+    <section
+      aria-labelledby={headingId}
+      className='w-full rounded-lg border border-gray-200 bg-white px-8 pt-4 pb-6 opacity-75'
+    >
       <div className='mb-6 flex items-center justify-between gap-3'>
         <div className='flex flex-1 items-center gap-4'>
-          <div className='flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gray-100 text-gray-700'>
+          <div
+            className='flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gray-100 text-gray-700'
+            aria-hidden='true'
+          >
             <CheckmarkIcon className='h-6 w-6' />
           </div>
-          <h2 className='text-sm/[1.6] font-bold text-gray-700'>{stepTitle}</h2>
+          <h2
+            id={headingId}
+            className='text-sm/[1.6] font-bold text-gray-700'
+          >
+            {stepTitle}
+          </h2>
         </div>
         {step.route && (
           <Link
@@ -46,16 +59,22 @@ export function CheckoutStepPrevious({ step }: CheckoutStepPreviousProps) {
             className='flex shrink-0 items-center gap-1 text-sm text-gray-700 underline'
             aria-label={`${t('edit')} ${stepTitle}`}
           >
-            <PencilIcon className='h-4 w-4' />
+            <PencilIcon
+              className='h-4 w-4'
+              aria-hidden='true'
+            />
             {t('edit')}
           </Link>
         )}
       </div>
       {PreviewComponent && (
-        <div className='lg:px-14'>
+        <div
+          id={previewId}
+          className='lg:px-14'
+        >
           <PreviewComponent />
         </div>
       )}
-    </div>
+    </section>
   )
 }
