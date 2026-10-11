@@ -11,6 +11,7 @@ interface UseCarouselStateProps {
   maxSlidesPerView: number
   scrollBehaviorPreference: 'smooth' | 'auto'
   onSlideChange?: (currentIndex: number) => void
+  navigationStep?: number
 }
 
 export function useCarouselState({
@@ -19,6 +20,7 @@ export function useCarouselState({
   maxSlidesPerView,
   scrollBehaviorPreference,
   onSlideChange,
+  navigationStep,
 }: UseCarouselStateProps) {
   const [isNextSlidePossible, setIsNextSlidePossible] = useState(true)
   const [isAtStart, setIsAtStart] = useState(true)
@@ -44,7 +46,7 @@ export function useCarouselState({
         '--carousel-gap'
       ) || '0'
     )
-    return (slideWidth + gap) * slidesPerView
+    return (slideWidth + gap) * (navigationStep ?? slidesPerView)
   }
 
   // Navigate to the previous slide group

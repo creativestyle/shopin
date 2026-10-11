@@ -14,10 +14,24 @@ export function CarouselNavigation({
   onSlideToPrev,
   onSlideToNext,
   carouselId,
+  size,
   className,
 }: CarouselNavigationProps & { className?: string }) {
   const t = useTranslations('carousel')
   const isAtStart = currentIndex === 1
+  const isSm = size === 'sm'
+
+  const buttonSize = isSm ? ('icon-sm' as const) : ('icon-lg' as const)
+  const iconSize = isSm ? 'size-4' : 'size-8'
+  const commonClasses = isSm
+    ? 'shadow-sm'
+    : 'opacity-0 shadow-[0_2px_2px_0_rgba(0,0,0,0.05)] group-hover:opacity-100 starting:opacity-0'
+  const prevPositionClasses = isSm
+    ? 'left-0 -ml-1 -translate-x-full'
+    : 'left-(--_fullbleed) ml-6'
+  const nextPositionClasses = isSm
+    ? 'right-0 translate-x-full'
+    : 'right-(--_fullbleed) mr-6'
 
   return (
     <div className={className}>
@@ -26,16 +40,17 @@ export function CarouselNavigation({
           type='button'
           variant='secondary'
           scheme='white'
-          size='icon-lg'
+          size={buttonSize}
           className={cn(
-            'absolute top-[var(--carousel-arrow-position)] z-[var(--z-carousel-arrow)] -translate-y-1/2 opacity-0 shadow-[0_2px_2px_0_rgba(0,0,0,0.05)] group-hover:opacity-100 starting:opacity-0 touchscreen:hidden',
-            'left-(--_fullbleed) ml-6'
+            'absolute top-[var(--carousel-arrow-position)] z-[var(--z-carousel-arrow)] -translate-y-1/2 touchscreen:hidden',
+            commonClasses,
+            prevPositionClasses
           )}
           aria-label={t('previousSlide')}
           aria-controls={carouselId}
           onClick={onSlideToPrev}
         >
-          <ChevronLeftIcon className='pointer-events-none size-8' />
+          <ChevronLeftIcon className={cn('pointer-events-none', iconSize)} />
         </Button>
       )}
 
@@ -44,16 +59,17 @@ export function CarouselNavigation({
           type='button'
           variant='secondary'
           scheme='white'
-          size='icon-lg'
+          size={buttonSize}
           className={cn(
-            'absolute top-[var(--carousel-arrow-position)] z-[var(--z-carousel-arrow)] -translate-y-1/2 opacity-0 shadow-[0_2px_2px_0_rgba(0,0,0,0.05)] group-hover:opacity-100 starting:opacity-0 touchscreen:hidden',
-            'right-(--_fullbleed) mr-6'
+            'absolute top-[var(--carousel-arrow-position)] z-[var(--z-carousel-arrow)] -translate-y-1/2 touchscreen:hidden',
+            commonClasses,
+            nextPositionClasses
           )}
           aria-label={t('nextSlide')}
           aria-controls={carouselId}
           onClick={onSlideToNext}
         >
-          <ChevronRightIcon className='pointer-events-none size-8' />
+          <ChevronRightIcon className={cn('pointer-events-none', iconSize)} />
         </Button>
       )}
     </div>
