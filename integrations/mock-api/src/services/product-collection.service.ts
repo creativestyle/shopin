@@ -141,6 +141,8 @@ export class ProductCollectionService {
       name: p.name,
       price: { ...p.price, currency },
       image: p.image,
+      variantId: p.variantId,
+      variantCount: p.variantCount,
     }))
 
     return {

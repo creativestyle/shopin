@@ -18,10 +18,10 @@ export const ColorSelector: React.FC<ColorSelectorProps> = ({
   value,
   onChange,
   className,
-  layout = 'inline',
 }) => {
+  // Swatches are fixed-size circles, so they always sit in a row rather than a grid.
   return (
-    <div className={cn(getSelectorLayoutClass(layout), className)}>
+    <div className={cn(getSelectorLayoutClass('inline'), className)}>
       {options.map((opt) => {
         const isSelected = value === opt.label
         return (
