@@ -15,33 +15,43 @@ export type RichTextNode = {
   marks?: unknown[]
 }
 
-/** GraphQL rich text links (assets.block / assets.hyperlink). Not part of @contentful/rich-text-types. */
-export type RichTextLinks = {
-  assets?: {
-    block?: Array<{
-      sys?: { id?: string }
-      url?: string | null
-      title?: string | null
-      description?: string | null
-    }>
-    hyperlink?: Array<{
-      sys?: { id?: string }
-      url?: string | null
-      title?: string | null
-      description?: string | null
-    }>
-  }
-}
+const RichTextLinkAssetSchema = z.object({
+  sys: z.object({ id: z.string().optional() }).optional(),
+  url: z.string().optional().nullable(),
+  title: z.string().optional().nullable(),
+  description: z.string().optional().nullable(),
+})
+
+const RichTextLinkEntrySchema = z.object({
+  sys: z.object({ id: z.string().optional() }).optional(),
+  url: z.string().optional().nullable(),
+})
+
+/** Resolved rich text links (assets and entries), injected by page.service before mapping. */
+export const RichTextLinksSchema = z.object({
+  assets: z
+    .object({
+      block: z.array(RichTextLinkAssetSchema).optional(),
+      hyperlink: z.array(RichTextLinkAssetSchema).optional(),
+    })
+    .optional(),
+  entries: z
+    .object({ hyperlink: z.array(RichTextLinkEntrySchema).optional() })
+    .optional(),
+})
+
+export type RichTextLinks = z.infer<typeof RichTextLinksSchema>
 
 /** Contentful reference (sys.id) used in rich text node data.target. */
 export const ContentfulRefSchema = z
   .object({ sys: z.object({ id: z.string().optional() }).optional() })
   .optional()
 
-/** Rich text link node data (url, alt) after resolution. */
+/** Rich text link node data: url (resolved) or uri (Contentful hyperlink), alt. */
 export const LinkNodeDataSchema = z
   .object({
     url: z.string().optional(),
+    uri: z.string().optional(),
     alt: z.string().optional(),
   })
   .catchall(z.unknown())

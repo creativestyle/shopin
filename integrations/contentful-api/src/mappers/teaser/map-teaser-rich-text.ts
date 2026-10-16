@@ -1,7 +1,7 @@
 import type { RichTextTeaser } from '@core/contracts/content/teaser-rich-text'
 import { RichTextDocumentResponseSchema } from '@core/contracts/content/rich-text-document'
 import type { TeaserRichTextApiResponse } from '../../schemas/teaser/teaser-rich-text'
-import { mergeRichTextAssetLinks, normalizeRichTextLinkData } from './rich-text'
+import { mergeRichTextLinks, normalizeRichTextLinkData } from './rich-text'
 
 /** Maps Contentful TeaserRichText entry to contract RichTextTeaser. */
 export function mapTeaserRichText(
@@ -16,7 +16,7 @@ export function mapTeaserRichText(
       : undefined
 
   if (document && richTextLinks) {
-    document = mergeRichTextAssetLinks(document, richTextLinks)
+    document = mergeRichTextLinks(document, richTextLinks)
   }
 
   if (document) {

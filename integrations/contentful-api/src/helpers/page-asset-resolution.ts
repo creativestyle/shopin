@@ -1,89 +1,121 @@
 import {
   RawPageDataSchema,
-  ComponentEntrySchema,
   RichTextNodeForCollectSchema,
   type RichTextNodeForCollect,
+  type RichTextLinks,
   type AssetItem,
+  type EntryItem,
 } from '../schemas'
 
-function collectAssetIdsFromRichText(
-  node: RichTextNodeForCollect,
-  out: Set<string>
-): void {
-  const nodeType = (node.nodeType ?? '').toString().toLowerCase()
-  const assetId = node.data?.target?.sys?.id
-  if (
-    (nodeType === 'embedded-asset-block' || nodeType === 'asset-hyperlink') &&
-    assetId
-  ) {
-    out.add(assetId)
-  }
-  for (const childNode of node.content ?? []) {
-    const parsed = RichTextNodeForCollectSchema.safeParse(childNode)
-    if (parsed.success) {
-      collectAssetIdsFromRichText(parsed.data, out)
-    }
-  }
+/** Rich text field as returned by Contentful GraphQL; `links` is injected after resolution. */
+type RichTextField = { json?: unknown; links?: RichTextLinks }
+
+export type PageLinkIds = { assetIds: string[]; entryIds: string[] }
+
+const ASSET_NODE_TYPES = new Set(['embedded-asset-block', 'asset-hyperlink'])
+
+function isRichTextField(value: unknown): value is RichTextField {
+  return typeof value === 'object' && value !== null && 'json' in value
 }
 
-/**
- * Collects asset IDs from all TeaserRichText components in a raw page response.
- */
-export function collectAssetIdsFromPageResponse(data: unknown): string[] {
+/** Returns the rich text fields of a teaser entry that may contain asset or entry links. */
+function getRichTextFields(entry: unknown): RichTextField[] {
+  const e = entry as {
+    __typename?: string
+    richText?: unknown
+    accordion?: { itemsCollection?: { items?: Array<{ body?: unknown }> } }
+  } | null
+  if (e?.__typename === 'TeaserRichText') {
+    return isRichTextField(e.richText) ? [e.richText] : []
+  }
+  if (e?.__typename === 'TeaserAccordion') {
+    return (e.accordion?.itemsCollection?.items ?? [])
+      .map((item) => item?.body)
+      .filter(isRichTextField)
+  }
+  return []
+}
+
+function getComponentEntries(data: unknown): unknown[] {
   const parsed = RawPageDataSchema.safeParse(data)
   if (!parsed.success) {
     return []
   }
-  const componentEntries =
+  return (
     parsed.data.pageCollection?.items?.[0]?.componentsCollection?.items ?? []
-  const assetIds = new Set<string>()
-  for (const componentEntry of componentEntries) {
-    const entryParsed = ComponentEntrySchema.safeParse(componentEntry)
-    if (
-      !entryParsed.success ||
-      entryParsed.data.__typename !== 'TeaserRichText' ||
-      !entryParsed.data.richText?.json
-    ) {
-      continue
-    }
-    const nodeParsed = RichTextNodeForCollectSchema.safeParse(
-      entryParsed.data.richText.json
-    )
-    if (nodeParsed.success) {
-      collectAssetIdsFromRichText(nodeParsed.data, assetIds)
+  )
+}
+
+function collectLinkIdsFromRichText(
+  node: RichTextNodeForCollect,
+  assetIds: Set<string>,
+  entryIds: Set<string>
+): void {
+  const nodeType = (node.nodeType ?? '').toString().toLowerCase()
+  const targetId = node.data?.target?.sys?.id
+  if (targetId && ASSET_NODE_TYPES.has(nodeType)) {
+    assetIds.add(targetId)
+  }
+  if (targetId && nodeType === 'entry-hyperlink') {
+    entryIds.add(targetId)
+  }
+  for (const childNode of node.content ?? []) {
+    const parsed = RichTextNodeForCollectSchema.safeParse(childNode)
+    if (parsed.success) {
+      collectLinkIdsFromRichText(parsed.data, assetIds, entryIds)
     }
   }
-  return [...assetIds]
 }
 
 /**
- * Mutates the raw page response: sets richText.links on each TeaserRichText
- * so mappers can resolve embedded-asset-block and asset-hyperlink nodes.
+ * Collects asset and entry IDs linked from rich text in TeaserRichText and TeaserAccordion components.
  */
-export function injectResolvedAssetsIntoPageResponse(
-  data: unknown,
-  assets: AssetItem[]
-): void {
-  const root = data as { pageCollection?: { items?: unknown[] } }
-  const items = root?.pageCollection?.items
-  if (!Array.isArray(items) || items.length === 0) {
-    return
-  }
-  const page = items[0] as { componentsCollection?: { items?: unknown[] } }
-  const componentEntries = page?.componentsCollection?.items
-  if (!Array.isArray(componentEntries)) {
-    return
-  }
-  const resolvedAssetsLinks = {
-    assets: { block: assets, hyperlink: assets },
-  }
-  for (const entry of componentEntries) {
-    const e = entry as {
-      __typename?: string
-      richText?: { json?: unknown; links?: unknown }
+export function collectLinkIdsFromPageResponse(data: unknown): PageLinkIds {
+  const assetIds = new Set<string>()
+  const entryIds = new Set<string>()
+  for (const entry of getComponentEntries(data)) {
+    for (const field of getRichTextFields(entry)) {
+      const nodeParsed = RichTextNodeForCollectSchema.safeParse(field.json)
+      if (nodeParsed.success) {
+        collectLinkIdsFromRichText(nodeParsed.data, assetIds, entryIds)
+      }
     }
-    if (e?.__typename === 'TeaserRichText' && e.richText != null) {
-      e.richText.links = resolvedAssetsLinks
+  }
+  return { assetIds: [...assetIds], entryIds: [...entryIds] }
+}
+
+/** Resolves a linked entry to a URL: pages by slug, link entries by their url. */
+function getEntryUrl(entry: EntryItem): string | undefined {
+  if (entry.__typename === 'Page' && entry.slug) {
+    return `/${entry.slug}`
+  }
+  if (entry.__typename === 'Link' && entry.url) {
+    return entry.url
+  }
+  return undefined
+}
+
+/**
+ * Mutates the raw page response: sets `links` on each rich text field
+ * so mappers can resolve embedded assets, asset hyperlinks and entry hyperlinks.
+ */
+export function injectResolvedLinksIntoPageResponse(
+  data: unknown,
+  assets: AssetItem[],
+  entries: EntryItem[]
+): void {
+  const links: RichTextLinks = {
+    assets: { block: assets, hyperlink: assets },
+    entries: {
+      hyperlink: entries.map((entry) => ({
+        sys: entry.sys,
+        url: getEntryUrl(entry),
+      })),
+    },
+  }
+  for (const entry of getComponentEntries(data)) {
+    for (const field of getRichTextFields(entry)) {
+      field.links = links
     }
   }
 }
