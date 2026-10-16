@@ -9,14 +9,15 @@ import {
   TeaserEntryApiResponseSchema,
 } from '../schemas'
 import {
-  collectAssetIdsFromPageResponse,
-  injectResolvedAssetsIntoPageResponse,
+  collectLinkIdsFromPageResponse,
+  injectResolvedLinksIntoPageResponse,
 } from '../helpers/page-asset-resolution'
 import { mapTeaserEntryToResponse } from '../mappers/teaser'
 import { mapPageItemToContentPageResponse } from '../mappers/page'
 import { PageBySlugQuery } from '../graphql/page-by-slug.query'
 import { AssetsByIdQuery } from '../graphql/assets-by-id.query'
-import type { AssetItem } from '../schemas'
+import { EntriesByIdQuery } from '../graphql/entries-by-id.query'
+import type { AssetItem, EntryItem } from '../schemas'
 import { ContentfulBaseService } from './contentful-base.service'
 
 @Injectable()
@@ -32,7 +33,7 @@ export class PageService extends ContentfulBaseService {
   /**
    * Fetches a page by slug and locale from Contentful.
    * Each teaser is a separate content model (TeaserBanner, TeaserHeadline, etc.).
-   * Rich text embedded assets are resolved in a separate low-complexity query to stay under the 11000 limit.
+   * Rich text assets and entry links are resolved in separate low-complexity queries to stay under the 11000 limit.
    */
   async getPage(
     slug: string,
@@ -66,7 +67,7 @@ export class PageService extends ContentfulBaseService {
       throw new NotFoundException('Page not found')
     }
 
-    await this.resolveAssetsInPageData(data, localeOrDefault, preview)
+    await this.resolveLinksInPageData(data, localeOrDefault, preview)
     const parsedWithAssets = PageCollectionApiResponseSchema.parse(data)
     const pageWithAssets = parsedWithAssets?.pageCollection?.items?.[0] ?? page
 
@@ -101,36 +102,61 @@ export class PageService extends ContentfulBaseService {
   }
 
   /**
-   * Fetches assets by IDs from the raw page response and injects them into the
-   * rich text links so mappers can resolve embedded-asset-block and asset-hyperlink nodes.
-   * Non-fatal on failure: rich text will show placeholders for unresolved assets.
+   * Fetches linked assets and entries by IDs from the raw page response and injects them into
+   * the rich text links so mappers can resolve embedded assets, asset and entry hyperlinks.
+   * Non-fatal on failure: unresolved assets show placeholders, unresolved entry links render without href.
    */
-  private async resolveAssetsInPageData(
+  private async resolveLinksInPageData(
     data: unknown,
     locale: string,
     preview: boolean
   ): Promise<void> {
-    const assetIds = collectAssetIdsFromPageResponse(data)
-    if (assetIds.length === 0) {
+    const { assetIds, entryIds } = collectLinkIdsFromPageResponse(data)
+    if (assetIds.length === 0 && entryIds.length === 0) {
       return
     }
-    try {
-      const assetsResponse = await this.request<{
-        assetCollection?: { items?: AssetItem[] }
-      }>(
+    const [assets, entries] = await Promise.all([
+      this.fetchByIds<AssetItem>(
         AssetsByIdQuery,
-        { ids: assetIds, limit: assetIds.length, locale },
+        'assetCollection',
+        assetIds,
+        locale,
         preview
-      )
-      const assets = assetsResponse?.assetCollection?.items ?? []
-      if (assets.length > 0) {
-        injectResolvedAssetsIntoPageResponse(data, assets)
-      }
+      ),
+      this.fetchByIds<EntryItem>(
+        EntriesByIdQuery,
+        'entryCollection',
+        entryIds,
+        locale,
+        preview
+      ),
+    ])
+    if (assets.length > 0 || entries.length > 0) {
+      injectResolvedLinksIntoPageResponse(data, assets, entries)
+    }
+  }
+
+  private async fetchByIds<T>(
+    query: string,
+    collection: 'assetCollection' | 'entryCollection',
+    ids: string[],
+    locale: string,
+    preview: boolean
+  ): Promise<T[]> {
+    if (ids.length === 0) {
+      return []
+    }
+    try {
+      const response = await this.request<
+        Partial<Record<typeof collection, { items?: T[] }>>
+      >(query, { ids, limit: ids.length, locale }, preview)
+      return response?.[collection]?.items ?? []
     } catch (err) {
       this.logger.warn(
-        { err },
-        'Failed to resolve rich text assets (non-fatal, placeholders will be used)'
+        { err, collection },
+        'Failed to resolve rich text links (non-fatal)'
       )
+      return []
     }
   }
 }

@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-/** Rich text node shape for collecting asset IDs (embedded images). */
+/** Rich text node shape for collecting linked asset and entry IDs. */
 export interface RichTextNodeForCollect {
   nodeType?: string
   content?: RichTextNodeForCollect[]
@@ -47,20 +47,6 @@ export const RawPageDataSchema = z
   })
   .catchall(z.unknown())
 
-/** Component entry (teaser) with __typename and optional richText. */
-export const ComponentEntrySchema = z
-  .object({
-    __typename: z.string().optional(),
-    richText: z
-      .object({
-        json: z.unknown(),
-        links: z.unknown().optional(),
-      })
-      .optional()
-      .nullable(),
-  })
-  .catchall(z.unknown())
-
 /** Asset item from Contentful assets query (used to inject into rich text links). */
 export const AssetItemSchema = z.object({
   sys: z.object({ id: z.string().optional() }).optional(),
@@ -70,3 +56,13 @@ export const AssetItemSchema = z.object({
 })
 
 export type AssetItem = z.infer<typeof AssetItemSchema>
+
+/** Entry item from Contentful entries query (used to resolve rich text entry hyperlinks). */
+export const EntryItemSchema = z.object({
+  __typename: z.string().optional(),
+  sys: z.object({ id: z.string().optional() }).optional(),
+  slug: z.string().optional().nullable(),
+  url: z.string().optional().nullable(),
+})
+
+export type EntryItem = z.infer<typeof EntryItemSchema>

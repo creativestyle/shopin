@@ -42,7 +42,7 @@ function mapNodes(
 }
 
 // ---------------------------------------------------------------------------
-// Asset resolution
+// Asset and entry resolution
 // ---------------------------------------------------------------------------
 
 function buildAssetIdToUrlMap(
@@ -69,7 +69,20 @@ function buildAssetIdToUrlMap(
   return map
 }
 
-function getAssetId(node: RichTextNode): string | undefined {
+function buildEntryIdToUrlMap(
+  links: RichTextLinks | undefined
+): Map<string, string> {
+  const map = new Map<string, string>()
+  for (const entry of links?.entries?.hyperlink ?? []) {
+    const id = entry.sys?.id
+    if (id && entry.url) {
+      map.set(id, entry.url)
+    }
+  }
+  return map
+}
+
+function getTargetId(node: RichTextNode): string | undefined {
   const result = ContentfulRefSchema.safeParse(node.data?.target)
   return result.success ? result.data?.sys?.id : undefined
 }
@@ -86,7 +99,7 @@ function injectAssetUrls(
   if (!ASSET_NODE_TYPE_SET.has(nodeType)) {
     return node
   }
-  const assetId = getAssetId(node)
+  const assetId = getTargetId(node)
   const asset = assetId ? idToAsset.get(assetId) : undefined
   if (nodeType === 'embedded-asset-block') {
     const url = asset?.url ?? ''
@@ -105,6 +118,21 @@ function injectAssetUrls(
   }
 }
 
+function injectEntryUrls(
+  node: RichTextNode,
+  idToUrl: Map<string, string>
+): RichTextNode {
+  if (getNormalizedNodeType(node) !== 'entry-hyperlink') {
+    return node
+  }
+  const entryId = getTargetId(node)
+  const url = entryId ? idToUrl.get(entryId) : undefined
+  if (!url) {
+    return node
+  }
+  return { ...node, data: { ...node.data, url } }
+}
+
 // ---------------------------------------------------------------------------
 // Link normalization
 // ---------------------------------------------------------------------------
@@ -116,11 +144,11 @@ function getNodeTextContent(node: RichTextNode): string {
   return (node.content ?? []).map(getNodeTextContent).join('')
 }
 
-function dataWithoutTarget<T extends Record<string, unknown>>(
+function dataWithoutRefs<T extends Record<string, unknown>>(
   data: T
 ): Record<string, unknown> {
   return Object.fromEntries(
-    Object.entries(data).filter(([key]) => key !== 'target')
+    Object.entries(data).filter(([key]) => key !== 'target' && key !== 'uri')
   )
 }
 
@@ -130,7 +158,7 @@ function normalizeLinkNode(node: RichTextNode): RichTextNode {
     return node
   }
   const data = LinkNodeDataSchema.parse(node.data)
-  const resolvedUrl = data.url
+  const resolvedUrl = data.url ?? data.uri
   if (!resolvedUrl) {
     return node
   }
@@ -142,7 +170,7 @@ function normalizeLinkNode(node: RichTextNode): RichTextNode {
     ...node,
     nodeType: 'hyperlink',
     data: {
-      ...dataWithoutTarget(data),
+      ...dataWithoutRefs(data),
       label,
       url: resolvedUrl,
     },
@@ -153,16 +181,19 @@ function normalizeLinkNode(node: RichTextNode): RichTextNode {
 // Public API
 // ---------------------------------------------------------------------------
 
-/** Injects resolved asset URLs into the document for embedded-asset-block and asset-hyperlink nodes. */
-export function mergeRichTextAssetLinks(
+/** Injects resolved asset and entry URLs into embedded-asset-block, asset-hyperlink and entry-hyperlink nodes. */
+export function mergeRichTextLinks(
   doc: RichTextDocumentResponse,
   links: RichTextLinks | undefined
 ): RichTextDocumentResponse {
   const idToAsset = buildAssetIdToUrlMap(links)
-  if (idToAsset.size === 0) {
+  const idToEntryUrl = buildEntryIdToUrlMap(links)
+  if (idToAsset.size === 0 && idToEntryUrl.size === 0) {
     return doc
   }
-  const transformed = mapNodes(doc, (node) => injectAssetUrls(node, idToAsset))
+  const transformed = mapNodes(doc, (node) =>
+    injectEntryUrls(injectAssetUrls(node, idToAsset), idToEntryUrl)
+  )
   return RichTextDocumentResponseSchema.parse(transformed)
 }
 
