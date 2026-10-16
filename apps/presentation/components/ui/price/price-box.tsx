@@ -96,21 +96,21 @@ function PriceBox({
           taxNote={footer}
         />
 
-        {price.discountedPriceInCents !== undefined &&
-          price.omnibusPriceInCents !== undefined &&
-          omnibusPriceLabel && (
-            <FormattedPrice
-              value={price.omnibusPriceInCents}
-              currency={price.currency}
-              fractionDigits={price.fractionDigits}
-              prefix={`${omnibusPriceLabel}`}
-              locale={locale}
-              className='mt-0.5 text-xs/[1.6]'
-            />
-          )}
-
         {footer && <span className='sr-only text-gray-900'>{footer}</span>}
       </div>
+
+      {price.discountedPriceInCents !== undefined &&
+        price.omnibusPriceInCents !== undefined &&
+        omnibusPriceLabel && (
+          <FormattedPrice
+            value={price.omnibusPriceInCents}
+            currency={price.currency}
+            fractionDigits={price.fractionDigits}
+            prefix={omnibusPriceLabel}
+            locale={locale}
+            className='mt-1 text-xs/[1.6]'
+          />
+        )}
 
       {price.recommendedRetailPriceInCents !== undefined &&
         recommendedRetailPriceLabel && (

@@ -113,7 +113,7 @@
         "loyaltyBonus": "Collect 3% loyalty bonus"
       },
       "recommendedRetailPrice": "RRP",
-      "omnibusPrice": "30-day best price"
+      "omnibusPrice": "30-day best price:"
     },
     "seo": {
       "about": "About this product"
@@ -707,6 +707,7 @@
     "removeError": "Failed to remove from wishlist"
   },
   "productCard": {
-    "linkAriaLabel": "View details for {name}"
+    "linkAriaLabel": "View details for {name}",
+    "omnibusPrice": "30-day best price:"
   }
 }

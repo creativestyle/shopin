@@ -112,7 +112,7 @@
         "loyaltyBonus": "3% Treuebonus sammeln"
       },
       "recommendedRetailPrice": "UVP",
-      "omnibusPrice": "30-Tage Bestpreis"
+      "omnibusPrice": "30-Tage Bestpreis:"
     },
     "seo": {
       "about": "Über dieses Produkt"
@@ -706,6 +706,7 @@
     "removeError": "Entfernen aus der Wunschliste fehlgeschlagen"
   },
   "productCard": {
-    "linkAriaLabel": "{name} ansehen"
+    "linkAriaLabel": "{name} ansehen",
+    "omnibusPrice": "30-Tage Bestpreis:"
   }
 }
