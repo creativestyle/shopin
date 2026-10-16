@@ -14,9 +14,14 @@ import type {
   SetShippingMethodRequest,
 } from '@core/contracts/cart/shipping-method'
 import { UserClientService } from '../client/user-client.service'
+import { COMMERCETOOLS_CLIENT, Client } from '../client/client.module'
 import { mapCartToResponse } from '../mappers/cart'
 import { mapShippingMethodsToResponse } from '../mappers/shipping-method'
-import { CartApiResponseSchema } from '../schemas/cart'
+import { CartApiResponseSchema, type CartApiResponse } from '../schemas/cart'
+import {
+  ProductProjectionPagedQueryApiResponseSchema,
+  type ProductProjectionApiResponse,
+} from '../schemas/product-projection'
 import {
   CartUpdateActionSchema,
   type CartUpdateAction,
@@ -33,6 +38,7 @@ export class CartService {
 
   constructor(
     private readonly userClientService: UserClientService,
+    @Inject(COMMERCETOOLS_CLIENT) private readonly client: Client,
     @Inject(LANGUAGE_TOKEN) private readonly languageProvider: LanguageProvider
   ) {}
 
@@ -51,12 +57,53 @@ export class CartService {
     return this.updateCartWithActions(cartId, [actionData])
   }
 
+  // Line items lack sibling variants and attribute labels, so load their products
+  private async getLineItemProducts(
+    cart: CartApiResponse
+  ): Promise<Record<string, ProductProjectionApiResponse> | undefined> {
+    const productIds = [
+      ...new Set(cart.lineItems?.map((item) => item.productId) ?? []),
+    ]
+    if (productIds.length === 0) {
+      return undefined
+    }
+
+    try {
+      const response = await this.client
+        .productProjections()
+        .get({
+          queryArgs: {
+            where: `id in (${productIds.map((id) => `"${id}"`).join(', ')})`,
+            staged: false,
+            expand: ['productType'],
+            limit: productIds.length,
+          },
+        })
+        .execute()
+
+      const { results } = ProductProjectionPagedQueryApiResponseSchema.parse(
+        response.body
+      )
+      return Object.fromEntries(results.map((product) => [product.id, product]))
+    } catch {
+      return undefined
+    }
+  }
+
   private async processCartResponse(
     responseBody: unknown,
-    currentLanguage: string
+    currentLanguage: string,
+    withProducts = true
   ): Promise<CartResponse> {
     const validatedCart = CartApiResponseSchema.parse(responseBody)
-    const mappedCart = mapCartToResponse(validatedCart, currentLanguage)
+    const productsById = withProducts
+      ? await this.getLineItemProducts(validatedCart)
+      : undefined
+    const mappedCart = mapCartToResponse(
+      validatedCart,
+      currentLanguage,
+      productsById
+    )
     return CartResponseSchema.parse(mappedCart)
   }
 
@@ -108,7 +155,11 @@ export class CartService {
       })
       .execute()
 
-    return this.processCartResponse(response.body, currentLanguage)
+    return this.processCartResponse(
+      response.body,
+      currentLanguage,
+      expandArray.length > 0
+    )
   }
 
   async createCart(): Promise<CartResponse> {

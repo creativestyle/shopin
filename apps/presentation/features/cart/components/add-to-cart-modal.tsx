@@ -90,7 +90,7 @@ export function AddToCartModal({ open, onOpenChange }: AddToCartModalProps) {
             actions={
               <CartActions
                 variant='modal'
-                onLinkClick={() => onOpenChange(false)}
+                onClose={() => onOpenChange(false)}
               />
             }
           />
