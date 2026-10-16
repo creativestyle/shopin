@@ -3,6 +3,8 @@
 import { useRef, useEffect } from 'react'
 import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
+import { LoadingSpinner } from '@/components/ui/loading-spinner'
+import { ErrorDisplay } from '@/components/ui/error-display'
 import { useCheckoutNavigation } from './components/checkout-steps-frame/use-checkout-navigation'
 import { getNextStep } from './components/checkout-steps-frame/checkout-steps-config'
 import { useCheckoutButtonLabel } from './components/checkout-steps-frame/use-checkout-button-label'
@@ -21,7 +23,11 @@ export function DeliveryMethodActive() {
   const buttonLabel = useCheckoutButtonLabel('deliveryMethod')
   const { cart } = useCart()
   const hasShippingAddress = !!cart?.id && !!cart?.shippingAddress
-  const { data: shippingMethodsData } = useShippingMethods(hasShippingAddress)
+  const {
+    data: shippingMethodsData,
+    isLoading,
+    error,
+  } = useShippingMethods(hasShippingAddress)
   const { handleSetShippingMethod, isPending } = useSetShippingMethod()
 
   const shippingMethods = shippingMethodsData?.shippingMethods || []
@@ -83,6 +89,14 @@ export function DeliveryMethodActive() {
       }
       handleNextStep()
     }
+  }
+
+  if (isLoading) {
+    return <LoadingSpinner className='size-6' />
+  }
+
+  if (error) {
+    return <ErrorDisplay>{t('loadError')}</ErrorDisplay>
   }
 
   if (shippingMethods.length === 0) {
