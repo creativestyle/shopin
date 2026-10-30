@@ -58,7 +58,7 @@ export function mapFooterItemToFooterResponse(
     if (trimmedLabel && trimmedLabel.toLowerCase() !== 'untitled') {
       return trimmedLabel
     }
-    return (footerLink.url ?? '').trim() || 'Link'
+    return (footerLink.url ?? '').trim()
   }
 
   const toCmsLink = (footerLink: FooterLinkApiResponse) => {
@@ -79,14 +79,18 @@ export function mapFooterItemToFooterResponse(
     }
   }
 
+  const toCmsLinks = (
+    footerLinks: FooterLinkApiResponse[] | null | undefined
+  ) => (footerLinks ?? []).map(toCmsLink).filter((link) => link.label)
+
   const sections: FooterSectionResponse[] = (
     footer.footerLinksCollection?.items ?? []
   ).map((footerSection) => ({
-    title: (footerSection.title ?? '').trim() || 'Section',
-    links: (footerSection.linksCollection?.items ?? []).map(toCmsLink),
+    title: (footerSection.title ?? '').trim(),
+    links: toCmsLinks(footerSection.linksCollection?.items),
   }))
 
-  const legalLinks = (footer.legalLinksCollection?.items ?? []).map(toCmsLink)
+  const legalLinks = toCmsLinks(footer.legalLinksCollection?.items)
 
   const optionalString = (value: unknown): string | undefined =>
     value != null && String(value).trim() !== ''
@@ -96,7 +100,7 @@ export function mapFooterItemToFooterResponse(
   const paymentMethodsList = optionalString(footer.paymentMethodsList)
   const paymentMethods = paymentMethodsList
     ? {
-        title: optionalString(footer.paymentMethodsTitle) ?? 'Payment methods',
+        title: optionalString(footer.paymentMethodsTitle) ?? '',
         methods: paymentMethodsList
           .split(/\r?\n/)
           .map((line) => line.trim())
@@ -124,9 +128,9 @@ export function mapFooterItemToFooterResponse(
           title: optionalString(footer.customerServiceTitle) ?? '',
           phone: optionalString(footer.customerServicePhone),
           hours: optionalString(footer.customerServiceHours),
-          contactUs: footer.customerServiceContactUs
-            ? toCmsLink(footer.customerServiceContactUs)
-            : undefined,
+          contactUs: toCmsLinks(
+            footer.customerServiceContactUs && [footer.customerServiceContactUs]
+          )[0],
         }
       : undefined,
     paymentMethods,

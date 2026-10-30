@@ -34,8 +34,5 @@ export function getMockFooter(): FooterResponse {
       title: 'Payment methods',
       methods: ['Demo'],
     },
-    country: {
-      title: 'Country',
-    },
   }
 }
