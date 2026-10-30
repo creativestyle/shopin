@@ -4,6 +4,6 @@
   "author": "creativestyle GmbH",
   "private": true,
   "devDependencies": {
-    "@tsconfig/node22": "^22.0.0"
+    "@tsconfig/node22": "22.0.5"
   }
 }

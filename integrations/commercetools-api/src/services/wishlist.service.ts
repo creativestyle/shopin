@@ -1,4 +1,4 @@
-import { Injectable, Inject, Scope } from '@nestjs/common'
+import { Injectable, Inject, NotFoundException, Scope } from '@nestjs/common'
 import { LANGUAGE_TOKEN } from '@core/i18n'
 import type { LanguageProvider } from '@apps/bff/src/common/language/language.provider'
 import type {
@@ -8,6 +8,7 @@ import type {
 } from '@core/contracts/wishlist/wishlist'
 import { UserClientService } from '../client/user-client.service'
 import { mapShoppingListToWishlist } from '../mappers/wishlist'
+import { isNotFoundError } from '../helpers/is-not-found-error'
 
 @Injectable({ scope: Scope.REQUEST })
 export class WishlistService {
@@ -34,16 +35,24 @@ export class WishlistService {
     const currentLanguage = await this.getCurrentLanguage()
     const client = await this.getClient()
 
-    const response = await client
-      .me()
-      .shoppingLists()
-      .withId({ ID: wishlistId })
-      .get({
-        queryArgs: {
-          expand: ['lineItems[*].variant'],
-        },
-      })
-      .execute()
+    let response
+    try {
+      response = await client
+        .me()
+        .shoppingLists()
+        .withId({ ID: wishlistId })
+        .get({
+          queryArgs: {
+            expand: ['lineItems[*].variant'],
+          },
+        })
+        .execute()
+    } catch (error) {
+      if (isNotFoundError(error)) {
+        throw new NotFoundException(`Wishlist not found: ${wishlistId}`)
+      }
+      throw error
+    }
 
     const fullWishlist = await mapShoppingListToWishlist(
       response.body,

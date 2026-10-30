@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
 import HeartIcon from '@/public/icons/heart.svg'
@@ -30,10 +30,13 @@ export function AddToWishlist({
   const isInWishlistOnServer = productKeys.has(wishlistKey)
   const [isInWishlist, setIsInWishlist] = useState(isInWishlistOnServer)
 
-  // Sync local state when server state changes
-  useEffect(() => {
+  // Sync local state when server state changes (adjusting state during render)
+  const [prevIsInWishlistOnServer, setPrevIsInWishlistOnServer] =
+    useState(isInWishlistOnServer)
+  if (isInWishlistOnServer !== prevIsInWishlistOnServer) {
+    setPrevIsInWishlistOnServer(isInWishlistOnServer)
     setIsInWishlist(isInWishlistOnServer)
-  }, [isInWishlistOnServer])
+  }
 
   const handleClick = async () => {
     const isPending = isAddingToWishlist || isRemovingFromWishlist

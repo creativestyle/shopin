@@ -17,7 +17,7 @@
   "dependencies": {
     "@core/contracts": "*",
     "@core/i18n": "*",
-    "@faker-js/faker": "^9.8.0"
+    "@faker-js/faker": "^10.5.0"
   },
   "devDependencies": {
     "@core/eslint-config": "*",

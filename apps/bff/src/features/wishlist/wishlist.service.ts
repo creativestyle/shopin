@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common'
+import { Injectable, Logger, NotFoundException } from '@nestjs/common'
 import { DataSourceFactory } from '../../data-source/data-source.factory'
 import type {
   WishlistResponse,
@@ -37,23 +37,60 @@ export class WishlistService extends BaseAuthenticatedService {
     }
 
     const wishlistService = this.getWishlistService()
-    return await wishlistService.getWishlist(wishlistId, page, limit)
+    try {
+      return await wishlistService.getWishlist(wishlistId, page, limit)
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        await this.clearStaleWishlistId(wishlistId)
+        return null
+      }
+      throw error
+    }
   }
 
   async addToWishlist(
     request: AddToWishlistRequest
   ): Promise<WishlistResponse> {
-    const wishlistId = await this.getOrCreateWishlistId()
-    const wishlistService = this.getWishlistService()
-    return await wishlistService.addToWishlist(wishlistId, request)
+    return this.withWishlistId((wishlistId) =>
+      this.getWishlistService().addToWishlist(wishlistId, request)
+    )
   }
 
   async removeFromWishlist(
     request: RemoveFromWishlistRequest
   ): Promise<WishlistResponse> {
+    return this.withWishlistId((wishlistId) =>
+      this.getWishlistService().removeFromWishlist(wishlistId, request)
+    )
+  }
+
+  /**
+   * Runs an operation against the current wishlist. If the stored wishlist ID no longer
+   * exists in the data source (e.g. deleted, or created by another data source),
+   * the stale cookie is cleared and the operation is retried once on a fresh wishlist.
+   */
+  private async withWishlistId(
+    operation: (wishlistId: string) => Promise<WishlistResponse>
+  ): Promise<WishlistResponse> {
     const wishlistId = await this.getOrCreateWishlistId()
-    const wishlistService = this.getWishlistService()
-    return await wishlistService.removeFromWishlist(wishlistId, request)
+    try {
+      return await operation(wishlistId)
+    } catch (error) {
+      if (!(error instanceof NotFoundException)) {
+        throw error
+      }
+      await this.clearStaleWishlistId(wishlistId)
+      return await operation(await this.getOrCreateWishlistId())
+    }
+  }
+
+  private async clearStaleWishlistId(wishlistId: string): Promise<void> {
+    this.logger.warn(`Clearing stale wishlist ID: ${wishlistId}`)
+    if (await this.isLoggedIn()) {
+      await this.wishlistIdService.deleteLoggedInWishlistId()
+    } else {
+      await this.wishlistIdService.deleteGuestWishlistId()
+    }
   }
 
   /**
