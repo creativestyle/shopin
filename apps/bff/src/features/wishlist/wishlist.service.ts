@@ -68,6 +68,10 @@ export class WishlistService extends BaseAuthenticatedService {
    * Runs an operation against the current wishlist. If the stored wishlist ID no longer
    * exists in the data source (e.g. deleted, or created by another data source),
    * the stale cookie is cleared and the operation is retried once on a fresh wishlist.
+   *
+   * A 404 from the operation can also mean a nested resource is missing (e.g. a line
+   * item that was already removed). Only reset the wishlist ID when the wishlist
+   * itself is confirmed missing; otherwise rethrow so the existing wishlist is kept.
    */
   private async withWishlistId(
     operation: (wishlistId: string) => Promise<WishlistResponse>
@@ -76,7 +80,10 @@ export class WishlistService extends BaseAuthenticatedService {
     try {
       return await operation(wishlistId)
     } catch (error) {
-      if (!(error instanceof NotFoundException)) {
+      if (
+        !(error instanceof NotFoundException) ||
+        (await this.wishlistExists(wishlistId))
+      ) {
         throw error
       }
       await this.clearStaleWishlistId(wishlistId)
@@ -84,11 +91,33 @@ export class WishlistService extends BaseAuthenticatedService {
     }
   }
 
+  private async wishlistExists(wishlistId: string): Promise<boolean> {
+    try {
+      await this.getWishlistService().getWishlist(wishlistId)
+      return true
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        return false
+      }
+      throw error
+    }
+  }
+
+  /**
+   * Clears every cookie that holds the stale wishlist ID. getWishlistId() can fall
+   * back to the guest cookie for a logged-in user, so the source cookie is matched
+   * by value rather than inferred from the login status.
+   */
   private async clearStaleWishlistId(wishlistId: string): Promise<void> {
     this.logger.warn(`Clearing stale wishlist ID: ${wishlistId}`)
-    if (await this.isLoggedIn()) {
+    const [loggedInWishlistId, guestWishlistId] = await Promise.all([
+      this.wishlistIdService.getLoggedInWishlistId(),
+      this.wishlistIdService.getGuestWishlistId(),
+    ])
+    if (loggedInWishlistId === wishlistId) {
       await this.wishlistIdService.deleteLoggedInWishlistId()
-    } else {
+    }
+    if (guestWishlistId === wishlistId) {
       await this.wishlistIdService.deleteGuestWishlistId()
     }
   }
