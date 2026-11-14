@@ -3,57 +3,54 @@
 import { Button } from '@/components/ui/button'
 import { Link } from '@/lib/navigation'
 import { useTranslations } from 'next-intl'
-import { cn } from '@/lib/utils'
 
 interface CartActionsProps {
   variant?: 'default' | 'modal'
-  onLinkClick?: () => void
+  onClose?: () => void
 }
 
 export function CartActions({
   variant = 'default',
-  onLinkClick,
+  onClose,
 }: CartActionsProps) {
   const t = useTranslations('cart')
 
-  const isModal = variant === 'modal'
-
-  return (
-    <div
-      className={cn('flex w-full gap-4', {
-        'items-start': isModal,
-        'flex-col': !isModal,
-      })}
-    >
-      {isModal && (
+  if (variant === 'modal') {
+    return (
+      <div className='flex w-full items-start gap-4'>
         <Button
+          type='button'
           variant='secondary'
           scheme='black'
+          className='flex-1'
+          onClick={onClose}
+        >
+          {t('addToCartModal.continue')}
+        </Button>
+        <Button
+          variant='primary'
           className='flex-1'
           asChild
         >
           <Link
             href='/cart'
-            onClick={onLinkClick}
+            onClick={onClose}
           >
             {t('addToCartModal.goToCart')}
           </Link>
         </Button>
-      )}
+      </div>
+    )
+  }
+
+  return (
+    <div className='flex w-full flex-col gap-4'>
       <Button
         variant='primary'
-        className={cn({
-          'flex-1': isModal,
-          'w-full': !isModal,
-        })}
+        className='w-full'
         asChild
       >
-        <Link
-          href='/checkout'
-          onClick={onLinkClick}
-        >
-          {t('checkout')}
-        </Link>
+        <Link href='/checkout'>{t('checkout')}</Link>
       </Button>
     </div>
   )

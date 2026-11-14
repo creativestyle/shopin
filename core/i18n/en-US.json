@@ -213,7 +213,8 @@
     "addToCartModal": {
       "toastMessage": "Good choice. Item has been added to cart.",
       "moreProducts": "More products",
-      "goToCart": "Go to cart"
+      "goToCart": "Go to cart",
+      "continue": "Continue"
     },
     "empty": {
       "title": "Your cart is currently empty.",
