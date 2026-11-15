@@ -22,7 +22,7 @@ export function getMockFooter(): FooterResponse {
     },
     customerService: {
       title: 'Customer service',
-      phone: '+49 DEMO · SHOPin accelerator (please don’t call — it’s pretend)',
+      phone: '+49 30 123456789',
       hours: 'Mon–Fri 9:00–18:00',
       contactUs: {
         label: 'Contact us',
@@ -33,9 +33,6 @@ export function getMockFooter(): FooterResponse {
     paymentMethods: {
       title: 'Payment methods',
       methods: ['Demo'],
-    },
-    country: {
-      title: 'Country',
     },
   }
 }

@@ -2,6 +2,9 @@
   "legalBar": {
     "copyright": "© 2026 SHOPin storefront accelerator."
   },
+  "footer": {
+    "callUs": "Rufen Sie uns an: {phone}"
+  },
   "common": {
     "welcomeMessage": "Willkommen in unserer Anwendung!",
     "yes": "Ja",

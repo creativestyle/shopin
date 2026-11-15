@@ -1,3 +1,4 @@
+import { useTranslations } from 'next-intl'
 import type { FooterCustomerService } from '@core/contracts/content/layout'
 import { CmsLink } from '@/features/content/cms-link'
 import PhoneIcon from '../../../public/icons/phone.svg'
@@ -8,6 +9,8 @@ export function CustomerServiceBlock({
 }: {
   customerService: FooterCustomerService
 }) {
+  const t = useTranslations('footer')
+
   return (
     <div className='space-y-4'>
       <h3 className='text-sm leading-tight font-bold text-gray-900'>
@@ -15,12 +18,19 @@ export function CustomerServiceBlock({
       </h3>
       <div className='space-y-2.5'>
         {customerService.phone && (
-          <div className='flex items-center gap-2.5'>
-            <PhoneIcon className='size-6 text-gray-600' />
-            <span className='text-base leading-normal font-bold text-gray-600'>
+          <a
+            href={`tel:${customerService.phone}`}
+            aria-label={t('callUs', { phone: customerService.phone })}
+            className='flex w-fit items-center gap-2.5 text-gray-600 transition-colors hover:text-gray-900'
+          >
+            <PhoneIcon
+              className='size-6'
+              aria-hidden='true'
+            />
+            <span className='text-base leading-normal font-bold'>
               {customerService.phone}
             </span>
-          </div>
+          </a>
         )}
         {customerService.hours && (
           <p className='text-sm leading-normal font-normal text-gray-600'>
