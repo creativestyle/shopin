@@ -7,6 +7,7 @@ export const TeaserVideoApiResponseSchema = z.object({
   title: z.string().optional().nullable(),
   video: ContentfulImageApiResponseSchema,
   thumbnail: ContentfulImageApiResponseSchema.optional().nullable(),
+  captions: ContentfulImageApiResponseSchema.optional().nullable(),
   autoplay: z.boolean().optional().nullable(),
   controls: z.boolean().optional().nullable(),
   caption: z.string().optional().nullable(),

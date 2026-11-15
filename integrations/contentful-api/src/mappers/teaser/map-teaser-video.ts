@@ -9,6 +9,7 @@ export function mapTeaserVideo(entry: TeaserVideoApiResponse): VideoTeaser {
     title: entry.title ?? undefined,
     videoUrl: entry.video?.url ?? undefined,
     thumbnailUrl: entry.thumbnail?.url ?? undefined,
+    captionsUrl: entry.captions?.url ?? undefined,
     autoplay: entry.autoplay ?? false,
     controls: entry.controls ?? true,
     caption: entry.caption ?? undefined,
