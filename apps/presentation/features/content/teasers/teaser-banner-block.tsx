@@ -1,5 +1,6 @@
 import { ContentImage } from '@/features/content/content-image'
 import { CmsButton } from '@/features/content/cms-button'
+import { CmsLink } from '@/features/content/cms-link'
 import { cn } from '@/lib/utils'
 import type { BannerTeaser } from '@core/contracts/content/teaser-banner'
 
@@ -11,7 +12,8 @@ export function TeaserBannerBlock({
   imagePreload?: boolean
 }) {
   const { backgroundImage, headline, body, cta } = teaser
-  const hasContent = headline || body || cta?.link?.url
+  const linkedCta = cta?.link?.url ? cta : undefined
+  const hasContent = headline || body || linkedCta
   if (!hasContent && !backgroundImage?.url) {
     return null
   }
@@ -20,6 +22,16 @@ export function TeaserBannerBlock({
 
   return (
     <div className='relative rounded-lg'>
+      {linkedCta && (
+        <CmsLink
+          link={{
+            ...linkedCta.link,
+            ariaLabel: linkedCta.link.ariaLabel ?? linkedCta.link.label,
+          }}
+          className='absolute inset-0 z-10 rounded-lg'
+          useLabelAsFallbackContent={false}
+        />
+      )}
       {backgroundImage && (
         <div className='relative w-full overflow-hidden rounded-lg sm:aspect-[3/1] sm:min-h-[320px]'>
           <ContentImage
@@ -55,10 +67,11 @@ export function TeaserBannerBlock({
               {body}
             </p>
           )}
-          {cta?.link?.url && (
+          {linkedCta && (
             <CmsButton
-              cta={cta}
+              cta={linkedCta}
               className='mt-4'
+              asLabel
             />
           )}
         </div>
