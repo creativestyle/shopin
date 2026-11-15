@@ -60,7 +60,11 @@ export function createLoggerConfig(): Params {
   return {
     pinoHttp: {
       level: getLogLevel(),
-      genReqId: (req) => getCorrelationId(req as Request),
+      genReqId: (req, res) => {
+        const id = getCorrelationId(req as Request)
+        res.setHeader(CORRELATION_ID_HEADER, id)
+        return id
+      },
       redact: createRedactConfig(),
 
       serializers: {
