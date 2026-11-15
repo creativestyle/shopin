@@ -677,7 +677,9 @@
     },
     "video": {
       "unavailable": "Video nicht verfügbar",
-      "play": "Video abspielen"
+      "play": "Video abspielen",
+      "playTitled": "Video abspielen: {title}",
+      "captions": "Untertitel"
     }
   },
   "searchResults": {
