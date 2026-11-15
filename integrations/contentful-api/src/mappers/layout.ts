@@ -11,7 +11,6 @@ import type {
 } from '../schemas/footer'
 import type { TopBarItemApiResponse } from '../schemas/header'
 import { LinkTargetSchema } from '@core/contracts/content/cms-link'
-import { rfcToUrlPrefix } from '@config/constants'
 import { mapLinkEntryToCmsLink } from './cms-link'
 
 /**
@@ -37,18 +36,15 @@ export function mapTopBarItemToHeaderResponse(
 /**
  * Maps Contentful footer item to contract FooterResponse.
  * Validates output with FooterResponseSchema from @core/contracts.
- * Uses locale to resolve linkedPage slugs to full URLs.
+ * linkedPage slugs map to unprefixed paths; the presentation Link adds the locale.
  */
 export function mapFooterItemToFooterResponse(
-  footer: FooterItemApiResponse,
-  locale: string
+  footer: FooterItemApiResponse
 ): FooterResponse {
-  const localePrefix = rfcToUrlPrefix(locale)
-
   const resolveLinkUrl = (footerLink: FooterLinkApiResponse): string => {
     const pageSlug = footerLink.linkedPage?.slug?.trim()
     if (pageSlug) {
-      return `/${localePrefix}/${pageSlug}`
+      return `/${pageSlug}`
     }
     return (footerLink.url ?? '').trim() || '#'
   }
