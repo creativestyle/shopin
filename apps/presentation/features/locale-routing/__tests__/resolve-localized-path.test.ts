@@ -151,7 +151,7 @@ describe('resolveLocalizedPath', () => {
       variantSegment: null,
     })
 
-    expect(m.getContentPage).toHaveBeenCalledWith('about-us')
+    expect(m.getContentPage).toHaveBeenCalledWith('about-us', false)
     expect(result).toBe('/de/ueber-uns')
   })
 

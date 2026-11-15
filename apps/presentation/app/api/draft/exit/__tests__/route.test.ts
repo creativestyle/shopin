@@ -14,6 +14,7 @@ import { NextRequest } from 'next/server'
 
 jest.mock('@/lib/draft-mode', () => ({
   isSafeDraftRedirectPath: jest.fn(),
+  PREVIEW_ACTIVE_COOKIE: 'preview_active',
   PREVIEW_TOKEN_COOKIE: 'preview_token',
   PREVIEW_TOKEN_INTERNAL_PARAM: '__pt',
 }))

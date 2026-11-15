@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { I18N_CONFIG, getLocale } from '@config/constants'
 import {
   isSafeDraftRedirectPath,
+  PREVIEW_ACTIVE_COOKIE,
   PREVIEW_TOKEN_COOKIE,
   PREVIEW_TOKEN_INTERNAL_PARAM,
 } from '@/lib/draft-mode'
@@ -52,13 +53,32 @@ export function GET(request: NextRequest) {
   redirectUrl.search = forwarded.toString()
 
   const response = NextResponse.redirect(redirectUrl, 307)
-  // Clear with the same name/path the cookie was set with (path:'/').
+  // Mirror the set attributes so the clear also applies inside Contentful's cross-site iframe.
+  const isHttps = getSiteProtocol(request) === 'https:'
   response.cookies.set({
     name: PREVIEW_TOKEN_COOKIE,
     value: '',
     httpOnly: true,
     path: '/',
     maxAge: 0,
+    secure: isHttps,
+    sameSite: isHttps ? 'none' : 'lax',
+  })
+  response.cookies.set({
+    name: PREVIEW_ACTIVE_COOKIE,
+    value: '',
+    path: '/',
+    maxAge: 0,
+    secure: isHttps,
+    sameSite: isHttps ? 'none' : 'lax',
   })
   return response
+}
+
+function getSiteProtocol(request: NextRequest): string {
+  try {
+    return new URL(process.env.FRONTEND_URL ?? '').protocol
+  } catch {
+    return request.nextUrl.protocol
+  }
 }

@@ -94,10 +94,9 @@ export default async function PreviewPage({
     )
   }
 
-  // Any other path is a content slug. Functional routes (cart, account, …) get funneled here
-  // under an active draft cookie but have no CMS entry, so resolve them to the 404 page rather
-  // than rendering a soft "no content" message in the site chrome. getContentPage is
-  // request-cached, so ContentPage's own fetch reuses this result (or this rejection).
+  // Any other path is a content slug. Unknown slugs resolve to the 404 page rather than a soft
+  // "no content" message (app routes like cart/account bypass preview in the proxy).
+  // getContentPage is request-cached, so ContentPage's own fetch reuses this result.
   const slug = path.join('/')
   try {
     await getContentPage(slug, true)

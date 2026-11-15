@@ -55,6 +55,9 @@ export const PREVIEW_TOKEN_COOKIE = 'preview_token'
  */
 export const PREVIEW_TOKEN_INTERNAL_PARAM = '__pt'
 
+/** Non-HttpOnly UI hint set by the proxy while a draft session is active; never a credential. */
+export const PREVIEW_ACTIVE_COOKIE = 'preview_active'
+
 function getSecret(): string {
   return process.env.NEXT_DRAFT_MODE_SECRET ?? ''
 }
