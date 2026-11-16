@@ -6,6 +6,9 @@
     "e2e": "playwright test",
     "e2e:headed": "playwright test --headed",
     "e2e:ui": "playwright test --ui",
+    "e2e:journeys": "playwright test -c playwright.journeys.config.ts",
+    "e2e:journeys:headed": "playwright test -c playwright.journeys.config.ts --headed",
+    "e2e:journeys:ui": "playwright test -c playwright.journeys.config.ts --ui",
     "report": "playwright show-report"
   },
   "devDependencies": {
