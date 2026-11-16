@@ -18,6 +18,7 @@ import {
   encodeVariant,
 } from '@/lib/variant/variant-key'
 import {
+  isSiteHttps,
   PREVIEW_ACTIVE_COOKIE,
   PREVIEW_TOKEN_COOKIE,
   PREVIEW_TOKEN_INTERNAL_PARAM,
@@ -46,15 +47,6 @@ const APP_ROUTE_SEGMENTS = new Set([
 ])
 
 // ─── Small helpers ────────────────────────────────────────────────────────────
-
-/** Returns the protocol ('http:' or 'https:') of FRONTEND_URL, defaulting to 'http:'. */
-function getSiteProtocol(): string {
-  try {
-    return new URL(process.env.FRONTEND_URL ?? '').protocol
-  } catch {
-    return 'http:'
-  }
-}
 
 function resolveCorrelationId(request: NextRequest): string {
   const existing = request.headers.get(CORRELATION_ID_HEADER)
@@ -142,7 +134,7 @@ function syncDraftMarkerCookie(
   isActive: boolean
 ): void {
   if (isActive) {
-    const isSiteSsl = getSiteProtocol() === 'https:'
+    const isSiteSsl = isSiteHttps()
     response.cookies.set({
       name: PREVIEW_ACTIVE_COOKIE,
       value: '1',
@@ -273,7 +265,7 @@ function handlePreviewPath(
   // Establish / refresh the draft session cookie so subsequent in-app navigations
   // continue to be routed through the preview subtree.
   if (activeToken) {
-    const isSiteSsl = getSiteProtocol() === 'https:'
+    const isSiteSsl = isSiteHttps()
     response.cookies.set({
       name: PREVIEW_TOKEN_COOKIE,
       value: activeToken,

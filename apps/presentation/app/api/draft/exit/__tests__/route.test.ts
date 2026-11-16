@@ -14,6 +14,7 @@ import { NextRequest } from 'next/server'
 
 jest.mock('@/lib/draft-mode', () => ({
   isSafeDraftRedirectPath: jest.fn(),
+  isSiteHttps: jest.requireActual('@/lib/draft-mode').isSiteHttps,
   PREVIEW_ACTIVE_COOKIE: 'preview_active',
   PREVIEW_TOKEN_COOKIE: 'preview_token',
   PREVIEW_TOKEN_INTERNAL_PARAM: '__pt',
@@ -35,12 +36,18 @@ function makeRequest(params: Record<string, string>): NextRequest {
   return new NextRequest(url.toString())
 }
 
+function locationUrl(res: Response): URL {
+  const location = res.headers.get('location') ?? ''
+  expect(location.startsWith('/')).toBe(true)
+  return new URL(location, 'http://placeholder')
+}
+
 function locationPath(res: Response): string {
-  return new URL(res.headers.get('location') ?? '').pathname
+  return locationUrl(res).pathname
 }
 
 function locationParams(res: Response): URLSearchParams {
-  return new URL(res.headers.get('location') ?? '').searchParams
+  return locationUrl(res).searchParams
 }
 
 describe('GET /api/draft/exit', () => {

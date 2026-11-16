@@ -34,6 +34,7 @@ jest.mock('@/lib/draft-mode', () => {
     PREVIEW_TOKEN_COOKIE: 'preview_token',
     PREVIEW_TOKEN_INTERNAL_PARAM: '__pt',
     DRAFT_COOKIE_MAX_AGE_SEC: maxAge,
+    isSiteHttps: jest.requireActual('@/lib/draft-mode').isSiteHttps,
     isPreviewTokenValid: (token: string | null | undefined) =>
       !!token && verifyDraftToken(token, mockDraftSecret, maxAge),
   }
