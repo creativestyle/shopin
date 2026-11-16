@@ -18,6 +18,8 @@ import {
   encodeVariant,
 } from '@/lib/variant/variant-key'
 import {
+  isSiteHttps,
+  PREVIEW_ACTIVE_COOKIE,
   PREVIEW_TOKEN_COOKIE,
   PREVIEW_TOKEN_INTERNAL_PARAM,
   DRAFT_COOKIE_MAX_AGE_SEC,
@@ -29,16 +31,22 @@ const intlMiddleware = createMiddleware(routing)
 const knownLocalePrefixes = new Set(listLocales().map((l) => l.urlPrefix))
 const defaultLocalePrefix = getLocale(I18N_CONFIG.defaultLocale).urlPrefix
 
-// ─── Small helpers ────────────────────────────────────────────────────────────
+// App routes with no CMS draft representation; they render normally during a draft session.
+const APP_ROUTE_SEGMENTS = new Set([
+  'account',
+  'cart',
+  'checkout',
+  'demo',
+  'forgot-password',
+  'reset-password',
+  'search',
+  'setup',
+  'sign-in',
+  'sign-up',
+  'wishlist',
+])
 
-/** Returns the protocol ('http:' or 'https:') of FRONTEND_URL, defaulting to 'http:'. */
-function getSiteProtocol(): string {
-  try {
-    return new URL(process.env.FRONTEND_URL ?? '').protocol
-  } catch {
-    return 'http:'
-  }
-}
+// ─── Small helpers ────────────────────────────────────────────────────────────
 
 function resolveCorrelationId(request: NextRequest): string {
   const existing = request.headers.get(CORRELATION_ID_HEADER)
@@ -55,6 +63,7 @@ interface RequestContext {
   firstIsLocale: boolean
   locale: string
   draftCookieToken: string | undefined
+  isDraftActive: boolean
   isPathPreview: boolean
   isPreview: boolean
   variantKey: string
@@ -93,10 +102,11 @@ function buildRequestContext(
   const isDraftActive = isPreviewTokenValid(draftCookieToken)
   const isPathPreview =
     firstSegment === 'preview' || (firstIsLocale && segments[1] === 'preview')
-  // Under an active draft cookie, every clean URL is funneled into the /preview subtree.
-  // Functional routes with no draft (CMS) representation (cart, account, …) resolve to no
-  // content there and render the 404 page — acceptable inside an editorial preview session.
-  const isPreview = isPathPreview || isDraftActive
+  // Under an active draft cookie, clean content URLs are funneled into the /preview subtree;
+  // app routes (cart, account, …) keep normal routing and show the banner client-side.
+  const routeSegment = firstIsLocale ? segments[1] : firstSegment
+  const isAppRoute = !!routeSegment && APP_ROUTE_SEGMENTS.has(routeSegment)
+  const isPreview = isPathPreview || (isDraftActive && !isAppRoute)
 
   // Preview always uses the default variant — no A/B testing in editorial preview sessions.
   const variantKey = isPreview
@@ -109,10 +119,37 @@ function buildRequestContext(
     firstIsLocale,
     locale,
     draftCookieToken,
+    isDraftActive,
     isPathPreview,
     isPreview,
     variantKey,
     correlationId: resolveCorrelationId(request),
+  }
+}
+
+/** Keeps the non-HttpOnly preview_active marker in sync with the draft session. */
+function syncDraftMarkerCookie(
+  request: NextRequest,
+  response: NextResponse,
+  isActive: boolean
+): void {
+  if (isActive) {
+    const isSiteSsl = isSiteHttps()
+    response.cookies.set({
+      name: PREVIEW_ACTIVE_COOKIE,
+      value: '1',
+      path: '/',
+      maxAge: DRAFT_COOKIE_MAX_AGE_SEC,
+      secure: isSiteSsl,
+      sameSite: isSiteSsl ? 'none' : 'lax',
+    })
+  } else if (request.cookies.has(PREVIEW_ACTIVE_COOKIE)) {
+    response.cookies.set({
+      name: PREVIEW_ACTIVE_COOKIE,
+      value: '',
+      path: '/',
+      maxAge: 0,
+    })
   }
 }
 
@@ -216,15 +253,19 @@ function handlePreviewPath(
   requestHeaders.set(CORRELATION_ID_HEADER, ctx.correlationId)
   requestHeaders.set('x-next-intl-locale', ctx.locale)
 
+  // Preview ignores intl's locale redirect; drop its Location or the browser follows it
+  const responseHeaders = new Headers(intlResponse.headers)
+  responseHeaders.delete('location')
+
   const response = NextResponse.rewrite(rewriteUrl, {
-    headers: intlResponse.headers,
+    headers: responseHeaders,
     request: { headers: requestHeaders },
   })
 
   // Establish / refresh the draft session cookie so subsequent in-app navigations
   // continue to be routed through the preview subtree.
   if (activeToken) {
-    const isSiteSsl = getSiteProtocol() === 'https:'
+    const isSiteSsl = isSiteHttps()
     response.cookies.set({
       name: PREVIEW_TOKEN_COOKIE,
       value: activeToken,
@@ -235,6 +276,7 @@ function handlePreviewPath(
       sameSite: isSiteSsl ? 'none' : 'lax',
     })
   }
+  syncDraftMarkerCookie(request, response, !!activeToken)
 
   return response
 }
@@ -259,7 +301,9 @@ function handleStandardPath(
     internalPathname = `/${variantKey}/${locale}`
   }
 
-  return rewrite(request, internalPathname, ctx, intlResponse)
+  const response = rewrite(request, internalPathname, ctx, intlResponse)
+  syncDraftMarkerCookie(request, response, ctx.isDraftActive)
+  return response
 }
 
 // ─── Middleware entry point ───────────────────────────────────────────────────

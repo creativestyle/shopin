@@ -55,6 +55,18 @@ export const PREVIEW_TOKEN_COOKIE = 'preview_token'
  */
 export const PREVIEW_TOKEN_INTERNAL_PARAM = '__pt'
 
+/** Non-HttpOnly UI hint set by the proxy while a draft session is active; never a credential. */
+export const PREVIEW_ACTIVE_COOKIE = 'preview_active'
+
+/** True when FRONTEND_URL is https; only the protocol is read, so any domain can serve preview. */
+export function isSiteHttps(): boolean {
+  try {
+    return new URL(process.env.FRONTEND_URL ?? '').protocol === 'https:'
+  } catch {
+    return false
+  }
+}
+
 function getSecret(): string {
   return process.env.NEXT_DRAFT_MODE_SECRET ?? ''
 }

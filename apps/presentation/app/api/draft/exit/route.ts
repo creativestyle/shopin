@@ -1,10 +1,13 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest } from 'next/server'
 import { I18N_CONFIG, getLocale } from '@config/constants'
 import {
   isSafeDraftRedirectPath,
+  isSiteHttps,
+  PREVIEW_ACTIVE_COOKIE,
   PREVIEW_TOKEN_COOKIE,
   PREVIEW_TOKEN_INTERNAL_PARAM,
 } from '@/lib/draft-mode'
+import { relativeRedirect } from '@/lib/relative-redirect'
 
 const defaultLocalePrefix = getLocale(I18N_CONFIG.defaultLocale).urlPrefix
 
@@ -26,6 +29,9 @@ const defaultLocalePrefix = getLocale(I18N_CONFIG.defaultLocale).urlPrefix
  * Any other query params are content state (collection page/sort/filter, product variantId) and
  * are preserved on the returned URL so a broken preview session drops the user back at the same
  * non-preview location. The preview token param is never echoed back onto a published URL.
+ *
+ * The redirect is path-only so the browser stays on the domain it called (request.nextUrl
+ * holds the internal host behind a proxy, e.g. 0.0.0.0:8888).
  */
 export function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl
@@ -47,18 +53,26 @@ export function GET(request: NextRequest) {
   forwarded.delete('slug')
   forwarded.delete(PREVIEW_TOKEN_INTERNAL_PARAM)
 
-  const redirectUrl = request.nextUrl.clone()
-  redirectUrl.pathname = target
-  redirectUrl.search = forwarded.toString()
-
-  const response = NextResponse.redirect(redirectUrl, 307)
-  // Clear with the same name/path the cookie was set with (path:'/').
+  const query = forwarded.toString()
+  const response = relativeRedirect(query ? `${target}?${query}` : target)
+  // Mirror the set attributes so the clear also applies inside Contentful's cross-site iframe.
+  const isHttps = isSiteHttps()
   response.cookies.set({
     name: PREVIEW_TOKEN_COOKIE,
     value: '',
     httpOnly: true,
     path: '/',
     maxAge: 0,
+    secure: isHttps,
+    sameSite: isHttps ? 'none' : 'lax',
+  })
+  response.cookies.set({
+    name: PREVIEW_ACTIVE_COOKIE,
+    value: '',
+    path: '/',
+    maxAge: 0,
+    secure: isHttps,
+    sameSite: isHttps ? 'none' : 'lax',
   })
   return response
 }

@@ -30,9 +30,11 @@ jest.mock('@/lib/draft-mode', () => {
   // initialize), so the cap value cannot reference an outer `const` without a TDZ error.
   const maxAge = 60 * 60 // 1h — mirrors DRAFT_COOKIE_MAX_AGE_SEC
   return {
+    PREVIEW_ACTIVE_COOKIE: 'preview_active',
     PREVIEW_TOKEN_COOKIE: 'preview_token',
     PREVIEW_TOKEN_INTERNAL_PARAM: '__pt',
     DRAFT_COOKIE_MAX_AGE_SEC: maxAge,
+    isSiteHttps: jest.requireActual('@/lib/draft-mode').isSiteHttps,
     isPreviewTokenValid: (token: string | null | undefined) =>
       !!token && verifyDraftToken(token, mockDraftSecret, maxAge),
   }
@@ -401,38 +403,36 @@ describe('cookie-driven preview — clean /locale/... path (isDraftActive=true)'
 
 describe('active draft cookie funnels clean URLs into preview', () => {
   it.each(['cart', 'checkout', 'account', 'sign-in', 'wishlist', 'setup'])(
-    'funnels /en/%s into the /preview subtree',
+    'keeps app route /en/%s out of the /preview subtree',
     (segment) => {
       const res = proxy(
         makeRequest(`/en/${segment}`, {
           cookie: `preview_token=${ACTIVE_PREVIEW_TOKEN}`,
         })
       )
-      expect(rewritePath(res)).toBe(`/${DEFAULT_VARIANT}/en/preview/${segment}`)
+      expect(rewritePath(res)).toBe(`/${DEFAULT_VARIANT}/en/${segment}`)
     }
   )
 
-  it('funnels nested routes (account/orders) into preview', () => {
+  it('keeps nested app routes (account/orders) out of preview', () => {
     const res = proxy(
       makeRequest('/en/account/orders', {
         cookie: `preview_token=${ACTIVE_PREVIEW_TOKEN}`,
       })
     )
-    expect(rewritePath(res)).toBe(
-      `/${DEFAULT_VARIANT}/en/preview/account/orders`
-    )
+    expect(rewritePath(res)).toBe(`/${DEFAULT_VARIANT}/en/account/orders`)
   })
 
-  it('funnels an unprefixed path (/cart) into preview under an active cookie', () => {
+  it('keeps an unprefixed app route (/cart) out of preview under an active cookie', () => {
     const res = proxy(
       makeRequest('/cart', { cookie: `preview_token=${ACTIVE_PREVIEW_TOKEN}` })
     )
-    expect(rewritePath(res)).toBe(`/${DEFAULT_VARIANT}/en/preview/cart`)
+    expect(rewritePath(res)).toBe(`/${DEFAULT_VARIANT}/en/cart`)
   })
 
   it('injects __pt when funnelling a clean URL into preview', () => {
     const res = proxy(
-      makeRequest('/en/cart', {
+      makeRequest('/en/about-us', {
         cookie: `preview_token=${ACTIVE_PREVIEW_TOKEN}`,
       })
     )

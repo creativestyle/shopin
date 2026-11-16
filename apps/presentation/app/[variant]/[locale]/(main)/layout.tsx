@@ -7,6 +7,7 @@ import {
   PageShell,
   PageContent,
 } from '../../../../components/layout/page-shell'
+import { DraftModeSessionBanner } from '@/components/layout/draft-mode-banner'
 
 export default async function Layout({
   params,
@@ -21,6 +22,7 @@ export default async function Layout({
   return (
     <PageShell>
       <SiteTopBar />
+      <DraftModeSessionBanner />
       <Header />
       <PageContent>{children}</PageContent>
       <Footer />

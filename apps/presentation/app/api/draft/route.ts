@@ -5,28 +5,14 @@ import {
   createPreviewToken,
   isDraftSecretValid,
   isSafeDraftRedirectPath,
+  isSiteHttps,
   PREVIEW_TOKEN_COOKIE,
   PREVIEW_TOKEN_INTERNAL_PARAM,
   DRAFT_COOKIE_MAX_AGE_SEC,
 } from '@/lib/draft-mode'
+import { relativeRedirect } from '@/lib/relative-redirect'
 
 const defaultLocalePrefix = getLocale(I18N_CONFIG.defaultLocale).urlPrefix
-
-/**
- * Base URL for the draft redirect. Uses FRONTEND_URL so redirect always goes to the canonical site.
- * When unset (e.g. local dev), uses request origin and rewrites 0.0.0.0 → localhost.
- */
-function getDraftRedirectBase(request: NextRequest): string {
-  const base = process.env.FRONTEND_URL?.trim()?.replace(/\/$/, '')
-  if (base) {
-    return base
-  }
-  const url = new URL(request.nextUrl.origin)
-  if (url.hostname === '0.0.0.0') {
-    url.hostname = 'localhost'
-  }
-  return url.origin
-}
 
 /**
  * Draft Mode endpoint for headless CMS preview.
@@ -36,13 +22,15 @@ function getDraftRedirectBase(request: NextRequest): string {
  * https://<your-site>/api/draft?secret=<NEXT_DRAFT_MODE_SECRET>&slug=<entry-slug>&locale=<locale>
  *
  * The CMS typically sends locale as en-US, de-DE, etc. We redirect to app URL prefix (en, de).
- * Token delivery strategy depends on the redirect base protocol (FRONTEND_URL when set):
+ * The redirect is path-only, so the browser stays on whichever domain the CMS called; the
+ * server never needs to know its public host (behind a proxy it only sees e.g. 0.0.0.0:8888).
+ * Token delivery strategy depends on the FRONTEND_URL protocol (domain is ignored):
  *
- * HTTPS redirect base (production): HttpOnly cookie with SameSite=None;Secure. Works in
+ * HTTPS (production): HttpOnly cookie with SameSite=None;Secure. Works in
  * Contentful's cross-site iframe. Token never appears in the URL, access logs, or Referer
  * headers. The proxy reads the cookie and injects it into the internal rewrite URL as ?__pt=.
  *
- * HTTP redirect base (local dev, e.g. FRONTEND_URL=http://localhost:3000 or unset):
+ * HTTP (local dev, e.g. FRONTEND_URL=http://localhost:3000 or unset):
  * URL param ?__pt=. SameSite=None;Secure requires HTTPS so cookies cannot be forwarded
  * cross-site on plain HTTP. The signed, short-lived token rides in the URL; the preview
  * page validates it and renders draft content. The StripPreviewToken client component
@@ -75,21 +63,17 @@ export function GET(request: NextRequest) {
   }
 
   const token = createPreviewToken()
-  const redirectBase = getDraftRedirectBase(request)
   // Omit the default locale prefix — intlMiddleware would strip it anyway (localePrefix: 'as-needed').
   const previewPath =
     locale === defaultLocalePrefix
       ? `/preview/${normalizedSlug}`
       : `/${locale}/preview/${normalizedSlug}`
 
-  // Delivery is keyed on the redirect-base protocol (server-controlled), not on request headers
+  // Delivery is keyed on the FRONTEND_URL protocol (server-controlled), not on request headers
   // (x-forwarded-host/proto can be spoofed). On HTTPS we always use the SameSite=None;Secure
   // cookie — never the URL — so the token can't leak to logs/Referer even behind an HTTP ingress.
-  const redirectUrl = new URL(previewPath, redirectBase)
-  const redirectIsHttps = new URL(redirectBase).protocol === 'https:'
-
-  if (redirectIsHttps) {
-    const response = NextResponse.redirect(redirectUrl, 307)
+  if (isSiteHttps()) {
+    const response = relativeRedirect(previewPath)
     response.cookies.set({
       name: PREVIEW_TOKEN_COOKIE,
       value: token,
@@ -102,8 +86,8 @@ export function GET(request: NextRequest) {
     return response
   }
 
-  redirectUrl.searchParams.set(PREVIEW_TOKEN_INTERNAL_PARAM, token)
-  const response = NextResponse.redirect(redirectUrl, 307)
+  const query = new URLSearchParams({ [PREVIEW_TOKEN_INTERNAL_PARAM]: token })
+  const response = relativeRedirect(`${previewPath}?${query}`)
   // On HTTP, also set a SameSite=Lax HttpOnly cookie so the proxy can establish
   // a draft session and in-app navigation stays in draft mode after the initial
   // preview load. The __pt URL param is the primary entry credential; the cookie

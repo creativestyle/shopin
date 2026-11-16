@@ -22,6 +22,7 @@ jest.mock('@/lib/draft-mode', () => ({
   isDraftSecretValid: jest.fn(),
   isSafeDraftRedirectPath: jest.fn(),
   createPreviewToken: jest.fn(),
+  isSiteHttps: jest.requireActual('@/lib/draft-mode').isSiteHttps,
   PREVIEW_TOKEN_COOKIE: 'preview_token',
   PREVIEW_TOKEN_INTERNAL_PARAM: '__pt',
   DRAFT_COOKIE_MAX_AGE_SEC: 86400,
@@ -66,6 +67,10 @@ function makeRequest(
   return new NextRequest(url.toString(), headers ? { headers } : undefined)
 }
 
+function locationUrl(res: Response): URL {
+  return new URL(res.headers.get('location') ?? '', 'http://placeholder')
+}
+
 function validParams() {
   return { secret: 'valid-secret', slug: 'products/shoe', locale: 'en-US' }
 }
@@ -80,7 +85,7 @@ describe('GET /api/draft', () => {
     draftModeMocks().isSafeDraftRedirectPath.mockReturnValue(true)
     draftModeMocks().createPreviewToken.mockReturnValue('signed-token-abc')
     homepageMock().mockReturnValue('homepage')
-    delete process.env.FRONTEND_URL
+    process.env.FRONTEND_URL = 'https://shop.example.com'
   })
 
   // ─── Validation failures ──────────────────────────────────────────────
@@ -182,11 +187,14 @@ describe('GET /api/draft', () => {
   // ─── Success path — HTTP (local dev) ─────────────────────────────────
 
   describe('success path on HTTP', () => {
+    beforeEach(() => {
+      delete process.env.FRONTEND_URL
+    })
+
     it('puts the token as ?__pt= in the redirect URL', () => {
       draftModeMocks().createPreviewToken.mockReturnValue('my-signed-token')
       const res = GET(makeRequest(validParams(), 'http://localhost:3000'))
-      const location = res.headers.get('location') ?? ''
-      expect(new URL(location).searchParams.get('__pt')).toBe('my-signed-token')
+      expect(locationUrl(res).searchParams.get('__pt')).toBe('my-signed-token')
     })
 
     it('sets a SameSite=Lax HttpOnly cookie on HTTP alongside the __pt URL param', () => {
@@ -203,8 +211,7 @@ describe('GET /api/draft', () => {
     it('also puts the token in the URL when using the Lax-cookie HTTP path', () => {
       draftModeMocks().createPreviewToken.mockReturnValue('my-signed-token')
       const res = GET(makeRequest(validParams(), 'http://localhost:3000'))
-      const location = res.headers.get('location') ?? ''
-      expect(new URL(location).searchParams.get('__pt')).toBe('my-signed-token')
+      expect(locationUrl(res).searchParams.get('__pt')).toBe('my-signed-token')
     })
   })
 
@@ -244,28 +251,27 @@ describe('GET /api/draft', () => {
     })
   })
 
-  // ─── getDraftRedirectBase ────────────────────────────────────────────
+  // ─── Redirect target ──────────────────────────────────────────────────
 
-  describe('redirect base', () => {
-    it('uses FRONTEND_URL when set, stripping trailing slash', () => {
-      process.env.FRONTEND_URL = 'https://shop.example.com/'
-      const res = GET(makeRequest(validParams()))
-      const location = res.headers.get('location') ?? ''
-      expect(location.startsWith('https://shop.example.com/')).toBe(true)
-      // Confirm no double slash after base
-      expect(location).not.toContain('com//')
+  describe('redirect target', () => {
+    it('is path-only so the browser stays on the domain the CMS called', () => {
+      const res = GET(makeRequest(validParams(), 'http://0.0.0.0:8888'))
+      expect(res.headers.get('location')).toBe('/preview/products/shoe')
     })
 
-    it('uses request origin when FRONTEND_URL is not set', () => {
-      const res = GET(makeRequest(validParams(), 'https://localhost:3000'))
-      const location = res.headers.get('location') ?? ''
-      expect(location.startsWith('https://localhost:3000')).toBe(true)
+    it('ignores the FRONTEND_URL domain (multi-domain deployments)', () => {
+      process.env.FRONTEND_URL = 'https://other-domain.example.com'
+      const res = GET(makeRequest({ ...validParams(), locale: 'de-DE' }))
+      expect(res.headers.get('location')).toBe('/de/preview/products/shoe')
     })
 
-    it('rewrites 0.0.0.0 to localhost when FRONTEND_URL is unset', () => {
+    it('keeps the HTTP token param on the path-only redirect', () => {
+      delete process.env.FRONTEND_URL
+      draftModeMocks().createPreviewToken.mockReturnValue('tok')
       const res = GET(makeRequest(validParams(), 'http://0.0.0.0:3000'))
-      const location = res.headers.get('location') ?? ''
-      expect(location.startsWith('http://localhost:3000')).toBe(true)
+      expect(res.headers.get('location')).toBe(
+        '/preview/products/shoe?__pt=tok'
+      )
     })
   })
 
@@ -302,8 +308,7 @@ describe('GET /api/draft', () => {
       draftModeMocks().createPreviewToken.mockReturnValue('preview-tok-xyz')
       const res = GET(makeRequest(validParams(), 'http://localhost:3000'))
       // Token in URL param (primary entry credential)
-      const location = res.headers.get('location') ?? ''
-      expect(new URL(location).searchParams.get('__pt')).toBe('preview-tok-xyz')
+      expect(locationUrl(res).searchParams.get('__pt')).toBe('preview-tok-xyz')
       // Also sets a Lax cookie so the proxy can maintain the draft session across in-app nav
       const cookie = res.headers.get('set-cookie') ?? ''
       expect(cookie).toContain('preview-tok-xyz')
@@ -321,7 +326,7 @@ describe('GET /api/draft', () => {
         )
       )
       const location = res.headers.get('location') ?? ''
-      expect(new URL(location).searchParams.get('__pt')).toBe('tok-de')
+      expect(locationUrl(res).searchParams.get('__pt')).toBe('tok-de')
       expect(location).toContain('/de/preview/')
     })
   })
