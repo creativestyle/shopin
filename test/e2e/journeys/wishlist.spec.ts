@@ -1,27 +1,51 @@
 import { test, expect } from '@playwright/test'
-import { buyBox, openFirstProduct } from './support/actions'
+import {
+  openProductFromCategory,
+  saveTestProductToWishlist,
+} from './support/actions'
+import { t } from './support/i18n'
+import { pdp, productList, toast, wishlistPage } from './support/selectors'
+import { ROUTES, TEST_DATA } from './support/test-data'
 
-test.describe('Wishlist', () => {
-  test('guest can save and remove a product', async ({ page }) => {
-    const name = await openFirstProduct(page)
+test.describe('Wishlist', { tag: '@wishlist' }, () => {
+  test(
+    'Guest saves a product from the product page',
+    { tag: ['@desktop', '@priority-medium', '@unverified'] },
+    async ({ page }) => {
+      await openProductFromCategory(page)
 
-    await buyBox(page).getByRole('button', { name: 'Save to wishlist' }).click()
-    await expect(page.getByText('Added to wishlist')).toBeVisible()
-    await expect(
-      buyBox(page).getByRole('button', { name: 'Remove from wishlist' })
-    ).toBeVisible()
+      await pdp.saveToWishlist(page).click()
 
-    await page.goto('/wishlist')
-    await expect(page.getByRole('heading', { level: 1 })).toHaveText(
-      'Wishlist (1 item)'
-    )
-    const tile = page.getByRole('link', { name: `View details for ${name}` })
-    await expect(tile).toBeVisible()
+      await expect(toast.addedToWishlist(page)).toBeVisible()
+      await expect(pdp.removeFromWishlist(page)).toBeVisible()
+    }
+  )
 
-    await page.getByRole('button', { name: 'Remove from wishlist' }).click()
+  test(
+    'Wishlist page lists the saved product',
+    { tag: ['@desktop', '@priority-medium', '@unverified'] },
+    async ({ page }) => {
+      await saveTestProductToWishlist(page)
 
-    await expect(
-      page.getByText('Your wishlist is empty. Start adding products you love!')
-    ).toBeVisible()
-  })
+      await page.goto(ROUTES.wishlist)
+
+      await expect(wishlistPage.heading(page)).toHaveText(
+        `${t('wishlist.title')} (1 ${t('wishlist.item')})`
+      )
+      await expect(productList.tile(page, TEST_DATA.product.name)).toBeVisible()
+    }
+  )
+
+  test(
+    'Removing the only product empties the wishlist',
+    { tag: ['@desktop', '@priority-medium', '@unverified'] },
+    async ({ page }) => {
+      await saveTestProductToWishlist(page)
+      await page.goto(ROUTES.wishlist)
+
+      await wishlistPage.removeItem(page).click()
+
+      await expect(wishlistPage.emptyMessage(page)).toBeVisible()
+    }
+  )
 })

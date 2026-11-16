@@ -1,77 +1,87 @@
-import { expect, type Page } from '@playwright/test'
-import { CATEGORY_WITH_SINGLE_VARIANT_PRODUCTS, GUEST_ADDRESS } from './catalog'
+import { expect, type Page, type Response } from '@playwright/test'
+import {
+  cartPage,
+  checkout,
+  header,
+  miniCart,
+  pdp,
+  productList,
+  searchPopup,
+  toast,
+} from './selectors'
+import { ROUTES, TEST_DATA } from './test-data'
 
-const PRODUCT_LINK_PREFIX = 'View details for '
+const cartItemsRequest = (method: string) => (r: Response) =>
+  r.url().includes('/cart/items') && r.request().method() === method
 
-export function buyBox(page: Page) {
-  return page.getByRole('complementary').filter({
-    has: page.getByRole('button', { name: 'Add to Basket' }),
-  })
-}
-
-export function headerCartLink(page: Page) {
-  return page.getByRole('banner').getByRole('link', { name: /^Cart/ })
-}
-
-/** Opens the first product of a category and returns its name. */
-export async function openFirstProduct(
-  page: Page,
-  categoryPath = CATEGORY_WITH_SINGLE_VARIANT_PRODUCTS
-) {
-  await page.goto(categoryPath)
-  const tile = page
-    .getByRole('link', { name: new RegExp(`^${PRODUCT_LINK_PREFIX}`) })
-    .first()
-  const label = await tile.getAttribute('aria-label')
-  const name = label!.slice(PRODUCT_LINK_PREFIX.length)
-
-  await tile.click()
+/** Opens the test product from its category page. */
+export async function openProductFromCategory(page: Page) {
+  const { category, name } = TEST_DATA.product
+  await page.goto(category)
+  await productList.tile(page, name).click()
   await expect(page).toHaveURL(/\/p\/.+variantId=/)
-  await expect(page.getByRole('heading', { level: 1, name })).toBeVisible()
-  return name
+  await expect(pdp.heading(page, name)).toBeVisible()
 }
 
-/** Adds the product open on the PDP and returns the mini-cart sheet. */
+/** Adds the product open on the PDP and waits for the mini-cart. */
 export async function addToCartFromPdp(page: Page) {
-  const added = page.waitForResponse(
-    (r) => r.url().includes('/cart/items') && r.request().method() === 'POST'
-  )
-  await buyBox(page).getByRole('button', { name: 'Add to Basket' }).click()
+  const added = page.waitForResponse(cartItemsRequest('POST'))
+  await pdp.addToBasket(page).click()
   expect((await added).ok()).toBe(true)
-
-  const miniCart = page.getByRole('dialog', { name: /^Cart \(\d+\)/ })
-  await expect(
-    miniCart.getByText('Good choice. Item has been added to cart.')
-  ).toBeVisible()
-  return miniCart
+  await expect(miniCart.addedMessage(page)).toBeVisible()
 }
 
-/** Puts one product in the cart and returns its name. */
-export async function addFirstProductToCart(page: Page) {
-  const name = await openFirstProduct(page)
-  const miniCart = await addToCartFromPdp(page)
-  await miniCart.getByRole('button', { name: 'Close' }).click()
-  return name
+/** Puts the test product in the cart and closes the mini-cart. */
+export async function addTestProductToCart(page: Page) {
+  await openProductFromCategory(page)
+  await addToCartFromPdp(page)
+  await miniCart.close(page).click()
+  await expect(miniCart.dialog(page)).toBeHidden()
+}
+
+/** Saves the test product from its product page. */
+export async function saveTestProductToWishlist(page: Page) {
+  await openProductFromCategory(page)
+  await pdp.saveToWishlist(page).click()
+  await expect(toast.addedToWishlist(page)).toBeVisible()
+}
+
+export async function increaseCartQuantity(page: Page, to: number) {
+  const updated = page.waitForResponse(cartItemsRequest('PUT'))
+  await cartPage.increaseQuantity(page, to).click()
+  expect((await updated).ok()).toBe(true)
+}
+
+export async function removeCartItem(page: Page) {
+  await cartPage.removeItem(page).click()
+  await cartPage.confirmRemoval(page).click()
+}
+
+export async function searchFromHeader(page: Page, term: string) {
+  await page.goto(ROUTES.home)
+  await header.searchButton(page).click()
+  await searchPopup.input(page).fill(term)
+  await searchPopup.input(page).press('Enter')
 }
 
 export async function startGuestCheckout(page: Page) {
-  await page.goto('/cart')
-  await page.getByRole('link', { name: 'Checkout', exact: true }).click()
-  await page.getByRole('button', { name: 'Order as Guest' }).click()
+  await page.goto(ROUTES.cart)
+  await cartPage.checkout(page).click()
+  await checkout.orderAsGuest(page).click()
   await expect(page).toHaveURL(/\/checkout\/billing/)
 }
 
 export async function fillBillingAddress(page: Page, email: string) {
-  const form = page.locator('#billing-address-form')
-  await form.getByLabel('First Name').fill(GUEST_ADDRESS.firstName)
-  await form.getByLabel('Last Name').fill(GUEST_ADDRESS.lastName)
-  await form.getByLabel('Street Name').fill(GUEST_ADDRESS.streetName)
-  await form.getByLabel('Street Number').fill(GUEST_ADDRESS.streetNumber)
-  await form.getByLabel('Postal Code').fill(GUEST_ADDRESS.postalCode)
-  await form.getByLabel('City').fill(GUEST_ADDRESS.city)
-  await form.getByLabel('Email').fill(email)
-  await form.getByRole('combobox', { name: 'Country' }).click()
-  await page.getByRole('option', { name: GUEST_ADDRESS.country }).click()
+  const { address } = TEST_DATA
+  await checkout.field(page, 'firstName').fill(address.firstName)
+  await checkout.field(page, 'lastName').fill(address.lastName)
+  await checkout.field(page, 'streetName').fill(address.streetName)
+  await checkout.field(page, 'streetNumber').fill(address.streetNumber)
+  await checkout.field(page, 'postalCode').fill(address.postalCode)
+  await checkout.field(page, 'city').fill(address.city)
+  await checkout.field(page, 'email').fill(email)
+  await checkout.countrySelect(page).click()
+  await checkout.countryOption(page, address.countryCode).click()
 }
 
 /** Drives guest checkout from the cart up to the review step. */
@@ -79,33 +89,26 @@ export async function checkoutAsGuestToReview(page: Page, email: string) {
   await startGuestCheckout(page)
 
   await fillBillingAddress(page, email)
-  await page
-    .getByRole('button', { name: 'Continue to Shipping Address' })
-    .click()
+  await checkout.continueToShipping(page).click()
 
   await expect(page).toHaveURL(/\/checkout\/shipping/)
-  await expect(
-    page.getByRole('checkbox', {
-      name: 'The delivery address matches the billing address',
-    })
-  ).toBeChecked()
-  await page
-    .getByRole('button', { name: 'Continue to Delivery Method' })
-    .click()
+  await expect(checkout.sameAsBilling(page)).toBeChecked()
+  await checkout.continueToDeliveryMethod(page).click()
 
   await expect(page).toHaveURL(/\/checkout\/delivery-method/)
-  await expect(page.getByRole('radio').first()).toBeVisible()
-  await page.getByRole('button', { name: 'Continue to Payment Method' }).click()
+  await expect(checkout.deliveryMethods(page)).toBeVisible()
+  await checkout.continueToPayment(page).click()
 
   await expect(page).toHaveURL(/\/checkout\/payment/)
-  await page.getByRole('radio', { name: /^Invoice/ }).check()
-  await page.getByRole('button', { name: 'Continue to Review Order' }).click()
+  await checkout.paymentMethod(page, TEST_DATA.paymentMethod).check()
+  await checkout.continueToReview(page).click()
 
   await expect(page).toHaveURL(/\/checkout\/review/)
 }
 
+/** Accepts the terms and continues to the demo payment provider. */
 export async function acceptTermsAndBuy(page: Page) {
-  await page.getByRole('checkbox', { name: /accept/i }).check()
-  await page.getByRole('button', { name: 'Buy Now' }).click()
+  await checkout.acceptTerms(page).check()
+  await checkout.buyNow(page).click()
   await expect(page).toHaveURL(/\/demo\/mocked-payment-step\//)
 }

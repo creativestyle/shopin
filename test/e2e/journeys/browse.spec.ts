@@ -1,40 +1,44 @@
 import { test, expect } from '@playwright/test'
-import {
-  CATEGORY_WITH_SINGLE_VARIANT_PRODUCTS,
-  MULTI_VARIANT_PRODUCT,
-} from './support/catalog'
-import { buyBox, openFirstProduct } from './support/actions'
+import { openProductFromCategory } from './support/actions'
+import { pdp, productList } from './support/selectors'
+import { TEST_DATA } from './support/test-data'
 
-test.describe('Browse', () => {
-  test('category page lists products', async ({ page }) => {
-    await page.goto(CATEGORY_WITH_SINGLE_VARIANT_PRODUCTS)
+test.describe('Browse', { tag: '@browse' }, () => {
+  test(
+    'Category page lists products',
+    { tag: ['@desktop', '@priority-high', '@unverified'] },
+    async ({ page }) => {
+      await page.goto(TEST_DATA.product.category)
 
-    await expect(
-      page.getByRole('link', { name: /^View details for / }).first()
-    ).toBeVisible()
-  })
+      await expect(productList.tile(page, TEST_DATA.product.name)).toBeVisible()
+    }
+  )
 
-  test('product tile opens the product page', async ({ page }) => {
-    await openFirstProduct(page)
+  test(
+    'Product tile opens the product page',
+    { tag: ['@desktop', '@priority-high', '@unverified'] },
+    async ({ page }) => {
+      await openProductFromCategory(page)
 
-    await expect(
-      buyBox(page).getByRole('button', { name: 'Add to Basket' })
-    ).toBeEnabled()
-  })
+      await expect(pdp.addToBasket(page)).toBeEnabled()
+    }
+  )
 
-  test('selecting a variant option updates the URL', async ({ page }) => {
-    await page.goto(MULTI_VARIANT_PRODUCT.path)
-    await expect(
-      page.getByRole('heading', { level: 1, name: MULTI_VARIANT_PRODUCT.name })
-    ).toBeVisible()
+  test(
+    'Selecting a variant option updates the URL',
+    { tag: ['@desktop', '@priority-medium', '@unverified'] },
+    async ({ page }) => {
+      const { path, name, option } = TEST_DATA.variantProduct
+      await page.goto(path)
+      await expect(pdp.heading(page, name)).toBeVisible()
 
-    const option = buyBox(page).getByRole('button', {
-      name: MULTI_VARIANT_PRODUCT.option,
-      exact: true,
-    })
-    await option.click()
+      await pdp.variantOption(page, option).click()
 
-    await expect(page).toHaveURL(/variantId=\d+/)
-    await expect(option).toHaveAttribute('aria-pressed', 'true')
-  })
+      await expect(page).toHaveURL(/variantId=\d+/)
+      await expect(pdp.variantOption(page, option)).toHaveAttribute(
+        'aria-pressed',
+        'true'
+      )
+    }
+  )
 })

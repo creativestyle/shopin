@@ -1,54 +1,70 @@
 import { test, expect } from '@playwright/test'
 import {
-  addFirstProductToCart,
+  addTestProductToCart,
   addToCartFromPdp,
-  headerCartLink,
-  openFirstProduct,
+  increaseCartQuantity,
+  openProductFromCategory,
+  removeCartItem,
 } from './support/actions'
+import { t } from './support/i18n'
+import { cartPage, header, miniCart } from './support/selectors'
+import { ROUTES, TEST_DATA } from './support/test-data'
 
-test.describe('Cart', () => {
-  test('adding from the product page opens the mini-cart', async ({ page }) => {
-    const name = await openFirstProduct(page)
-    const miniCart = await addToCartFromPdp(page)
+test.describe('Cart', { tag: '@cart' }, () => {
+  test(
+    'Adding from the product page opens the mini-cart',
+    { tag: ['@desktop', '@priority-critical', '@unverified'] },
+    async ({ page }) => {
+      await openProductFromCategory(page)
+      await addToCartFromPdp(page)
 
-    await expect(miniCart).toHaveAccessibleName('Cart (1)')
-    await expect(miniCart.getByText(name).first()).toBeVisible()
-    await expect(
-      miniCart.getByRole('link', { name: 'Go to cart' })
-    ).toBeVisible()
+      await expect(miniCart.dialog(page)).toHaveAccessibleName(
+        t('cart.titleWithCount', { count: 1 })
+      )
+      await expect(miniCart.item(page, TEST_DATA.product.name)).toBeVisible()
+      await expect(miniCart.goToCart(page)).toBeVisible()
+    }
+  )
 
-    await miniCart.getByRole('button', { name: 'Close' }).click()
-    await expect(headerCartLink(page)).toContainText('1')
-  })
+  test(
+    'Header cart badge counts the added item',
+    { tag: ['@desktop', '@priority-high', '@unverified'] },
+    async ({ page }) => {
+      await addTestProductToCart(page)
 
-  test('quantity can be changed and the item removed', async ({ page }) => {
-    const name = await addFirstProductToCart(page)
-    await page.goto('/cart')
-    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Cart (1)')
-    await expect(page.getByRole('link', { name }).first()).toBeVisible()
+      await expect(header.cartLink(page)).toContainText('1')
+    }
+  )
 
-    const subtotal = page.getByText('Subtotal', { exact: true }).locator('..')
-    const subtotalBefore = await subtotal.innerText()
+  test(
+    'Increasing the quantity updates the subtotal',
+    { tag: ['@desktop', '@priority-high', '@unverified'] },
+    async ({ page }) => {
+      await addTestProductToCart(page)
+      await page.goto(ROUTES.cart)
+      await expect(cartPage.item(page, TEST_DATA.product.name)).toBeVisible()
+      const subtotalBefore = await cartPage.summary(page).innerText()
 
-    const updated = page.waitForResponse(
-      (r) => r.url().includes('/cart/items') && r.request().method() === 'PUT'
-    )
-    await page.getByRole('button', { name: 'Quantity: increase to 2' }).click()
-    expect((await updated).ok()).toBe(true)
+      await increaseCartQuantity(page, 2)
 
-    await expect(
-      page.getByRole('spinbutton', { name: 'Quantity: current value is 2' })
-    ).toBeVisible()
-    await expect(subtotal).not.toHaveText(subtotalBefore)
+      await expect(cartPage.quantity(page, 2)).toBeVisible()
+      await expect(cartPage.summary(page)).not.toHaveText(subtotalBefore)
+    }
+  )
 
-    await page.getByRole('button', { name: 'Remove item' }).click()
-    await page
-      .getByRole('alertdialog')
-      .getByRole('button', { name: 'Remove', exact: true })
-      .click()
+  test(
+    'Removing the only item empties the cart',
+    { tag: ['@desktop', '@priority-high', '@unverified'] },
+    async ({ page }) => {
+      await addTestProductToCart(page)
+      await page.goto(ROUTES.cart)
+      await expect(cartPage.heading(page)).toHaveText(
+        t('cart.titleWithCount', { count: 1 })
+      )
 
-    await expect(
-      page.getByText('Your cart is currently empty.', { exact: false })
-    ).toBeVisible()
-  })
+      await removeCartItem(page)
+
+      await expect(cartPage.emptyMessage(page)).toBeVisible()
+    }
+  )
 })

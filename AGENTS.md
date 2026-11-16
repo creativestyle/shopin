@@ -44,6 +44,8 @@ demo/               # Optional demo packages (removable for production)
   data-source-header-reader/
   demo-disclaimer/
   mocked-payment-service-provider/
+test/
+  e2e/              # Playwright suites: shopping journeys (real stack) and platform specs (mock BFF)
 ```
 
 ## Key commands
@@ -85,6 +87,7 @@ Presentation (Next.js) → BFF (NestJS) → Integration adapters → External AP
 - **Translations** via `@core/i18n` with `next-intl`. JSON-based, supports multiple locales.
 - **Pre-commit hooks** run lint + format via Husky/lint-staged.
 - **Skills workflow** scales to the change: trivial work is done directly, small/low-risk work gets one approval, and non-trivial work uses a staged spec → plan → execute flow.
+- **E2E tests** follow the rules in [test/e2e/AGENTS.md](test/e2e/AGENTS.md): selectors and test data in shared code, one case per test, required tags.
 - **Never commit `.env` files or secrets** — use `.env.example` as a template only.
 
 <!-- BEGIN:nextjs-agent-rules -->

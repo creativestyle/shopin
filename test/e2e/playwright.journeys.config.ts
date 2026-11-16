@@ -1,8 +1,9 @@
 import { defineConfig, devices } from '@playwright/test'
 import path from 'node:path'
+import { LOCALE } from './journeys/support/i18n'
 
 // Shopping journeys against the real stack: presentation → BFF → commercetools.
-// Set BASE_URL to target a deployed environment instead of local servers.
+// BASE_URL targets a deployed environment; E2E_LOCALE (en-US, de-DE) picks the language.
 const baseURL = process.env.BASE_URL ?? 'http://localhost:3000'
 const isCI = !!process.env.CI
 const rootDir = path.resolve(__dirname, '../..')
@@ -18,7 +19,8 @@ export default defineConfig({
 
   use: {
     baseURL,
-    locale: 'en-US',
+    locale: LOCALE,
+    actionTimeout: 15_000,
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
     storageState: {

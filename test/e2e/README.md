@@ -1,5 +1,7 @@
 # E2E Test Suite
 
+Test code here follows the rules in [AGENTS.md](AGENTS.md): read them before adding or changing a test.
+
 Two Playwright suites live here:
 
 | Suite                  | Config                          | Backend                  | Covers                                         |
@@ -24,7 +26,7 @@ BASE_URL=https://staging.example.com npm run e2e:journeys
 
 - **Servers:** already running `npm run dev` / `start:local` servers are reused. Otherwise (and always in CI) Playwright runs `start:local` for the BFF and presentation app. `BASE_URL` targets a deployed environment and starts nothing.
 - **Rate limiting:** the BFF allows 5 req/min on auth, payment and order routes. Set `BFF_RATE_LIMIT_ENABLED=false` in `.env` when reusing your own servers; Playwright sets it when it starts the BFF.
-- **Test data:** catalog entry points (category, multi-variant product, search term, US guest address) live in `journeys/support/catalog.ts`. Products inside the category are discovered at runtime.
+- **Test data:** routes, products, search terms, addresses and payment labels live per locale in `journeys/support/test-data.ts`.
 - **Side effects:** checkout specs place real guest orders in commercetools with `e2e+<timestamp>@example.com` emails.
 - **`@mock-payment`:** these specs drive the demo payment provider (`/demo/mocked-payment-step`). Exclude them once a real PSP replaces it.
 - **Shared build:** `start:local` rebuilds `apps/presentation/.next`, which overwrites the platform suite's `build:e2e` output. Run `build:e2e` again before switching back.

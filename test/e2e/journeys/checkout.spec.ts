@@ -1,72 +1,74 @@
 import { test, expect } from '@playwright/test'
-import { uniqueEmail } from './support/catalog'
 import {
   acceptTermsAndBuy,
-  addFirstProductToCart,
+  addTestProductToCart,
   checkoutAsGuestToReview,
 } from './support/actions'
+import { checkout, mockedPayment, orderComplete } from './support/selectors'
+import { ROUTES, uniqueEmail } from './support/test-data'
 
-test.describe('Guest checkout', () => {
-  test('empty cart cannot enter checkout', async ({ page }) => {
-    await page.goto('/checkout/billing')
+test.describe('Guest checkout', { tag: '@checkout' }, () => {
+  test(
+    'Empty cart cannot enter checkout',
+    { tag: ['@desktop', '@priority-medium', '@unverified'] },
+    async ({ page }) => {
+      await page.goto(ROUTES.checkoutBilling)
 
-    await expect(page).toHaveURL(/\/cart$/)
-  })
+      await expect(page).toHaveURL(ROUTES.cart)
+    }
+  )
 
-  test('review step requires accepting the terms', async ({ page }) => {
-    await addFirstProductToCart(page)
-    await checkoutAsGuestToReview(page, uniqueEmail())
+  test(
+    'Review step requires accepting the terms',
+    { tag: ['@desktop', '@priority-high', '@unverified'] },
+    async ({ page }) => {
+      await addTestProductToCart(page)
+      await checkoutAsGuestToReview(page, uniqueEmail())
 
-    await page.getByRole('button', { name: 'Buy Now' }).click()
+      await checkout.buyNow(page).click()
 
-    await expect(
-      page.getByText('Please accept the Terms and Conditions to continue.')
-    ).toBeVisible()
-    await expect(page).toHaveURL(/\/checkout\/review/)
-  })
+      await expect(checkout.termsRequired(page)).toBeVisible()
+      await expect(page).toHaveURL(/\/checkout\/review/)
+    }
+  )
 })
 
 // Relies on the demo mocked payment provider; drop when a real PSP replaces it.
 test.describe(
   'Guest checkout with mocked payment',
-  { tag: '@mock-payment' },
+  { tag: ['@checkout', '@mock-payment'] },
   () => {
-    test('places an order', async ({ page }) => {
-      const email = uniqueEmail()
-      await addFirstProductToCart(page)
-      await checkoutAsGuestToReview(page, email)
-      await acceptTermsAndBuy(page)
+    test(
+      'Guest places an order',
+      { tag: ['@desktop', '@priority-critical', '@unverified'] },
+      async ({ page }) => {
+        const email = uniqueEmail()
+        await addTestProductToCart(page)
+        await checkoutAsGuestToReview(page, email)
+        await acceptTermsAndBuy(page)
 
-      await page.getByRole('button', { name: 'Pay Now' }).click()
+        await mockedPayment.payNow(page).click()
 
-      await expect(page).toHaveURL(/\/checkout\/complete\?orderId=/, {
-        timeout: 30_000,
-      })
-      await expect(
-        page.getByRole('heading', {
-          level: 1,
-          name: 'Thank you for your order',
-        })
-      ).toBeVisible()
-      await expect(
-        page.getByText(/Order No\. \S+ has been placed/)
-      ).toContainText(email)
-    })
+        await expect(page).toHaveURL(/\/checkout\/complete\?orderId=/)
+        await expect(orderComplete.heading(page)).toBeVisible()
+        await expect(orderComplete.confirmation(page, email)).toBeVisible()
+      }
+    )
 
-    test('failed payment returns to the review step', async ({ page }) => {
-      await addFirstProductToCart(page)
-      await checkoutAsGuestToReview(page, uniqueEmail())
-      await acceptTermsAndBuy(page)
+    test(
+      'Failed payment returns to the review step',
+      { tag: ['@desktop', '@priority-high', '@unverified'] },
+      async ({ page }) => {
+        await addTestProductToCart(page)
+        await checkoutAsGuestToReview(page, uniqueEmail())
+        await acceptTermsAndBuy(page)
 
-      await page
-        .getByRole('button', { name: 'Simulate Failed Payment' })
-        .click()
+        await mockedPayment.simulateFailure(page).click()
 
-      await expect(page).toHaveURL(/\/checkout\/review/)
-      await expect(
-        page.getByText('Payment failed. Please try again.')
-      ).toBeVisible()
-      await expect(page.getByRole('button', { name: 'Buy Now' })).toBeVisible()
-    })
+        await expect(page).toHaveURL(/\/checkout\/review/)
+        await expect(checkout.paymentFailed(page)).toBeVisible()
+        await expect(checkout.buyNow(page)).toBeVisible()
+      }
+    )
   }
 )

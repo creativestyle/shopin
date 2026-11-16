@@ -1,51 +1,37 @@
 import { test, expect } from '@playwright/test'
-import { SEARCH_TERM } from './support/catalog'
+import { searchFromHeader } from './support/actions'
+import { miniCart, productList, searchResults } from './support/selectors'
+import { ROUTES, TEST_DATA } from './support/test-data'
 
-test.describe('Search', () => {
-  test('header search leads to a results page', async ({ page }) => {
-    await page.goto('/')
-    await page
-      .getByRole('banner')
-      .getByRole('button', { name: 'What are you looking for?' })
-      .click()
+test.describe('Search', { tag: '@search' }, () => {
+  test(
+    'Header search leads to a results page',
+    { tag: ['@desktop', '@priority-high', '@unverified'] },
+    async ({ page }) => {
+      const { term, onlyResult } = TEST_DATA.search
+      await searchFromHeader(page, term)
 
-    const popup = page.getByRole('dialog', {
-      name: 'What are you looking for?',
-    })
-    const input = popup.getByRole('textbox', {
-      name: 'What are you looking for?',
-    })
-    await input.fill(SEARCH_TERM)
-    await input.press('Enter')
+      await expect(page).toHaveURL(ROUTES.search(term))
+      await expect(searchResults.heading(page, term)).toBeVisible()
+      await expect(productList.tile(page, onlyResult)).toBeVisible()
+    }
+  )
 
-    await expect(page).toHaveURL(new RegExp(`/search\\?q=${SEARCH_TERM}`))
-    await expect(
-      page.getByRole('heading', {
-        level: 1,
-        name: new RegExp(`Your search results for: .${SEARCH_TERM}. \\(\\d+`),
-      })
-    ).toBeVisible()
-    await expect(
-      page.getByRole('link', { name: /^View details for / }).first()
-    ).toBeVisible()
-  })
+  test(
+    'Add to basket from search results',
+    { tag: ['@desktop', '@priority-medium', '@unverified'] },
+    async ({ page }) => {
+      test.fail(
+        true,
+        'Card link covers Add to Basket on search results; button has no variantId'
+      )
 
-  test('add to basket from search results', async ({ page }) => {
-    // Known bug: search results render AddToCart without variantId/variantCount.
-    test.fail()
+      await page.goto(ROUTES.search(TEST_DATA.search.term))
+      await expect(searchResults.addToBasket(page)).toBeVisible()
 
-    await page.goto(`/search?q=${SEARCH_TERM}`)
-    const addButton = page
-      .getByRole('button', { name: 'Add to Basket' })
-      .first()
-    await expect(addButton).toBeVisible()
+      await searchResults.addToBasket(page).click()
 
-    const added = page.waitForResponse(
-      (r) => r.url().includes('/cart/items') && r.request().method() === 'POST',
-      { timeout: 5_000 }
-    )
-    await addButton.click()
-
-    await added
-  })
+      await expect(miniCart.addedMessage(page)).toBeVisible()
+    }
+  )
 })
