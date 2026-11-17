@@ -29,11 +29,12 @@ export function CartItem({ item }: CartItemProps) {
   const t = useTranslations('cart')
   const productHref = getProductHref(item.productSlug)
   const { totalPrice, originalPrice } = calculateItemPrices(item)
-  const variantText = formatItemAttributes(item.attributes, (key) =>
-    (KNOWN_ATTRIBUTE_KEYS as readonly string[]).includes(key)
-      ? t(`item.${key}` as 'item.color' | 'item.size')
+  const variantText = formatItemAttributes(item.attributes, (key) => {
+    const normalizedKey = key.toLowerCase()
+    return (KNOWN_ATTRIBUTE_KEYS as readonly string[]).includes(normalizedKey)
+      ? t(`item.${normalizedKey}` as 'item.color' | 'item.size')
       : key
-  )
+  })
   const unitPriceFormatted = formatPriceWithPrefix(getUnitPrice(item), locale, {
     currency: item.price.currency,
     fractionDigits: item.price.fractionDigits,
@@ -114,6 +115,8 @@ export function CartItem({ item }: CartItemProps) {
             <CartItemQuantitySwitcher
               item={item}
               itemName={item.name}
+              onRemoveClick={handleRemoveClick}
+              isRemoving={isRemoving}
               className='h-10'
             />
           </div>

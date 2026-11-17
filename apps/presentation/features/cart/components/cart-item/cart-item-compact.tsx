@@ -119,6 +119,8 @@ export function CartItemCompact({
                 <CartItemQuantitySwitcher
                   item={item}
                   itemName={item.name}
+                  onRemoveClick={handleRemoveClick}
+                  isRemoving={isRemoving}
                   className='h-10 shrink-0'
                 />
               )}

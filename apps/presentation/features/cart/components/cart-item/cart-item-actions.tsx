@@ -43,7 +43,7 @@ export function CartItemActions({
           },
           'disabled:cursor-not-allowed disabled:opacity-50'
         )}
-        aria-label={removeAriaLabel}
+        aria-label={showText ? undefined : removeAriaLabel}
       >
         <TrashBinIcon className='size-6 shrink-0 text-gray-700' />
         {showText && (
