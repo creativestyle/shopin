@@ -3,9 +3,12 @@
 import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
 import { Link } from '@/lib/navigation'
+import { useCustomer } from '@/features/customer/customer-use-customer'
 
 export function EmptyCart() {
   const t = useTranslations('cart.empty')
+  const { isLoggedIn, isLoading } = useCustomer()
+  const showSignIn = !isLoading && !isLoggedIn
 
   return (
     <div className='flex w-full flex-col items-center px-0'>
@@ -22,14 +25,16 @@ export function EmptyCart() {
         >
           <Link href='/'>{t('continueShopping')}</Link>
         </Button>
-        <Button
-          variant='primary'
-          scheme='red'
-          className='flex-1 text-center lg:flex-none'
-          asChild
-        >
-          <Link href='/sign-in'>{t('signIn')}</Link>
-        </Button>
+        {showSignIn && (
+          <Button
+            variant='primary'
+            scheme='red'
+            className='flex-1 text-center lg:flex-none'
+            asChild
+          >
+            <Link href='/sign-in'>{t('signIn')}</Link>
+          </Button>
+        )}
       </div>
     </div>
   )
