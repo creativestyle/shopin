@@ -91,7 +91,8 @@
       "loadMore": "Mehr Fotos laden",
       "dialogTitle": "Bildergalerie",
       "dialogDescription": "Durch Produktbilder blättern",
-      "closeButtonAria": "Galerie schließen"
+      "closeButtonAria": "Galerie schließen",
+      "thumbnailAria": "Bild {current} von {total}"
     },
     "buyBox": {
       "size": "Größe",

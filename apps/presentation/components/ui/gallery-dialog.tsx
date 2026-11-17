@@ -33,6 +33,7 @@ export interface GalleryDialogProps {
 }
 
 const DEFAULT_IMAGE_SIZE = 1200
+const PENDING_SCROLL_SETTLE_MS = 400
 
 function clampGalleryIndex(index: number, imagesLength: number): number {
   if (imagesLength <= 0) {
@@ -57,56 +58,88 @@ function GalleryDialogBody({
 }: GalleryDialogBodyProps) {
   const carouselRef = useRef<CarouselRef>(null)
   const pendingIndexRef = useRef<number | null>(null)
+  const pendingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const lastReportedIndexRef = useRef(0)
   const [selectedIndex, setSelectedIndex] = useState(startIndex)
-  const [focusedIndex, setFocusedIndex] = useState(startIndex)
+
+  const clearPendingTimeout = useCallback(() => {
+    if (pendingTimeoutRef.current !== null) {
+      clearTimeout(pendingTimeoutRef.current)
+      pendingTimeoutRef.current = null
+    }
+  }, [])
+
+  // Release the guard once the scroll settles without reaching the target
+  const armPendingTimeout = useCallback(() => {
+    clearPendingTimeout()
+    pendingTimeoutRef.current = setTimeout(() => {
+      pendingTimeoutRef.current = null
+      pendingIndexRef.current = null
+      setSelectedIndex(lastReportedIndexRef.current)
+    }, PENDING_SCROLL_SETTLE_MS)
+  }, [clearPendingTimeout])
+
+  const scrollToImage = useCallback(
+    (index: number) => {
+      pendingIndexRef.current = index
+      armPendingTimeout()
+      carouselRef.current?.scrollToSlide(index)
+    },
+    [armPendingTimeout]
+  )
 
   const selectImage = (index: number) => {
     const nextIndex = clampGalleryIndex(index, images.length)
     if (nextIndex === selectedIndex) {
       return
     }
-    pendingIndexRef.current = nextIndex
     setSelectedIndex(nextIndex)
-    setFocusedIndex(nextIndex)
-    carouselRef.current?.scrollToSlide(nextIndex)
+    scrollToImage(nextIndex)
   }
 
   const handleSlideChange = useCallback(
     (currentIndex: number) => {
       const newIndex = clampGalleryIndex(currentIndex - 1, images.length)
+      lastReportedIndexRef.current = newIndex
       if (pendingIndexRef.current !== null) {
-        if (newIndex === pendingIndexRef.current) {
-          pendingIndexRef.current = null
+        if (newIndex !== pendingIndexRef.current) {
+          armPendingTimeout()
+          return
         }
-        return
+        pendingIndexRef.current = null
+        clearPendingTimeout()
       }
       setSelectedIndex(newIndex)
     },
-    [images.length]
+    [images.length, armPendingTimeout, clearPendingTimeout]
   )
 
   useEffect(() => {
-    carouselRef.current?.scrollToSlide(startIndex)
-  }, [startIndex])
+    if (startIndex > 0) {
+      scrollToImage(startIndex)
+    }
+  }, [startIndex, scrollToImage])
+
+  useEffect(() => clearPendingTimeout, [clearPendingTimeout])
 
   const carouselSlides = images.map((item, idx) => {
-    const isFocusedImage = idx === focusedIndex
+    const isStartImage = idx === startIndex
     return (
       <CarouselSlide
         key={idx}
         className='flex min-h-full items-center justify-center'
       >
-        <div className='flex h-full max-h-screen w-full items-center justify-center p-4'>
+        <div className='flex h-full w-full items-center justify-center p-4'>
           <Image
             loader={productImageLoader(item.src)}
             src={item.src}
             alt={item.alt || ''}
             width={imageWidth}
             height={imageHeight}
-            preload={isFocusedImage}
-            loading={isFocusedImage ? 'eager' : 'lazy'}
-            fetchPriority={isFocusedImage ? 'high' : undefined}
-            className='h-auto max-h-[calc(100vh-2rem)] w-auto max-w-full object-contain'
+            preload={isStartImage}
+            loading={isStartImage ? 'eager' : 'lazy'}
+            fetchPriority={isStartImage ? 'high' : undefined}
+            className='h-auto max-h-full w-auto max-w-full object-contain'
           />
         </div>
       </CarouselSlide>
@@ -115,7 +148,7 @@ function GalleryDialogBody({
 
   return (
     <div className='relative flex h-full w-full flex-col'>
-      <div className='flex min-h-0 w-full flex-1 [&_[data-role=carousel]]:h-full [&_[data-role=carousel]_[role=group]]:h-full [&_[data-role=carousel]_div[role=group]]:h-full [&_[data-role=carousel]>div]:h-full [&_button[type=button]]:opacity-100'>
+      <div className='flex min-h-0 w-full flex-1 [&_[data-role=carousel]]:h-full [&_[data-role=carousel]_[role=group]]:h-full [&_[data-role=carousel]_[role=group]]:grid-rows-[100%] [&_[data-role=carousel]_div[role=group]]:h-full [&_[data-role=carousel]>div]:h-full [&_button[type=button]]:opacity-100'>
         <Carousel
           ref={carouselRef}
           gridConfig={1}

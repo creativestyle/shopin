@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from 'react'
 import Image from 'next/image'
+import { useTranslations } from 'next-intl'
 import { productImageLoader } from '@/lib/product-image-loader'
 import { cn } from '@/lib/utils'
 import { Carousel, CarouselSlide } from '@/components/ui/carousel'
@@ -21,11 +22,13 @@ export interface GalleryThumbnailStripProps {
 function ThumbnailButton({
   item,
   idx,
+  label,
   isSelected,
   onSelect,
 }: {
   item: GalleryThumbnailStripImage
   idx: number
+  label: string
   isSelected: boolean
   onSelect: (index: number) => void
 }) {
@@ -39,13 +42,13 @@ function ThumbnailButton({
           ? 'border-gray-700 shadow-sm'
           : 'border-transparent opacity-70 hover:opacity-100'
       )}
-      aria-label={item.alt || `View image ${idx + 1}`}
+      aria-label={item.alt || label}
       aria-pressed={isSelected}
     >
       <Image
         loader={productImageLoader(item.src)}
         src={item.src}
-        alt={item.alt || ''}
+        alt=''
         width={50}
         height={65}
         loading='lazy'
@@ -60,6 +63,7 @@ export function GalleryThumbnailStrip({
   selectedIndex,
   onSelect,
 }: GalleryThumbnailStripProps) {
+  const t = useTranslations('product.gallery')
   const carouselRef = useRef<CarouselRef>(null)
   const thumbnailsRef = useRef<HTMLDivElement>(null)
 
@@ -86,8 +90,14 @@ export function GalleryThumbnailStrip({
   const needsCarousel = images.length > maxSlides.md
 
   return (
-    <div className='pointer-events-none absolute inset-x-0 bottom-0 z-10 md:bottom-4'>
-      <div className='pointer-events-auto w-full rounded-none bg-white px-3 py-4 md:mx-auto md:w-fit md:max-w-[364px] md:rounded-[16px] md:py-3'>
+    <div className='shrink-0 md:pb-4'>
+      <div
+        className={cn(
+          'w-full bg-white px-3 py-4 md:mx-auto md:w-fit md:max-w-[364px] md:rounded-[16px] md:py-3',
+          // Room for the sm arrows, which sit outside the scroller
+          needsCarousel && 'px-11 md:px-3 touchscreen:px-3'
+        )}
+      >
         {needsCarousel ? (
           <div className='[--_fullbleed:2px]'>
             <Carousel
@@ -105,6 +115,10 @@ export function GalleryThumbnailStrip({
                   <ThumbnailButton
                     item={item}
                     idx={idx}
+                    label={t('thumbnailAria', {
+                      current: idx + 1,
+                      total: images.length,
+                    })}
                     isSelected={idx === selectedIndex}
                     onSelect={onSelect}
                   />
@@ -115,7 +129,7 @@ export function GalleryThumbnailStrip({
         ) : (
           <div
             ref={thumbnailsRef}
-            className='flex gap-2 overflow-x-auto scroll-smooth [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden'
+            className='flex [scrollbar-width:none] gap-2 overflow-x-auto scroll-smooth [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden'
           >
             {images.map((item, idx) => (
               <div
@@ -125,6 +139,10 @@ export function GalleryThumbnailStrip({
                 <ThumbnailButton
                   item={item}
                   idx={idx}
+                  label={t('thumbnailAria', {
+                    current: idx + 1,
+                    total: images.length,
+                  })}
                   isSelected={idx === selectedIndex}
                   onSelect={onSelect}
                 />
