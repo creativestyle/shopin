@@ -5,7 +5,9 @@ import { useTranslations } from 'next-intl'
 import { Link } from '@/lib/navigation'
 import { Button } from '@/components/ui/button'
 import { Field, FieldError } from '@/components/ui/field'
+import { FormField } from '@/components/ui/form-field'
 import { TextInput } from '@/components/ui/inputs/text-input'
+import { DateInput } from '@/components/ui/inputs/date-input'
 import { PasswordInput } from '@/components/ui/inputs/password-input'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-button'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -40,6 +42,7 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
   const [showErrorToast, setShowErrorToast] = useState(false)
 
   const form = useForm<RegisterFormData>({
+    mode: 'onTouched',
     resolver: zodResolver(RegisterFormSchema),
     defaultValues: {
       salutation: undefined,
@@ -66,6 +69,18 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
       return
     }
     const response = result.data
+    if (
+      !response.success &&
+      response.errorTranslationKey === 'errors.conflict'
+    ) {
+      form.setError('email', {
+        type: 'server',
+        message: 'account.signUp.errors.conflict',
+      })
+      form.setFocus('email')
+      return
+    }
+
     if (!response.success && response.errorTranslationKey) {
       setErrorMessage(
         t(response.errorTranslationKey as Parameters<typeof t>[0])
@@ -75,7 +90,7 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
     }
 
     if (!response.success) {
-      setErrorMessage(response.message ?? t('errors.internalServerError'))
+      setErrorMessage(t('errors.internalServerError'))
       setShowErrorToast(true)
       return
     }
@@ -92,6 +107,7 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
       {showErrorToast && errorMessage && (
         <Toast
           type='error'
+          critical
           withCloseButton={false}
           withIcon={false}
           className='max-w-full sm:max-w-full'
@@ -109,7 +125,14 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
           control={form.control}
           render={({ field, fieldState }) => (
             <Field data-invalid={fieldState.invalid}>
+              <p
+                id='salutation-label'
+                className='mb-3 text-base/[1.5] text-gray-500'
+              >
+                {t('salutationLabel')}
+              </p>
               <RadioGroup
+                aria-labelledby='salutation-label'
                 orientation='horizontal'
                 value={field.value}
                 onValueChange={field.onChange}
@@ -143,119 +166,103 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
         />
 
         <div className='flex flex-col gap-4'>
-          <Controller
+          <FormField
             name='firstName'
             control={form.control}
-            render={({ field, fieldState }) => (
-              <Field data-invalid={fieldState.invalid}>
-                <TextInput
-                  {...field}
-                  id='firstName'
-                  label={t('firstNameLabel')}
-                  required
-                  autoComplete='given-name'
-                />
-                {fieldState.invalid && fieldState.error && (
-                  <FieldError error={fieldState.error} />
-                )}
-              </Field>
+            render={({ field, validationState }) => (
+              <TextInput
+                {...field}
+                id='firstName'
+                label={t('firstNameLabel')}
+                required
+                autoComplete='given-name'
+                validationState={validationState}
+              />
             )}
           />
 
-          <Controller
+          <FormField
             name='lastName'
             control={form.control}
-            render={({ field, fieldState }) => (
-              <Field data-invalid={fieldState.invalid}>
-                <TextInput
-                  {...field}
-                  id='lastName'
-                  label={t('lastNameLabel')}
-                  required
-                  autoComplete='family-name'
-                />
-                {fieldState.invalid && fieldState.error && (
-                  <FieldError error={fieldState.error} />
-                )}
-              </Field>
+            render={({ field, validationState }) => (
+              <TextInput
+                {...field}
+                id='lastName'
+                label={t('lastNameLabel')}
+                required
+                autoComplete='family-name'
+                validationState={validationState}
+              />
             )}
           />
         </div>
 
-        <Controller
+        <FormField
           name='email'
           control={form.control}
-          render={({ field, fieldState }) => (
-            <Field data-invalid={fieldState.invalid}>
-              <TextInput
-                {...field}
-                id='email'
-                label={t('emailLabel')}
-                required
-                autoComplete='email'
-              />
-              {fieldState.invalid && fieldState.error && (
-                <FieldError error={fieldState.error} />
-              )}
-            </Field>
+          errorContent={
+            form.formState.errors.email?.type === 'server' ? (
+              <Link
+                href='/sign-in'
+                className='underline'
+              >
+                {t('signInLink')}
+              </Link>
+            ) : null
+          }
+          render={({ field, validationState }) => (
+            <TextInput
+              {...field}
+              id='email'
+              label={t('emailLabel')}
+              required
+              autoComplete='email'
+              validationState={validationState}
+            />
           )}
         />
 
-        <Controller
+        <FormField
           name='dateOfBirth'
           control={form.control}
-          render={({ field, fieldState }) => (
-            <Field data-invalid={fieldState.invalid}>
-              <TextInput
-                {...field}
-                id='dateOfBirth'
-                label={t('dateOfBirthLabel')}
-                placeholder='YYYY-MM-DD'
-                type='date'
-                autoComplete='bday'
-              />
-              {fieldState.invalid && fieldState.error && (
-                <FieldError error={fieldState.error} />
-              )}
-            </Field>
+          render={({ field, validationState }) => (
+            <DateInput
+              {...field}
+              id='dateOfBirth'
+              label={t('dateOfBirthLabel')}
+              autoComplete='bday'
+              validationState={validationState}
+            />
           )}
         />
 
-        <Controller
+        <FormField
           name='password'
           control={form.control}
-          render={({ field, fieldState }) => (
-            <Field data-invalid={fieldState.invalid}>
-              <PasswordInput
-                {...field}
-                id='password'
-                label={t('passwordLabel')}
-                required
-                autoComplete='new-password'
-              />
-              {fieldState.invalid && fieldState.error && (
-                <FieldError error={fieldState.error} />
-              )}
-            </Field>
+          render={({ field, validationState }) => (
+            <PasswordInput
+              {...field}
+              id='password'
+              label={t('passwordLabel')}
+              required
+              autoComplete='new-password'
+              validationState={validationState}
+            />
           )}
         />
 
-        <Controller
+        <FormField
           name='confirmPassword'
           control={form.control}
-          render={({ field, fieldState }) => (
-            <Field data-invalid={fieldState.invalid}>
-              <PasswordInput
-                {...field}
-                id='confirmPassword'
-                label={t('confirmPasswordLabel')}
-                required
-                autoComplete='new-password'
-              />
-              {fieldState.invalid && fieldState.error && (
-                <FieldError error={fieldState.error} />
-              )}
-            </Field>
+          render={({ field, validationState }) => (
+            <PasswordInput
+              {...field}
+              id='confirmPassword'
+              label={t('confirmPasswordLabel')}
+              required
+              autoComplete='new-password'
+              validationState={validationState}
+            />
           )}
         />
 

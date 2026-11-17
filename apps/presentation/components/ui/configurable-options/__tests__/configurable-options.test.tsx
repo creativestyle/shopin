@@ -191,4 +191,42 @@ describe('ConfigurableOptions', () => {
     const sizeMButton = screen.getByRole('button', { name: 'M' })
     expect(sizeMButton).toHaveAttribute('aria-selected', 'true')
   })
+
+  it('preselects options when variants load after the URL already holds a variant ID', () => {
+    mockUseVariantUrl.mockReturnValue({
+      updateUrl: mockUpdateUrl,
+      variantId: 'variant-123',
+    })
+    const options = [
+      {
+        key: 'size',
+        label: 'Size',
+        type: 'string' as const,
+        options: [{ label: 'S' }, { label: 'M' }],
+      },
+    ]
+
+    const { rerender } = render(<ConfigurableOptions options={options} />)
+    expect(screen.getByRole('button', { name: 'M' })).toHaveAttribute(
+      'aria-selected',
+      'false'
+    )
+
+    rerender(
+      <ConfigurableOptions
+        options={options}
+        variants={[
+          {
+            id: 'variant-123',
+            attributes: [{ name: 'size', label: 'Size', value: 'M' }],
+          },
+        ]}
+      />
+    )
+
+    expect(screen.getByRole('button', { name: 'M' })).toHaveAttribute(
+      'aria-selected',
+      'true'
+    )
+  })
 })
