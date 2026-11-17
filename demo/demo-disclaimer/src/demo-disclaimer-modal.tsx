@@ -6,7 +6,9 @@ import * as CheckboxPrimitive from '@radix-ui/react-checkbox'
 import * as DialogPrimitive from '@radix-ui/react-dialog'
 import {
   acknowledgeDemoDisclaimer,
+  dismissDemoDisclaimerForSession,
   hasAcknowledgedDemoDisclaimer,
+  hasDismissedDemoDisclaimerThisSession,
 } from './cookies.js'
 
 type SupportedLocale = 'en' | 'de'
@@ -134,7 +136,10 @@ export function DemoDisclaimerModal() {
   }, [open])
 
   useEffect(() => {
-    if (!hasAcknowledgedDemoDisclaimer()) {
+    if (
+      !hasAcknowledgedDemoDisclaimer() &&
+      !hasDismissedDemoDisclaimerThisSession()
+    ) {
       setOpen(true)
     }
   }, [])
@@ -143,6 +148,7 @@ export function DemoDisclaimerModal() {
     if (dontShowAgain) {
       acknowledgeDemoDisclaimer()
     }
+    dismissDemoDisclaimerForSession()
     setOpen(false)
   }
 

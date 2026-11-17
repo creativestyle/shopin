@@ -1,7 +1,10 @@
 import { z } from 'zod'
 
 export const LoginRequestSchema = z.object({
-  email: z.email('account.signIn.errors.emailInvalid'),
+  email: z
+    .string()
+    .min(1, 'account.signIn.errors.emailRequired')
+    .pipe(z.email('account.signIn.errors.emailInvalid')),
   password: z.string().min(1, 'account.signIn.errors.passwordRequired'),
 })
 

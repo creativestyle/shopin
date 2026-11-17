@@ -25,7 +25,7 @@ export const UpdateCustomerRequestSchema = z.object({
   dateOfBirth: z
     .union([
       z.literal(''), // allow empty string to clear the date
-      z.iso.date(),
+      z.iso.date('account.myAccount.customerData.errors.dateOfBirthInvalid'),
     ])
     .optional(),
 })
