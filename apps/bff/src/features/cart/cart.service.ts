@@ -174,7 +174,7 @@ export class CartService extends BaseAuthenticatedService {
    * from CT — this handles the case where the user logged in from a different currency/language.
    * @returns Cart ID or undefined if none exists
    */
-  private async getCartId(): Promise<string | undefined> {
+  async getCartId(): Promise<string | undefined> {
     const isLoggedIn = await this.isLoggedIn()
 
     if (isLoggedIn) {

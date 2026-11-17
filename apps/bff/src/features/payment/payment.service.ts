@@ -15,9 +15,9 @@ export class PaymentService {
   ) {}
 
   async getPaymentMethods(): Promise<PaymentMethodsResponse> {
-    const cart = await this.cartService.getCart()
+    const cartId = await this.cartService.getCartId()
     const paymentService = this.dataSourceFactory.getServices().paymentService
-    return await paymentService.getPaymentMethods(cart?.id)
+    return await paymentService.getPaymentMethods(cartId)
   }
 
   async setPaymentMethod(
