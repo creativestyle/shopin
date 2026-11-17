@@ -1,11 +1,13 @@
 import { redirect } from '@/lib/navigation'
 import { getLocale } from 'next-intl/server'
-import { cookies } from 'next/headers'
+import { cookies, headers } from 'next/headers'
 import {
   ACCESS_TOKEN_COOKIE_NAME,
   CART_ID_COOKIE_PREFIX_GUEST,
   CART_ID_COOKIE_PREFIX_LOGGED,
+  CLIENT_IP_HEADER,
   CORRELATION_ID_HEADER,
+  INTERNAL_SECRET_HEADER,
 } from '@config/constants'
 import { createBffFetchServer } from '@/lib/bff/core/bff-fetch-server'
 import { logger } from '@/lib/logger'
@@ -47,18 +49,27 @@ async function createBffFetchWithCookies(
     .map(({ name, value }) => `${name}=${value}`)
     .join('; ')
 
-  const [baseClient, correlationId] = await Promise.all([
+  const [baseClient, correlationId, requestHeaders] = await Promise.all([
     createBffFetchServer(),
     getCorrelationId(),
+    headers(),
   ])
+
+  const internalSecret = process.env.BFF_INTERNAL_SECRET?.trim()
+  const clientIp = requestHeaders.get('x-forwarded-for')?.split(',')[0]?.trim()
 
   return {
     fetch: (path, options) => {
-      const headers = new Headers(options?.headers)
-      headers.set('Cookie', cookieHeader)
-      headers.set(CORRELATION_ID_HEADER, correlationId)
+      const bffHeaders = new Headers(options?.headers)
+      bffHeaders.set('Cookie', cookieHeader)
+      bffHeaders.set(CORRELATION_ID_HEADER, correlationId)
+      // Lets the BFF rate-limit per shopper instead of per Next server IP
+      if (internalSecret && clientIp) {
+        bffHeaders.set(INTERNAL_SECRET_HEADER, internalSecret)
+        bffHeaders.set(CLIENT_IP_HEADER, clientIp)
+      }
 
-      return baseClient.fetch(path, { ...options, headers })
+      return baseClient.fetch(path, { ...options, headers: bffHeaders })
     },
   }
 }

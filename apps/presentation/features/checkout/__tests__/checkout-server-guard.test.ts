@@ -1,7 +1,12 @@
 /**
  * @jest-environment node
  */
-jest.mock('next/headers', () => ({ cookies: jest.fn() }))
+jest.mock('next/headers', () => ({
+  cookies: jest.fn(),
+  headers: jest.fn(
+    async () => new Headers({ 'x-forwarded-for': '203.0.113.7, 10.0.0.1' })
+  ),
+}))
 jest.mock('next-intl/server', () => ({ getLocale: jest.fn(async () => 'en') }))
 jest.mock('@/lib/navigation', () => ({
   redirect: jest.fn(({ href }: { href: string }) => {
@@ -118,6 +123,36 @@ describe('ensureCheckoutStep', () => {
     const headers = new Headers(baseFetch.mock.calls[0][1].headers)
     expect(headers.get('Cookie')).toBe('cart-guest-en=c1; access_token=t1')
     expect(headers.get('x-correlation-id')).toBe('corr-1')
+  })
+
+  describe('client IP forwarding', () => {
+    const originalSecret = process.env.BFF_INTERNAL_SECRET
+
+    afterEach(() => {
+      process.env.BFF_INTERNAL_SECRET = originalSecret
+    })
+
+    it('forwards the shopper IP with the internal secret when it is set', async () => {
+      process.env.BFF_INTERNAL_SECRET = 'internal-secret'
+      respondWithCart({ ...BASE_CART, billingAddress: ADDRESS })
+
+      await ensureCheckoutStep('shipping')
+
+      const headers = new Headers(baseFetch.mock.calls[0][1].headers)
+      expect(headers.get('x-bff-internal-secret')).toBe('internal-secret')
+      expect(headers.get('x-bff-client-ip')).toBe('203.0.113.7')
+    })
+
+    it('sends neither header when no secret is set', async () => {
+      delete process.env.BFF_INTERNAL_SECRET
+      respondWithCart({ ...BASE_CART, billingAddress: ADDRESS })
+
+      await ensureCheckoutStep('shipping')
+
+      const headers = new Headers(baseFetch.mock.calls[0][1].headers)
+      expect(headers.has('x-bff-internal-secret')).toBe(false)
+      expect(headers.has('x-bff-client-ip')).toBe(false)
+    })
   })
 
   it.each([

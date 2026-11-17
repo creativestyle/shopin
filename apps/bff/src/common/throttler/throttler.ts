@@ -8,6 +8,8 @@ import {
   ThrottlerModuleOptions,
   ThrottlerStorage,
 } from '@nestjs/throttler'
+import type { Request } from 'express'
+import { resolveTrustedClientIp } from './trusted-client-ip'
 
 /** Skip key: @SecureRateLimit() sets SkipThrottle({ default: true }), so only secure routes have this true. */
 const THROTTLER_SKIP = 'THROTTLER:SKIP'
@@ -28,6 +30,14 @@ export class OptionalThrottlerGuard extends ThrottlerGuard {
     private readonly config: ConfigService
   ) {
     super(options, storageService, reflector)
+  }
+
+  protected override async getTracker(req: Request): Promise<string> {
+    const secret = this.config.get<string>('BFF_INTERNAL_SECRET')
+    return (
+      resolveTrustedClientIp(req.headers, secret) ??
+      (await super.getTracker(req))
+    )
   }
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
