@@ -11,6 +11,7 @@ type Props = {
   className?: string
   sizes?: string
   preload?: boolean
+  eager?: boolean
 }
 
 /**
@@ -28,6 +29,7 @@ export function ContentImage({
   className,
   sizes,
   preload,
+  eager,
 }: Props) {
   const url = image.url?.trim()
   if (!url) {
@@ -46,7 +48,11 @@ export function ContentImage({
       sizes={sizes}
       className={cn({ 'object-cover': useFill }, className)}
       {...(useFill ? { fill: true } : { width: width!, height: height! })}
-      {...(preload ? { preload: true, fetchPriority: 'high' as const } : {})}
+      {...(preload
+        ? { preload: true, fetchPriority: 'high' as const }
+        : eager
+          ? { loading: 'eager' as const }
+          : {})}
     />
   )
 }

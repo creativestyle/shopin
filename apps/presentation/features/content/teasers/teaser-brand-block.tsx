@@ -13,10 +13,10 @@ import {
 
 function TeaserBrandItemContent({
   item,
-  preload,
+  eager,
 }: {
   item: TeaserBrandItem
-  preload?: boolean
+  eager?: boolean
 }) {
   return (
     <>
@@ -27,7 +27,7 @@ function TeaserBrandItemContent({
             fill
             className='object-cover'
             sizes='(min-width: 1536px) 192px, (min-width: 1280px) 160px, (min-width: 1024px) 170px, (min-width: 768px) 192px, (min-width: 640px) 320px, 50vw'
-            preload={preload}
+            eager={eager}
           />
         </div>
       )}
@@ -75,13 +75,13 @@ export function TeaserBrandBlock({
                 >
                   <TeaserBrandItemContent
                     item={item}
-                    preload={shouldPreload(index)}
+                    eager={shouldPreload(index)}
                   />
                 </CmsLink>
               ) : (
                 <TeaserBrandItemContent
                   item={item}
-                  preload={shouldPreload(index)}
+                  eager={shouldPreload(index)}
                 />
               )}
             </Card>

@@ -13,10 +13,10 @@ import {
 
 function TeaserCarouselItemContent({
   item,
-  preload,
+  eager,
 }: {
   item: TeaserCarouselItem
-  preload?: boolean
+  eager?: boolean
 }) {
   return (
     <>
@@ -27,7 +27,7 @@ function TeaserCarouselItemContent({
             fill
             className='object-cover'
             sizes='280px'
-            preload={preload}
+            eager={eager}
           />
         </div>
       )}
@@ -77,7 +77,7 @@ export function TeaserCarouselBlock({
                 >
                   <TeaserCarouselItemContent
                     item={item}
-                    preload={
+                    eager={
                       imagePreload &&
                       index < CONTENT_CAROUSEL_PRELOAD_ITEM_COUNT
                     }
@@ -86,7 +86,7 @@ export function TeaserCarouselBlock({
               ) : (
                 <TeaserCarouselItemContent
                   item={item}
-                  preload={
+                  eager={
                     imagePreload && index < CONTENT_CAROUSEL_PRELOAD_ITEM_COUNT
                   }
                 />

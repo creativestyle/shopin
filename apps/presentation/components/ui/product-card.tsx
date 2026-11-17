@@ -18,6 +18,7 @@ interface ProductCardProps extends Omit<LinkProps, 'href' | 'className'> {
   locale: string
   actions?: React.ReactNode
   imagePreload?: boolean
+  imageEager?: boolean
 }
 
 export const ProductCard: React.FC<ProductCardProps> = ({
@@ -27,6 +28,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   actions,
   locale,
   imagePreload,
+  imageEager,
   ...props
 }) => {
   const href = getProductHref(data.slug, data.variantId)
@@ -65,7 +67,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           className='pointer-events-none absolute inset-0 h-full w-full max-w-none object-contain object-center'
           sizes='(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw'
           preload={imagePreload}
-          loading={imagePreload ? 'eager' : undefined}
+          loading={imagePreload || imageEager ? 'eager' : undefined}
           fetchPriority={imagePreload ? 'high' : undefined}
         />
 

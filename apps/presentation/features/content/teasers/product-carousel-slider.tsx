@@ -34,7 +34,7 @@ export function ProductCarouselSlider({
           <ProductCard
             data={product}
             locale={locale}
-            imagePreload={
+            imageEager={
               imagePreload && index < CONTENT_CAROUSEL_PRELOAD_ITEM_COUNT
             }
           />
