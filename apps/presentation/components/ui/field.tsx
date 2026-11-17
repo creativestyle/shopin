@@ -178,6 +178,7 @@ function FieldError({
   className,
   error,
   variant = 'default',
+  children,
   ...props
 }: React.ComponentProps<'div'> & {
   error: { message?: string }
@@ -207,6 +208,7 @@ function FieldError({
       >
         {errorMessage}
       </p>
+      {children}
     </div>
   )
 }

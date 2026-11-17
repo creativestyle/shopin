@@ -70,6 +70,18 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
       return
     }
     const response = result.data
+    if (
+      !response.success &&
+      response.errorTranslationKey === 'errors.conflict'
+    ) {
+      form.setError('email', {
+        type: 'server',
+        message: 'account.signUp.errors.conflict',
+      })
+      form.setFocus('email')
+      return
+    }
+
     if (!response.success && response.errorTranslationKey) {
       setErrorMessage(
         t(response.errorTranslationKey as Parameters<typeof t>[0])
@@ -79,7 +91,7 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
     }
 
     if (!response.success) {
-      setErrorMessage(response.message ?? t('errors.internalServerError'))
+      setErrorMessage(t('errors.internalServerError'))
       setShowErrorToast(true)
       return
     }
@@ -96,6 +108,7 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
       {showErrorToast && errorMessage && (
         <Toast
           type='error'
+          critical
           withCloseButton={false}
           withIcon={false}
           className='max-w-full sm:max-w-full'
@@ -113,7 +126,14 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
           control={form.control}
           render={({ field, fieldState }) => (
             <Field data-invalid={fieldState.invalid}>
+              <p
+                id='salutation-label'
+                className='mb-3 text-base/[1.5] text-gray-500'
+              >
+                {t('salutationLabel')}
+              </p>
               <RadioGroup
+                aria-labelledby='salutation-label'
                 orientation='horizontal'
                 value={field.value}
                 onValueChange={field.onChange}
@@ -181,6 +201,16 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
         <FormField
           name='email'
           control={form.control}
+          errorContent={
+            form.formState.errors.email?.type === 'server' ? (
+              <Link
+                href='/sign-in'
+                className='underline'
+              >
+                {t('signInLink')}
+              </Link>
+            ) : null
+          }
           render={({ field, validationState }) => (
             <TextInput
               {...field}

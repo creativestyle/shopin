@@ -7,6 +7,7 @@
     "yes": "Yes",
     "no": "No",
     "description": "Your e-commerce platform with a modern design system.",
+    "skipToContent": "Skip to main content",
     "homepage": "Home",
     "logoAlt": "SHOPIN",
     "logoHomeLink": "SHOPIN - Home",
@@ -19,6 +20,12 @@
     "noSuggestions": "<bold>0</bold> Results",
     "noSearchProducts": "Sorry - we couldn't find any results for <bold>\"{query}\"</bold>.",
     "scrollableDialogContent": "Scrollable dialog content",
+    "quantitySwitcher": {
+      "label": "Quantity",
+      "decreaseTo": "{label}: decrease to {value}",
+      "increaseTo": "{label}: increase to {value}",
+      "currentValue": "{label}: current value is {value}"
+    },
     "scrollLeft": "Scroll left",
     "scrollRight": "Scroll right",
     "hidePassword": "Hide password",
@@ -106,7 +113,7 @@
         "loyaltyBonus": "Collect 3% loyalty bonus"
       },
       "recommendedRetailPrice": "RRP",
-      "omnibusPrice": "30-day best price"
+      "omnibusPrice": "30-day best price:"
     },
     "seo": {
       "about": "About this product"
@@ -188,6 +195,7 @@
       "title": "Order Summary",
       "subtotal": "Subtotal",
       "shipping": "Shipping",
+      "shippingAtCheckout": "Calculated at checkout",
       "tax": "Tax",
       "discount": "Discount",
       "total": "Total",
@@ -201,9 +209,9 @@
       "removeItem": "Failed to remove item",
       "fetchCart": "Failed to fetch cart"
     },
+    "moreProductsCount": "More ({count}+)",
     "addToCartModal": {
       "toastMessage": "Good choice. Item has been added to cart.",
-      "dialogDescription": "Review your cart contents after adding an item.",
       "moreProducts": "More products",
       "goToCart": "Go to cart"
     },
@@ -252,6 +260,8 @@
       "title": "Register",
       "backToSignIn": "Back to Sign In",
       "backToCheckout": "Back to checkout",
+      "signInLink": "Sign in",
+      "salutationLabel": "Salutation",
       "salutationOptions": {
         "Ms": "Ms.",
         "Mr": "Mr.",
@@ -705,6 +715,7 @@
     "removeError": "Failed to remove from wishlist"
   },
   "productCard": {
-    "linkAriaLabel": "View details for {name}"
+    "linkAriaLabel": "View details for {name}",
+    "omnibusPrice": "30-day best price:"
   }
 }
