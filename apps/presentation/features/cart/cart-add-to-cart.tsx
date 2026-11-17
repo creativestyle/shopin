@@ -88,6 +88,7 @@ export function AddToCart({
           productId={productId}
           productSlug={productSlug}
           productName={productName}
+          restoreFocusRef={buttonRef}
         />
       )}
     </>

@@ -73,6 +73,8 @@ function SheetContent({
   side = 'right',
   showCloseButton = true,
   restoreFocusRef,
+  onOpenAutoFocus: onOpenAutoFocusProp,
+  onCloseAutoFocus: onCloseAutoFocusProp,
   ...props
 }: React.ComponentProps<typeof SheetPrimitive.Content> & {
   side?: 'top' | 'right' | 'bottom' | 'left'
@@ -80,7 +82,13 @@ function SheetContent({
   restoreFocusRef?: React.RefObject<HTMLElement | null>
 }) {
   const t = useTranslations('common')
-  const { onOpenAutoFocus, onCloseAutoFocus } = useFocusRestore(restoreFocusRef)
+  const { onOpenAutoFocus, onCloseAutoFocus } = useFocusRestore(
+    restoreFocusRef,
+    {
+      onOpenAutoFocus: onOpenAutoFocusProp,
+      onCloseAutoFocus: onCloseAutoFocusProp,
+    }
+  )
 
   return (
     <SheetPortal>

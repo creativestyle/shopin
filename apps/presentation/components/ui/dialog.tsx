@@ -83,13 +83,21 @@ function DialogContent({
   children,
   showCloseButton = true,
   restoreFocusRef,
+  onOpenAutoFocus: onOpenAutoFocusProp,
+  onCloseAutoFocus: onCloseAutoFocusProp,
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Content> & {
   showCloseButton?: boolean
   restoreFocusRef?: React.RefObject<HTMLElement | null>
 }) {
   const t = useTranslations('common')
-  const { onOpenAutoFocus, onCloseAutoFocus } = useFocusRestore(restoreFocusRef)
+  const { onOpenAutoFocus, onCloseAutoFocus } = useFocusRestore(
+    restoreFocusRef,
+    {
+      onOpenAutoFocus: onOpenAutoFocusProp,
+      onCloseAutoFocus: onCloseAutoFocusProp,
+    }
+  )
 
   return (
     <DialogPortal data-slot='dialog-portal'>
