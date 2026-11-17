@@ -10,6 +10,9 @@ import { getCommonErrorMessage } from '@/lib/error-translation-keys'
 import { TeaserBlock } from './teasers/teaser-block'
 import { TeaserHeroBlock } from './teasers/teaser-hero-block'
 
+// Components likely visible on first paint (e.g. hero + following carousel)
+const ABOVE_THE_FOLD_COMPONENT_COUNT = 2
+
 interface ContentPageProps {
   slug: string
   isDraft?: boolean
@@ -82,7 +85,7 @@ export async function ContentPage({ slug, isDraft = false }: ContentPageProps) {
             <div className='ui-fullbleed-width'>
               <TeaserHeroBlock
                 teaser={teaser}
-                imagePreload={i === 0}
+                imagePreload={i < ABOVE_THE_FOLD_COMPONENT_COUNT}
               />
             </div>
           </div>
@@ -98,7 +101,7 @@ export async function ContentPage({ slug, isDraft = false }: ContentPageProps) {
             <TeaserBlock
               teaser={teaser}
               index={i}
-              imagePreload={i === 0}
+              imagePreload={i < ABOVE_THE_FOLD_COMPONENT_COUNT}
             />
           </StandardContainer>
         )
