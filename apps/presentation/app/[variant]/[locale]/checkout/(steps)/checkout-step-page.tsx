@@ -1,6 +1,7 @@
 import { ensureCheckoutStep } from '@/features/checkout/checkout-server-guard'
 import type { CheckoutStepId } from '@/features/checkout/checkout-server-guard'
 import { CheckoutRouteGuard } from '@/features/checkout/checkout-route-guard'
+import { CartHydrationBoundary } from '@/features/cart/cart-hydration-boundary'
 import { CheckoutStepsFrame } from '@/features/checkout/checkout-steps-frame'
 
 interface CheckoutStepPageProps {
@@ -12,11 +13,15 @@ export async function CheckoutStepPage({
   stepId,
   children,
 }: CheckoutStepPageProps) {
-  await ensureCheckoutStep(stepId)
+  const cart = await ensureCheckoutStep(stepId)
 
   return (
-    <CheckoutRouteGuard currentStepId={stepId}>
-      <CheckoutStepsFrame currentStepId={stepId}>{children}</CheckoutStepsFrame>
-    </CheckoutRouteGuard>
+    <CartHydrationBoundary cart={cart}>
+      <CheckoutRouteGuard currentStepId={stepId}>
+        <CheckoutStepsFrame currentStepId={stepId}>
+          {children}
+        </CheckoutStepsFrame>
+      </CheckoutRouteGuard>
+    </CartHydrationBoundary>
   )
 }

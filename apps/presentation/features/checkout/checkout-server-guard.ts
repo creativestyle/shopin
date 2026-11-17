@@ -1,9 +1,16 @@
 import { redirect } from '@/lib/navigation'
 import { getLocale } from 'next-intl/server'
 import { cookies } from 'next/headers'
+import {
+  ACCESS_TOKEN_COOKIE_NAME,
+  CART_ID_COOKIE_PREFIX_GUEST,
+  CART_ID_COOKIE_PREFIX_LOGGED,
+  CORRELATION_ID_HEADER,
+} from '@config/constants'
 import { createBffFetchServer } from '@/lib/bff/core/bff-fetch-server'
-import { BaseService } from '@/lib/bff/services/base-service'
-import { CartResponseSchema } from '@core/contracts/cart/cart'
+import { logger } from '@/lib/logger'
+import { getCorrelationId } from '@/lib/logger/logger-context'
+import { CartService } from '@/features/cart/cart-service'
 import type { CartResponse } from '@core/contracts/cart/cart'
 import {
   getFirstIncompleteStep,
@@ -17,48 +24,53 @@ import type { BffFetchClient } from '@/lib/bff/types'
 
 export type { CheckoutStepId } from './components/checkout-steps-frame/checkout-steps-config'
 
-/** Local cart fetcher — avoids cross-feature import of CartService. */
-class CartFetchService extends BaseService {
-  async getCart(): Promise<CartResponse | null> {
-    const data = await this.get<CartResponse | null>('/cart', {
-      allowEmpty: true,
-    })
+type RequestCookie = { name: string; value: string }
 
-    if (!data) {
-      return null
-    }
-
-    return CartResponseSchema.parse(data)
-  }
+/** Read-only guard: without these cookies the BFF would refresh tokens via Set-Cookie the browser never gets. */
+function canResolveCartOnServer(requestCookies: RequestCookie[]): boolean {
+  const hasCartId = requestCookies.some(
+    ({ name }) =>
+      name.startsWith(CART_ID_COOKIE_PREFIX_GUEST) ||
+      name.startsWith(CART_ID_COOKIE_PREFIX_LOGGED)
+  )
+  const hasAccessToken = requestCookies.some(
+    ({ name }) => name === ACCESS_TOKEN_COOKIE_NAME
+  )
+  return hasCartId && hasAccessToken
 }
 
-/** BFF fetch client that forwards request cookies so the BFF can resolve the cart. */
-async function createBffFetchWithCookies(): Promise<BffFetchClient> {
-  const cookieStore = await cookies()
-  const allCookies = cookieStore.getAll()
-  const cookieHeader = allCookies.map((c) => `${c.name}=${c.value}`).join('; ')
+/** BFF fetch client that forwards request cookies and correlation id so the BFF can resolve the cart. */
+async function createBffFetchWithCookies(
+  requestCookies: RequestCookie[]
+): Promise<BffFetchClient> {
+  const cookieHeader = requestCookies
+    .map(({ name, value }) => `${name}=${value}`)
+    .join('; ')
 
-  const baseClient = await createBffFetchServer()
+  const [baseClient, correlationId] = await Promise.all([
+    createBffFetchServer(),
+    getCorrelationId(),
+  ])
 
   return {
-    fetch: async (path, options) => {
-      const existingHeaders = (options?.headers ?? {}) as Record<string, string>
+    fetch: (path, options) => {
+      const headers = new Headers(options?.headers)
+      headers.set('Cookie', cookieHeader)
+      headers.set(CORRELATION_ID_HEADER, correlationId)
 
-      return baseClient.fetch(path, {
-        ...options,
-        headers: {
-          ...existingHeaders,
-          ...(cookieHeader ? { Cookie: cookieHeader } : {}),
-        },
-      })
+      return baseClient.fetch(path, { ...options, headers })
     },
   }
 }
 
+/** Returns the cart, or null when the server cannot resolve it and the client guard decides. */
 export async function ensureCheckoutStep(
   currentStepId: CheckoutStepId
-): Promise<CartResponse> {
+): Promise<CartResponse | null> {
   const cart = await getCartOrRedirect()
+  if (!cart) {
+    return null
+  }
 
   const incompleteStep = getFirstIncompleteStep(cart, currentStepId)
   if (incompleteStep) {
@@ -69,11 +81,11 @@ export async function ensureCheckoutStep(
   return cart
 }
 
-export async function ensureCheckoutEntry(): Promise<void> {
+/** Returns the cart, or null when the server cannot resolve it and the client guard decides. */
+export async function ensureCheckoutEntry(): Promise<CartResponse | null> {
   const cart = await getCartOrRedirect()
-
-  if (!isStepComplete('billing', cart)) {
-    return
+  if (!cart || !isStepComplete('billing', cart)) {
+    return cart
   }
 
   const locale = await getLocale()
@@ -87,12 +99,28 @@ export async function ensureCheckoutEntry(): Promise<void> {
   if (reviewStep) {
     redirect({ href: reviewStep.route, locale })
   }
+
+  return cart
 }
 
-async function getCartOrRedirect(): Promise<CartResponse> {
-  const bffFetch = await createBffFetchWithCookies()
-  const cartService = new CartFetchService(bffFetch)
-  const cart = await cartService.getCart()
+async function getCartOrRedirect(): Promise<CartResponse | null> {
+  const cookieStore = await cookies()
+  const requestCookies = cookieStore.getAll()
+
+  if (!canResolveCartOnServer(requestCookies)) {
+    return null
+  }
+
+  let cart: CartResponse | null = null
+  try {
+    const bffFetch = await createBffFetchWithCookies(requestCookies)
+    cart = await new CartService(bffFetch).getCart()
+  } catch (error) {
+    logger.warn(
+      { error: error instanceof Error ? error.message : String(error) },
+      'Checkout server guard: cart fetch failed'
+    )
+  }
 
   if (!cart || cart.itemCount === 0) {
     const locale = await getLocale()

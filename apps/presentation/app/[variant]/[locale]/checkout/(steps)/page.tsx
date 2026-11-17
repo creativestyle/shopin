@@ -1,5 +1,6 @@
 import { initRouteContext } from '@/lib/request-context/route-context'
 import { ensureCheckoutEntry } from '@/features/checkout/checkout-server-guard'
+import { CartHydrationBoundary } from '@/features/cart/cart-hydration-boundary'
 import { CheckoutEntryClient } from './checkout-entry-client'
 
 export default async function Page({
@@ -10,7 +11,11 @@ export default async function Page({
   const { variant, locale } = await params
   initRouteContext({ variant, locale })
 
-  await ensureCheckoutEntry()
+  const cart = await ensureCheckoutEntry()
 
-  return <CheckoutEntryClient />
+  return (
+    <CartHydrationBoundary cart={cart}>
+      <CheckoutEntryClient />
+    </CartHydrationBoundary>
+  )
 }
