@@ -30,7 +30,6 @@ export function CheckoutStepPrevious({ step }: CheckoutStepPreviousProps) {
   const stepTitle = useCheckoutStepTitle(step)
   const PreviewComponent = PREVIEW_COMPONENTS[step.id]
   const headingId = `checkout-step-${step.id}-heading`
-  const previewId = `checkout-step-${step.id}-preview`
 
   return (
     <section
@@ -68,10 +67,7 @@ export function CheckoutStepPrevious({ step }: CheckoutStepPreviousProps) {
         )}
       </div>
       {PreviewComponent && (
-        <div
-          id={previewId}
-          className='lg:px-14'
-        >
+        <div className='lg:px-14'>
           <PreviewComponent />
         </div>
       )}

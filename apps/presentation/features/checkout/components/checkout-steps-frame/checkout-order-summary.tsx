@@ -8,35 +8,26 @@ import { ErrorDisplay } from '@/components/ui/error-display'
 
 export function CheckoutOrderSummary() {
   const t = useTranslations('cart')
-  const tCommon = useTranslations()
   const { cart, isLoading, error } = useCart()
+  const headingId = 'checkout-order-summary-heading'
 
   return (
     <section
-      aria-label={t('summary.title')}
+      aria-labelledby={headingId}
       className='lg:sticky lg:top-8 lg:h-fit'
     >
       <div className='flex h-full w-full flex-col rounded-lg border border-gray-200 bg-white lg:max-h-[calc(100vh-6rem-2rem)]'>
         <div className='shrink-0 p-6 pb-0'>
-          <h2 className='mb-6 text-base/[1.1] font-bold text-gray-950'>
+          <h2
+            id={headingId}
+            className='mb-6 text-base/[1.1] font-bold text-gray-950'
+          >
             {t('summary.title')}
           </h2>
         </div>
-        <div aria-live='polite'>
-          {isLoading && (
-            <div
-              role='status'
-              aria-label={tCommon('common.loading')}
-            >
-              <LoadingSpinner className='size-6' />
-            </div>
-          )}
-        </div>
+        {isLoading && <LoadingSpinner className='size-6' />}
         {error && (
-          <div
-            className='p-6'
-            role='alert'
-          >
+          <div className='p-6'>
             <ErrorDisplay>{t('errors.fetchCart')}</ErrorDisplay>
           </div>
         )}
