@@ -38,6 +38,7 @@
     "yes": "Ja",
     "no": "Nein",
     "description": "Ihre E-Commerce-Plattform mit einem modernen Design-System.",
+    "skipToContent": "Zum Hauptinhalt springen",
     "homepage": "Startseite",
     "logoAlt": "SHOPIN",
     "logoHomeLink": "SHOPIN - Startseite",
@@ -50,6 +51,12 @@
     "noSuggestions": "<bold>0</bold> Ergebnisse",
     "noSearchProducts": "Entschuldigung - wir konnten keine Ergebnisse f\u00fcr <bold>\"{query}\"</bold> finden.",
     "scrollableDialogContent": "Scrollbarer Dialoginhalt",
+    "quantitySwitcher": {
+      "label": "Menge",
+      "decreaseTo": "{label}: auf {value} verringern",
+      "increaseTo": "{label}: auf {value} erhöhen",
+      "currentValue": "{label}: aktueller Wert ist {value}"
+    },
     "scrollLeft": "Nach links scrollen",
     "scrollRight": "Nach rechts scrollen",
     "hidePassword": "Passwort ausblenden",
@@ -136,7 +143,7 @@
         "loyaltyBonus": "3% Treuebonus sammeln"
       },
       "recommendedRetailPrice": "UVP",
-      "omnibusPrice": "30-Tage Bestpreis"
+      "omnibusPrice": "30-Tage Bestpreis:"
     },
     "seo": {
       "about": "Über dieses Produkt"
@@ -218,6 +225,7 @@
       "title": "Bestellübersicht",
       "subtotal": "Zwischensumme",
       "shipping": "Versand",
+      "shippingAtCheckout": "Wird an der Kasse berechnet",
       "tax": "MwSt.",
       "discount": "Rabatt",
       "total": "Gesamtpreis",
@@ -231,9 +239,9 @@
       "removeItem": "Fehler beim Entfernen des Artikels",
       "fetchCart": "Fehler beim Laden des Warenkorbs"
     },
+    "moreProductsCount": "Mehr ({count}+)",
     "addToCartModal": {
       "toastMessage": "Gute Wahl. Artikel wurde zum Warenkorb hinzugefügt.",
-      "dialogDescription": "Warenkorbinhalt nach dem Hinzufügen eines Artikels überprüfen.",
       "moreProducts": "Mehr Produkte",
       "goToCart": "Zum Warenkorb"
     },
@@ -282,6 +290,8 @@
       "title": "Registrieren",
       "backToSignIn": "Zurück zur Anmeldung",
       "backToCheckout": "Zurück zur Kasse",
+      "signInLink": "Anmelden",
+      "salutationLabel": "Anrede",
       "salutationOptions": {
         "Ms": "Frau",
         "Mr": "Herr",
@@ -727,6 +737,7 @@
     "removeError": "Entfernen aus der Wunschliste fehlgeschlagen"
   },
   "productCard": {
-    "linkAriaLabel": "{name} ansehen"
+    "linkAriaLabel": "{name} ansehen",
+    "omnibusPrice": "30-Tage Bestpreis:"
   }
 }

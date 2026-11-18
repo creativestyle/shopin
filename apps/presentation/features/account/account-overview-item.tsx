@@ -23,9 +23,9 @@ export const AccountOverviewItem: FC<
     >
       <Link
         href={href}
-        className='group flex items-center gap-6 p-4 text-gray-700 lg:p-7'
+        className='group flex items-center gap-4 p-4 text-gray-700 xl:p-5'
       >
-        <span className='block rounded-full bg-gray-900 p-2 transition-colors group-hover:bg-primary lg:p-4'>
+        <span className='block rounded-full bg-gray-900 p-2 transition-colors group-hover:bg-primary xl:p-3'>
           <Icon
             className='size-6 text-white'
             aria-hidden='true'
