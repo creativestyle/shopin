@@ -2,7 +2,7 @@
   "cookieConsent": {
     "banner": {
       "title": "We value your privacy",
-      "description": "We use cookies to run the store and, with your permission, to analyse traffic and personalise content. You can accept all cookies, reject non-essential ones, or choose which categories to allow."
+      "description": "We use cookies to run the store and, with your permission, to analyse traffic and personalise content. You can accept all cookies, reject non-essential ones, or choose which categories to allow. Learn more in our <link>privacy policy</link>."
     },
     "actions": {
       "acceptAll": "Accept all",

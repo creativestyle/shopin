@@ -11,8 +11,7 @@ import { useConsent } from './use-consent'
  *   const analyticsAllowed = useConsentGate('analytics')
  *   {analyticsAllowed && <Script src="https://…/gtag.js" />}
  *
- * No such scripts exist in the app yet — this is the mechanism future tags
- * plug into so non-essential cookies are only ever set after consent.
+ * Withdrawing a category reloads the page, so a tag that already ran stops.
  */
 export function useConsentGate(category: ConsentCategory): boolean {
   const { consentState } = useConsent()

@@ -35,6 +35,33 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to optimize and load [DM Sans](https://fonts.google.com/specimen/DM+Sans) from Google Fonts (see `app/layout.tsx`).
 
+## Cookie consent
+
+`features/cookie-consent` stores the visitor's choice per category (`analytics`, `marketing`) in the `cookie_consent` cookie. It ships with no trackers of its own. The demo store's mock tags come from `@demo/mock-tracking-tags`, which is removed together with the demo workspace.
+
+To add a real tag (e.g. Google Tag Manager, Meta Pixel), render it from a client component in `app/[variant]/[locale]/layout.tsx` behind the category it belongs to:
+
+```tsx
+'use client'
+import Script from 'next/script'
+import { ConsentGate } from '@/features/cookie-consent/consent-gate'
+
+export function AnalyticsTag() {
+  return (
+    <ConsentGate category='analytics'>
+      <Script
+        id='gtm'
+        src='https://www.googletagmanager.com/gtm.js?id=GTM-XXXX'
+      />
+    </ConsentGate>
+  )
+}
+```
+
+- `useConsentGate(category)` returns the same flag when you need it outside JSX.
+- When a visitor withdraws a category, the page reloads, so a tag that has already run stops tracking.
+- List every cookie the tag sets in your cookie policy, and delete those cookies when consent is missing, like `@demo/mock-tracking-tags` does.
+
 ## Learn more
 
 - [Next.js Documentation](https://nextjs.org/docs)

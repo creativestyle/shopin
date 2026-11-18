@@ -2,7 +2,8 @@ import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { ConsentProvider } from '../consent-provider'
 import { CookieBanner } from '../cookie-banner'
-import { clearConsent, readConsent } from '../consent-cookie'
+import { clearConsent, readConsent, writeConsent } from '../consent-cookie'
+import { allAccepted } from '../cookie-consent-config'
 
 function renderBanner() {
   return render(
@@ -77,24 +78,11 @@ describe('CookieBanner', () => {
     })
   })
 
-  it('does not render when a choice is already stored', async () => {
-    const { rerender } = renderBanner()
-    // Accept to store a choice, then remount.
-    const user = userEvent.setup()
-    await user.click(
-      await screen.findByRole('button', {
-        name: 'cookieConsent.actions.acceptAll',
-      })
-    )
+  it('does not render when a choice is already stored', () => {
+    writeConsent(allAccepted())
 
-    rerender(
-      <ConsentProvider>
-        <CookieBanner />
-      </ConsentProvider>
-    )
+    renderBanner()
 
-    await waitFor(() =>
-      expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
-    )
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 })

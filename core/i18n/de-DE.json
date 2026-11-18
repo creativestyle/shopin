@@ -2,7 +2,7 @@
   "cookieConsent": {
     "banner": {
       "title": "Ihre Privatsphäre ist uns wichtig",
-      "description": "Wir verwenden Cookies für den Betrieb des Shops und – mit Ihrer Einwilligung – zur Analyse des Datenverkehrs und zur Personalisierung von Inhalten. Sie können alle Cookies akzeptieren, nicht notwendige ablehnen oder auswählen, welche Kategorien Sie zulassen möchten."
+      "description": "Wir verwenden Cookies für den Betrieb des Shops und – mit Ihrer Einwilligung – zur Analyse des Datenverkehrs und zur Personalisierung von Inhalten. Sie können alle Cookies akzeptieren, nicht notwendige ablehnen oder auswählen, welche Kategorien Sie zulassen möchten. Mehr dazu in unserer <link>Datenschutzerklärung</link>."
     },
     "actions": {
       "acceptAll": "Alle akzeptieren",

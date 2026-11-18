@@ -97,7 +97,6 @@ function PreferencesForm({
               checked
               disabled
               aria-labelledby={`${baseId}-essential`}
-              aria-label={t('categories.essential.name')}
             />
           </li>
 
@@ -125,7 +124,6 @@ function PreferencesForm({
                     setSelection((prev) => ({ ...prev, [category]: checked }))
                   }
                   aria-labelledby={labelId}
-                  aria-label={t(`categories.${category}.name`)}
                 />
               </li>
             )

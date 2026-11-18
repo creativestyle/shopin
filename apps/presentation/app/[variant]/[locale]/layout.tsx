@@ -12,8 +12,7 @@ import { QueryProvider } from '../../query-provider'
 import { DemoDisclaimerModalWrapper } from './demo-disclaimer-modal-wrapper'
 import { ConsentProvider } from '@/features/cookie-consent/consent-provider'
 import { CookieConsent } from '@/features/cookie-consent/cookie-consent'
-import { AnalyticsGate } from '@/features/cookie-consent/analytics-gate'
-import { MarketingGate } from '@/features/cookie-consent/marketing-gate'
+import { DemoTrackingTagsWrapper } from './demo-tracking-tags-wrapper'
 import {
   listLocales,
   urlPrefixToRfc,
@@ -87,8 +86,7 @@ export default async function LocaleLayout({
                   <Toaster position='bottom-right' />
                   <DemoDisclaimerModalWrapper />
                   <CookieConsent />
-                  <AnalyticsGate />
-                  <MarketingGate />
+                  <DemoTrackingTagsWrapper />
                 </ConsentProvider>
               </AddToCartModalProvider>
             </StoreConfigProvider>

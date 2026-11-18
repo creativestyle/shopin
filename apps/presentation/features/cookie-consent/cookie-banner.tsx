@@ -3,6 +3,7 @@
 import { useTranslations } from 'next-intl'
 import * as DialogPrimitive from '@radix-ui/react-dialog'
 import { Button } from '@/components/ui/button'
+import { Link } from '@/lib/navigation'
 import { useConsent } from './use-consent'
 
 const noop = () => undefined
@@ -12,7 +13,7 @@ const noop = () => undefined
  * dimming overlay. Radix moves focus into it on open and traps it; it cannot be
  * dismissed with Esc or an outside click — the visitor must choose accept,
  * reject, or customise. Hidden while the preferences dialog is open so the two
- * modals never stack.
+ * modals never stack, and on legal pages so the privacy policy stays readable.
  */
 export function CookieBanner() {
   const t = useTranslations('cookieConsent')
@@ -42,7 +43,16 @@ export function CookieBanner() {
               {t('banner.title')}
             </DialogPrimitive.Title>
             <DialogPrimitive.Description className='text-sm text-gray-600'>
-              {t('banner.description')}
+              {t.rich('banner.description', {
+                link: (chunks) => (
+                  <Link
+                    href='/privacy'
+                    className='underline hover:no-underline'
+                  >
+                    {chunks}
+                  </Link>
+                ),
+              })}
             </DialogPrimitive.Description>
           </div>
           <div className='flex flex-col gap-2 sm:flex-row-reverse'>

@@ -8,13 +8,15 @@ import {
   useState,
   useSyncExternalStore,
 } from 'react'
+import { useIsLegalRoute } from '@/hooks/use-is-legal-route'
 import {
+  CONSENT_CATEGORIES,
   allAccepted,
   allRejected,
   type ConsentCategories,
   type ConsentState,
 } from './cookie-consent-config'
-import { clearConsent, writeConsent } from './consent-cookie'
+import { clearConsent, readConsent, writeConsent } from './consent-cookie'
 import {
   emitConsentChange,
   getConsentSnapshot,
@@ -27,7 +29,7 @@ export interface ConsentContextValue {
   consentState: ConsentState | null
   /** True once hydrated on the client (avoids rendering the banner during SSR). */
   isReady: boolean
-  /** The banner should be shown (ready + no stored choice). */
+  /** The banner should be shown (ready + no stored choice + not a legal page). */
   isBannerVisible: boolean
   /** The preferences dialog is open. */
   isPreferencesOpen: boolean
@@ -51,6 +53,32 @@ const noopSubscribe = () => () => {}
 const getHydrated = () => true
 const getNotHydrated = () => false
 
+function isWithdrawal(
+  previous: ConsentState | null,
+  next: ConsentCategories | null
+): boolean {
+  return CONSENT_CATEGORIES.some(
+    (category) =>
+      previous?.categories[category] === true && next?.[category] !== true
+  )
+}
+
+// Tag code that already ran can't be unloaded, so withdrawal reloads the page.
+function applyConsent(next: ConsentCategories | null): boolean {
+  const withdrawn = isWithdrawal(readConsent(), next)
+  if (next) {
+    writeConsent(next)
+  } else {
+    clearConsent()
+  }
+  if (withdrawn) {
+    window.location.reload()
+    return false
+  }
+  emitConsentChange()
+  return true
+}
+
 export function ConsentProvider({ children }: { children: React.ReactNode }) {
   const consentState = useSyncExternalStore(
     subscribeConsent,
@@ -62,12 +90,13 @@ export function ConsentProvider({ children }: { children: React.ReactNode }) {
     getHydrated,
     getNotHydrated
   )
+  const isLegalRoute = useIsLegalRoute()
   const [isPreferencesOpen, setIsPreferencesOpen] = useState(false)
 
   const persist = useCallback((categories: ConsentCategories) => {
-    writeConsent(categories)
-    emitConsentChange()
-    setIsPreferencesOpen(false)
+    if (applyConsent(categories)) {
+      setIsPreferencesOpen(false)
+    }
   }, [])
 
   const updateConsent = useCallback(
@@ -84,16 +113,16 @@ export function ConsentProvider({ children }: { children: React.ReactNode }) {
   const closePreferences = useCallback(() => setIsPreferencesOpen(false), [])
 
   const resetConsent = useCallback(() => {
-    clearConsent()
-    emitConsentChange()
-    setIsPreferencesOpen(false)
+    if (applyConsent(null)) {
+      setIsPreferencesOpen(false)
+    }
   }, [])
 
   const value = useMemo<ConsentContextValue>(
     () => ({
       consentState,
       isReady,
-      isBannerVisible: isReady && consentState === null,
+      isBannerVisible: isReady && consentState === null && !isLegalRoute,
       isPreferencesOpen,
       updateConsent,
       acceptAll,
@@ -105,6 +134,7 @@ export function ConsentProvider({ children }: { children: React.ReactNode }) {
     [
       consentState,
       isReady,
+      isLegalRoute,
       isPreferencesOpen,
       updateConsent,
       acceptAll,
