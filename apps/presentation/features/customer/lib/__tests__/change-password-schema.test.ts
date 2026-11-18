@@ -1,4 +1,16 @@
 import { ChangeCustomerPasswordRequestSchema } from '@core/contracts/customer/customer'
+import { PASSWORD_MAX_LENGTH, PASSWORD_MIN_LENGTH } from '@config/constants'
+import enUS from '@core/i18n/en-US.json'
+import deDE from '@core/i18n/de-DE.json'
+
+function translationAt(messages: object, key: string): unknown {
+  return key
+    .split('.')
+    .reduce<unknown>(
+      (node, part) => (node as Record<string, unknown> | undefined)?.[part],
+      messages
+    )
+}
 
 function firstError(newPassword: string): string | undefined {
   const result = ChangeCustomerPasswordRequestSchema.safeParse({
@@ -13,7 +25,8 @@ const ERRORS = 'account.myAccount.changePassword.errors'
 describe('ChangeCustomerPasswordRequestSchema', () => {
   it('accepts a password matching the stated rules', () => {
     expect(firstError('haslo123')).toBeUndefined()
-    expect(firstError('Passwort1234567890')).toBeUndefined()
+    expect(firstError('a'.repeat(PASSWORD_MIN_LENGTH))).toBeUndefined()
+    expect(firstError('a'.repeat(PASSWORD_MAX_LENGTH))).toBeUndefined()
     expect(firstError('grosseäöü')).toBeUndefined()
   })
 
@@ -23,12 +36,16 @@ describe('ChangeCustomerPasswordRequestSchema', () => {
     expect(firstError('p@ssw0rd€')).toBeUndefined()
   })
 
-  it('rejects passwords shorter than 8 characters', () => {
-    expect(firstError('haslo12')).toBe(`${ERRORS}.newPasswordMinLength`)
+  it('rejects passwords shorter than the min', () => {
+    expect(firstError('a'.repeat(PASSWORD_MIN_LENGTH - 1))).toBe(
+      `${ERRORS}.newPasswordMinLength`
+    )
   })
 
-  it('rejects passwords longer than 18 characters', () => {
-    expect(firstError('a'.repeat(19))).toBe(`${ERRORS}.newPasswordMaxLength`)
+  it('rejects passwords longer than the max', () => {
+    expect(firstError('a'.repeat(PASSWORD_MAX_LENGTH + 1))).toBe(
+      `${ERRORS}.newPasswordMaxLength`
+    )
   })
 
   it('rejects passwords without a letter', () => {
@@ -50,5 +67,16 @@ describe('ChangeCustomerPasswordRequestSchema', () => {
     expect(missing.error?.issues[0]?.message).toBe(
       `${ERRORS}.currentPasswordRequired`
     )
+  })
+
+  it.each([
+    `${ERRORS}.newPasswordMinLength`,
+    `${ERRORS}.newPasswordMaxLength`,
+    `${ERRORS}.newPasswordRequiresLetter`,
+    `${ERRORS}.wrongCurrentPassword`,
+    'account.passwordHint',
+  ])('has %s in en-US and de-DE', (key) => {
+    expect(typeof translationAt(enUS, key)).toBe('string')
+    expect(typeof translationAt(deDE, key)).toBe('string')
   })
 })

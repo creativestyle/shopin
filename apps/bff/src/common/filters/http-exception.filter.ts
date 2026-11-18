@@ -7,6 +7,7 @@ import {
 } from '@nestjs/common'
 import type { Request } from 'express'
 import type { ZodError } from 'zod'
+import { PUBLIC_ERROR_CODES } from '@core/contracts/core/error-codes'
 import type { NestExceptionForLog } from '../logger/logger.config'
 import { FrontendInputValidationException } from '../validation/frontend-input-validation.exception'
 
@@ -15,7 +16,7 @@ type ErrorCode = { code?: string }
 
 type ErrorBody = ErrorCode &
   (
-    | { statusCode: 400; message: string; issues: ZodError['issues'] }
+    | { statusCode: 400; message: string; issues?: ZodError['issues'] }
     | { statusCode: 401; message: string }
     | { statusCode: 403; message: string }
     | { statusCode: 404; message: string }
@@ -109,18 +110,18 @@ export class HttpErrorFilter implements ExceptionFilter {
 
     const body = STATUS_BODY_MAP[status] ?? DEFAULT_ERROR_BODY
 
-    // Our own exceptions may attach a machine-readable `code` so the client can tell
-    // apart two failures that share a status (e.g. wrong password vs expired session).
-    // Only the code is forwarded - never the exception message, which may leak internals.
-    const code = this.getSafeErrorCode(exception)
+    // Only allow-listed codes are forwarded, never the exception message
+    const code = this.getPublicErrorCode(exception)
     if (code) {
-      return { ...body, code } as ErrorBody
+      const message =
+        status === HttpStatus.BAD_REQUEST ? 'Bad Request' : body.message
+      return { statusCode: body.statusCode, message, code } as ErrorBody
     }
 
     return body
   }
 
-  private getSafeErrorCode(exception: unknown): string | undefined {
+  private getPublicErrorCode(exception: unknown): string | undefined {
     if (!(exception instanceof HttpException)) {
       return undefined
     }
@@ -131,7 +132,9 @@ export class HttpErrorFilter implements ExceptionFilter {
     }
 
     const code = (response as { code?: unknown }).code
-    return typeof code === 'string' ? code : undefined
+    return typeof code === 'string' && PUBLIC_ERROR_CODES.has(code)
+      ? code
+      : undefined
   }
 
   /** Attach exception to request so pino-http can include it when it logs (warn/error level). */

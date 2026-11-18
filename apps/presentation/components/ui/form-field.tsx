@@ -30,6 +30,8 @@ type FormFieldProps<
   description?: React.ReactNode
   /** Rendered next to the error message, inside the same alert region. */
   errorContent?: React.ReactNode
+  /** ICU values for the translated error message. */
+  errorValues?: ComponentProps<typeof FieldError>['values']
 } & Omit<ComponentProps<typeof Field>, 'children'>
 
 export function FormField<
@@ -42,6 +44,7 @@ export function FormField<
   errorVariant = 'default',
   description,
   errorContent,
+  errorValues,
   ...fieldProps
 }: FormFieldProps<TFieldValues, TName>) {
   return (
@@ -65,6 +68,7 @@ export function FormField<
               <FieldError
                 error={fieldState.error}
                 variant={errorVariant}
+                values={errorValues}
               >
                 {errorContent}
               </FieldError>

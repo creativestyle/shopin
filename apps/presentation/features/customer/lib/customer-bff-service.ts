@@ -58,7 +58,7 @@ export class CustomerService extends BaseService {
       allowEmpty: true,
       onError: async (res) => {
         if (
-          res.status === 401 &&
+          res.status === 400 &&
           (await parseErrorCode(res)) === INVALID_CURRENT_PASSWORD_CODE
         ) {
           throw new InvalidCurrentPasswordError()

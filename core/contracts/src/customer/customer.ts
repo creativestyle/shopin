@@ -52,8 +52,7 @@ export type ChangeCustomerPasswordRequest = z.infer<
 >
 
 /**
- * Machine-readable code the BFF returns (with 401) when `currentPassword` does not
- * match the customer's password. Lets the client tell a wrong password apart from an
- * expired session, which is also a 401 on the same endpoint.
+ * Machine-readable code the BFF returns (with 400) when `currentPassword` does not
+ * match the customer's password, so the client can show it on the field.
  */
 export const INVALID_CURRENT_PASSWORD_CODE = 'INVALID_CURRENT_PASSWORD'

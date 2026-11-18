@@ -1,4 +1,4 @@
-import { hasStatusCode } from './is-not-found-error'
+import { hasStatusCode } from './has-status-code'
 
 interface CommercetoolsErrorBody {
   body?: {

@@ -107,21 +107,33 @@ describe('HttpErrorFilter', () => {
     filter.catch(
       new HttpException(
         {
-          statusCode: 401,
+          statusCode: 400,
           message: 'Invalid current password',
           code: 'INVALID_CURRENT_PASSWORD',
         },
-        401
+        400
       ),
       host
     )
 
-    expect(getStatus()).toBe(401)
+    expect(getStatus()).toBe(400)
     expect(getJson()).toEqual({
-      statusCode: 401,
-      message: 'Unauthorized',
+      statusCode: 400,
+      message: 'Bad Request',
       code: 'INVALID_CURRENT_PASSWORD',
     })
+  })
+
+  it('drops codes that are not on the public allow-list', () => {
+    const { host, getJson } = createHttpHostMock()
+    const filter = new HttpErrorFilter()
+
+    filter.catch(
+      new HttpException({ message: 'x', code: 'INTERNAL_DB_ID_42' }, 401),
+      host
+    )
+
+    expect(getJson()).toEqual({ statusCode: 401, message: 'Unauthorized' })
   })
 
   it('does not forward non-string codes or exception messages', () => {

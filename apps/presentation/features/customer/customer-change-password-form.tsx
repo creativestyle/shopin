@@ -8,6 +8,7 @@ import { useChangePassword } from './hooks/use-change-password'
 import { InvalidCurrentPasswordError } from './lib/invalid-current-password-error'
 import { revalidateDependentField } from '@/lib/form-utils'
 import { ChangeCustomerPasswordRequestSchema } from '@core/contracts/customer/customer'
+import { PASSWORD_RULE_VALUES } from '@core/contracts/core/password'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useTranslations } from 'next-intl'
 import { FC } from 'react'
@@ -27,6 +28,7 @@ type ChangePasswordFormData = z.infer<typeof ChangePasswordFormSchema>
 
 export const ChangePasswordForm: FC = () => {
   const t = useTranslations('account.myAccount.changePassword')
+  const tAccount = useTranslations('account')
   const { handlePasswordChange, isPasswordChangePending } = useChangePassword()
 
   const form = useForm<ChangePasswordFormData>({
@@ -95,7 +97,8 @@ export const ChangePasswordForm: FC = () => {
         <FormField
           name='newPassword'
           control={form.control}
-          description={t('passwordHint')}
+          description={tAccount('passwordHint', PASSWORD_RULE_VALUES)}
+          errorValues={PASSWORD_RULE_VALUES}
           render={({ field, validationState }) => (
             <PasswordInput
               {...field}

@@ -40,11 +40,11 @@ describe('CustomerService.changePassword', () => {
     await expect(service.changePassword(REQUEST)).resolves.toBeUndefined()
   })
 
-  it('throws InvalidCurrentPasswordError on 401 with the invalid-password code', async () => {
+  it('throws InvalidCurrentPasswordError on 400 with the invalid-password code', async () => {
     const { service } = createService(
-      jsonResponse(401, {
-        statusCode: 401,
-        message: 'Unauthorized',
+      jsonResponse(400, {
+        statusCode: 400,
+        message: 'Bad Request',
         code: INVALID_CURRENT_PASSWORD_CODE,
       })
     )

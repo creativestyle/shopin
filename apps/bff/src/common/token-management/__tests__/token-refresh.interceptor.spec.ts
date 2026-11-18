@@ -1,43 +1,71 @@
 import { UnauthorizedException } from '@nestjs/common'
+import type { CallHandler, ExecutionContext } from '@nestjs/common'
 import { InvalidCurrentPasswordException } from '@integrations/commercetools-api'
+import { firstValueFrom, throwError } from 'rxjs'
 import { TokenRefreshInterceptor } from '../token-refresh.interceptor'
 
-/** Exposes the protected guard that decides whether a session refresh is attempted. */
-class TestableTokenRefreshInterceptor extends TokenRefreshInterceptor {
-  public isSessionFailure(error: unknown): boolean {
-    return this.isUnauthorizedError(error)
+function setup() {
+  const refreshTokenService = {
+    refreshToken: jest.fn().mockResolvedValue({
+      accessToken: 'new-access',
+      expiresIn: 3600,
+    }),
+  }
+  const tokenStorageService = {
+    getAccessToken: jest.fn().mockResolvedValue('access'),
+    getRefreshToken: jest.fn().mockResolvedValue('refresh'),
+    getAuthStatus: jest.fn().mockResolvedValue(true),
+    setAccessToken: jest.fn(),
+    setRefreshToken: jest.fn(),
+    clearTokens: jest.fn(),
+  }
+  const cartIdService = { deleteAllCartIds: jest.fn() }
+  const interceptor = new TokenRefreshInterceptor(
+    { getAuthServices: () => ({ refreshTokenService }) } as never,
+    tokenStorageService as never,
+    cartIdService as never,
+    {} as never,
+    { log: jest.fn() } as never
+  )
+  const request = { headers: {} }
+  const context = {
+    switchToHttp: () => ({ getRequest: () => request }),
+  } as unknown as ExecutionContext
+
+  return { interceptor, context, refreshTokenService, tokenStorageService }
+}
+
+function failingHandler(error: unknown) {
+  return { handle: jest.fn(() => throwError(() => error)) } as CallHandler & {
+    handle: jest.Mock
   }
 }
 
-function createInterceptor(): TestableTokenRefreshInterceptor {
-  return new TestableTokenRefreshInterceptor(
-    {} as never,
-    {} as never,
-    {} as never,
-    {} as never,
-    {} as never
-  )
-}
+describe('TokenRefreshInterceptor.intercept', () => {
+  it('refreshes and replays the request on an expired session', async () => {
+    const { interceptor, context, refreshTokenService } = setup()
+    const next = failingHandler(new UnauthorizedException())
 
-describe('TokenRefreshInterceptor.isUnauthorizedError', () => {
-  it('treats UnauthorizedException as an expired session', () => {
-    expect(
-      createInterceptor().isSessionFailure(new UnauthorizedException())
-    ).toBe(true)
+    await expect(
+      firstValueFrom(await interceptor.intercept(context, next))
+    ).rejects.toBeDefined()
+
+    expect(refreshTokenService.refreshToken).toHaveBeenCalledTimes(1)
+    expect(next.handle).toHaveBeenCalledTimes(2)
   })
 
-  it('treats a raw 401 from the data source as an expired session', () => {
-    expect(createInterceptor().isSessionFailure({ statusCode: 401 })).toBe(true)
-  })
+  it('passes a wrong current password through without refresh, replay or logout', async () => {
+    const { interceptor, context, refreshTokenService, tokenStorageService } =
+      setup()
+    const error = new InvalidCurrentPasswordException()
+    const next = failingHandler(error)
 
-  // A wrong current password must not trigger the refresh-and-replay path: that would
-  // resend the same wrong password and then clear the customer's tokens, logging them
-  // out over a typo.
-  it('does not treat a wrong current password as an expired session', () => {
-    expect(
-      createInterceptor().isSessionFailure(
-        new InvalidCurrentPasswordException()
-      )
-    ).toBe(false)
+    await expect(
+      firstValueFrom(await interceptor.intercept(context, next))
+    ).rejects.toBe(error)
+
+    expect(refreshTokenService.refreshToken).not.toHaveBeenCalled()
+    expect(tokenStorageService.clearTokens).not.toHaveBeenCalled()
+    expect(next.handle).toHaveBeenCalledTimes(1)
   })
 })
