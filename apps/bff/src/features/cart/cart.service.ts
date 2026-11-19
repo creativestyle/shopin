@@ -152,7 +152,7 @@ export class CartService extends BaseAuthenticatedService {
    * Get cart ID from cart ID service, or create a new cart if none exists.
    * This method does not fetch the full cart, only gets/creates the cart ID.
    */
-  private async getOrCreateCartId(): Promise<string> {
+  async getOrCreateCartId(): Promise<string> {
     const cartId = await this.getCartId()
     if (cartId) {
       return cartId
@@ -174,7 +174,7 @@ export class CartService extends BaseAuthenticatedService {
    * from CT — this handles the case where the user logged in from a different currency/language.
    * @returns Cart ID or undefined if none exists
    */
-  async getCartId(): Promise<string | undefined> {
+  private async getCartId(): Promise<string | undefined> {
     const isLoggedIn = await this.isLoggedIn()
 
     if (isLoggedIn) {

@@ -15,18 +15,19 @@ export class PaymentService {
   ) {}
 
   async getPaymentMethods(): Promise<PaymentMethodsResponse> {
-    const cartId = await this.cartService.getCartId()
+    const cart = await this.cartService.getCart()
     const paymentService = this.dataSourceFactory.getServices().paymentService
-    return await paymentService.getPaymentMethods(cartId)
+    return await paymentService.getPaymentMethods(cart?.id)
   }
 
   async setPaymentMethod(
     request: SetPaymentMethodRequest
   ): Promise<CartResponse> {
-    const cart = await this.cartService.getOrCreateCart()
+    // Data source re-reads the cart via me(), which checks ownership
+    const cartId = await this.cartService.getOrCreateCartId()
     const cartPaymentService =
       this.dataSourceFactory.getServices().cartPaymentService
-    return await cartPaymentService.setPaymentMethod(cart.id, request)
+    return await cartPaymentService.setPaymentMethod(cartId, request)
   }
 
   async initiatePayment(cartId: string): Promise<{ paymentLink: string }> {

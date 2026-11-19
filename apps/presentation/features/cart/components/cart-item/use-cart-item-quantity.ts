@@ -4,11 +4,12 @@ import { useEffect, useRef, useState } from 'react'
 import { useUpdateCartItem } from '../../hooks/use-update-cart-item'
 import { debounce } from '@/lib/debounce'
 import type { LineItemResponse } from '@core/contracts/cart/cart'
+import { CART_LINE_ITEM_MAX_QUANTITY } from '@config/constants'
 
 const DEFAULT_DEBOUNCE_MS = 300
 
-function clampQuantity(value: number, max?: number): number {
-  return max !== undefined ? Math.min(value, max) : value
+function clampQuantity(value: number, max: number): number {
+  return Math.min(value, max)
 }
 
 interface UseCartItemQuantityOptions {
@@ -23,10 +24,10 @@ export function useCartItemQuantity({
   const { handleUpdate, isPending: isUpdatingCart } = useUpdateCartItem()
   const [isUpdating, setIsUpdating] = useState(false)
   const [optimisticQuantity, setOptimisticQuantity] = useState(item.quantity)
-  const max =
-    item.maxQuantity != null
-      ? Math.max(item.maxQuantity, item.quantity)
-      : undefined
+  const max = Math.max(
+    item.maxQuantity ?? CART_LINE_ITEM_MAX_QUANTITY,
+    item.quantity
+  )
 
   const stateRef = useRef({
     pendingDelta: 0,
@@ -109,11 +110,7 @@ export function useCartItemQuantity({
   }, [debounceMs])
 
   const updateQuantityOptimistically = (delta: number) => {
-    if (
-      delta > 0 &&
-      max !== undefined &&
-      stateRef.current.targetQuantity >= max
-    ) {
+    if (delta > 0 && stateRef.current.targetQuantity >= max) {
       return
     }
     stateRef.current.pendingDelta += delta

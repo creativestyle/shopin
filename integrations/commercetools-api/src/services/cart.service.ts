@@ -18,7 +18,10 @@ import { ServerClientService } from '../client/server-client.service'
 import { mapCartToResponse } from '../mappers/cart'
 import { mapShippingMethodsToResponse } from '../mappers/shipping-method'
 import { buildInClause } from '../helpers/build-in-clause'
-import { CART_LINE_ITEM_MAX_QUANTITY } from '@config/constants'
+import {
+  CART_INVENTORY_MODE,
+  CART_LINE_ITEM_MAX_QUANTITY,
+} from '@config/constants'
 import { CartApiResponseSchema, type CartApiResponse } from '../schemas/cart'
 import {
   CartUpdateActionSchema,
@@ -260,7 +263,7 @@ export class CartService {
         body: {
           currency,
           country,
-          inventoryMode: 'ReserveOnOrder',
+          inventoryMode: CART_INVENTORY_MODE,
         },
       })
       .execute()

@@ -33,3 +33,8 @@ export const CART_ID_COOKIE_CONFIG = {
  * Max quantity per cart line item; also caps the stock level exposed to shoppers
  */
 export const CART_LINE_ITEM_MAX_QUANTITY = 99
+
+/**
+ * Cart inventory mode; TrackOnly never blocks order creation after payment
+ */
+export const CART_INVENTORY_MODE = 'TrackOnly' as const
