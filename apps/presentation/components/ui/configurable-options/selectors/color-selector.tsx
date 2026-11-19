@@ -9,7 +9,10 @@ import { getSelectorLayoutClass } from './selector-utils'
 
 export type ColorOption = ColorOptionItemResponse
 
-export interface ColorSelectorProps extends SelectorComponentProps {
+export interface ColorSelectorProps extends Omit<
+  SelectorComponentProps,
+  'layout'
+> {
   options: ColorOption[]
 }
 
@@ -19,7 +22,6 @@ export const ColorSelector: React.FC<ColorSelectorProps> = ({
   onChange,
   className,
 }) => {
-  // Swatches are fixed-size circles, so they always sit in a row rather than a grid.
   return (
     <div className={cn(getSelectorLayoutClass('inline'), className)}>
       {options.map((opt) => {

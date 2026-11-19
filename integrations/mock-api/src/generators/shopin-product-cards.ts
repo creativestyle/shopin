@@ -1,6 +1,7 @@
 import type { ProductCardResponse } from '@core/contracts/product-collection/product-card'
 import type { MockApi } from '../client/client.module'
 import { createShopinBasicPrice } from './shopin-basic-price'
+import { getShopinProductVariantSummary } from './shopin-product-details'
 
 type Faker = ReturnType<MockApi['getFaker']>
 
@@ -26,10 +27,6 @@ const BRANDS = [
   'Under Armour',
   'New Balance',
 ]
-
-// Cards only gate the variant picker; the modal refetches real variants from the PDP.
-const DEFAULT_VARIANT_ID = '1'
-const MAX_VARIANT_COUNT = 12
 
 export interface MockProductAttributes {
   color: string
@@ -57,8 +54,6 @@ export function createShopinProductCardList(
         name,
         price,
         image: { src: '/images/product-image.png', alt: name },
-        variantId: DEFAULT_VARIANT_ID,
-        variantCount: faker.number.int({ min: 1, max: MAX_VARIANT_COUNT }),
         attributes: {
           color: faker.helpers.arrayElement(COLORS),
           size: faker.helpers.arrayElement(SIZES),
@@ -69,4 +64,15 @@ export function createShopinProductCardList(
     },
     { count }
   )
+}
+
+/** Re-seeds faker, so call it only after all other generation is done. */
+export function withShopinVariantSummary<T extends ProductCardResponse>(
+  faker: Faker,
+  cards: T[]
+): T[] {
+  return cards.map((card) => ({
+    ...card,
+    ...getShopinProductVariantSummary(faker, card.slug),
+  }))
 }

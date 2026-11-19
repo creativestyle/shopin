@@ -1,15 +1,13 @@
 'use client'
 
-import { useState, useEffect, useId } from 'react'
+import { useState, useId } from 'react'
 import type { DataSource } from '@config/constants'
-import { DEFAULT_DATA_SOURCE } from '@config/constants'
-import { getDataSourceFromCookie, setDataSourceCookie } from '../utils/cookies'
+import { setDataSourceCookie } from '../utils/cookies'
 
 export interface DataSourceOption {
   value: DataSource
   name: string
   description: string
-  selectAriaLabel: string
 }
 
 export interface DataSourceSelectorLabels {
@@ -21,26 +19,20 @@ export interface DataSourceSelectorLabels {
 }
 
 interface DataSourceSelectorProps {
+  initialDataSource: DataSource
   labels: DataSourceSelectorLabels
   options: readonly DataSourceOption[]
 }
 
 export function DataSourceSelector({
+  initialDataSource,
   labels,
   options,
 }: DataSourceSelectorProps) {
   const [selectedDataSource, setSelectedDataSource] =
-    useState<DataSource>(DEFAULT_DATA_SOURCE)
+    useState<DataSource>(initialDataSource)
   const id = useId()
   const headingId = `${id}-heading`
-
-  useEffect(() => {
-    // Initialize from cookie
-    const stored = getDataSourceFromCookie()
-    if (stored) {
-      setSelectedDataSource(stored)
-    }
-  }, [])
 
   const handleDataSourceChange = (dataSource: DataSource) => {
     setSelectedDataSource(dataSource)
@@ -70,6 +62,8 @@ export function DataSourceSelector({
       >
         {options.map((option) => {
           const isSelected = selectedDataSource === option.value
+          const nameId = `${id}-${option.value}-name`
+          const buttonId = `${id}-${option.value}-button`
           const descriptionId = `${id}-${option.value}-description`
 
           return (
@@ -78,7 +72,12 @@ export function DataSourceSelector({
               className='flex items-center justify-between p-3 border border-gray-300 rounded-lg'
             >
               <div>
-                <h3 className='font-medium'>{option.name}</h3>
+                <h3
+                  id={nameId}
+                  className='font-medium'
+                >
+                  {option.name}
+                </h3>
                 <p
                   id={descriptionId}
                   className='text-sm text-gray-500'
@@ -87,9 +86,10 @@ export function DataSourceSelector({
                 </p>
               </div>
               <button
+                id={buttonId}
                 type='button'
                 aria-pressed={isSelected}
-                aria-label={option.selectAriaLabel}
+                aria-labelledby={`${nameId} ${buttonId}`}
                 aria-describedby={descriptionId}
                 className={`inline-flex items-center justify-center transition-all duration-200 box-border cursor-pointer px-6 py-3 text-sm font-bold leading-tight rounded-full ${
                   isSelected
@@ -106,10 +106,7 @@ export function DataSourceSelector({
       </div>
 
       <div className='mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg'>
-        <p
-          role='status'
-          className='text-sm text-blue-700'
-        >
+        <p className='text-sm text-blue-700'>
           <strong>{labels.currentSelection}</strong> {selectedName}
         </p>
       </div>

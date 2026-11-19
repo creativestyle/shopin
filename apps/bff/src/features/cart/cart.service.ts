@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common'
+import { Injectable, NotFoundException } from '@nestjs/common'
 import { DataSourceFactory } from '../../data-source/data-source.factory'
 import type { CartResponse } from '@core/contracts/cart/cart'
 import type {
@@ -35,7 +35,16 @@ export class CartService extends BaseAuthenticatedService {
     }
 
     const cartService = this.getCartService()
-    return await cartService.getCart(cartId)
+    try {
+      return await cartService.getCart(cartId)
+    } catch (error) {
+      // Stale id (e.g. mock cart lost on BFF restart): drop it so a new cart is created
+      if (error instanceof NotFoundException) {
+        await this.clearCartId()
+        return null
+      }
+      throw error
+    }
   }
 
   async getOrCreateCart(): Promise<CartResponse> {

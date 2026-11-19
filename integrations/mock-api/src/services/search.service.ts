@@ -12,13 +12,17 @@ import type {
   SearchProductsResult,
 } from '@core/contracts/product-search/search-provider'
 import { extractQuerySuggestions } from '@core/contracts/product-search/suggestion-utils'
-import type { Filters } from '@core/contracts/product-collection/product-collection-page'
 import { generateSeed } from '../helpers/generateSeed'
 import {
   createShopinProductCardList,
   buildFacetsFromProducts,
+  withShopinVariantSummary,
   type ProductCardWithAttributes,
 } from '../generators'
+import {
+  calculatePriceRange,
+  filterProductCards,
+} from '../helpers/product-card-filters'
 
 const MIN_MATCH_COUNT = 8
 const MAX_MATCH_COUNT = 60
@@ -54,54 +58,6 @@ export class SearchService implements SearchProvider {
     })
   }
 
-  private applyFilters(
-    products: ProductCardWithAttributes[],
-    filters?: Filters
-  ): ProductCardWithAttributes[] {
-    if (!filters) {
-      return products
-    }
-
-    return products.filter((product) => {
-      for (const [attrName, values] of Object.entries(filters)) {
-        if (!values || values.length === 0) {
-          continue
-        }
-
-        const productValue =
-          product.attributes[attrName as keyof typeof product.attributes]
-        if (!productValue) {
-          continue
-        }
-
-        if (!values.some((v) => v === productValue)) {
-          return false
-        }
-      }
-      return true
-    })
-  }
-
-  private getEffectivePrice(product: ProductCardWithAttributes): number {
-    return (
-      product.price.discountedPriceInCents ?? product.price.regularPriceInCents
-    )
-  }
-
-  private calculatePriceRange(products: ProductCardWithAttributes[]): {
-    minPriceInCents: number
-    maxPriceInCents: number
-  } {
-    if (products.length === 0) {
-      return { minPriceInCents: 0, maxPriceInCents: 0 }
-    }
-    const prices = products.map((p) => this.getEffectivePrice(p))
-    return {
-      minPriceInCents: Math.min(...prices),
-      maxPriceInCents: Math.max(...prices),
-    }
-  }
-
   // Sort is ignored, matching ProductCollectionService.
   async searchProducts(
     options: SearchProductsOptions
@@ -123,34 +79,23 @@ export class SearchService implements SearchProvider {
     }
 
     const currency = resolveCurrencyFromLanguage(language)
-    const priceRange = this.calculatePriceRange(allProducts)
-
-    let filteredProducts = this.applyFilters(allProducts, filters)
-
-    if (saleOnly) {
-      filteredProducts = filteredProducts.filter(
-        (product) => product.price.discountedPriceInCents !== undefined
-      )
-    }
-
-    if (priceMin !== undefined || priceMax !== undefined) {
-      filteredProducts = filteredProducts.filter((product) => {
-        const price = this.getEffectivePrice(product)
-        if (priceMin !== undefined && price < priceMin) {
-          return false
-        }
-        if (priceMax !== undefined && price > priceMax) {
-          return false
-        }
-        return true
-      })
-    }
+    const priceRange = calculatePriceRange(allProducts)
+    const filteredProducts = filterProductCards(allProducts, {
+      filters,
+      saleOnly,
+      priceMin,
+      priceMax,
+    })
 
     const facets = buildFacetsFromProducts(allProducts, filteredProducts)
     const offset = (page - 1) * limit
+    const pageProducts = withShopinVariantSummary(
+      this.mockApi.getFaker(),
+      filteredProducts.slice(offset, offset + limit)
+    )
 
     return {
-      products: filteredProducts.slice(offset, offset + limit).map((p) => ({
+      products: pageProducts.map((p) => ({
         id: p.id,
         slug: p.slug,
         name: p.name,
