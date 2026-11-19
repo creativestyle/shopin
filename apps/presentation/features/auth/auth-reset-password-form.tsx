@@ -8,10 +8,12 @@ import { Button } from '@/components/ui/button'
 import { FormField } from '@/components/ui/form-field'
 import { PasswordInput } from '@/components/ui/inputs/password-input'
 import { ResetPasswordRequestSchema } from '@core/contracts/auth/reset-password'
+import { PASSWORD_RULE_VALUES } from '@core/contracts/core/password'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Toast, addToast } from '@/components/ui/toast'
 import { HttpError } from '@/lib/error-utils'
+import { revalidateDependentField } from '@/lib/form-utils'
 import { useResetPassword } from './hooks/use-reset-password'
 import { z } from 'zod'
 import { ErrorDisplay } from '@/components/ui/error-display'
@@ -39,6 +41,7 @@ export const ResetPasswordForm: FC<ResetPasswordFormProps> = ({
   onSuccess,
 }) => {
   const t = useTranslations('account.resetPassword')
+  const tAccount = useTranslations('account')
   const searchParams = useSearchParams()
   const { resetPasswordMutation } = useResetPassword()
   const [formError, setFormError] = useState<
@@ -150,9 +153,15 @@ export const ResetPasswordForm: FC<ResetPasswordFormProps> = ({
         <FormField
           name='newPassword'
           control={form.control}
+          description={tAccount('passwordHint', PASSWORD_RULE_VALUES)}
+          errorValues={PASSWORD_RULE_VALUES}
           render={({ field, validationState }) => (
             <PasswordInput
               {...field}
+              onChange={(e) => {
+                field.onChange(e)
+                revalidateDependentField(form, 'confirmPassword')
+              }}
               id='newPassword'
               label={t('newPasswordLabel')}
               required
