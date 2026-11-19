@@ -9,6 +9,9 @@ import { MyCustomerApiResponseSchema } from '../schemas/customer'
 import { mapUpdateCustomerRequestToActions } from '../helpers/customer-update-actions'
 import { mapCustomerToResponse } from '../mappers/customer'
 import { isDuplicateEmailError } from '../helpers/is-duplicate-email-error'
+import { isInvalidCurrentPasswordError } from '../helpers/is-invalid-current-password-error'
+import { hasStatusCode } from '../helpers/has-status-code'
+import { InvalidCurrentPasswordException } from '../exceptions/invalid-current-password.exception'
 
 @Injectable({ scope: Scope.REQUEST })
 export class CommercetoolsCustomerService {
@@ -59,6 +62,27 @@ export class CommercetoolsCustomerService {
   }
 
   async changeCustomerPassword(
+    changeCustomerPasswordRequest: ChangeCustomerPasswordRequest
+  ): Promise<void> {
+    try {
+      await this.postPasswordChange(changeCustomerPasswordRequest).catch(
+        (error: unknown) => {
+          if (!hasStatusCode(error) || error.statusCode !== 409) {
+            throw error
+          }
+          // Customer changed since its version was read; retry once with a fresh one
+          return this.postPasswordChange(changeCustomerPasswordRequest)
+        }
+      )
+    } catch (error) {
+      if (isInvalidCurrentPasswordError(error)) {
+        throw new InvalidCurrentPasswordException()
+      }
+      throw error
+    }
+  }
+
+  private async postPasswordChange(
     changeCustomerPasswordRequest: ChangeCustomerPasswordRequest
   ): Promise<void> {
     const client = await this.userClientService.getClient()

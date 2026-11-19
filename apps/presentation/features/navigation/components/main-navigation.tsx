@@ -17,12 +17,19 @@ interface MainNavigationProps extends MainNavigationResponse {
 const ENTER_TIMEOUT = 200
 const LEAVE_TIMEOUT = 150
 
+const subscribeNoop = () => () => {}
+
 export const MainNavigation: React.FC<MainNavigationProps> = ({
   items,
   className,
 }) => {
   const [activeItem, setActiveItem] = React.useState<LinkResponse | null>(null)
-  const [mounted, setMounted] = React.useState(false)
+  // Portal target (document.body) only exists on the client
+  const mounted = React.useSyncExternalStore(
+    subscribeNoop,
+    () => true,
+    () => false
+  )
   const [dropdownTop, setDropdownTop] = React.useState(0)
   const navRef = React.useRef<HTMLDivElement>(null)
   const enterTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(
@@ -76,7 +83,6 @@ export const MainNavigation: React.FC<MainNavigationProps> = ({
   }
 
   React.useEffect(() => {
-    setMounted(true)
     return () => {
       if (enterTimeoutRef.current) {
         clearTimeout(enterTimeoutRef.current)

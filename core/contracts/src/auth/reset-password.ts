@@ -1,10 +1,13 @@
 import { z } from 'zod'
+import { createPasswordSchema } from '../core/password'
 
 export const ResetPasswordRequestSchema = z.object({
   tokenValue: z.string(),
-  newPassword: z
-    .string()
-    .min(8, 'account.resetPassword.errors.newPasswordMinLength'),
+  newPassword: createPasswordSchema({
+    minLength: 'account.resetPassword.errors.newPasswordMinLength',
+    maxLength: 'account.resetPassword.errors.newPasswordMaxLength',
+    requiresLetter: 'account.resetPassword.errors.newPasswordRequiresLetter',
+  }),
 })
 
 export type ResetPasswordRequest = z.infer<typeof ResetPasswordRequestSchema>

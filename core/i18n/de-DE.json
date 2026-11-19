@@ -7,6 +7,7 @@
     "yes": "Ja",
     "no": "Nein",
     "description": "Ihre E-Commerce-Plattform mit einem modernen Design-System.",
+    "skipToContent": "Zum Hauptinhalt springen",
     "homepage": "Startseite",
     "logoHomeLink": "SHOPIN - Startseite",
     "close": "Schließen",
@@ -18,6 +19,12 @@
     "noSuggestions": "<bold>0</bold> Ergebnisse",
     "noSearchProducts": "Entschuldigung - wir konnten keine Ergebnisse f\u00fcr <bold>\"{query}\"</bold> finden.",
     "scrollableDialogContent": "Scrollbarer Dialoginhalt",
+    "quantitySwitcher": {
+      "label": "Menge",
+      "decreaseTo": "{label}: auf {value} verringern",
+      "increaseTo": "{label}: auf {value} erhöhen",
+      "currentValue": "{label}: aktueller Wert ist {value}"
+    },
     "scrollLeft": "Nach links scrollen",
     "scrollRight": "Nach rechts scrollen",
     "hidePassword": "Passwort ausblenden",
@@ -104,7 +111,7 @@
         "loyaltyBonus": "3% Treuebonus sammeln"
       },
       "recommendedRetailPrice": "UVP",
-      "omnibusPrice": "30-Tage Bestpreis"
+      "omnibusPrice": "30-Tage Bestpreis:"
     },
     "seo": {
       "about": "Über dieses Produkt"
@@ -186,6 +193,7 @@
       "title": "Bestellübersicht",
       "subtotal": "Zwischensumme",
       "shipping": "Versand",
+      "shippingAtCheckout": "Wird an der Kasse berechnet",
       "tax": "MwSt.",
       "discount": "Rabatt",
       "total": "Gesamtpreis",
@@ -199,9 +207,9 @@
       "removeItem": "Fehler beim Entfernen des Artikels",
       "fetchCart": "Fehler beim Laden des Warenkorbs"
     },
+    "moreProductsCount": "Mehr ({count}+)",
     "addToCartModal": {
       "toastMessage": "Gute Wahl. Artikel wurde zum Warenkorb hinzugefügt.",
-      "dialogDescription": "Warenkorbinhalt nach dem Hinzufügen eines Artikels überprüfen.",
       "moreProducts": "Mehr Produkte",
       "goToCart": "Zum Warenkorb"
     },
@@ -214,6 +222,7 @@
     "cart": "Warenkorb"
   },
   "account": {
+    "passwordHint": "{min}-{max} Zeichen, davon mindestens 1 Buchstabe.",
     "signIn": {
       "title": "Einloggen",
       "description": "Nutzen Sie Ihr Konto und sammeln Sie Punkte für diesen Einkauf",
@@ -250,6 +259,8 @@
       "title": "Registrieren",
       "backToSignIn": "Zurück zur Anmeldung",
       "backToCheckout": "Zurück zur Kasse",
+      "signInLink": "Anmelden",
+      "salutationLabel": "Anrede",
       "salutationOptions": {
         "Ms": "Frau",
         "Mr": "Herr",
@@ -275,7 +286,9 @@
         "lastNameRequired": "Nachname ist erforderlich",
         "emailInvalid": "Bitte geben Sie eine gültige E-Mail-Adresse ein",
         "dateOfBirthInvalid": "Bitte geben Sie ein gültiges Datum im Format TT-MM-JJJJ ein",
-        "passwordMinLength": "Das Passwort muss mindestens 8 Zeichen lang sein",
+        "passwordMinLength": "Das Passwort muss mindestens {min} Zeichen lang sein",
+        "passwordMaxLength": "Das Passwort darf höchstens {max} Zeichen lang sein",
+        "passwordRequiresLetter": "Das Passwort muss mindestens 1 Buchstaben enthalten",
         "acceptTermsRequired": "Sie müssen den Allgemeinen Geschäftsbedingungen zustimmen",
         "confirmPasswordRequired": "Bitte bestätigen Sie Ihr Passwort",
         "passwordsDoNotMatch": "Die Passwörter stimmen nicht überein",
@@ -349,7 +362,9 @@
         "invalidToken": "Ungültiger Link. Bitte fordern Sie eine neue Passwortzurücksetzung an.",
         "confirmPasswordRequired": "Bitte bestätigen Sie Ihr Passwort",
         "passwordsDoNotMatch": "Passwörter stimmen nicht überein",
-        "newPasswordMinLength": "Das Passwort muss mindestens 8 Zeichen lang sein",
+        "newPasswordMinLength": "Das Passwort muss mindestens {min} Zeichen lang sein",
+        "newPasswordMaxLength": "Das Passwort darf höchstens {max} Zeichen lang sein",
+        "newPasswordRequiresLetter": "Das Passwort muss mindestens 1 Buchstaben enthalten",
         "tooManyRequests": "Zu viele Anfragen. Bitte warten Sie einen Moment und versuchen Sie es erneut.",
         "internalServerError": "Ein Fehler ist aufgetreten. Bitte versuchen Sie es später erneut"
       }
@@ -402,7 +417,7 @@
       },
       "changePassword": {
         "changePasswordTitle": "Passwort",
-        "changePasswordDescription": "Hier können Sie ein neues Passwort (min. 8 Zeichen davon min 1 Buchstabe/max 18 Zeichen lang, keine Sonderzeichen) für sich festlegen. Dazu ist aus Sicherheitsgründen die Eingabe des alten Passworts erforderlich.",
+        "changePasswordDescription": "Hier können Sie ein neues Passwort für sich festlegen. Dazu ist aus Sicherheitsgründen die Eingabe des alten Passworts erforderlich.",
         "currentPassword": "Aktuelles Passwort",
         "newPassword": "Neues Passwort",
         "confirmNewPassword": "Neues Passwort bestätigen",
@@ -412,7 +427,10 @@
         "submitButtonLabel": "Passwort ändern",
         "errors": {
           "currentPasswordRequired": "Aktuelles Passwort ist erforderlich",
-          "newPasswordMinLength": "Neues Passwort muss mindestens 8 Zeichen lang sein",
+          "wrongCurrentPassword": "Das ist nicht Ihr aktuelles Passwort. Bitte versuchen Sie es erneut.",
+          "newPasswordMinLength": "Neues Passwort muss mindestens {min} Zeichen lang sein",
+          "newPasswordMaxLength": "Neues Passwort darf maximal {max} Zeichen lang sein",
+          "newPasswordRequiresLetter": "Neues Passwort muss mindestens 1 Buchstaben enthalten",
           "confirmPasswordRequired": "Bitte bestätigen Sie Ihr neues Passwort",
           "passwordsDoNotMatch": "Die Passwörter stimmen nicht überein"
         }
@@ -697,6 +715,7 @@
     "removeError": "Entfernen aus der Wunschliste fehlgeschlagen"
   },
   "productCard": {
-    "linkAriaLabel": "{name} ansehen"
+    "linkAriaLabel": "{name} ansehen",
+    "omnibusPrice": "30-Tage Bestpreis:"
   }
 }
