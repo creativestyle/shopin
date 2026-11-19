@@ -26,6 +26,21 @@ export async function parseValidationErrorMessage(
   }
 }
 
+/**
+ * Reads the machine-readable `code` the BFF attaches to some error bodies, so callers
+ * can tell apart two failures that share a status.
+ */
+export async function parseErrorCode(
+  response: Response
+): Promise<string | undefined> {
+  try {
+    const errorBody = await response.json()
+    return typeof errorBody?.code === 'string' ? errorBody.code : undefined
+  } catch {
+    return undefined
+  }
+}
+
 type BaseErrorResponse = {
   success: boolean
   statusCode?: number

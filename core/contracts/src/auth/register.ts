@@ -1,12 +1,17 @@
 import { z } from 'zod'
 import { SALUTATION_OPTIONS } from '@config/constants'
+import { createPasswordSchema } from '../core/password'
 
 export const RegisterRequestSchema = z.object({
   salutation: z.enum([...SALUTATION_OPTIONS, '']).optional(),
   firstName: z.string().min(1, 'account.signUp.errors.firstNameRequired'),
   lastName: z.string().min(1, 'account.signUp.errors.lastNameRequired'),
   email: z.email('account.signUp.errors.emailInvalid'),
-  password: z.string().min(8, 'account.signUp.errors.passwordMinLength'),
+  password: createPasswordSchema({
+    minLength: 'account.signUp.errors.passwordMinLength',
+    maxLength: 'account.signUp.errors.passwordMaxLength',
+    requiresLetter: 'account.signUp.errors.passwordRequiresLetter',
+  }),
   dateOfBirth: z
     .union([
       z.literal(''), // allow empty string to clear the date
