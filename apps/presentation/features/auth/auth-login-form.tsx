@@ -155,6 +155,10 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
             <TextInput
               {...field}
               id='email'
+              type='email'
+              inputMode='email'
+              autoCapitalize='none'
+              spellCheck={false}
               label={t('emailLabel')}
               required
               autoComplete='email'
@@ -191,11 +195,11 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
           type='submit'
           disabled={form.formState.isSubmitting || loginMutation.isPending}
           aria-busy={form.formState.isSubmitting || loginMutation.isPending}
-          className='w-full uppercase'
+          className='w-full'
         >
           {form.formState.isSubmitting || loginMutation.isPending
-            ? t('submitting')
-            : t('submitButton')}
+            ? t('signingIn')
+            : t('signInButton')}
         </Button>
       </form>
     </div>

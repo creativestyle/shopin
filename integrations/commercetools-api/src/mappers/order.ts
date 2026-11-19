@@ -123,6 +123,10 @@ export function mapOrderToSummary(
     grandTotal: createBasicPrice(grandTotalCents, { currency })!,
     currency,
     itemCount,
+    deliveryTime: getLocalizedString(
+      order.shippingInfo?.shippingMethod?.obj?.custom?.fields?.deliveryTime,
+      language
+    ),
     lineItemImages,
   }
 }

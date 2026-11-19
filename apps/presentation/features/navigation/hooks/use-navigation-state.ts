@@ -10,13 +10,16 @@ export function useNavigationState(open: boolean) {
     SubcategoryLink | undefined
   >()
 
-  React.useEffect(() => {
+  // Reset to the first level whenever the navigation opens (adjusting state during render)
+  const [prevOpen, setPrevOpen] = React.useState(open)
+  if (open !== prevOpen) {
+    setPrevOpen(open)
     if (open) {
       setCurrentLevel(1)
       setSelectedCategory(undefined)
       setSelectedSubcategory(undefined)
     }
-  }, [open])
+  }
 
   return {
     currentLevel,

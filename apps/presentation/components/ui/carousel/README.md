@@ -269,7 +269,7 @@ All TypeScript types are defined in `types/carousel.ts` for type safety.
 - ARIA labels on navigation buttons
 - `role="group"` on slide container
 - `aria-live="polite"` for screen reader announcements
-- Keyboard navigation support
+- Keyboard navigation: the slide container is focusable, `ArrowLeft` / `ArrowRight` move by one slide group (works in Safari, which does not focus scroll containers by default)
 - Respects `prefers-reduced-motion`
 
 ---

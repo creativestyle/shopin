@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from 'react'
+import { useState, useRef, useCallback } from 'react'
 import type { ChangeEvent, KeyboardEvent } from 'react'
 import { validateQuantity } from './quantity-utils'
 
@@ -31,9 +31,11 @@ export function useQuantityInput({
   const inputRef = useRef<HTMLInputElement>(null)
 
   // Sync input value when prop value changes (e.g., from server response)
-  useEffect(() => {
+  const [prevValue, setPrevValue] = useState(value)
+  if (value !== prevValue) {
+    setPrevValue(value)
     setInputValue(value.toString())
-  }, [value])
+  }
 
   const setValidatedInputValue = useCallback(
     (nextValue: number) => {

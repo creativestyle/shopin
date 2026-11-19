@@ -1,14 +1,4 @@
-/**
- * Type guard to check if an error has a statusCode property
- */
-function hasStatusCode(error: unknown): error is { statusCode: number } {
-  return (
-    error !== null &&
-    typeof error === 'object' &&
-    'statusCode' in error &&
-    typeof (error as { statusCode: unknown }).statusCode === 'number'
-  )
-}
+import { hasStatusCode } from './has-status-code'
 
 /**
  * Checks if an error is a 404 Not Found error from Commercetools
