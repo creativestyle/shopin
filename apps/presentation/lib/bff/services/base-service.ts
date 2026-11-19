@@ -16,6 +16,8 @@ type ServiceRequestOptions = Omit<RequestInit, 'body' | 'method'> & {
   /**
    * Custom error handler. If provided, called when response is not ok.
    * Can return a value (to handle error gracefully) or throw an error.
+   * Returning undefined falls through to the default handling (RateLimitError on 429,
+   * otherwise a generic error), so a handler only needs to cover the statuses it maps.
    */
   onError?: (response: Response) => Promise<unknown> | unknown
   /**
@@ -105,7 +107,10 @@ export abstract class BaseService {
   ): Promise<T> {
     if (!res.ok) {
       if (options?.onError) {
-        return (await options.onError(res)) as T
+        const handled = await options.onError(res)
+        if (handled !== undefined) {
+          return handled as T
+        }
       }
 
       if (res.status === 429) {
