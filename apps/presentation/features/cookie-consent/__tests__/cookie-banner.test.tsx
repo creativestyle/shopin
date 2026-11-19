@@ -1,5 +1,6 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { useSelectedLayoutSegments } from 'next/navigation'
 import { ConsentProvider } from '../consent-provider'
 import { CookieBanner } from '../cookie-banner'
 import { clearConsent, readConsent, writeConsent } from '../consent-cookie'
@@ -13,9 +14,36 @@ function renderBanner() {
   )
 }
 
+jest.mock('next/navigation', () => ({
+  ...jest.requireActual('next/navigation'),
+  useSelectedLayoutSegments: jest.fn(),
+}))
+
+const mockSegments = jest.mocked(useSelectedLayoutSegments)
+
 describe('CookieBanner', () => {
   beforeEach(() => {
     clearConsent()
+    mockSegments.mockReturnValue([])
+  })
+
+  it('links to the privacy policy from the description', async () => {
+    renderBanner()
+
+    const banner = await screen.findByRole('dialog')
+    expect(
+      within(banner).getByRole('link', {
+        name: 'cookieConsent.banner.description',
+      })
+    ).toHaveAttribute('href', '/privacy')
+  })
+
+  it('does not render on a legal page even without a stored choice', () => {
+    mockSegments.mockReturnValue(['(main)', 'privacy'])
+
+    renderBanner()
+
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 
   it('shows on first visit with accept/reject/customise actions and takes focus', async () => {

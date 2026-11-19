@@ -16,7 +16,8 @@ import {
   type ConsentCategories,
   type ConsentState,
 } from './cookie-consent-config'
-import { clearConsent, readConsent, writeConsent } from './consent-cookie'
+import { readConsent, writeConsent } from './consent-cookie'
+import { reloadPage } from './reload-page'
 import {
   emitConsentChange,
   getConsentSnapshot,
@@ -40,8 +41,6 @@ export interface ConsentContextValue {
   rejectNonEssential: () => void
   openPreferences: () => void
   closePreferences: () => void
-  /** Clears the stored choice and re-shows the banner. */
-  resetConsent: () => void
 }
 
 const ConsentContext = createContext<ConsentContextValue | undefined>(undefined)
@@ -55,24 +54,19 @@ const getNotHydrated = () => false
 
 function isWithdrawal(
   previous: ConsentState | null,
-  next: ConsentCategories | null
+  next: ConsentCategories
 ): boolean {
   return CONSENT_CATEGORIES.some(
-    (category) =>
-      previous?.categories[category] === true && next?.[category] !== true
+    (category) => previous?.categories[category] === true && !next[category]
   )
 }
 
 // Tag code that already ran can't be unloaded, so withdrawal reloads the page.
-function applyConsent(next: ConsentCategories | null): boolean {
+function applyConsent(next: ConsentCategories): boolean {
   const withdrawn = isWithdrawal(readConsent(), next)
-  if (next) {
-    writeConsent(next)
-  } else {
-    clearConsent()
-  }
+  writeConsent(next)
   if (withdrawn) {
-    window.location.reload()
+    reloadPage()
     return false
   }
   emitConsentChange()
@@ -112,12 +106,6 @@ export function ConsentProvider({ children }: { children: React.ReactNode }) {
   const openPreferences = useCallback(() => setIsPreferencesOpen(true), [])
   const closePreferences = useCallback(() => setIsPreferencesOpen(false), [])
 
-  const resetConsent = useCallback(() => {
-    if (applyConsent(null)) {
-      setIsPreferencesOpen(false)
-    }
-  }, [])
-
   const value = useMemo<ConsentContextValue>(
     () => ({
       consentState,
@@ -129,7 +117,6 @@ export function ConsentProvider({ children }: { children: React.ReactNode }) {
       rejectNonEssential,
       openPreferences,
       closePreferences,
-      resetConsent,
     }),
     [
       consentState,
@@ -141,7 +128,6 @@ export function ConsentProvider({ children }: { children: React.ReactNode }) {
       rejectNonEssential,
       openPreferences,
       closePreferences,
-      resetConsent,
     ]
   )
 

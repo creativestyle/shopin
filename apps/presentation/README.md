@@ -60,7 +60,7 @@ export function AnalyticsTag() {
 
 - `useConsentGate(category)` returns the same flag when you need it outside JSX.
 - When a visitor withdraws a category, the page reloads, so a tag that has already run stops tracking.
-- List every cookie the tag sets in your cookie policy, and delete those cookies when consent is missing, like `@demo/mock-tracking-tags` does.
+- List every cookie the tag sets in your cookie policy, and delete those cookies once the stored choice has been read (`isReady` from `useConsent()`) and the category isn't consented, like `@demo/mock-tracking-tags` does. Before `isReady` the choice is still unknown, so deleting then would wipe a consented visitor's cookie on every load.
 
 ## Learn more
 

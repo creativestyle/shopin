@@ -4,7 +4,24 @@ import { ConsentProvider } from '../consent-provider'
 import { CookieConsent } from '../cookie-consent'
 import { CookieFooterTrigger } from '../cookie-footer-trigger'
 import { clearConsent, readConsent, writeConsent } from '../consent-cookie'
-import { allRejected, type ConsentCategories } from '../cookie-consent-config'
+import {
+  allAccepted,
+  allRejected,
+  type ConsentCategories,
+} from '../cookie-consent-config'
+import { reloadPage } from '../reload-page'
+
+jest.mock('../reload-page', () => ({ reloadPage: jest.fn() }))
+
+const mockReloadPage = jest.mocked(reloadPage)
+
+async function saveDialog(user: ReturnType<typeof userEvent.setup>) {
+  await user.click(
+    screen.getByRole('button', {
+      name: 'cookieConsent.actions.savePreferences',
+    })
+  )
+}
 
 async function openPreferencesFromFooter(stored: ConsentCategories) {
   writeConsent(stored)
@@ -33,6 +50,7 @@ function categorySwitch(category: keyof ConsentCategories) {
 describe('CookiePreferencesDialog', () => {
   beforeEach(() => {
     clearConsent()
+    mockReloadPage.mockClear()
   })
 
   it('seeds the toggles from the stored choice', async () => {
@@ -51,11 +69,7 @@ describe('CookiePreferencesDialog', () => {
     const user = await openPreferencesFromFooter(allRejected())
 
     await user.click(categorySwitch('analytics'))
-    await user.click(
-      screen.getByRole('button', {
-        name: 'cookieConsent.actions.savePreferences',
-      })
-    )
+    await saveDialog(user)
 
     await waitFor(() =>
       expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
@@ -64,6 +78,29 @@ describe('CookiePreferencesDialog', () => {
       analytics: true,
       marketing: false,
     })
+  })
+
+  it('reloads the page when a granted category is withdrawn', async () => {
+    const user = await openPreferencesFromFooter(allAccepted())
+
+    await user.click(categorySwitch('analytics'))
+    await saveDialog(user)
+
+    expect(mockReloadPage).toHaveBeenCalledTimes(1)
+    expect(readConsent()?.categories.analytics).toBe(false)
+  })
+
+  it('does not reload when a category is newly granted', async () => {
+    const user = await openPreferencesFromFooter(allRejected())
+
+    await user.click(categorySwitch('marketing'))
+    await saveDialog(user)
+
+    await waitFor(() =>
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    )
+    expect(readConsent()?.categories.marketing).toBe(true)
+    expect(mockReloadPage).not.toHaveBeenCalled()
   })
 
   it('accepts all categories from the dialog and closes', async () => {
