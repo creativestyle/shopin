@@ -5,8 +5,10 @@ import { FormField } from '@/components/ui/form-field'
 import { TextInput } from '@/components/ui/inputs/text-input'
 import { DateInput } from '@/components/ui/inputs/date-input'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-button'
-import { useUpdateCustomer } from '../hooks/use-update-customer'
-import { HttpError } from '@/lib/error-utils'
+import { addToast } from '@/components/ui/toast'
+import { useBffClientMutation } from '@/lib/bff/utils/mutations'
+import { useCustomerService } from '../hooks/use-customer-service'
+import { customerKeys } from '../customer-keys'
 import {
   getCustomerDataFormDefaultValues,
   cleanCustomerData,
@@ -17,8 +19,9 @@ import {
   UpdateCustomerRequestSchema,
 } from '@core/contracts/customer/customer'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { useQueryClient } from '@tanstack/react-query'
 import { useTranslations } from 'next-intl'
-import { FC, useEffect } from 'react'
+import { FC, useEffect, useId } from 'react'
 import { Controller, useForm } from 'react-hook-form'
 import { SALUTATION_OPTIONS } from '@config/constants'
 
@@ -34,6 +37,23 @@ export const CustomerDataForm: FC<ContactDataFormProps> = ({
   onStateChange,
 }) => {
   const t = useTranslations('account.myAccount')
+  const salutationLabelId = useId()
+  const { customerService } = useCustomerService()
+  const queryClient = useQueryClient()
+
+  const updateMutation = useBffClientMutation({
+    mutationFn: (data: UpdateCustomerRequest) =>
+      customerService.updateCustomer(data),
+    errorMessage: t('customerData.errors.general'),
+    onSuccess: (data) => {
+      queryClient.setQueryData(customerKeys.me(), data)
+      addToast({
+        type: 'success',
+        children: t('customerData.updateSuccess'),
+      })
+      onSuccess()
+    },
+  })
 
   const form = useForm<UpdateCustomerRequest>({
     mode: 'onTouched',
@@ -41,30 +61,18 @@ export const CustomerDataForm: FC<ContactDataFormProps> = ({
     defaultValues: getCustomerDataFormDefaultValues(customer),
   })
 
-  const { updateCustomer, isUpdateCustomerPending } = useUpdateCustomer({
-    onSuccess,
-  })
-
   async function onSubmit(data: UpdateCustomerRequest) {
-    const result = await updateCustomer(cleanCustomerData(data))
-
-    if (!result.success && HttpError.isConflictError(result.error)) {
-      form.setError('email', {
-        type: 'server',
-        message: 'account.myAccount.customerData.errors.emailInUse',
-      })
-      form.setFocus('email')
-    }
+    await updateMutation.mutateAsync(cleanCustomerData(data))
   }
 
   useEffect(() => {
     if (onStateChange) {
       onStateChange({
         isDirty: form.formState.isDirty,
-        isPending: isUpdateCustomerPending,
+        isPending: updateMutation.isPending,
       })
     }
-  }, [form.formState.isDirty, isUpdateCustomerPending, onStateChange])
+  }, [form.formState.isDirty, updateMutation.isPending, onStateChange])
 
   return (
     <form
@@ -78,7 +86,7 @@ export const CustomerDataForm: FC<ContactDataFormProps> = ({
         render={({ field, fieldState }) => (
           <Field data-invalid={fieldState.invalid}>
             <span
-              id='salutation-label'
+              id={salutationLabelId}
               className='mb-2 text-sm font-medium text-gray-700'
             >
               {t('customerData.salutation')}
@@ -88,7 +96,7 @@ export const CustomerDataForm: FC<ContactDataFormProps> = ({
               orientation='horizontal'
               value={field.value}
               onValueChange={field.onChange}
-              aria-labelledby='salutation-label'
+              aria-labelledby={salutationLabelId}
               invalid={fieldState.invalid}
               className='grid-flow-row gap-4 sm:grid-flow-col sm:gap-8'
             >
@@ -116,21 +124,6 @@ export const CustomerDataForm: FC<ContactDataFormProps> = ({
               <FieldError error={fieldState.error} />
             )}
           </Field>
-        )}
-      />
-
-      <FormField
-        name='email'
-        control={form.control}
-        render={({ field, validationState }) => (
-          <TextInput
-            {...field}
-            id='email'
-            label={t('customerData.email')}
-            required
-            autoComplete='email'
-            validationState={validationState}
-          />
         )}
       />
 

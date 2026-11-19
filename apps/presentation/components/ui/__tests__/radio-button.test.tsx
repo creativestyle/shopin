@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { RadioGroup, RadioGroupItem } from '../radio-button'
+import { Field, FieldError } from '../field'
 
 describe('RadioButton', () => {
   it('renders group and items', () => {
@@ -173,5 +174,53 @@ describe('RadioButton', () => {
     expect(disabledRadio).toBeDisabled()
     await user.click(disabledRadio)
     expect(onChange).not.toHaveBeenCalled()
+  })
+
+  it('marks the group invalid only when invalid is set', () => {
+    const { rerender } = render(
+      <RadioGroup>
+        <RadioGroupItem value='a' />
+      </RadioGroup>
+    )
+    expect(screen.getByRole('radiogroup')).not.toHaveAttribute('aria-invalid')
+
+    rerender(
+      <RadioGroup invalid>
+        <RadioGroupItem value='a' />
+      </RadioGroup>
+    )
+    expect(screen.getByRole('radiogroup')).toHaveAttribute(
+      'aria-invalid',
+      'true'
+    )
+  })
+
+  it('passes ariaDescribedBy to the group', () => {
+    render(
+      <RadioGroup ariaDescribedBy='hint'>
+        <RadioGroupItem value='a' />
+      </RadioGroup>
+    )
+
+    expect(
+      screen.getByRole('radiogroup').getAttribute('aria-describedby')
+    ).toContain('hint')
+  })
+
+  it('is described by the field error inside an invalid Field', () => {
+    render(
+      <Field data-invalid>
+        <RadioGroup invalid>
+          <RadioGroupItem value='a' />
+        </RadioGroup>
+        <FieldError error={{ message: 'Pick one' }} />
+      </Field>
+    )
+
+    const errorId = screen.getByRole('alert').id
+    expect(errorId).toBeTruthy()
+    expect(
+      screen.getByRole('radiogroup').getAttribute('aria-describedby')
+    ).toContain(errorId)
   })
 })

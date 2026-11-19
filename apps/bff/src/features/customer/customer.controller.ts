@@ -18,16 +18,22 @@ import {
   ApiOkResponse,
   ApiBadRequestResponse,
   ApiUnauthorizedResponse,
+  ApiConflictResponse,
 } from '@nestjs/swagger'
 import { SecureRateLimit } from '../../common/throttler/secure-rate-limit.decorator'
 import { CustomerService } from './customer.service'
 import {
+  ChangeCustomerEmailRequest,
+  ChangeCustomerEmailRequestSchema,
+  ChangeCustomerEmailResponse,
+  ChangeCustomerEmailResponseSchema,
   ChangeCustomerPasswordRequest,
   ChangeCustomerPasswordRequestSchema,
   CustomerResponse,
   CustomerResponseSchema,
   UpdateCustomerRequest,
   UpdateCustomerRequestSchema,
+  EMAIL_IN_USE_CODE,
   INVALID_CURRENT_PASSWORD_CODE,
 } from '@core/contracts/customer/customer'
 import { TokenRefreshInterceptor } from '../../common/token-management/token-refresh.interceptor'
@@ -49,6 +55,7 @@ import {
 import {
   AuthLoggerService,
   authLogContextFromRequest,
+  type AuthFailureReason,
 } from '../../common/auth-logging'
 
 @Controller('customer')
@@ -149,6 +156,53 @@ export class CustomerController {
         reason: isInvalidCurrentPasswordException(err)
           ? 'invalid_credentials'
           : 'error',
+        ...authLogContextFromRequest(req),
+      })
+      throw err
+    }
+  }
+
+  @Put('me/email')
+  @SecureRateLimit()
+  @UseCsrfGuard()
+  @HttpCode(HttpStatus.OK)
+  @Header('Cache-Control', 'no-store, no-cache, must-revalidate, private')
+  @Header('Pragma', 'no-cache')
+  @Header('Expires', '0')
+  @ApiOkResponse({
+    description:
+      'Email changed; the new address must be verified before the next sign-in',
+  })
+  @ApiBadRequestResponse({
+    description: `Invalid request body, or wrong current password (code: ${INVALID_CURRENT_PASSWORD_CODE})`,
+  })
+  @ApiConflictResponse({
+    description: `Email already in use (code: ${EMAIL_IN_USE_CODE})`,
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Not authenticated',
+  })
+  async changeCustomerEmail(
+    @Req() req: Request,
+    @ZodBody(ChangeCustomerEmailRequestSchema)
+    changeCustomerEmailRequest: ChangeCustomerEmailRequest
+  ): Promise<ChangeCustomerEmailResponse> {
+    try {
+      const result = await this.customerService.changeCustomerEmail(
+        changeCustomerEmailRequest
+      )
+      this.authLogger.log({
+        action: 'email_change',
+        outcome: 'success',
+        userId: result.customer.id,
+        ...authLogContextFromRequest(req),
+      })
+      return ChangeCustomerEmailResponseSchema.strip().parse(result)
+    } catch (err) {
+      this.authLogger.log({
+        action: 'email_change',
+        outcome: 'failure',
+        reason: getEmailChangeFailureReason(err),
         ...authLogContextFromRequest(req),
       })
       throw err
@@ -269,9 +323,22 @@ export class CustomerController {
 }
 
 function isInvalidCurrentPasswordException(err: unknown): boolean {
+  return hasErrorCode(err, INVALID_CURRENT_PASSWORD_CODE)
+}
+
+function getEmailChangeFailureReason(err: unknown): AuthFailureReason {
+  if (hasErrorCode(err, INVALID_CURRENT_PASSWORD_CODE)) {
+    return 'invalid_credentials'
+  }
+  if (hasErrorCode(err, EMAIL_IN_USE_CODE)) {
+    return 'user_exists'
+  }
+  return 'error'
+}
+
+function hasErrorCode(err: unknown, code: string): boolean {
   return (
     err instanceof HttpException &&
-    (err.getResponse() as { code?: unknown })?.code ===
-      INVALID_CURRENT_PASSWORD_CODE
+    (err.getResponse() as { code?: unknown })?.code === code
   )
 }
