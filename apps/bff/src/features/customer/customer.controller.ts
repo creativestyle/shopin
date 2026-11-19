@@ -4,6 +4,7 @@ import {
   Get,
   Header,
   HttpCode,
+  HttpException,
   HttpStatus,
   Param,
   Post,
@@ -15,6 +16,7 @@ import type { Request } from 'express'
 import {
   ApiTags,
   ApiOkResponse,
+  ApiBadRequestResponse,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger'
 import { SecureRateLimit } from '../../common/throttler/secure-rate-limit.decorator'
@@ -26,6 +28,7 @@ import {
   CustomerResponseSchema,
   UpdateCustomerRequest,
   UpdateCustomerRequestSchema,
+  INVALID_CURRENT_PASSWORD_CODE,
 } from '@core/contracts/customer/customer'
 import { TokenRefreshInterceptor } from '../../common/token-management/token-refresh.interceptor'
 import { TokenProvider } from '../../common/token-management/token-provider'
@@ -117,6 +120,9 @@ export class CustomerController {
   @ApiOkResponse({
     description: 'Password changed successfully',
   })
+  @ApiBadRequestResponse({
+    description: `Invalid request body, or wrong current password (code: ${INVALID_CURRENT_PASSWORD_CODE})`,
+  })
   @ApiUnauthorizedResponse({
     description: 'Not authenticated',
   })
@@ -140,7 +146,9 @@ export class CustomerController {
       this.authLogger.log({
         action: 'password_change',
         outcome: 'failure',
-        reason: 'invalid_credentials',
+        reason: isInvalidCurrentPasswordException(err)
+          ? 'invalid_credentials'
+          : 'error',
         ...authLogContextFromRequest(req),
       })
       throw err
@@ -258,4 +266,12 @@ export class CustomerController {
     await this.customerService.setDefaultBillingAddress(addressId)
     return { success: true }
   }
+}
+
+function isInvalidCurrentPasswordException(err: unknown): boolean {
+  return (
+    err instanceof HttpException &&
+    (err.getResponse() as { code?: unknown })?.code ===
+      INVALID_CURRENT_PASSWORD_CODE
+  )
 }
