@@ -1,4 +1,35 @@
 {
+  "cookieConsent": {
+    "banner": {
+      "title": "We value your privacy",
+      "description": "We use cookies to run the store and, with your permission, to analyse traffic and personalise content. You can accept all cookies, reject non-essential ones, or choose which categories to allow. Learn more in our <link>privacy policy</link>."
+    },
+    "actions": {
+      "acceptAll": "Accept all",
+      "essentialOnly": "Only essential",
+      "customise": "Customise",
+      "savePreferences": "Save preferences"
+    },
+    "preferences": {
+      "title": "Cookie preferences",
+      "description": "Choose which categories of cookies you allow. Essential cookies are always active because the store cannot function without them."
+    },
+    "categories": {
+      "essential": {
+        "name": "Essential",
+        "description": "Required for core features like your cart, checkout, and security. These cannot be turned off."
+      },
+      "analytics": {
+        "name": "Analytics",
+        "description": "Help us understand how the store is used so we can improve it. No data is collected without your consent."
+      },
+      "marketing": {
+        "name": "Marketing",
+        "description": "Used to show you relevant offers and measure the performance of our campaigns."
+      }
+    },
+    "footerLink": "Cookie preferences"
+  },
   "legalBar": {
     "copyright": "© 2026 SHOPin storefront accelerator."
   },
@@ -229,6 +260,7 @@
     "cart": "Cart"
   },
   "account": {
+    "passwordHint": "{min}-{max} characters, including at least 1 letter.",
     "signIn": {
       "title": "Sign In",
       "description": "Use your account and collect points for this purchase",
@@ -292,7 +324,9 @@
         "lastNameRequired": "Last name is required",
         "emailInvalid": "Please enter a valid email address",
         "dateOfBirthInvalid": "Please enter a valid date in DD-MM-YYYY format",
-        "passwordMinLength": "Password must be at least 8 characters",
+        "passwordMinLength": "Password must be at least {min} characters",
+        "passwordMaxLength": "Password must be at most {max} characters",
+        "passwordRequiresLetter": "Password must contain at least 1 letter",
         "acceptTermsRequired": "You must accept the terms and conditions",
         "confirmPasswordRequired": "Please confirm your password",
         "passwordsDoNotMatch": "Passwords do not match",
@@ -366,7 +400,9 @@
         "invalidToken": "Invalid reset link. Please request a new password reset.",
         "confirmPasswordRequired": "Please confirm your password",
         "passwordsDoNotMatch": "Passwords do not match",
-        "newPasswordMinLength": "Password must be at least 8 characters",
+        "newPasswordMinLength": "Password must be at least {min} characters",
+        "newPasswordMaxLength": "Password must be at most {max} characters",
+        "newPasswordRequiresLetter": "Password must contain at least 1 letter",
         "tooManyRequests": "Too many requests. Please wait a moment and try again.",
         "internalServerError": "An error occurred. Please try again later"
       }
@@ -417,7 +453,7 @@
       },
       "changePassword": {
         "changePasswordTitle": "Password",
-        "changePasswordDescription": "Here you can set a new password (min. 8 characters including at least 1 letter/max 18 characters, no special characters). For security reasons, you need to enter your old password.",
+        "changePasswordDescription": "Here you can set a new password. For security reasons, you need to enter your old password.",
         "currentPassword": "Current Password",
         "newPassword": "New Password",
         "confirmNewPassword": "Confirm New Password",
@@ -427,7 +463,10 @@
         "submitButtonLabel": "Change Password",
         "errors": {
           "currentPasswordRequired": "Current password is required",
-          "newPasswordMinLength": "New password must be at least 8 characters",
+          "wrongCurrentPassword": "That is not your current password. Please try again.",
+          "newPasswordMinLength": "New password must be at least {min} characters",
+          "newPasswordMaxLength": "New password must be at most {max} characters",
+          "newPasswordRequiresLetter": "New password must contain at least 1 letter",
           "confirmPasswordRequired": "Please confirm your new password",
           "passwordsDoNotMatch": "Passwords do not match"
         }
