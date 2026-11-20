@@ -130,7 +130,8 @@ export class CartService extends BaseAuthenticatedService {
     const cartService = this.getCartService()
 
     const cart = await cartService.getCart(cartId)
-    if (cart.discountCodes?.length) {
+    // Codes that no longer apply do not block a replacement.
+    if (cart.discountCodes?.some((entry) => entry.applied)) {
       throw new FrontendSafeException('alreadyApplied')
     }
 

@@ -47,6 +47,7 @@ import type {
 import { ZodBody } from '../../common/validation'
 import { CartTokenRefreshInterceptor } from './cart-token-refresh.interceptor'
 import { UseCsrfGuard } from '../csrf/csrf.decorator'
+import { SecureRateLimit } from '../../common/throttler/secure-rate-limit.decorator'
 
 @Controller('cart')
 @ApiTags('cart')
@@ -131,6 +132,7 @@ export class CartController {
   }
 
   @Post('discount-code')
+  @SecureRateLimit()
   @UseCsrfGuard()
   @HttpCode(HttpStatus.OK)
   @ApiOkResponse({

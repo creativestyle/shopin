@@ -86,6 +86,19 @@ export const CartLineItemApiResponseSchema = z.object({
   product: CartLineItemProductApiResponseSchema.optional(),
   variant: CartLineItemVariantApiResponseSchema.optional(),
   totalPrice: TypedMoneyApiResponseSchema.optional(),
+  // Cart discounts applied to this line item; totalPrice already has them deducted.
+  discountedPricePerQuantity: z
+    .array(
+      z.object({
+        quantity: z.number(),
+        discountedPrice: z.object({
+          includedDiscounts: z.array(
+            z.object({ discountedAmount: TypedMoneyApiResponseSchema })
+          ),
+        }),
+      })
+    )
+    .optional(),
   price: z
     .object({
       value: z.object({

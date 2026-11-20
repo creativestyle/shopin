@@ -88,6 +88,8 @@ export type PaymentInfoResponse = z.infer<typeof PaymentInfoResponseSchema>
 export const DiscountCodeResponseSchema = z.object({
   id: z.string(),
   code: z.string(),
+  // False when the code is still on the cart but no longer grants its discount.
+  applied: z.boolean(),
 })
 
 export type DiscountCodeResponse = z.infer<typeof DiscountCodeResponseSchema>
@@ -155,7 +157,7 @@ export type ApplyDiscountCodeRequest = z.infer<
 >
 
 export const RemoveDiscountCodeRequestSchema = z.object({
-  discountCodeId: z.string(),
+  discountCodeId: z.string().trim().min(1).max(100),
 })
 
 export type RemoveDiscountCodeRequest = z.infer<

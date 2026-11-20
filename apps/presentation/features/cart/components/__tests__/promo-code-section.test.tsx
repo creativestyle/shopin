@@ -1,10 +1,11 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { PromoCodeSection } from '../promo-code-section'
 
 const mockApplyCode = jest.fn()
 const mockRemoveCode = jest.fn()
 let mockFeedback: { type: 'success' | 'error'; message: string } | null = null
+let mockIsApplying = false
 
 jest.mock('next-intl', () => ({
   useTranslations:
@@ -18,7 +19,7 @@ jest.mock('../../hooks/use-promo-code', () => ({
   usePromoCode: () => ({
     applyCode: mockApplyCode,
     removeCode: mockRemoveCode,
-    isApplying: false,
+    isApplying: mockIsApplying,
     isRemoving: false,
     feedback: mockFeedback,
     clearFeedback: jest.fn(),
@@ -33,6 +34,7 @@ describe('PromoCodeSection', () => {
   beforeEach(() => {
     jest.clearAllMocks()
     mockFeedback = null
+    mockIsApplying = false
     mockApplyCode.mockResolvedValue({ success: true, data: {} })
     mockRemoveCode.mockResolvedValue({ success: true, data: {} })
   })
@@ -95,7 +97,7 @@ describe('PromoCodeSection', () => {
     render(
       <PromoCodeSection
         label='Promo code'
-        appliedCodes={[{ id: 'dc-1', code: 'SAVE10' }]}
+        appliedCodes={[{ id: 'dc-1', code: 'SAVE10', applied: true }]}
       />
     )
 
@@ -132,5 +134,84 @@ describe('PromoCodeSection', () => {
     await openSection(user)
 
     expect(screen.getByRole('status')).toHaveTextContent('Promo code applied.')
+  })
+
+  it('links the error message to the input', async () => {
+    mockFeedback = { type: 'error', message: 'This code has expired.' }
+    const user = userEvent.setup()
+    render(<PromoCodeSection label='Promo code' />)
+    await openSection(user)
+
+    expect(
+      screen.getByRole('textbox', { name: 'cart.promoCode.label' })
+    ).toHaveAccessibleDescription('This code has expired.')
+  })
+
+  it('keeps the input focusable while a code is being applied', async () => {
+    mockIsApplying = true
+    const user = userEvent.setup()
+    render(<PromoCodeSection label='Promo code' />)
+    await openSection(user)
+
+    const input = screen.getByRole('textbox', { name: 'cart.promoCode.label' })
+    expect(input).not.toBeDisabled()
+    expect(input).toHaveAttribute('readonly')
+  })
+
+  it('shows a code that no longer applies, with a remove control', async () => {
+    render(
+      <PromoCodeSection
+        label='Promo code'
+        appliedCodes={[{ id: 'dc-1', code: 'SAVE10', applied: false }]}
+      />
+    )
+
+    expect(
+      screen.getByText('cart.promoCode.notApplied:SAVE10')
+    ).toBeInTheDocument()
+    expect(
+      screen.getByRole('button', {
+        name: 'cart.promoCode.removeAriaLabel:SAVE10',
+      })
+    ).toBeInTheDocument()
+  })
+
+  it('prefers a working code over one that no longer applies', () => {
+    render(
+      <PromoCodeSection
+        label='Promo code'
+        appliedCodes={[
+          { id: 'dc-1', code: 'STALE', applied: false },
+          { id: 'dc-2', code: 'SAVE10', applied: true },
+        ]}
+      />
+    )
+
+    expect(
+      screen.getByText('cart.promoCode.applied:SAVE10')
+    ).toBeInTheDocument()
+  })
+
+  it('moves focus to the input after the code is removed', async () => {
+    const user = userEvent.setup()
+    const { rerender } = render(
+      <PromoCodeSection
+        label='Promo code'
+        appliedCodes={[{ id: 'dc-1', code: 'SAVE10', applied: true }]}
+      />
+    )
+
+    await user.click(
+      screen.getByRole('button', {
+        name: 'cart.promoCode.removeAriaLabel:SAVE10',
+      })
+    )
+    rerender(<PromoCodeSection label='Promo code' />)
+
+    await waitFor(() =>
+      expect(
+        screen.getByRole('textbox', { name: 'cart.promoCode.label' })
+      ).toHaveFocus()
+    )
   })
 })

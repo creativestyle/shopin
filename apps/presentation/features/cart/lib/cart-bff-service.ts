@@ -75,6 +75,10 @@ export class CartService extends BaseService {
       validatedRequest,
       {
         onError: async (response) => {
+          // Fall through so the base service throws RateLimitError.
+          if (response.status === 429) {
+            return undefined
+          }
           throw await toPromoCodeError(response)
         },
       }

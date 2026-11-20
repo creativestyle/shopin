@@ -7,6 +7,7 @@ import { useCartService } from './use-cart-service'
 import { useBffClientMutation } from '@/lib/bff/utils/mutations'
 import { cartKeys } from '../cart-keys'
 import { PromoCodeError } from '../lib/promo-code-error'
+import { RateLimitError } from '@/lib/bff/utils/rate-limit-error'
 import type { CartResponse } from '@core/contracts/cart/cart'
 
 type PromoCodeFeedback =
@@ -37,6 +38,10 @@ export function usePromoCode() {
       setFeedback({ type: 'success', message: t('success') })
     },
     onError: (error: unknown) => {
+      if (error instanceof RateLimitError) {
+        setFeedback({ type: 'error', message: t('errors.tooManyRequests') })
+        return
+      }
       const reason = error instanceof PromoCodeError ? error.reason : null
       setFeedback({
         type: 'error',

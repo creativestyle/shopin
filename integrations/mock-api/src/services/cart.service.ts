@@ -25,7 +25,7 @@ import { randomUUID } from 'crypto'
 import {
   recalculateCartTotals,
   findLineItem,
-  applyDiscount,
+  computeGrandTotal,
 } from '../helpers/cart-helpers'
 import {
   createShopinPrice,
@@ -165,7 +165,7 @@ export class CartService {
     const cart = await this.getCart(cartId)
     const normalizedCode = code.trim().toUpperCase()
 
-    if (cart.discountCodes?.length) {
+    if (cart.discountCodes?.some((entry) => entry.applied)) {
       throw new DiscountCodeError('alreadyApplied')
     }
 
@@ -177,19 +177,21 @@ export class CartService {
       throw new DiscountCodeError(fixture.reason)
     }
 
+    const discountAmount = createShopinPrice(
+      fixture.discountInCents,
+      cart.currency
+    )
     const updatedCart: CartResponse = {
       ...cart,
       discountCodes: [
-        { id: `mock-discount-${normalizedCode}`, code: normalizedCode },
+        {
+          id: `mock-discount-${normalizedCode}`,
+          code: normalizedCode,
+          applied: true,
+        },
       ],
-      discountAmount: createShopinPrice(fixture.discountInCents, cart.currency),
-      grandTotal: createShopinPrice(
-        applyDiscount(
-          cart.subtotal.regularPriceInCents,
-          fixture.discountInCents
-        ),
-        cart.currency
-      ),
+      discountAmount,
+      grandTotal: computeGrandTotal({ ...cart, discountAmount }),
     }
 
     cartStore.set(cartId, updatedCart)
@@ -209,10 +211,7 @@ export class CartService {
       ...cart,
       discountCodes: remaining.length > 0 ? remaining : undefined,
       discountAmount: undefined,
-      grandTotal: createShopinPrice(
-        cart.subtotal.regularPriceInCents,
-        cart.currency
-      ),
+      grandTotal: computeGrandTotal({ ...cart, discountAmount: undefined }),
     }
 
     cartStore.set(cartId, updatedCart)
@@ -331,16 +330,10 @@ export class CartService {
     const cart = await this.getCart(cartId)
 
     if (!validatedRequest.shippingMethodId) {
-      // Remove shipping method - recalculate grand total
-      const previousShippingCents =
-        cart.shippingInfo?.price.regularPriceInCents || 0
-      const newGrandTotalCents =
-        cart.grandTotal.regularPriceInCents - previousShippingCents
-
       const updatedCart: CartResponse = {
         ...cart,
         shippingInfo: undefined,
-        grandTotal: createShopinPrice(newGrandTotalCents, cart.currency),
+        grandTotal: computeGrandTotal({ ...cart, shippingInfo: undefined }),
       }
       cartStore.set(cartId, updatedCart)
       return updatedCart
@@ -358,28 +351,19 @@ export class CartService {
       )
     }
 
-    // Calculate shipping cost difference
-    const previousShippingCents =
-      cart.shippingInfo?.price.regularPriceInCents || 0
-    const newShippingCents = selectedMethod.price.centAmount
-    const shippingDiff = newShippingCents - previousShippingCents
-
-    // Recalculate grand total with new shipping cost
-    const newGrandTotalCents =
-      cart.grandTotal.regularPriceInCents + shippingDiff
-
+    const shippingInfo: CartResponse['shippingInfo'] = {
+      shippingMethodId: selectedMethod.id,
+      shippingMethodName: selectedMethod.name,
+      price: {
+        regularPriceInCents: selectedMethod.price.centAmount,
+        currency: selectedMethod.price.currencyCode,
+        fractionDigits: 2,
+      },
+    }
     const updatedCart: CartResponse = {
       ...cart,
-      shippingInfo: {
-        shippingMethodId: selectedMethod.id,
-        shippingMethodName: selectedMethod.name,
-        price: {
-          regularPriceInCents: selectedMethod.price.centAmount,
-          currency: selectedMethod.price.currencyCode,
-          fractionDigits: 2,
-        },
-      },
-      grandTotal: createShopinPrice(newGrandTotalCents, cart.currency),
+      shippingInfo,
+      grandTotal: computeGrandTotal({ ...cart, shippingInfo }),
     }
     cartStore.set(cartId, updatedCart)
     return updatedCart

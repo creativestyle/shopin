@@ -120,6 +120,31 @@ export function calculateLineItemsSubtotal(
   )
 }
 
+/** Sum of cart discounts CT has already deducted from line item totals. */
+export function calculateLineItemsDiscount(
+  lineItems: CartApiResponse['lineItems']
+): number {
+  return (
+    lineItems?.reduce(
+      (sum, item) =>
+        sum +
+        // Without totalPrice the subtotal falls back to undiscounted prices.
+        (item.totalPrice ? (item.discountedPricePerQuantity ?? []) : []).reduce(
+          (itemSum, entry) =>
+            itemSum +
+            entry.quantity *
+              entry.discountedPrice.includedDiscounts.reduce(
+                (unitSum, discount) =>
+                  unitSum + discount.discountedAmount.centAmount,
+                0
+              ),
+          0
+        ),
+      0
+    ) ?? 0
+  )
+}
+
 /**
  * Calculates subtotal from custom line items
  */
@@ -221,7 +246,15 @@ export function mapDiscountCodes(
 
   const mapped = discountCodes.flatMap((info) => {
     const code = info.discountCode.obj?.code
-    return code ? [{ id: info.discountCode.id, code }] : []
+    return code
+      ? [
+          {
+            id: info.discountCode.id,
+            code,
+            applied: info.state === 'MatchesCart',
+          },
+        ]
+      : []
   })
 
   return mapped.length > 0 ? mapped : undefined
@@ -237,10 +270,18 @@ export function mapCartToResponse(
   const customLineItemsSubtotalCents = calculateCustomLineItemsSubtotal(
     cart.customLineItems
   )
-  const subtotalCents = lineItemsSubtotalCents + customLineItemsSubtotalCents
+  // Line item totals are net of cart discounts; add them back so subtotal − discount + shipping = total.
+  const lineItemsDiscountCents = calculateLineItemsDiscount(cart.lineItems)
+  const subtotalCents =
+    lineItemsSubtotalCents +
+    lineItemsDiscountCents +
+    customLineItemsSubtotalCents
 
   const taxCents = calculateTaxFromCart(cart)
-  const discountCents = cart.discountOnTotalPrice?.discountedAmount.centAmount
+  const totalDiscountCents =
+    lineItemsDiscountCents +
+    (cart.discountOnTotalPrice?.discountedAmount.centAmount ?? 0)
+  const discountCents = totalDiscountCents > 0 ? totalDiscountCents : undefined
   const grandTotalCents =
     cart.taxedPrice?.totalGross.centAmount ?? cart.totalPrice.centAmount
 

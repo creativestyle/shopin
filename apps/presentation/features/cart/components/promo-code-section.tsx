@@ -1,6 +1,6 @@
 'use client'
 
-import { useId, useState, type FormEvent } from 'react'
+import { useEffect, useId, useRef, useState, type FormEvent } from 'react'
 import { useTranslations } from 'next-intl'
 import {
   Accordion,
@@ -25,7 +25,9 @@ export function PromoCodeSection({
 }: PromoCodeSectionProps) {
   const t = useTranslations('cart.promoCode')
   const inputId = useId()
+  const errorId = `${inputId}-error`
   const [code, setCode] = useState('')
+  const focusInputAfterRemove = useRef(false)
   const {
     applyCode,
     removeCode,
@@ -35,7 +37,25 @@ export function PromoCodeSection({
     clearFeedback,
   } = usePromoCode()
 
-  const appliedCode = appliedCodes?.[0]
+  // Prefer a working code; otherwise surface a stale one so it can be removed.
+  const appliedCode =
+    appliedCodes?.find((entry) => entry.applied) ?? appliedCodes?.[0]
+
+  // The Remove button unmounts on success, so hand focus to the input that replaces it.
+  useEffect(() => {
+    if (!appliedCode && focusInputAfterRemove.current) {
+      focusInputAfterRemove.current = false
+      document.getElementById(inputId)?.focus()
+    }
+  }, [appliedCode, inputId])
+
+  const handleRemove = async (discountCodeId: string) => {
+    focusInputAfterRemove.current = true
+    const result = await removeCode({ discountCodeId })
+    if (!result.success) {
+      focusInputAfterRemove.current = false
+    }
+  }
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault()
@@ -68,14 +88,16 @@ export function PromoCodeSection({
           {appliedCode ? (
             <div className='flex items-center justify-between gap-4'>
               <span className='text-sm text-gray-950'>
-                {t('applied', { code: appliedCode.code })}
+                {appliedCode.applied
+                  ? t('applied', { code: appliedCode.code })
+                  : t('notApplied', { code: appliedCode.code })}
               </span>
               <Button
                 type='button'
                 variant='tertiary'
                 disabled={isRemoving}
                 aria-label={t('removeAriaLabel', { code: appliedCode.code })}
-                onClick={() => removeCode({ discountCodeId: appliedCode.id })}
+                onClick={() => handleRemove(appliedCode.id)}
               >
                 {t('remove')}
               </Button>
@@ -102,7 +124,11 @@ export function PromoCodeSection({
                   validationState={
                     feedback?.type === 'error' ? 'error' : 'none'
                   }
-                  disabled={isApplying}
+                  // readOnly, not disabled: disabling the focused input would drop keyboard focus.
+                  readOnly={isApplying}
+                  aria-describedby={
+                    feedback?.type === 'error' ? errorId : undefined
+                  }
                   // Inset ring: the accordion content clips overflow, so an outset ring is cut off.
                   className='h-12 rounded-full py-0 placeholder-gray-400 data-[keyboard-focus]:ring-offset-0 data-[keyboard-focus]:ring-inset'
                   onChange={(event) => {
@@ -134,6 +160,7 @@ export function PromoCodeSection({
             {feedback?.type === 'success' ? feedback.message : ''}
           </p>
           <p
+            id={errorId}
             role='alert'
             className='mt-2 text-sm text-red-600 empty:mt-0'
           >

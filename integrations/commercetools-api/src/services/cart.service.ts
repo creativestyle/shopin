@@ -7,7 +7,6 @@ import type {
   CartResponse,
   SetBillingAddressRequest,
   SetShippingAddressRequest,
-  DiscountCodeErrorReason,
 } from '@core/contracts/cart/cart'
 import {
   CartResponseSchema,
@@ -24,6 +23,10 @@ import { mapCartToResponse } from '../mappers/cart'
 import { mapShippingMethodsToResponse } from '../mappers/shipping-method'
 import { buildInClause } from '../helpers/build-in-clause'
 import {
+  findRejectedDiscountCode,
+  toDiscountCodeError,
+} from '../helpers/discount-code'
+import {
   CART_INVENTORY_MODE,
   CART_LINE_ITEM_MAX_QUANTITY,
 } from '@config/constants'
@@ -32,52 +35,6 @@ import {
   CartUpdateActionSchema,
   type CartUpdateAction,
 } from '../schemas/cart-update-action'
-
-/** CT DiscountCodeState values that mean the code was not applied. */
-const DISCOUNT_CODE_STATE_REASONS: Record<string, DiscountCodeErrorReason> = {
-  NotValid: 'expired',
-  NotActive: 'invalid',
-  DoesNotMatchCart: 'notApplicable',
-  MaxApplicationReached: 'notApplicable',
-  ApplicationStoppedByPreviousDiscount: 'notApplicable',
-  ApplicationStoppedByGroupBestDeal: 'notApplicable',
-}
-
-/** CT can accept the action and still not grant the discount; the state says so. */
-function findRejectedDiscountCode(
-  cart: CartApiResponse,
-  code: string
-): { id: string; reason: DiscountCodeErrorReason } | undefined {
-  const info = cart.discountCodes?.find(
-    (entry) => entry.discountCode.obj?.code === code
-  )
-
-  if (!info || info.state === 'MatchesCart') {
-    return undefined
-  }
-
-  return {
-    id: info.discountCode.id,
-    reason: DISCOUNT_CODE_STATE_REASONS[info.state] ?? 'notApplicable',
-  }
-}
-
-function toDiscountCodeError(error: unknown): unknown {
-  const errors = (
-    error as { body?: { errors?: { code?: string; reason?: string }[] } }
-  ).body?.errors
-
-  const nonApplicable = errors?.find(
-    (entry) => entry.code === 'DiscountCodeNonApplicable'
-  )
-  if (!nonApplicable) {
-    return error
-  }
-
-  return new DiscountCodeError(
-    nonApplicable.reason === 'TimeRangeNonApplicable' ? 'expired' : 'invalid'
-  )
-}
 
 interface GetCartOptions extends ContractGetCartOptions {
   expand?: string[]
@@ -501,7 +458,14 @@ export class CartService {
     const rawCart = CartApiResponseSchema.parse(responseBody)
     const rejection = findRejectedDiscountCode(rawCart, code)
     if (rejection) {
-      await this.removeDiscountCode(cartId, rejection.id).catch(() => undefined)
+      await this.removeDiscountCode(cartId, rejection.id).catch((error) => {
+        // The code stays on the cart; it maps as not applied, so it can still be removed.
+        Logger.warn(
+          `Failed to roll back discount code ${rejection.id} on cart ${cartId}`,
+          error,
+          CartService.name
+        )
+      })
       throw new DiscountCodeError(rejection.reason)
     }
 
