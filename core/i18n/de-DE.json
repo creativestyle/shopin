@@ -765,5 +765,26 @@
   "productCard": {
     "linkAriaLabel": "{name} ansehen",
     "omnibusPrice": "30-Tage Bestpreis:"
+  },
+  "dataSourceSelector": {
+    "title": "Datenquelle konfigurieren",
+    "intro": "Wählen Sie aus, welche Datenquelle die Anwendung für Produkte, Kategorien und Inhalte verwenden soll.",
+    "select": "Auswählen",
+    "selected": "Ausgewählt",
+    "currentSelection": "Aktuelle Auswahl:",
+    "sources": {
+      "mock-set": {
+        "name": "Mock-API",
+        "description": "Mock-Daten für Entwicklung und Tests verwenden"
+      },
+      "commercetools-set": {
+        "name": "commercetools-API",
+        "description": "commercetools-API für Produktdaten verwenden"
+      },
+      "commercetools-algolia-set": {
+        "name": "commercetools-API + Algolia",
+        "description": "commercetools-API mit Algolia-Suche verwenden"
+      }
+    }
   }
 }

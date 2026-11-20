@@ -114,7 +114,7 @@ export function ProductCollectionContent({
                   variantId={product.variantId}
                   variantCount={product.variantCount}
                   variant='primary'
-                  className='z-2 w-full'
+                  className='w-full'
                 />
               )}
             />

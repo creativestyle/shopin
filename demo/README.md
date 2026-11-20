@@ -42,6 +42,8 @@ If you don't need the demo functionality, you can remove this entire workspace:
    - `getDataSourceHeader` — `apps/presentation/lib/bff/core/bff-fetch.ts`
    - **Demo payment**: Remove `PaymentDemo` from `apps/presentation/app/[locale]/demo/mocked-payment-step/[paymentId]/page.tsx`, or delete the whole `app/[locale]/demo/` route. Then update **`integrations/mock-api`**: the mock payment service (`integrations/mock-api/src/services/payment.service.ts`) currently returns a payment link to `/demo/mocked-payment-step/${cartId}`. Change `getPaymentLink()` to return your real payment provider URL (or a placeholder), otherwise checkout with the mock data source will redirect to a broken link.
    - In `apps/presentation/app/globals.css`, remove the line: `@source '../../../demo/data-source-selector/';`
+   - **Data-source selector page**: delete the `/setup` route (`apps/presentation/app/[variant]/[locale]/(main)/setup/`), which renders `DataSourceSelector`.
+   - **Mock data source**: remove `'mock-set'` from `ALLOWED_DATA_SOURCES` in `config/constants/src/data-source/index.ts`, so a leftover `data-source=mock-set` cookie can't select the mock variant.
 
 3. **Remove usage in BFF**
    - In `apps/bff/src/data-source/data-source.module.ts`: remove the `@demo/data-source-header-reader` import (`dataSourceHeaderMiddleware`, `DataSourceRequest`), remove the `configure()` implementation (or the whole `implements NestModule`), and change the `DATA_SOURCE` provider to use `DEFAULT_DATA_SOURCE` only (no request-based switching).
