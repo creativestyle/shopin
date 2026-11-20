@@ -9,7 +9,7 @@ import {
   ThrottlerStorage,
 } from '@nestjs/throttler'
 import type { Request } from 'express'
-import { resolveTrustedClientIp } from './trusted-client-ip'
+import { isTrustedInternalRequest } from './internal-request'
 
 /** Skip key: @SecureRateLimit() sets SkipThrottle({ default: true }), so only secure routes have this true. */
 const THROTTLER_SKIP = 'THROTTLER:SKIP'
@@ -20,6 +20,7 @@ const THROTTLER_SKIP = 'THROTTLER:SKIP'
  * Secure endpoints (auth, payment, order, change-password) also depend on this flag.
  * Ensures the "secure" throttler runs only on routes that use @SecureRateLimit()
  * when rate limiting is enabled.
+ * Requests carrying a matching BFF_INTERNAL_SECRET header are never throttled.
  */
 @Injectable()
 export class OptionalThrottlerGuard extends ThrottlerGuard {
@@ -32,18 +33,20 @@ export class OptionalThrottlerGuard extends ThrottlerGuard {
     super(options, storageService, reflector)
   }
 
-  protected override async getTracker(req: Request): Promise<string> {
-    const secret = this.config.get<string>('BFF_INTERNAL_SECRET')
-    return (
-      resolveTrustedClientIp(req.headers, secret) ??
-      (await super.getTracker(req))
-    )
-  }
-
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const rateLimitEnabled =
       this.config.get<string>('BFF_RATE_LIMIT_ENABLED') ?? 'false'
     if (rateLimitEnabled !== 'true') {
+      return true
+    }
+    // Server-side calls on a shopper's behalf would otherwise share the Next server's IP bucket
+    const request = context.switchToHttp().getRequest<Request>()
+    if (
+      isTrustedInternalRequest(
+        request.headers,
+        this.config.get<string>('BFF_INTERNAL_SECRET')
+      )
+    ) {
       return true
     }
     const handler = context.getHandler()

@@ -1,12 +1,7 @@
 /**
  * @jest-environment node
  */
-jest.mock('next/headers', () => ({
-  cookies: jest.fn(),
-  headers: jest.fn(
-    async () => new Headers({ 'x-forwarded-for': '203.0.113.7, 10.0.0.1' })
-  ),
-}))
+jest.mock('next/headers', () => ({ cookies: jest.fn() }))
 jest.mock('next-intl/server', () => ({ getLocale: jest.fn(async () => 'en') }))
 jest.mock('@/lib/navigation', () => ({
   redirect: jest.fn(({ href }: { href: string }) => {
@@ -26,7 +21,10 @@ import { redirect } from '@/lib/navigation'
 import { createBffFetchServer } from '@/lib/bff/core/bff-fetch-server'
 import { logger } from '@/lib/logger'
 import type { CartResponse } from '@core/contracts/cart/cart'
-import { ensureCheckoutStep } from '../checkout-server-guard'
+import {
+  ensureCheckoutEntry,
+  ensureCheckoutStep,
+} from '../checkout-server-guard'
 
 const PRICE = { regularPriceInCents: 1000, currency: 'EUR' }
 const ADDRESS = { firstName: 'Jane', city: 'Berlin', country: 'DE' }
@@ -41,6 +39,18 @@ const BASE_CART: CartResponse = {
   itemCount: 1,
   shippingInfo: undefined,
   paymentInfo: undefined,
+}
+
+const COMPLETE_CART: CartResponse = {
+  ...BASE_CART,
+  billingAddress: ADDRESS,
+  shippingAddress: ADDRESS,
+  shippingInfo: {
+    shippingMethodId: 'standard',
+    shippingMethodName: 'Standard',
+    price: PRICE,
+  },
+  paymentInfo: { payments: [{ typeId: 'payment', id: 'payment-1' }] },
 }
 
 const SESSION_COOKIES = [
@@ -115,24 +125,35 @@ describe('ensureCheckoutStep', () => {
     expect(redirect).not.toHaveBeenCalled()
   })
 
-  it('forwards request cookies and the correlation id to the BFF', async () => {
+  it('forwards only BFF cookies, unchanged, plus the correlation id', async () => {
+    setCookies([
+      { name: 'cart-guest-en', value: 'c1' },
+      { name: 'access_token', value: 't1' },
+      { name: 'refresh_token', value: 'r1' },
+      { name: 'wishlist-logged-en', value: 'w1' },
+      { name: 'preview_token', value: 'secret-preview' },
+      { name: 'correlationId', value: 'cookie-corr' },
+      { name: '_ga', value: 'GA1.1' },
+    ])
     respondWithCart({ ...BASE_CART, billingAddress: ADDRESS })
 
     await ensureCheckoutStep('shipping')
 
     const headers = new Headers(baseFetch.mock.calls[0][1].headers)
-    expect(headers.get('Cookie')).toBe('cart-guest-en=c1; access_token=t1')
+    expect(headers.get('Cookie')).toBe(
+      'cart-guest-en=c1; access_token=t1; refresh_token=r1; wishlist-logged-en=w1'
+    )
     expect(headers.get('x-correlation-id')).toBe('corr-1')
   })
 
-  describe('client IP forwarding', () => {
+  describe('internal secret', () => {
     const originalSecret = process.env.BFF_INTERNAL_SECRET
 
     afterEach(() => {
       process.env.BFF_INTERNAL_SECRET = originalSecret
     })
 
-    it('forwards the shopper IP with the internal secret when it is set', async () => {
+    it('sends the internal secret when it is set', async () => {
       process.env.BFF_INTERNAL_SECRET = 'internal-secret'
       respondWithCart({ ...BASE_CART, billingAddress: ADDRESS })
 
@@ -140,19 +161,24 @@ describe('ensureCheckoutStep', () => {
 
       const headers = new Headers(baseFetch.mock.calls[0][1].headers)
       expect(headers.get('x-bff-internal-secret')).toBe('internal-secret')
-      expect(headers.get('x-bff-client-ip')).toBe('203.0.113.7')
     })
 
-    it('sends neither header when no secret is set', async () => {
-      delete process.env.BFF_INTERNAL_SECRET
-      respondWithCart({ ...BASE_CART, billingAddress: ADDRESS })
+    it.each([undefined, '', '   '])(
+      'sends no internal secret header when the secret is %p',
+      async (secret) => {
+        if (secret === undefined) {
+          delete process.env.BFF_INTERNAL_SECRET
+        } else {
+          process.env.BFF_INTERNAL_SECRET = secret
+        }
+        respondWithCart({ ...BASE_CART, billingAddress: ADDRESS })
 
-      await ensureCheckoutStep('shipping')
+        await ensureCheckoutStep('shipping')
 
-      const headers = new Headers(baseFetch.mock.calls[0][1].headers)
-      expect(headers.has('x-bff-internal-secret')).toBe(false)
-      expect(headers.has('x-bff-client-ip')).toBe(false)
-    })
+        const headers = new Headers(baseFetch.mock.calls[0][1].headers)
+        expect(headers.has('x-bff-internal-secret')).toBe(false)
+      }
+    )
   })
 
   it.each([
@@ -168,4 +194,35 @@ describe('ensureCheckoutStep', () => {
       expect(redirect).not.toHaveBeenCalled()
     }
   )
+})
+
+describe('ensureCheckoutEntry', () => {
+  beforeEach(() => {
+    jest.clearAllMocks()
+    jest.mocked(createBffFetchServer).mockResolvedValue({ fetch: baseFetch })
+    setCookies(SESSION_COOKIES)
+  })
+
+  it('stays on /checkout while billing is incomplete', async () => {
+    respondWithCart(BASE_CART)
+
+    await expect(ensureCheckoutEntry()).resolves.toEqual(BASE_CART)
+    expect(redirect).not.toHaveBeenCalled()
+  })
+
+  it('goes to the first incomplete step once billing is done', async () => {
+    respondWithCart({ ...BASE_CART, billingAddress: ADDRESS })
+
+    await expect(ensureCheckoutEntry()).rejects.toThrow(
+      'NEXT_REDIRECT:/checkout/shipping'
+    )
+  })
+
+  it('goes to review when every step is complete', async () => {
+    respondWithCart(COMPLETE_CART)
+
+    await expect(ensureCheckoutEntry()).rejects.toThrow(
+      'NEXT_REDIRECT:/checkout/review'
+    )
+  })
 })
