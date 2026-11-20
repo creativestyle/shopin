@@ -1,4 +1,4 @@
-import { Injectable, Inject, Scope } from '@nestjs/common'
+import { Injectable, Inject, Logger, Scope } from '@nestjs/common'
 import { LANGUAGE_TOKEN } from '@core/i18n'
 import { resolveCurrencyFromLanguage } from '@core/i18n/currency-utils'
 import { resolveCountryFromLanguage } from '@core/i18n/language-tag-utils'
@@ -13,13 +13,20 @@ import {
   CartResponseSchema,
   DiscountCodeError,
 } from '@core/contracts/cart/cart'
+import type { GetCartOptions as ContractGetCartOptions } from '@core/contracts/core/data-source-interfaces'
 import type {
   ShippingMethodsResponse,
   SetShippingMethodRequest,
 } from '@core/contracts/cart/shipping-method'
 import { UserClientService } from '../client/user-client.service'
+import { ServerClientService } from '../client/server-client.service'
 import { mapCartToResponse } from '../mappers/cart'
 import { mapShippingMethodsToResponse } from '../mappers/shipping-method'
+import { buildInClause } from '../helpers/build-in-clause'
+import {
+  CART_INVENTORY_MODE,
+  CART_LINE_ITEM_MAX_QUANTITY,
+} from '@config/constants'
 import { CartApiResponseSchema, type CartApiResponse } from '../schemas/cart'
 import {
   CartUpdateActionSchema,
@@ -72,6 +79,19 @@ function toDiscountCodeError(error: unknown): unknown {
   )
 }
 
+interface GetCartOptions extends ContractGetCartOptions {
+  expand?: string[]
+}
+
+function toStockKey(sku: string, supplyChannelId?: string): string {
+  return JSON.stringify([sku, supplyChannelId ?? null])
+}
+
+// Never exposes more than the per-line cap, so raw stock levels stay hidden
+function toMaxQuantity(availableQuantity: number): number {
+  return Math.min(Math.max(0, availableQuantity), CART_LINE_ITEM_MAX_QUANTITY)
+}
+
 @Injectable({ scope: Scope.REQUEST })
 export class CartService {
   private static readonly CART_EXPAND = [
@@ -82,9 +102,11 @@ export class CartService {
     // Required to read the shopper-facing code; CT returns only a reference id otherwise.
     'discountCodes[*].discountCode',
   ] satisfies string[]
+  private static readonly INVENTORY_PAGE_LIMIT = 500
 
   constructor(
     private readonly userClientService: UserClientService,
+    private readonly serverClientService: ServerClientService,
     @Inject(LANGUAGE_TOKEN) private readonly languageProvider: LanguageProvider
   ) {}
 
@@ -98,19 +120,123 @@ export class CartService {
 
   private async updateCartWithAction(
     cartId: string,
-    actionData: unknown
+    actionData: unknown,
+    withInventory = false
   ): Promise<CartResponse> {
-    return this.updateCartWithActions(cartId, [actionData])
+    return this.updateCartWithActions(cartId, [actionData], withInventory)
+  }
+
+  private async getCartVersion(cartId: string): Promise<number> {
+    const client = await this.getClient()
+    const response = await client
+      .me()
+      .carts()
+      .withId({ ID: cartId })
+      .get()
+      .execute()
+
+    return CartApiResponseSchema.parse(response.body).version
   }
 
   private async processCartResponse(
     responseBody: unknown,
-    currentLanguage: string
+    currentLanguage: string,
+    withInventory = false
   ): Promise<CartResponse> {
-    return this.mapValidatedCart(
-      CartApiResponseSchema.parse(responseBody),
-      currentLanguage
-    )
+    const validatedCart = CartApiResponseSchema.parse(responseBody)
+    const mappedCart = mapCartToResponse(validatedCart, currentLanguage)
+    const cart = withInventory
+      ? await this.enrichWithInventory(validatedCart, mappedCart)
+      : mappedCart
+    return CartResponseSchema.parse(cart)
+  }
+
+  private async enrichWithInventory(
+    apiCart: CartApiResponse,
+    cart: CartResponse
+  ): Promise<CartResponse> {
+    const stockKeyByLineItemId = new Map<string, string>()
+    const skus = new Set<string>()
+
+    for (const item of apiCart.lineItems ?? []) {
+      const sku = item.variant?.sku
+      const inventoryMode = item.inventoryMode ?? apiCart.inventoryMode
+      if (!sku || inventoryMode == null || inventoryMode === 'None') {
+        continue
+      }
+      skus.add(sku)
+      stockKeyByLineItemId.set(item.id, toStockKey(sku, item.supplyChannel?.id))
+    }
+
+    if (skus.size === 0) {
+      return cart
+    }
+
+    try {
+      const stockByKey = await this.getStockByKey([...skus])
+
+      if (stockByKey.size === 0) {
+        return cart
+      }
+
+      return {
+        ...cart,
+        lineItems: cart.lineItems.map((item) => {
+          const stockKey = stockKeyByLineItemId.get(item.id)
+          const availableQuantity = stockKey
+            ? stockByKey.get(stockKey)
+            : undefined
+
+          return availableQuantity == null
+            ? item
+            : { ...item, maxQuantity: toMaxQuantity(availableQuantity) }
+        }),
+      }
+    } catch (error) {
+      Logger.warn(
+        'Failed to fetch inventory for cart line items',
+        error,
+        CartService.name
+      )
+      return cart
+    }
+  }
+
+  private async getStockByKey(skus: string[]): Promise<Map<string, number>> {
+    const client = this.serverClientService.getClient()
+    const stockByKey = new Map<string, number>()
+    let offset = 0
+
+    while (true) {
+      const response = await client
+        .inventory()
+        .get({
+          queryArgs: {
+            where: buildInClause('sku', skus),
+            limit: CartService.INVENTORY_PAGE_LIMIT,
+            offset,
+          },
+        })
+        .execute()
+
+      const results = response.body.results ?? []
+
+      for (const entry of results) {
+        if (entry.sku == null || entry.availableQuantity == null) {
+          continue
+        }
+        stockByKey.set(
+          toStockKey(entry.sku, entry.supplyChannel?.id),
+          entry.availableQuantity
+        )
+      }
+
+      if (results.length < CartService.INVENTORY_PAGE_LIMIT) {
+        return stockByKey
+      }
+
+      offset += results.length
+    }
   }
 
   private mapValidatedCart(
@@ -127,9 +253,7 @@ export class CartService {
   ): Promise<unknown> {
     const client = await this.getClient()
 
-    // Get cart version from cartId
-    const cartForVersion = await this.getCart(cartId, [])
-    const cartVersion = cartForVersion.version
+    const cartVersion = await this.getCartVersion(cartId)
 
     const validatedActions = actionsData.map((actionData) =>
       CartUpdateActionSchema.parse(actionData)
@@ -155,32 +279,46 @@ export class CartService {
 
   async updateCartWithActions(
     cartId: string,
-    actionsData: unknown[]
+    actionsData: unknown[],
+    withInventory = false
   ): Promise<CartResponse> {
     const currentLanguage = await this.getCurrentLanguage()
     const responseBody = await this.updateCartWithActionsRaw(
       cartId,
       actionsData
     )
-    return this.processCartResponse(responseBody, currentLanguage)
+    return this.processCartResponse(
+      responseBody,
+      currentLanguage,
+      withInventory
+    )
   }
 
-  async getCart(cartId: string, expand?: string[]): Promise<CartResponse> {
+  async getCart(
+    cartId: string,
+    {
+      expand = CartService.CART_EXPAND,
+      withInventory = true,
+    }: GetCartOptions = {}
+  ): Promise<CartResponse> {
     const currentLanguage = await this.getCurrentLanguage()
     const client = await this.getClient()
-    const expandArray = expand ?? CartService.CART_EXPAND
     const response = await client
       .me()
       .carts()
       .withId({ ID: cartId })
       .get({
         queryArgs: {
-          expand: expandArray,
+          expand,
         },
       })
       .execute()
 
-    return this.processCartResponse(response.body, currentLanguage)
+    return this.processCartResponse(
+      response.body,
+      currentLanguage,
+      withInventory
+    )
   }
 
   async createCart(): Promise<CartResponse> {
@@ -196,6 +334,7 @@ export class CartService {
         body: {
           currency,
           country,
+          inventoryMode: CART_INVENTORY_MODE,
         },
       })
       .execute()
@@ -224,7 +363,7 @@ export class CartService {
       quantity: quantity ?? 1,
     }
 
-    return this.updateCartWithAction(cartId, actionData)
+    return this.updateCartWithAction(cartId, actionData, true)
   }
 
   async updateCartItem(
@@ -238,7 +377,7 @@ export class CartService {
       quantity,
     }
 
-    return this.updateCartWithAction(cartId, actionData)
+    return this.updateCartWithAction(cartId, actionData, true)
   }
 
   async removeCartItem(
@@ -250,7 +389,7 @@ export class CartService {
       lineItemId,
     }
 
-    return this.updateCartWithAction(cartId, actionData)
+    return this.updateCartWithAction(cartId, actionData, true)
   }
 
   async setBillingAddress(

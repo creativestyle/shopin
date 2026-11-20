@@ -27,8 +27,8 @@ export function CartSummary({
 }: CartSummaryProps) {
   const locale = useLocale()
   const t = useTranslations('cart')
-  const shippingCents = cart.shippingInfo?.price.regularPriceInCents || 0
-  const discountCents = cart.discountAmount?.regularPriceInCents ?? 0
+  const shippingPrice = cart.shippingInfo?.price
+  const discount = cart.discountAmount
 
   const content = (
     <>
@@ -41,37 +41,44 @@ export function CartSummary({
           <Divider />
         </>
       )}
-      <div className='flex w-full flex-col items-start gap-2'>
-        <PriceRow
-          label={t('summary.subtotal')}
-          value={cart.subtotal.regularPriceInCents}
-          currency={cart.subtotal.currency ?? cart.currency}
-          fractionDigits={cart.subtotal.fractionDigits ?? 2}
-          locale={locale}
-        />
-        {discountCents > 0 && (
+      <div
+        aria-live='polite'
+        aria-atomic='true'
+        className='flex w-full flex-col gap-4'
+      >
+        <div className='flex w-full flex-col items-start gap-2'>
           <PriceRow
-            label={t('summary.discount')}
-            value={-discountCents}
-            currency={cart.discountAmount?.currency ?? cart.currency}
-            fractionDigits={cart.discountAmount?.fractionDigits ?? 2}
+            label={t('summary.subtotal')}
+            value={cart.subtotal.regularPriceInCents}
+            currency={cart.subtotal.currency ?? cart.currency}
+            fractionDigits={cart.subtotal.fractionDigits ?? 2}
             locale={locale}
           />
-        )}
-        <PriceRow
-          label={t('summary.shipping')}
-          value={shippingCents}
-          currency={cart.currency}
-          fractionDigits={2}
-          locale={locale}
+          {discount && discount.regularPriceInCents > 0 && (
+            <PriceRow
+              label={t('summary.discount')}
+              value={-discount.regularPriceInCents}
+              currency={discount.currency ?? cart.currency}
+              fractionDigits={discount.fractionDigits ?? 2}
+              locale={locale}
+            />
+          )}
+          <PriceRow
+            label={t('summary.shipping')}
+            value={shippingPrice?.regularPriceInCents}
+            currency={shippingPrice?.currency ?? cart.currency}
+            fractionDigits={shippingPrice?.fractionDigits ?? 2}
+            locale={locale}
+            placeholder={t('summary.shippingAtCheckout')}
+          />
+        </div>
+        <Divider />
+        <CartTotalDisplay
+          total={cart.grandTotal.regularPriceInCents}
+          currency={cart.grandTotal.currency ?? cart.currency}
+          fractionDigits={cart.grandTotal.fractionDigits ?? 2}
         />
       </div>
-      <Divider />
-      <CartTotalDisplay
-        total={cart.grandTotal.regularPriceInCents}
-        currency={cart.grandTotal.currency ?? cart.currency}
-        fractionDigits={cart.grandTotal.fractionDigits ?? 2}
-      />
       {actions && (
         <>
           <Divider />

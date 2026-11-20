@@ -1,5 +1,7 @@
 import { Injectable } from '@nestjs/common'
 import type {
+  ChangeCustomerEmailRequest,
+  ChangeCustomerEmailResponse,
   CustomerResponse,
   UpdateCustomerRequest,
 } from '@core/contracts/customer/customer'
@@ -33,6 +35,28 @@ export class CustomerService {
   }): Promise<void> {
     const { customerService } = this.dataSourceFactory.getServices()
     return customerService.changeCustomerPassword(changeCustomerPasswordRequest)
+  }
+
+  async changeCustomerEmail(
+    changeCustomerEmailRequest: ChangeCustomerEmailRequest
+  ): Promise<ChangeCustomerEmailResponse> {
+    const { customerService } = this.dataSourceFactory.getServices()
+    const customer = await customerService.changeCustomerEmail(
+      changeCustomerEmailRequest
+    )
+
+    if (customer.isEmailVerified !== false) {
+      return { customer }
+    }
+
+    // TODO: temporary solution to return email token to frontend, it should send email.
+    const { generateEmailTokenService } =
+      this.dataSourceFactory.getAuthServices()
+    const { emailToken } = await generateEmailTokenService.generateEmailToken({
+      email: customer.email,
+    })
+
+    return { customer, emailToken }
   }
 
   async getAddresses(): Promise<AddressesResponse> {

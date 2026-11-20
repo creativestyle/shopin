@@ -7,19 +7,25 @@ import {
 } from '@nestjs/common'
 import type { Request } from 'express'
 import type { ZodError } from 'zod'
+import { PUBLIC_ERROR_CODES } from '@core/contracts/core/error-codes'
 import type { NestExceptionForLog } from '../logger/logger.config'
 import { FrontendInputValidationException } from '../validation/frontend-input-validation.exception'
 import { FrontendSafeException } from '../errors/frontend-safe.exception'
 
-type ErrorBody =
-  | { statusCode: 400; message: string; issues: ZodError['issues'] }
-  | { statusCode: 400; message: string; reason: string }
-  | { statusCode: 401; message: string }
-  | { statusCode: 403; message: string }
-  | { statusCode: 404; message: string }
-  | { statusCode: 409; message: string }
-  | { statusCode: 429; message: string }
-  | { statusCode: 500; message: string }
+/** Machine-readable discriminator our own exceptions may attach to any status. */
+type ErrorCode = { code?: string }
+
+type ErrorBody = ErrorCode &
+  (
+    | { statusCode: 400; message: string; issues?: ZodError['issues'] }
+    | { statusCode: 400; message: string; reason: string }
+    | { statusCode: 401; message: string }
+    | { statusCode: 403; message: string }
+    | { statusCode: 404; message: string }
+    | { statusCode: 409; message: string }
+    | { statusCode: 429; message: string }
+    | { statusCode: 500; message: string }
+  )
 
 const STATUS_BODY_MAP: Record<number, ErrorBody> = {
   [HttpStatus.BAD_REQUEST]: {
@@ -113,7 +119,33 @@ export class HttpErrorFilter implements ExceptionFilter {
       }
     }
 
-    return STATUS_BODY_MAP[status] ?? DEFAULT_ERROR_BODY
+    const body = STATUS_BODY_MAP[status] ?? DEFAULT_ERROR_BODY
+
+    // Only allow-listed codes are forwarded, never the exception message
+    const code = this.getPublicErrorCode(exception)
+    if (code) {
+      const message =
+        status === HttpStatus.BAD_REQUEST ? 'Bad Request' : body.message
+      return { statusCode: body.statusCode, message, code } as ErrorBody
+    }
+
+    return body
+  }
+
+  private getPublicErrorCode(exception: unknown): string | undefined {
+    if (!(exception instanceof HttpException)) {
+      return undefined
+    }
+
+    const response = exception.getResponse()
+    if (response === null || typeof response !== 'object') {
+      return undefined
+    }
+
+    const code = (response as { code?: unknown }).code
+    return typeof code === 'string' && PUBLIC_ERROR_CODES.has(code)
+      ? code
+      : undefined
   }
 
   /** Attach exception to request so pino-http can include it when it logs (warn/error level). */
