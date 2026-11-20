@@ -65,13 +65,15 @@ export function mapPageItemToContentPageResponse(
     page.metaTitle != null ||
     page.metaDescription != null ||
     ogImage != null ||
-    page.noIndex === true
+    page.noIndex === true ||
+    page.canonicalUrl != null
   const seo = hasSeo
     ? {
         metaTitle: page.metaTitle ?? undefined,
         metaDescription: page.metaDescription ?? undefined,
         ogImage,
         noIndex: page.noIndex ?? undefined,
+        canonicalUrl: page.canonicalUrl ?? undefined,
       }
     : undefined
 

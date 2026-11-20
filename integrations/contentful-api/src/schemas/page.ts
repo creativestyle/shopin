@@ -32,6 +32,7 @@ export const PageItemApiResponseSchema = z.object({
   metaDescription: z.string().optional().nullable(),
   ogImage: ContentfulImageApiResponseSchema,
   noIndex: z.boolean().optional().nullable(),
+  canonicalUrl: z.string().optional().nullable(),
   componentsCollection: z
     .object({
       items: z.array(z.unknown()).optional().nullable(),
