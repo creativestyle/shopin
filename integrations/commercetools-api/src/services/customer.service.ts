@@ -1,20 +1,29 @@
 import { Injectable, Scope } from '@nestjs/common'
 import type {
+  ChangeCustomerEmailRequest,
   ChangeCustomerPasswordRequest,
   CustomerResponse,
   UpdateCustomerRequest,
 } from '@core/contracts/customer/customer'
 import { UserClientService } from '../client/user-client.service'
+import { ServerClientService } from '../client/server-client.service'
 import { MyCustomerApiResponseSchema } from '../schemas/customer'
 import { mapUpdateCustomerRequestToActions } from '../helpers/customer-update-actions'
 import { mapCustomerToResponse } from '../mappers/customer'
+import { isDuplicateEmailError } from '../helpers/is-duplicate-email-error'
 import { isInvalidCurrentPasswordError } from '../helpers/is-invalid-current-password-error'
+import { isInvalidCredentialsError } from '../helpers/is-invalid-credentials-error'
 import { hasStatusCode } from '../helpers/has-status-code'
 import { InvalidCurrentPasswordException } from '../exceptions/invalid-current-password.exception'
+import { EmailInUseException } from '../exceptions/email-in-use.exception'
+import { EmailUnchangedException } from '../exceptions/email-unchanged.exception'
 
 @Injectable({ scope: Scope.REQUEST })
 export class CommercetoolsCustomerService {
-  constructor(private readonly userClientService: UserClientService) {}
+  constructor(
+    private readonly userClientService: UserClientService,
+    private readonly serverClientService: ServerClientService
+  ) {}
 
   async getCurrentCustomer(): Promise<CustomerResponse> {
     const client = await this.userClientService.getClient()
@@ -48,6 +57,66 @@ export class CommercetoolsCustomerService {
     const updatedCustomer = MyCustomerApiResponseSchema.parse(response.body)
 
     return mapCustomerToResponse(updatedCustomer)
+  }
+
+  /**
+   * Changes the sign-in email after checking the current password.
+   * Commercetools resets isEmailVerified on every changeEmail, so an unchanged
+   * email (ignoring case) is rejected instead of sent.
+   */
+  async changeCustomerEmail(
+    changeCustomerEmailRequest: ChangeCustomerEmailRequest
+  ): Promise<CustomerResponse> {
+    const { email, currentPassword } = changeCustomerEmailRequest
+    const currentCustomer = await this.getCurrentCustomer()
+
+    await this.verifyPassword(currentCustomer.email, currentPassword)
+
+    if (email.toLowerCase() === currentCustomer.email.toLowerCase()) {
+      throw new EmailUnchangedException()
+    }
+
+    try {
+      return await this.postEmailChange(email, currentCustomer.version).catch(
+        async (error: unknown) => {
+          if (
+            !hasStatusCode(error) ||
+            error.statusCode !== 409 ||
+            isDuplicateEmailError(error)
+          ) {
+            throw error
+          }
+          // Customer changed since its version was read; retry once with a fresh one
+          const { version } = await this.getCurrentCustomer()
+          return this.postEmailChange(email, version)
+        }
+      )
+    } catch (error: unknown) {
+      if (isDuplicateEmailError(error)) {
+        throw new EmailInUseException()
+      }
+      throw error
+    }
+  }
+
+  private async postEmailChange(
+    email: string,
+    version: number
+  ): Promise<CustomerResponse> {
+    const client = await this.userClientService.getClient()
+    const response = await client
+      .me()
+      .post({
+        body: {
+          actions: [{ action: 'changeEmail', email }],
+          version,
+        },
+      })
+      .execute()
+
+    return mapCustomerToResponse(
+      MyCustomerApiResponseSchema.parse(response.body)
+    )
   }
 
   async changeCustomerPassword(
@@ -88,5 +157,20 @@ export class CommercetoolsCustomerService {
         },
       })
       .execute()
+  }
+
+  private async verifyPassword(email: string, password: string): Promise<void> {
+    try {
+      await this.serverClientService
+        .getClient()
+        .login()
+        .post({ body: { email, password } })
+        .execute()
+    } catch (error: unknown) {
+      if (isInvalidCredentialsError(error)) {
+        throw new InvalidCurrentPasswordException()
+      }
+      throw error
+    }
   }
 }

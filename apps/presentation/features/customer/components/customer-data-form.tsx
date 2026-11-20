@@ -21,7 +21,7 @@ import {
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useQueryClient } from '@tanstack/react-query'
 import { useTranslations } from 'next-intl'
-import { FC, useEffect } from 'react'
+import { FC, useEffect, useId } from 'react'
 import { Controller, useForm } from 'react-hook-form'
 import { SALUTATION_OPTIONS } from '@config/constants'
 
@@ -37,6 +37,7 @@ export const CustomerDataForm: FC<ContactDataFormProps> = ({
   onStateChange,
 }) => {
   const t = useTranslations('account.myAccount')
+  const salutationLabelId = useId()
   const { customerService } = useCustomerService()
   const queryClient = useQueryClient()
 
@@ -84,7 +85,10 @@ export const CustomerDataForm: FC<ContactDataFormProps> = ({
         control={form.control}
         render={({ field, fieldState }) => (
           <Field data-invalid={fieldState.invalid}>
-            <span className='mb-2 text-sm font-medium text-gray-700'>
+            <span
+              id={salutationLabelId}
+              className='mb-2 text-sm font-medium text-gray-700'
+            >
               {t('customerData.salutation')}
             </span>
             <RadioGroup
@@ -92,6 +96,8 @@ export const CustomerDataForm: FC<ContactDataFormProps> = ({
               orientation='horizontal'
               value={field.value}
               onValueChange={field.onChange}
+              aria-labelledby={salutationLabelId}
+              invalid={fieldState.invalid}
               className='grid-flow-row gap-4 sm:grid-flow-col sm:gap-8'
             >
               {SALUTATION_OPTIONS.map((salutation) => (
