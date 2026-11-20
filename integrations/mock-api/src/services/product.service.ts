@@ -24,7 +24,7 @@ export class ProductService {
     const currency = resolveCurrencyFromLanguage(currentLanguage)
     const product = {
       ...productBase,
-      price: { ...productBase.price, currency },
+      price: productBase.price && { ...productBase.price, currency },
     }
     return {
       product,

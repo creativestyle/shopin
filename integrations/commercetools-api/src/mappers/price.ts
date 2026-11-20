@@ -1,9 +1,5 @@
 import type { ProductVariantApiResponse } from '../schemas/product-variant'
-import type { PriceApiResponse } from '../schemas/price'
 import type { BasicPriceResponse } from '@core/contracts/core/basic-price'
-import { resolveCurrencyFromLanguage } from '@core/i18n/currency-utils'
-import { resolveCountryFromLanguage } from '@core/i18n/language-tag-utils'
-import { I18N_CONFIG } from '@config/constants'
 import { createBasicPrice } from '../helpers/create-basic-price'
 
 interface MoneyAttributeValue {
@@ -21,44 +17,28 @@ function isMoneyAttributeValue(value: unknown): value is MoneyAttributeValue {
 }
 
 /**
- * Picks the variant price for the store resolved from the language.
+ * Maps the price commercetools selected for the store to the shopin price.
  *
- * Prefers `variant.price`, the price commercetools selects when the query sends
- * `priceCurrency`/`priceCountry`. Without it, falls back to a price in the store's
- * currency for its country, then to one in that currency without a country. A price
- * in another currency is never returned.
+ * `variant.price` is set only when the query sends `priceCurrency`/`priceCountry`
+ * (Price Selection). commercetools then picks the one price that applies to every
+ * shopper today; when it picks none, the remaining prices are scoped to a customer
+ * group or channel, outside their validity window, or in another currency, so none
+ * of them is shown. Returns undefined in that case: the product is not sellable in
+ * that store, so no amount is shown (never a zero or a foreign-currency amount).
  */
-export function selectVariantPrice(
-  variant: ProductVariantApiResponse,
-  currentLanguage: string = I18N_CONFIG.defaultLocale
-): PriceApiResponse | undefined {
-  if (variant.price) {
-    return variant.price
-  }
-  const currency = resolveCurrencyFromLanguage(currentLanguage)
-  const country = resolveCountryFromLanguage(currentLanguage)
-  const inCurrency = (variant.prices ?? []).filter(
-    (price) => price.value.currencyCode === currency
-  )
-  return (
-    inCurrency.find((price) => price.country === country) ??
-    inCurrency.find((price) => price.country === undefined)
-  )
-}
-
 export function mapVariantPriceToShopin(
-  variant: ProductVariantApiResponse,
-  currentLanguage?: string
-): BasicPriceResponse {
-  const selectedPrice = selectVariantPrice(variant, currentLanguage)
+  variant: ProductVariantApiResponse
+): BasicPriceResponse | undefined {
+  const selectedPrice = variant.price
+  if (!selectedPrice) {
+    return undefined
+  }
 
-  const regularPriceInCents = selectedPrice?.value.centAmount ?? 0
-  const discountedPriceInCents = selectedPrice?.discounted?.value.centAmount
-  const currency =
-    selectedPrice?.value.currencyCode ??
-    resolveCurrencyFromLanguage(currentLanguage ?? I18N_CONFIG.defaultLocale)
+  const regularPriceInCents = selectedPrice.value.centAmount
+  const discountedPriceInCents = selectedPrice.discounted?.value.centAmount
+  const currency = selectedPrice.value.currencyCode
 
-  const fields = selectedPrice?.custom?.fields
+  const fields = selectedPrice.custom?.fields
   const recommendedRetailPriceInCents =
     fields && typeof fields.recommendedRetailPrice === 'number'
       ? fields.recommendedRetailPrice

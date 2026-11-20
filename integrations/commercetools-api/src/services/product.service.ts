@@ -7,7 +7,7 @@ import { resolveCountryFromLanguage } from '@core/i18n/language-tag-utils'
 import type { ProductResponse } from '@core/contracts/product/product'
 import type { LocalizedStringApiResponse } from '../schemas/localized-string'
 import { getLocalizedString as mapLocalized } from '../helpers/get-localized-string'
-import { mapVariantPriceToShopin, selectVariantPrice } from '../mappers/price'
+import { mapVariantPriceToShopin } from '../mappers/price'
 import { mapBadges } from '../mappers/badges'
 import { mapConfigurableOptions } from '../mappers/configurable-options'
 import { mapVariantToGallery } from '../mappers/gallery'
@@ -74,14 +74,11 @@ export class ProductService {
         ([, value]) => typeof value === 'string' && value.length > 0
       )
     ) as Record<string, string>
-    // Badges use the same price as the price box (minor units)
-    const selectedPrice = selectVariantPrice(selectedVariant, currentLanguage)
-    const regularPriceCents = selectedPrice?.value.centAmount
-    const discountedCents = selectedPrice?.discounted?.value.centAmount
-
+    // One price for the price box and the badges, so they can never disagree.
+    const price = mapVariantPriceToShopin(selectedVariant)
     const badges = mapBadges(
-      regularPriceCents,
-      discountedCents,
+      price?.regularPriceInCents,
+      price?.discountedPriceInCents,
       product.createdAt
     )
 
@@ -127,7 +124,7 @@ export class ProductService {
             product.metaDescription as LocalizedStringApiResponse | undefined,
             currentLanguage
           ) || undefined,
-        price: mapVariantPriceToShopin(selectedVariant, currentLanguage),
+        price,
         gallery: mapVariantToGallery(selectedVariant, name),
         badges,
         // deliveryEstimate is not available from commercetools by default

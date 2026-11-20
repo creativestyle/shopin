@@ -106,67 +106,49 @@ describe('CommercetoolsProductService price selection', () => {
     })
   })
 
-  it('falls back to the price matching both store country and currency', async () => {
+  it('shows no price when commercetools selected none, even with store-currency prices in the list', async () => {
+    // e.g. a customer-group price or one that starts next month: commercetools skipped it on purpose
     const { service } = createService('de-DE', {
-      prices: [
-        price('usd-de', 9900, 'USD', 'DE'),
-        price('eur-at', 8800, 'EUR', 'AT'),
-        price('eur-de', 3000, 'EUR', 'DE'),
-      ],
+      prices: [price('eur-de', 3000, 'EUR', 'DE'), price('eur', 4000, 'EUR')],
+    })
+
+    const { product } = await service.getProduct('shirt')
+
+    expect(product.price).toBeUndefined()
+    expect(product.badges).toBeUndefined()
+  })
+
+  it('shows a free product at 0, not as unavailable', async () => {
+    const { service } = createService('de-DE', {
+      price: price('free', 0, 'EUR', 'DE'),
     })
 
     const { product } = await service.getProduct('shirt')
 
     expect(product.price).toEqual({
-      regularPriceInCents: 3000,
+      regularPriceInCents: 0,
       currency: 'EUR',
       fractionDigits: 2,
     })
   })
 
-  it('falls back to a country-less price in the store currency, never another currency', async () => {
-    const { service } = createService('de-DE', {
-      prices: [
-        price('usd', 9900, 'USD'),
-        price('eur-at', 8800, 'EUR', 'AT'),
-        price('eur', 4000, 'EUR'),
-      ],
-    })
-
-    const { product } = await service.getProduct('shirt')
-
-    expect(product.price).toEqual({
-      regularPriceInCents: 4000,
-      currency: 'EUR',
-      fractionDigits: 2,
-    })
-  })
-
-  it('shows no amount when only prices in another currency exist', async () => {
+  it('shows no price when only prices in another currency exist', async () => {
     const { service } = createService('de-DE', {
       prices: [price('usd-us', 9900, 'USD', 'US'), price('usd', 9900, 'USD')],
     })
 
     const { product } = await service.getProduct('shirt')
 
-    expect(product.price).toEqual({
-      regularPriceInCents: 0,
-      currency: 'EUR',
-      fractionDigits: 2,
-    })
+    expect(product.price).toBeUndefined()
     expect(product.badges).toBeUndefined()
   })
 
-  it('shows no amount when the variant has no price', async () => {
+  it('shows no price when the variant has no price', async () => {
     const { service } = createService('en-US', {})
 
     const { product } = await service.getProduct('shirt')
 
-    expect(product.price).toEqual({
-      regularPriceInCents: 0,
-      currency: 'USD',
-      fractionDigits: 2,
-    })
+    expect(product.price).toBeUndefined()
     expect(product.badges).toBeUndefined()
   })
 })
@@ -192,17 +174,14 @@ describe('CommercetoolsProductService PDP badges', () => {
     expect(product.badges).toEqual([{ variant: 'red', text: '-25%' }])
   })
 
-  it('takes the discount badge from the fallback price when commercetools selected none', async () => {
+  it('shows no discount badge when commercetools selected no price', async () => {
     const { service } = createService('de-DE', {
-      prices: [
-        price('usd', 10000, 'USD', 'US', 5000),
-        price('eur-de', 2000, 'EUR', 'DE', 1500),
-      ],
+      prices: [price('eur-de', 2000, 'EUR', 'DE', 1500)],
     })
 
     const { product } = await service.getProduct('shirt')
 
-    expect(product.price?.discountedPriceInCents).toBe(1500)
-    expect(product.badges).toEqual([{ variant: 'red', text: '-25%' }])
+    expect(product.price).toBeUndefined()
+    expect(product.badges).toBeUndefined()
   })
 })

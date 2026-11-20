@@ -49,6 +49,13 @@ describe('DecoratedPrice', () => {
     expect(price.compareDocumentPosition(taxNote)).toBe(
       Node.DOCUMENT_POSITION_FOLLOWING
     )
-    expect(container.querySelector('[class*="order-"]')).toBeNull()
+    // A flex `order-*` class would override the DOM order checked above.
+    const orderClasses = Array.from(container.querySelectorAll('*')).flatMap(
+      (element) =>
+        Array.from(element.classList).filter((name) =>
+          /^(?:[a-z0-9-]+:)*-?order-/.test(name)
+        )
+    )
+    expect(orderClasses).toEqual([])
   })
 })
