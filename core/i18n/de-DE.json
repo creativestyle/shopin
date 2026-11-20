@@ -54,7 +54,8 @@
       "label": "Menge",
       "decreaseTo": "{label}: auf {value} verringern",
       "increaseTo": "{label}: auf {value} erhöhen",
-      "currentValue": "{label}: aktueller Wert ist {value}"
+      "currentValue": "{label}: aktueller Wert ist {value}",
+      "remove": "{label}: entfernen"
     },
     "scrollLeft": "Nach links scrollen",
     "scrollRight": "Nach rechts scrollen",
@@ -205,8 +206,12 @@
     "continueShopping": "Weiter einkaufen",
     "item": {
       "quantity": "Menge",
+      "quantityFor": "Menge von {name}",
       "remove": "Entfernen",
       "removeAction": "Artikel entfernen",
+      "removeNamed": "{name} entfernen",
+      "unitPrice": "Stückpreis",
+      "perUnit": "pro Stück",
       "addToWishlist": "Zur Wunschliste hinzufügen",
       "artNumber": "Art.-Nr.",
       "color": "Farbe",
