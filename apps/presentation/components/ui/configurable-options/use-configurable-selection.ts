@@ -51,13 +51,23 @@ export function useConfigurableSelection(
       : {}
   )
 
-  React.useEffect(() => {
-    if (!variantId || Object.keys(currentSelectionFromVariant).length === 0) {
-      return
+  // Re-sync selection when the selection resolved from the URL variant changes
+  // (adjusting state during render). Keyed on the resolved selection's contents,
+  // not just variantId, so it also syncs when variants/options load after the
+  // URL already holds an ID.
+  const resolvedSelectionKey = JSON.stringify(
+    Object.entries(currentSelectionFromVariant).sort(([a], [b]) =>
+      a.localeCompare(b)
+    )
+  )
+  const [syncedSelectionKey, setSyncedSelectionKey] =
+    React.useState(resolvedSelectionKey)
+  if (resolvedSelectionKey !== syncedSelectionKey) {
+    setSyncedSelectionKey(resolvedSelectionKey)
+    if (variantId && Object.keys(currentSelectionFromVariant).length > 0) {
+      setInternalSelected(currentSelectionFromVariant)
     }
-
-    setInternalSelected(currentSelectionFromVariant)
-  }, [variantId, currentSelectionFromVariant])
+  }
 
   const handleChange = (key: string, value: string) => {
     const nextSelection = { ...internalSelected }

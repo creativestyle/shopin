@@ -64,6 +64,7 @@
   --z-header: 45;
   --z-modal: 50;
   --z-dropdown: 50;
+  --z-skip-link: 60;
 
   /* ===== SHADOWS ===== */
   --shadow-card: 0px 5px 10px 0px rgba(0, 0, 0, 0.05);
