@@ -1,5 +1,6 @@
 import { initRouteContext } from '@/lib/request-context/route-context'
 import { CustomerData } from '@/features/customer/customer-data'
+import { ChangeEmailForm } from '@/features/customer/customer-change-email-form'
 
 export default async function Page({
   params,
@@ -9,5 +10,10 @@ export default async function Page({
   const { variant, locale } = await params
   initRouteContext({ variant, locale })
 
-  return <CustomerData />
+  return (
+    <div className='flex flex-col gap-8'>
+      <CustomerData />
+      <ChangeEmailForm />
+    </div>
+  )
 }

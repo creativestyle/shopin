@@ -25,6 +25,7 @@ export function CartItemQuantitySwitcher({
   const t = useTranslations('cart')
   const {
     optimisticQuantity,
+    max,
     handleIncrease,
     handleDecrease,
     handleDirectInputChange,
@@ -44,6 +45,7 @@ export function CartItemQuantitySwitcher({
       removeLabel={t('item.removeNamed', { name: itemName })}
       disabled={isRemoving}
       min={MIN_QUANTITY}
+      max={max}
       ariaLabel={t('item.quantityFor', { name: itemName })}
       className={className}
     />

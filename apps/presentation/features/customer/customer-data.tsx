@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button'
 import { useCustomer } from './customer-use-customer'
 import { CustomerResponse } from '@core/contracts/customer/customer'
 import { useTranslations } from 'next-intl'
-import { FC, useState } from 'react'
+import { FC, useRef, useState } from 'react'
 import { formatSalutation } from './lib/customer-data-utils'
 import { CustomerDataForm } from './components/customer-data-form'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
@@ -43,6 +43,7 @@ export const CustomerData: FC = () => {
   const t = useTranslations('account.myAccount')
   const { customer, isLoading } = useCustomer()
   const [open, setOpen] = useState(false)
+  const editButtonRef = useRef<HTMLButtonElement>(null)
   const [formState, setFormState] = useState({
     isDirty: false,
     isPending: false,
@@ -90,6 +91,7 @@ export const CustomerData: FC = () => {
         <div className='mb-2 flex items-center justify-between'>
           <h2 className='text-lg font-bold'>{t('customerData.title')}</h2>
           <Button
+            ref={editButtonRef}
             variant='primary'
             scheme='black'
             size='sm'
@@ -117,6 +119,7 @@ export const CustomerData: FC = () => {
       >
         <SheetContent
           className='w-full max-w-xl'
+          restoreFocusRef={editButtonRef}
           aria-describedby={undefined}
           onPointerDownOutside={(e) => e.preventDefault()}
           onInteractOutside={(e) => e.preventDefault()}
