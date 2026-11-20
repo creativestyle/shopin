@@ -108,6 +108,7 @@ export function ReviewActive() {
           onClick={handlePlaceOrder}
           className='w-full'
           disabled={isPending}
+          aria-busy={isPending}
         >
           {isPending
             ? t('processing', { default: 'Processing...' })
