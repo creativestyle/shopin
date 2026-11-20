@@ -1,6 +1,8 @@
 import type { ProductVariantApiResponse } from '../schemas/product-variant'
+import type { PriceApiResponse } from '../schemas/price'
 import type { BasicPriceResponse } from '@core/contracts/core/basic-price'
-import { LanguageTagUtils, resolveCurrencyFromLanguage } from '@core/i18n'
+import { resolveCurrencyFromLanguage } from '@core/i18n/currency-utils'
+import { resolveCountryFromLanguage } from '@core/i18n/language-tag-utils'
 import { I18N_CONFIG } from '@config/constants'
 import { createBasicPrice } from '../helpers/create-basic-price'
 
@@ -18,21 +20,37 @@ function isMoneyAttributeValue(value: unknown): value is MoneyAttributeValue {
   )
 }
 
+/**
+ * Picks the variant price for the store resolved from the language.
+ *
+ * Prefers `variant.price`, the price commercetools selects when the query sends
+ * `priceCurrency`/`priceCountry`. Without it, falls back to a price in the store's
+ * currency for its country, then to one in that currency without a country. A price
+ * in another currency is never returned.
+ */
+export function selectVariantPrice(
+  variant: ProductVariantApiResponse,
+  currentLanguage: string = I18N_CONFIG.defaultLocale
+): PriceApiResponse | undefined {
+  if (variant.price) {
+    return variant.price
+  }
+  const currency = resolveCurrencyFromLanguage(currentLanguage)
+  const country = resolveCountryFromLanguage(currentLanguage)
+  const inCurrency = (variant.prices ?? []).filter(
+    (price) => price.value.currencyCode === currency
+  )
+  return (
+    inCurrency.find((price) => price.country === country) ??
+    inCurrency.find((price) => price.country === undefined)
+  )
+}
+
 export function mapVariantPriceToShopin(
   variant: ProductVariantApiResponse,
   currentLanguage?: string
 ): BasicPriceResponse {
-  const prices = variant.prices ?? []
-  const preferredCountry = currentLanguage
-    ? LanguageTagUtils.getCountry(currentLanguage)
-    : undefined
-
-  // Use CT's pre-selected price (based on priceCurrency/priceCountry query params) when available.
-  // Fall back to manual country search and then first price for backward compatibility.
-  const selectedPrice =
-    variant.price ??
-    prices.find((p) => p.country === preferredCountry) ??
-    prices[0]
+  const selectedPrice = selectVariantPrice(variant, currentLanguage)
 
   const regularPriceInCents = selectedPrice?.value.centAmount ?? 0
   const discountedPriceInCents = selectedPrice?.discounted?.value.centAmount

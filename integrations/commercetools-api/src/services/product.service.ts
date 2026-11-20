@@ -7,7 +7,7 @@ import { resolveCountryFromLanguage } from '@core/i18n/language-tag-utils'
 import type { ProductResponse } from '@core/contracts/product/product'
 import type { LocalizedStringApiResponse } from '../schemas/localized-string'
 import { getLocalizedString as mapLocalized } from '../helpers/get-localized-string'
-import { mapVariantPriceToShopin } from '../mappers/price'
+import { mapVariantPriceToShopin, selectVariantPrice } from '../mappers/price'
 import { mapBadges } from '../mappers/badges'
 import { mapConfigurableOptions } from '../mappers/configurable-options'
 import { mapVariantToGallery } from '../mappers/gallery'
@@ -74,10 +74,10 @@ export class ProductService {
         ([, value]) => typeof value === 'string' && value.length > 0
       )
     ) as Record<string, string>
-    // Price mapping with discount if available (minor units)
-    const firstPrice = selectedVariant.prices?.[0]
-    const regularPriceCents = firstPrice?.value.centAmount
-    const discountedCents = firstPrice?.discounted?.value.centAmount
+    // Badges use the same price as the price box (minor units)
+    const selectedPrice = selectVariantPrice(selectedVariant, currentLanguage)
+    const regularPriceCents = selectedPrice?.value.centAmount
+    const discountedCents = selectedPrice?.discounted?.value.centAmount
 
     const badges = mapBadges(
       regularPriceCents,
