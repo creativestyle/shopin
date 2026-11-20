@@ -74,8 +74,11 @@ export function GalleryThumbnailStrip({
       const selectedThumb = thumbnailsRef.current.children[selectedIndex] as
         | HTMLElement
         | undefined
+      const prefersReducedMotion = window.matchMedia?.(
+        '(prefers-reduced-motion: reduce)'
+      ).matches
       selectedThumb?.scrollIntoView?.({
-        behavior: 'smooth',
+        behavior: prefersReducedMotion ? 'auto' : 'smooth',
         block: 'nearest',
         inline: 'center',
       })
@@ -129,7 +132,7 @@ export function GalleryThumbnailStrip({
         ) : (
           <div
             ref={thumbnailsRef}
-            className='flex [scrollbar-width:none] gap-2 overflow-x-auto scroll-smooth [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden'
+            className='no-scrollbar flex gap-2 overflow-x-auto scroll-smooth-motion [-ms-overflow-style:none]'
           >
             {images.map((item, idx) => (
               <div

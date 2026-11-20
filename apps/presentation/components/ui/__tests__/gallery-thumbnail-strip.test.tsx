@@ -23,6 +23,16 @@ global.requestAnimationFrame = jest.fn((cb) => {
 
 Element.prototype.scrollTo = jest.fn()
 
+jest.mock('next-intl', () => ({
+  useTranslations:
+    (ns?: string) =>
+    (key: string, values?: { current: number; total: number }) =>
+      values
+        ? `${ns}.${key} ${values.current}/${values.total}`
+        : `${ns}.${key}`,
+  useLocale: () => 'en',
+}))
+
 /* eslint-disable @next/next/no-img-element -- Mock for testing */
 jest.mock('next/image', () => {
   const MockNextImage = (props: ImgHTMLAttributes<HTMLImageElement>) => (
@@ -123,8 +133,11 @@ describe('GalleryThumbnailStrip', () => {
     )
 
     expect(
-      screen.getAllByRole('button', { name: 'product.gallery.thumbnailAria' })
-    ).toHaveLength(2)
+      screen.getByRole('button', { name: 'product.gallery.thumbnailAria 1/2' })
+    ).toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: 'product.gallery.thumbnailAria 2/2' })
+    ).toBeInTheDocument()
   })
 
   it('renders a plain row for up to 6 images', () => {
