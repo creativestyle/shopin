@@ -12,6 +12,7 @@ import type {
   ShippingMethodsResponse,
   SetShippingMethodRequest,
 } from '@core/contracts/cart/shipping-method'
+import type { GetCartOptions } from '@core/contracts/core/data-source-interfaces'
 import { CartIdService } from '../cart-id/cart-id.service'
 import { TokenProvider } from '../../common/token-management/token-provider'
 import { TokenStorageService } from '../../common/token-management/token-storage.service'
@@ -28,7 +29,7 @@ export class CartService extends BaseAuthenticatedService {
     super(tokenProvider, tokenStorageService, dataSourceFactory)
   }
 
-  async getCart(): Promise<CartResponse | null> {
+  async getCart(options?: GetCartOptions): Promise<CartResponse | null> {
     const cartId = await this.getCartId()
     if (!cartId) {
       return null
@@ -36,7 +37,7 @@ export class CartService extends BaseAuthenticatedService {
 
     const cartService = this.getCartService()
     try {
-      return await cartService.getCart(cartId)
+      return await cartService.getCart(cartId, options)
     } catch (error) {
       // Stale id (e.g. mock cart lost on BFF restart): drop it so a new cart is created
       if (error instanceof NotFoundException) {
@@ -168,7 +169,7 @@ export class CartService extends BaseAuthenticatedService {
    * Get cart ID from cart ID service, or create a new cart if none exists.
    * This method does not fetch the full cart, only gets/creates the cart ID.
    */
-  private async getOrCreateCartId(): Promise<string> {
+  async getOrCreateCartId(): Promise<string> {
     const cartId = await this.getCartId()
     if (cartId) {
       return cartId
@@ -253,7 +254,7 @@ export class CartService extends BaseAuthenticatedService {
       return false
     }
     try {
-      await this.getCartService().getCart(cartId)
+      await this.getCartService().getCart(cartId, { withInventory: false })
       return false
     } catch (lookupError) {
       if (lookupError instanceof NotFoundException) {

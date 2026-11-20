@@ -51,8 +51,35 @@ export type ChangeCustomerPasswordRequest = z.infer<
   typeof ChangeCustomerPasswordRequestSchema
 >
 
+export const ChangeCustomerEmailRequestSchema = z.object({
+  email: z.email('account.myAccount.changeEmail.errors.emailInvalid'),
+  currentPassword: z
+    .string()
+    .min(1, 'account.myAccount.changeEmail.errors.currentPasswordRequired'),
+})
+
+export type ChangeCustomerEmailRequest = z.infer<
+  typeof ChangeCustomerEmailRequestSchema
+>
+
+export const ChangeCustomerEmailResponseSchema = z.object({
+  customer: CustomerResponseSchema,
+  // TODO: remove once an email service sends the verification mail.
+  emailToken: z.string().optional(),
+})
+
+export type ChangeCustomerEmailResponse = z.infer<
+  typeof ChangeCustomerEmailResponseSchema
+>
+
 /**
  * Machine-readable code the BFF returns (with 400) when `currentPassword` does not
  * match the customer's password, so the client can show it on the field.
  */
 export const INVALID_CURRENT_PASSWORD_CODE = 'INVALID_CURRENT_PASSWORD'
+
+/** Machine-readable code the BFF returns (with 409) when the new email is taken. */
+export const EMAIL_IN_USE_CODE = 'EMAIL_IN_USE'
+
+/** Machine-readable code the BFF returns (with 400) when the new email is the current one. */
+export const EMAIL_UNCHANGED_CODE = 'EMAIL_UNCHANGED'
