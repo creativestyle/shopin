@@ -1,6 +1,7 @@
 'use client'
 
 import { useCart } from '@/features/cart/cart-use-cart'
+import { useShippingMethods } from '../../hooks/use-shipping-methods'
 import { DeliveryMethodLabel } from './delivery-method-label'
 
 export function DeliveryMethodPreview() {
@@ -10,17 +11,30 @@ export function DeliveryMethodPreview() {
   const hasShippingInfo =
     shippingInfo?.shippingMethodName && shippingInfo?.shippingMethodId
 
+  const { data: shippingMethodsData } = useShippingMethods(!!hasShippingInfo)
+  const selectedMethod = shippingMethodsData?.shippingMethods.find(
+    (method) => method.id === shippingInfo?.shippingMethodId
+  )
+
   return (
     <>
       {hasShippingInfo && shippingInfo && (
         <DeliveryMethodLabel
-          name={shippingInfo.shippingMethodName}
+          name={
+            selectedMethod?.description ||
+            selectedMethod?.name ||
+            shippingInfo.shippingMethodName
+          }
+          deliveryTime={
+            selectedMethod?.deliveryTime ?? shippingInfo.deliveryTime
+          }
           priceInCents={shippingInfo.price.regularPriceInCents}
           currency={shippingInfo.price.currency || cart.currency}
           fractionDigits={shippingInfo.price.fractionDigits}
-          freeAboveInCents={shippingInfo.freeAbove?.regularPriceInCents}
-          freeAboveCurrency={shippingInfo.freeAbove?.currency || cart.currency}
-          freeAboveFractionDigits={shippingInfo.freeAbove?.fractionDigits}
+          freeAboveInCents={selectedMethod?.freeAbove?.centAmount}
+          freeAboveCurrency={
+            selectedMethod?.freeAbove?.currencyCode || cart.currency
+          }
           variant='preview'
         />
       )}

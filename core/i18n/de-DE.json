@@ -651,8 +651,10 @@
       "title": "Lieferung",
       "free": "Kostenlos",
       "freeShippingThreshold": "Kostenloser Versand ab {amount}",
+      "deliveryTime": "Lieferung in {time}",
       "noMethodsAvailable": "Keine Versandarten für Ihre Lieferadresse verfügbar. Dies kann an Ihrer Sprach-/Währungsauswahl liegen. Bitte versuchen Sie, eine andere Sprache oder Währung auszuwählen.",
-      "saveError": "Fehler beim Speichern der Versandart. Bitte versuchen Sie es erneut."
+      "saveError": "Fehler beim Speichern der Versandart. Bitte versuchen Sie es erneut.",
+      "loadError": "Fehler beim Laden der Versandarten. Bitte versuchen Sie es erneut."
     },
     "billing": {
       "title": "Rechnungsadresse",
@@ -708,7 +710,7 @@
       "confirmationMessage": "Die Bestellung Nr. {orderNumber} wurde aufgegeben. Eine Bestätigungs-E-Mail wird in Kürze an {email} gesendet werden.",
       "orderDetails": "Bestelldetails",
       "orderNumber": "Bestellungsnummer: {orderNumber}",
-      "deliveryTime": "Lieferung in 2-3 Werktagen",
+      "deliveryTime": "Lieferung in {time}",
       "delivery": "Lieferung",
       "deliveryAddress": "{name}, {address}, {city}, {country}",
       "deliveryMethod": "Lieferart",
