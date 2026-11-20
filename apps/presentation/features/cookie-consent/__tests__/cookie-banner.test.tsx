@@ -1,0 +1,116 @@
+import { render, screen, waitFor, within } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
+import { useSelectedLayoutSegments } from 'next/navigation'
+import { ConsentProvider } from '../consent-provider'
+import { CookieBanner } from '../cookie-banner'
+import { clearConsent, readConsent, writeConsent } from '../consent-cookie'
+import { allAccepted } from '../cookie-consent-config'
+
+function renderBanner() {
+  return render(
+    <ConsentProvider>
+      <CookieBanner />
+    </ConsentProvider>
+  )
+}
+
+jest.mock('next/navigation', () => ({
+  ...jest.requireActual('next/navigation'),
+  useSelectedLayoutSegments: jest.fn(),
+}))
+
+const mockSegments = jest.mocked(useSelectedLayoutSegments)
+
+describe('CookieBanner', () => {
+  beforeEach(() => {
+    clearConsent()
+    mockSegments.mockReturnValue([])
+  })
+
+  it('links to the privacy policy from the description', async () => {
+    renderBanner()
+
+    const banner = await screen.findByRole('dialog')
+    expect(
+      within(banner).getByRole('link', {
+        name: 'cookieConsent.banner.description',
+      })
+    ).toHaveAttribute('href', '/privacy')
+  })
+
+  it('does not render on a legal page even without a stored choice', () => {
+    mockSegments.mockReturnValue(['(main)', 'privacy'])
+
+    renderBanner()
+
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+  })
+
+  it('shows on first visit with accept/reject/customise actions and takes focus', async () => {
+    renderBanner()
+
+    const banner = await screen.findByRole('dialog')
+    expect(banner).toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: 'cookieConsent.actions.acceptAll' })
+    ).toBeInTheDocument()
+    expect(
+      screen.getByRole('button', {
+        name: 'cookieConsent.actions.essentialOnly',
+      })
+    ).toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: 'cookieConsent.actions.customise' })
+    ).toBeInTheDocument()
+
+    await waitFor(() =>
+      expect(banner.contains(document.activeElement)).toBe(true)
+    )
+  })
+
+  it('accepting all persists consent and dismisses the banner', async () => {
+    const user = userEvent.setup()
+    renderBanner()
+
+    await user.click(
+      await screen.findByRole('button', {
+        name: 'cookieConsent.actions.acceptAll',
+      })
+    )
+
+    await waitFor(() =>
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    )
+    expect(readConsent()?.categories).toEqual({
+      analytics: true,
+      marketing: true,
+    })
+  })
+
+  it('rejecting all persists a non-essential opt-out', async () => {
+    const user = userEvent.setup()
+    renderBanner()
+
+    await user.click(
+      await screen.findByRole('button', {
+        name: 'cookieConsent.actions.essentialOnly',
+      })
+    )
+
+    await waitFor(() =>
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    )
+    expect(readConsent()?.categories).toEqual({
+      analytics: false,
+      marketing: false,
+    })
+  })
+
+  it('does not render when a choice is already stored', () => {
+    writeConsent(allAccepted())
+
+    renderBanner()
+
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+  })
+})
