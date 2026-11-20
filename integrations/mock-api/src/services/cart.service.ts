@@ -3,9 +3,13 @@ import { PinoLogger } from 'nestjs-pino'
 import { LANGUAGE_TOKEN } from '@core/i18n'
 import { resolveCurrencyFromLanguage } from '@core/i18n/currency-utils'
 import type { LanguageProvider } from '@apps/bff/src/common/language/language.provider'
-import { CartResponseSchema } from '@core/contracts/cart/cart'
+import {
+  CartResponseSchema,
+  DiscountCodeError,
+} from '@core/contracts/cart/cart'
 import type {
   CartResponse,
+  DiscountCodeErrorReason,
   SetBillingAddressRequest,
   SetShippingAddressRequest,
 } from '@core/contracts/cart/cart'
@@ -18,7 +22,11 @@ import {
   SetShippingMethodRequestSchema,
 } from '@core/contracts/cart/shipping-method'
 import { randomUUID } from 'crypto'
-import { recalculateCartTotals, findLineItem } from '../helpers/cart-helpers'
+import {
+  recalculateCartTotals,
+  findLineItem,
+  computeGrandTotal,
+} from '../helpers/cart-helpers'
 import {
   createShopinPrice,
   createShopinLineItem,
@@ -27,6 +35,17 @@ import {
 // Simple in-memory store for mock carts
 // Cart IDs are stored in cookies, so we just need to persist cart data by ID
 export const cartStore = new Map<string, CartResponse>()
+
+/** Fixture codes covering each outcome. Anything unlisted is treated as invalid. */
+export const MOCK_DISCOUNT_CODES: Record<
+  string,
+  { discountInCents: number } | { reason: DiscountCodeErrorReason }
+> = {
+  SAVE10: { discountInCents: 1000 },
+  SAVE5: { discountInCents: 500 },
+  EXPIRED: { reason: 'expired' },
+  NOTYET: { reason: 'notApplicable' },
+}
 
 @Injectable()
 export class CartService {
@@ -142,6 +161,63 @@ export class CartService {
     return updatedCart
   }
 
+  async addDiscountCode(cartId: string, code: string): Promise<CartResponse> {
+    const cart = await this.getCart(cartId)
+    const normalizedCode = code.trim().toUpperCase()
+
+    if (cart.discountCodes?.some((entry) => entry.applied)) {
+      throw new DiscountCodeError('alreadyApplied')
+    }
+
+    const fixture = MOCK_DISCOUNT_CODES[normalizedCode]
+    if (!fixture) {
+      throw new DiscountCodeError('invalid')
+    }
+    if ('reason' in fixture) {
+      throw new DiscountCodeError(fixture.reason)
+    }
+
+    const discountAmount = createShopinPrice(
+      fixture.discountInCents,
+      cart.currency
+    )
+    const updatedCart: CartResponse = {
+      ...cart,
+      discountCodes: [
+        {
+          id: `mock-discount-${normalizedCode}`,
+          code: normalizedCode,
+          applied: true,
+        },
+      ],
+      discountAmount,
+      grandTotal: computeGrandTotal({ ...cart, discountAmount }),
+    }
+
+    cartStore.set(cartId, updatedCart)
+    return CartResponseSchema.parse(updatedCart)
+  }
+
+  async removeDiscountCode(
+    cartId: string,
+    discountCodeId: string
+  ): Promise<CartResponse> {
+    const cart = await this.getCart(cartId)
+    const remaining = (cart.discountCodes ?? []).filter(
+      (entry) => entry.id !== discountCodeId
+    )
+
+    const updatedCart: CartResponse = {
+      ...cart,
+      discountCodes: remaining.length > 0 ? remaining : undefined,
+      discountAmount: undefined,
+      grandTotal: computeGrandTotal({ ...cart, discountAmount: undefined }),
+    }
+
+    cartStore.set(cartId, updatedCart)
+    return CartResponseSchema.parse(updatedCart)
+  }
+
   async getActiveCart(): Promise<CartResponse | null> {
     // For mock, return the most recently created cart (simple implementation)
     // In a real scenario, this would query by customer ID and cart state
@@ -254,16 +330,10 @@ export class CartService {
     const cart = await this.getCart(cartId)
 
     if (!validatedRequest.shippingMethodId) {
-      // Remove shipping method - recalculate grand total
-      const previousShippingCents =
-        cart.shippingInfo?.price.regularPriceInCents || 0
-      const newGrandTotalCents =
-        cart.grandTotal.regularPriceInCents - previousShippingCents
-
       const updatedCart: CartResponse = {
         ...cart,
         shippingInfo: undefined,
-        grandTotal: createShopinPrice(newGrandTotalCents, cart.currency),
+        grandTotal: computeGrandTotal({ ...cart, shippingInfo: undefined }),
       }
       cartStore.set(cartId, updatedCart)
       return updatedCart
@@ -281,28 +351,19 @@ export class CartService {
       )
     }
 
-    // Calculate shipping cost difference
-    const previousShippingCents =
-      cart.shippingInfo?.price.regularPriceInCents || 0
-    const newShippingCents = selectedMethod.price.centAmount
-    const shippingDiff = newShippingCents - previousShippingCents
-
-    // Recalculate grand total with new shipping cost
-    const newGrandTotalCents =
-      cart.grandTotal.regularPriceInCents + shippingDiff
-
+    const shippingInfo: CartResponse['shippingInfo'] = {
+      shippingMethodId: selectedMethod.id,
+      shippingMethodName: selectedMethod.name,
+      price: {
+        regularPriceInCents: selectedMethod.price.centAmount,
+        currency: selectedMethod.price.currencyCode,
+        fractionDigits: 2,
+      },
+    }
     const updatedCart: CartResponse = {
       ...cart,
-      shippingInfo: {
-        shippingMethodId: selectedMethod.id,
-        shippingMethodName: selectedMethod.name,
-        price: {
-          regularPriceInCents: selectedMethod.price.centAmount,
-          currency: selectedMethod.price.currencyCode,
-          fractionDigits: 2,
-        },
-      },
-      grandTotal: createShopinPrice(newGrandTotalCents, cart.currency),
+      shippingInfo,
+      grandTotal: computeGrandTotal({ ...cart, shippingInfo }),
     }
     cartStore.set(cartId, updatedCart)
     return updatedCart
