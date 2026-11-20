@@ -390,7 +390,6 @@
       "submitting": "Resetting...",
       "backToSignIn": "Back to Sign In",
       "requestNewLink": "Request a new reset link",
-      "success": "Password reset successfully. You can now sign in with your new password.",
       "errors": {
         "tokenRequired": "Password reset token is required. Please use the link from your email.",
         "resetPasswordFailed": "Failed to reset password. Please try again or request a new reset link.",

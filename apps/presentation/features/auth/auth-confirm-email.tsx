@@ -26,18 +26,18 @@ export function ConfirmEmail({ onVerified }: ConfirmEmailProps) {
     isError: isMutationError,
     data: confirmEmailData,
   } = confirmEmailMutation
-  const hasAttemptedRef = useRef(false)
+  const submittedTokenRef = useRef<string | null>(null)
 
   const token = searchParams.get('token')
   const signInLink = `/sign-in`
 
   // Tokens are single-use: never submit the same one twice.
   useEffect(() => {
-    if (hasAttemptedRef.current || !token) {
+    if (!token || submittedTokenRef.current === token) {
       return
     }
 
-    hasAttemptedRef.current = true
+    submittedTokenRef.current = token
     confirmEmailMutate({ tokenValue: token })
   }, [token, confirmEmailMutate])
 

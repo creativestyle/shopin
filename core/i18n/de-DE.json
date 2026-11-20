@@ -389,7 +389,6 @@
       "submitting": "Wird zurückgesetzt...",
       "backToSignIn": "Zurück zur Anmeldung",
       "requestNewLink": "Neuen Link anfordern",
-      "success": "Passwort erfolgreich zurückgesetzt. Sie können sich jetzt mit Ihrem neuen Passwort anmelden.",
       "errors": {
         "tokenRequired": "Passwort-Zurücksetzen-Token ist erforderlich. Bitte verwenden Sie den Link aus Ihrer E-Mail.",
         "resetPasswordFailed": "Passwort konnte nicht zurückgesetzt werden. Bitte versuchen Sie es erneut oder fordern Sie einen neuen Link an.",

@@ -1,7 +1,9 @@
 'use client'
 
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useSearchParams } from 'next/navigation'
+import { useRouter } from '@/lib/navigation'
 import { ConfirmEmail } from '@/features/auth/auth-confirm-email'
+import { SIGN_IN_CONFIRMATION_PARAMS } from '@/features/auth/auth-sign-in-confirmation'
 import { setIsCheckoutFromSearchParams } from '@/features/checkout/checkout-param-utils'
 
 /**
@@ -13,7 +15,7 @@ export function VerifyEmailWithRedirect() {
 
   const onVerified = () => {
     const params = new URLSearchParams()
-    params.set('verified', 'true')
+    params.set(SIGN_IN_CONFIRMATION_PARAMS.emailVerified, 'true')
     setIsCheckoutFromSearchParams(params, searchParams)
     router.replace(`/sign-in?${params.toString()}`)
   }

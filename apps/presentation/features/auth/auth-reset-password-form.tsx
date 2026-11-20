@@ -81,7 +81,7 @@ export const ResetPasswordForm: FC<ResetPasswordFormProps> = ({
     if (!result.data.success) {
       if (result.data.message === 'token_expired') {
         setFormError('expiredToken')
-      } else if (result.data.statusCode === 400) {
+      } else if (result.data.message === 'token_invalid') {
         setFormError('invalidToken')
       } else {
         setFormError('generic')
