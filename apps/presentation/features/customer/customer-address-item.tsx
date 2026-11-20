@@ -46,6 +46,8 @@ export const CustomerAddressItem: FC<CustomerAddressItemProps> = ({
   const handleDeleteCancel = () => setShowDeleteConfirmation(false)
 
   const addressLines = useFormatAddressLines(address)
+  // Name + street tells apart several addresses of the same person
+  const addressName = addressLines.slice(0, 2).join(', ')
 
   return (
     <Card
@@ -86,7 +88,7 @@ export const CustomerAddressItem: FC<CustomerAddressItemProps> = ({
             scheme='black'
             size='sm'
             onClick={() => onEdit(address)}
-            aria-label={t('addresses.edit')}
+            aria-label={t('addresses.editAriaLabel', { address: addressName })}
           >
             <PencilIcon className='size-4' />
             {t('addresses.edit')}
@@ -96,7 +98,9 @@ export const CustomerAddressItem: FC<CustomerAddressItemProps> = ({
             scheme='black'
             size='sm'
             onClick={handleDeleteClick}
-            aria-label={t('addresses.delete')}
+            aria-label={t('addresses.deleteAriaLabel', {
+              address: addressName,
+            })}
             disabled={isDeleteAddressPending || showDeleteConfirmation}
           >
             <TrashIcon className='size-4' />

@@ -17,6 +17,7 @@ import {
   type AddressRequest,
 } from '@core/contracts/address/address-base'
 import PlusIcon from '@/public/icons/plus.svg'
+import { Checkbox } from '@/components/ui/checkbox'
 import { Button } from '@/components/ui/button'
 import { getCountryOptions } from '@/features/address/address-utils'
 
@@ -39,6 +40,10 @@ export interface AddressFormProps {
    */
   formId?: string
   /**
+   * Show "use as default" checkboxes. Only for creating an address; existing ones use CustomerAddressDefaultActions.
+   */
+  showDefaultAddressOptions?: boolean
+  /**
    * Callback to notify parent component of form state changes
    */
   onStateChange?: (state: AddressFormState) => void
@@ -53,6 +58,7 @@ export function AddressForm({
   onSubmit,
   defaultValues,
   formId,
+  showDefaultAddressOptions = false,
   onStateChange,
   countries,
 }: AddressFormProps) {
@@ -316,6 +322,55 @@ export function AddressForm({
           }}
         />
       </Field>
+
+      {showDefaultAddressOptions && (
+        <div className='space-y-3 border-t border-gray-200 pt-4'>
+          <Field>
+            <Controller
+              name='isDefaultShipping'
+              control={form.control}
+              render={({ field }) => (
+                <label className='flex cursor-pointer items-center gap-3'>
+                  <Checkbox
+                    id={`${fieldIdPrefix}-isDefaultShipping`}
+                    aria-labelledby={`${fieldIdPrefix}-isDefaultShipping-label`}
+                    checked={field.value || false}
+                    onCheckedChange={field.onChange}
+                  />
+                  <span
+                    id={`${fieldIdPrefix}-isDefaultShipping-label`}
+                    className='text-sm font-medium text-gray-700'
+                  >
+                    {t('defaultShipping')}
+                  </span>
+                </label>
+              )}
+            />
+          </Field>
+          <Field>
+            <Controller
+              name='isDefaultBilling'
+              control={form.control}
+              render={({ field }) => (
+                <label className='flex cursor-pointer items-center gap-3'>
+                  <Checkbox
+                    id={`${fieldIdPrefix}-isDefaultBilling`}
+                    aria-labelledby={`${fieldIdPrefix}-isDefaultBilling-label`}
+                    checked={field.value || false}
+                    onCheckedChange={field.onChange}
+                  />
+                  <span
+                    id={`${fieldIdPrefix}-isDefaultBilling-label`}
+                    className='text-sm font-medium text-gray-700'
+                  >
+                    {t('defaultBilling')}
+                  </span>
+                </label>
+              )}
+            />
+          </Field>
+        </div>
+      )}
     </form>
   )
 }

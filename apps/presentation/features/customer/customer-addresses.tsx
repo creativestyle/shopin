@@ -153,6 +153,7 @@ export const CustomerAddresses: FC = () => {
               <AddressForm
                 key={editingAddress?.id || 'new-address'}
                 formId='customer-address-form'
+                showDefaultAddressOptions={!editingAddress}
                 defaultValues={getAddressFormDefaultValues(
                   editingAddress,
                   customer

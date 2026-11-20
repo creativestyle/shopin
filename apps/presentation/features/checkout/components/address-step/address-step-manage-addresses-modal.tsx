@@ -152,6 +152,7 @@ export function AddressStepManageAddressesModal({
                     : 'new-address'
                 }
                 formId='customer-address-form'
+                showDefaultAddressOptions={formMode.type === 'creating'}
                 defaultValues={getAddressFormDefaultValues(
                   formMode.type === 'editing' ? formMode.address : undefined,
                   customer

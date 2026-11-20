@@ -1,9 +1,9 @@
 'use client'
 
-import { FC } from 'react'
+import { FC, ReactNode } from 'react'
 import { useTranslations } from 'next-intl'
-import { Badge } from '@/components/ui/badge/badge'
-import { Button } from '@/components/ui/button'
+import { badgeVariants } from '@/components/ui/badge/badge'
+import { buttonVariants } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { useCustomerAddressOperations } from './customer-use-customer-address-operations'
 import TruckIcon from '@/public/icons/delivery-truck.svg'
@@ -14,6 +14,55 @@ interface CustomerAddressDefaultActionsProps {
   isDefaultShipping: boolean
   isDefaultBilling: boolean
   className?: string
+}
+
+interface DefaultAddressButtonProps {
+  isDefault: boolean
+  isPending: boolean
+  defaultLabel: string
+  setDefaultLabel: string
+  icon: ReactNode
+  onSetDefault: () => void
+}
+
+// Same <button> in both states so focus survives the switch to "default"
+const DefaultAddressButton: FC<DefaultAddressButtonProps> = ({
+  isDefault,
+  isPending,
+  defaultLabel,
+  setDefaultLabel,
+  icon,
+  onSetDefault,
+}) => {
+  const isInactive = isDefault || isPending
+
+  return (
+    <button
+      type='button'
+      aria-disabled={isInactive}
+      onClick={isInactive ? undefined : onSetDefault}
+      className={
+        isDefault
+          ? badgeVariants({ variant: 'gray' })
+          : buttonVariants({
+              variant: 'tertiary',
+              scheme: 'black',
+              size: 'auto',
+              className:
+                'h-auto py-1 text-xs aria-disabled:pointer-events-none aria-disabled:text-gray-400',
+            })
+      }
+    >
+      {isDefault ? (
+        defaultLabel
+      ) : (
+        <>
+          {icon}
+          {setDefaultLabel}
+        </>
+      )}
+    </button>
+  )
 }
 
 /**
@@ -50,38 +99,22 @@ export const CustomerAddressDefaultActions: FC<
         className
       )}
     >
-      {isDefaultShipping ? (
-        <Badge variant='gray'>{t('addresses.defaultShipping')}</Badge>
-      ) : (
-        <Button
-          type='button'
-          variant='tertiary'
-          scheme='black'
-          size='auto'
-          className='h-auto py-1 text-xs'
-          onClick={onSetDefaultShipping}
-          disabled={isSetDefaultShippingPending}
-        >
-          <TruckIcon className='size-4' />
-          {t('addresses.setDefaultShipping')}
-        </Button>
-      )}
-      {isDefaultBilling ? (
-        <Badge variant='gray'>{t('addresses.defaultBilling')}</Badge>
-      ) : (
-        <Button
-          type='button'
-          variant='tertiary'
-          scheme='black'
-          size='auto'
-          className='h-auto py-1 text-xs'
-          onClick={onSetDefaultBilling}
-          disabled={isSetDefaultBillingPending}
-        >
-          <CoinsIcon className='size-4' />
-          {t('addresses.setDefaultBilling')}
-        </Button>
-      )}
+      <DefaultAddressButton
+        isDefault={isDefaultShipping}
+        isPending={isSetDefaultShippingPending}
+        defaultLabel={t('addresses.defaultShipping')}
+        setDefaultLabel={t('addresses.setDefaultShipping')}
+        icon={<TruckIcon className='size-4' />}
+        onSetDefault={onSetDefaultShipping}
+      />
+      <DefaultAddressButton
+        isDefault={isDefaultBilling}
+        isPending={isSetDefaultBillingPending}
+        defaultLabel={t('addresses.defaultBilling')}
+        setDefaultLabel={t('addresses.setDefaultBilling')}
+        icon={<CoinsIcon className='size-4' />}
+        onSetDefault={onSetDefaultBilling}
+      />
     </div>
   )
 }
