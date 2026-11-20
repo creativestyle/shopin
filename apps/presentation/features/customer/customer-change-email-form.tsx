@@ -11,6 +11,7 @@ import { TemporaryVerifyEmailButton } from '@/features/auth/auth-temporary-verif
 import { useChangeEmail } from './hooks/use-change-email'
 import { InvalidCurrentPasswordError } from './lib/invalid-current-password-error'
 import { EmailInUseError } from './lib/email-in-use-error'
+import { EmailUnchangedError } from './lib/email-unchanged-error'
 import {
   ChangeCustomerEmailRequest,
   ChangeCustomerEmailRequestSchema,
@@ -75,6 +76,15 @@ export const ChangeEmailForm: FC = () => {
         },
         { shouldFocus: true }
       )
+    } else if (result.error instanceof EmailUnchangedError) {
+      form.setError(
+        'email',
+        {
+          type: 'server',
+          message: 'account.myAccount.changeEmail.errors.emailUnchanged',
+        },
+        { shouldFocus: true }
+      )
     }
   }
 
@@ -83,7 +93,7 @@ export const ChangeEmailForm: FC = () => {
       scheme='gray'
       className='xl:w-1/2'
     >
-      <h3 className='mb-4 text-lg font-bold'>{t('title')}</h3>
+      <h2 className='mb-4 text-lg font-bold'>{t('title')}</h2>
       <p className='mb-6 text-sm text-gray-600'>{t('description')}</p>
       <form
         onSubmit={form.handleSubmit(onSubmit)}

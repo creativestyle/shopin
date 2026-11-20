@@ -9,6 +9,7 @@ import { useCustomerService } from './use-customer-service'
 import { customerKeys } from '../customer-keys'
 import { InvalidCurrentPasswordError } from '../lib/invalid-current-password-error'
 import { EmailInUseError } from '../lib/email-in-use-error'
+import { EmailUnchangedError } from '../lib/email-unchanged-error'
 import { ChangeCustomerEmailRequest } from '@core/contracts/customer/customer'
 import { useQueryClient } from '@tanstack/react-query'
 import { useTranslations } from 'next-intl'
@@ -22,12 +23,13 @@ export function useChangeEmail() {
   const changeEmailMutation = useBffClientMutation({
     mutationFn: (data: ChangeCustomerEmailRequest) =>
       customerService.changeEmail(data),
-    // Wrong password and taken email are shown on the fields by the form, not as a toast.
+    // Field-level failures are shown on the fields by the form, not as a toast.
     errorMessage: null,
     onError: (error) => {
       if (
         error instanceof InvalidCurrentPasswordError ||
-        error instanceof EmailInUseError
+        error instanceof EmailInUseError ||
+        error instanceof EmailUnchangedError
       ) {
         return
       }

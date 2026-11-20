@@ -479,6 +479,7 @@
         "errors": {
           "emailInvalid": "Please enter a valid email address",
           "emailInUse": "This email address is already in use",
+          "emailUnchanged": "This is already your email address",
           "currentPasswordRequired": "Current password is required",
           "wrongCurrentPassword": "That is not your current password. Please try again."
         }

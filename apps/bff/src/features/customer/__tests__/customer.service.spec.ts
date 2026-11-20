@@ -31,7 +31,7 @@ describe('CustomerService.changeCustomerEmail', () => {
     expect(generateEmailToken).toHaveBeenCalledWith({ email: REQUEST.email })
   })
 
-  it('returns no token when the email is still verified (unchanged)', async () => {
+  it('returns no token when the email is still verified', async () => {
     const customer = { id: 'c1', email: REQUEST.email, isEmailVerified: true }
     const { service, generateEmailToken } = createService(customer)
 

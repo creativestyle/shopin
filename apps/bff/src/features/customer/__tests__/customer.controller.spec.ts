@@ -1,7 +1,10 @@
 import {
   EmailInUseException,
+  EmailUnchangedException,
   InvalidCurrentPasswordException,
 } from '@integrations/commercetools-api'
+import { GUARDS_METADATA } from '@nestjs/common/constants'
+import { CsrfGuard } from '../../csrf/csrf.guard'
 import type { Request } from 'express'
 import { CustomerController } from '../customer.controller'
 
@@ -79,7 +82,7 @@ describe('CustomerController.changeCustomerEmail', () => {
     isEmailVerified: false,
   }
 
-  it('logs success without the addresses and returns the token', async () => {
+  it('logs success without the email addresses and returns the token', async () => {
     const { controller, authLogger } = createController(
       jest.fn(),
       jest.fn().mockResolvedValue({ customer, emailToken: 'token-1' })
@@ -108,6 +111,7 @@ describe('CustomerController.changeCustomerEmail', () => {
       'invalid_credentials',
     ],
     ['a taken email', new EmailInUseException(), 'user_exists'],
+    ['an unchanged email', new EmailUnchangedException(), 'validation_failed'],
     ['any other failure', new Error('boom'), 'error'],
   ])('logs %s with reason %s', async (_, error, reason) => {
     const { controller, authLogger } = createController(
@@ -126,5 +130,13 @@ describe('CustomerController.changeCustomerEmail', () => {
         reason,
       })
     )
+  })
+
+  it('is protected by the CSRF guard and the secure rate limit', () => {
+    const handler = CustomerController.prototype.changeCustomerEmail
+
+    expect(Reflect.getMetadata(GUARDS_METADATA, handler)).toContain(CsrfGuard)
+    expect(Reflect.getMetadata('THROTTLER:SKIPdefault', handler)).toBe(true)
+    expect(Reflect.getMetadataKeys(handler)).toContain('THROTTLER:LIMITsecure')
   })
 })

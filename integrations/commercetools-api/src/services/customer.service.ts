@@ -16,6 +16,7 @@ import { isInvalidCredentialsError } from '../helpers/is-invalid-credentials-err
 import { hasStatusCode } from '../helpers/has-status-code'
 import { InvalidCurrentPasswordException } from '../exceptions/invalid-current-password.exception'
 import { EmailInUseException } from '../exceptions/email-in-use.exception'
+import { EmailUnchangedException } from '../exceptions/email-unchanged.exception'
 
 @Injectable({ scope: Scope.REQUEST })
 export class CommercetoolsCustomerService {
@@ -61,52 +62,61 @@ export class CommercetoolsCustomerService {
   /**
    * Changes the sign-in email after checking the current password.
    * Commercetools resets isEmailVerified on every changeEmail, so an unchanged
-   * email (ignoring case) is a no-op.
+   * email (ignoring case) is rejected instead of sent.
    */
   async changeCustomerEmail(
     changeCustomerEmailRequest: ChangeCustomerEmailRequest
   ): Promise<CustomerResponse> {
+    const { email, currentPassword } = changeCustomerEmailRequest
     const currentCustomer = await this.getCurrentCustomer()
 
-    await this.verifyPassword(
-      currentCustomer.email,
-      changeCustomerEmailRequest.currentPassword
-    )
+    await this.verifyPassword(currentCustomer.email, currentPassword)
 
-    if (
-      changeCustomerEmailRequest.email.toLowerCase() ===
-      currentCustomer.email.toLowerCase()
-    ) {
-      return currentCustomer
+    if (email.toLowerCase() === currentCustomer.email.toLowerCase()) {
+      throw new EmailUnchangedException()
     }
 
-    const client = await this.userClientService.getClient()
-
     try {
-      const response = await client
-        .me()
-        .post({
-          body: {
-            actions: [
-              {
-                action: 'changeEmail',
-                email: changeCustomerEmailRequest.email,
-              },
-            ],
-            version: currentCustomer.version,
-          },
-        })
-        .execute()
-
-      const updatedCustomer = MyCustomerApiResponseSchema.parse(response.body)
-
-      return mapCustomerToResponse(updatedCustomer)
+      return await this.postEmailChange(email, currentCustomer.version).catch(
+        async (error: unknown) => {
+          if (
+            !hasStatusCode(error) ||
+            error.statusCode !== 409 ||
+            isDuplicateEmailError(error)
+          ) {
+            throw error
+          }
+          // Customer changed since its version was read; retry once with a fresh one
+          const { version } = await this.getCurrentCustomer()
+          return this.postEmailChange(email, version)
+        }
+      )
     } catch (error: unknown) {
       if (isDuplicateEmailError(error)) {
         throw new EmailInUseException()
       }
       throw error
     }
+  }
+
+  private async postEmailChange(
+    email: string,
+    version: number
+  ): Promise<CustomerResponse> {
+    const client = await this.userClientService.getClient()
+    const response = await client
+      .me()
+      .post({
+        body: {
+          actions: [{ action: 'changeEmail', email }],
+          version,
+        },
+      })
+      .execute()
+
+    return mapCustomerToResponse(
+      MyCustomerApiResponseSchema.parse(response.body)
+    )
   }
 
   async changeCustomerPassword(

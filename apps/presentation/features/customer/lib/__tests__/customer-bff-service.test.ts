@@ -4,9 +4,11 @@
 import { CustomerService } from '../customer-bff-service'
 import { InvalidCurrentPasswordError } from '../invalid-current-password-error'
 import { EmailInUseError } from '../email-in-use-error'
+import { EmailUnchangedError } from '../email-unchanged-error'
 import { RateLimitError } from '@/lib/bff/utils/rate-limit-error'
 import {
   EMAIL_IN_USE_CODE,
+  EMAIL_UNCHANGED_CODE,
   INVALID_CURRENT_PASSWORD_CODE,
 } from '@core/contracts/customer/customer'
 import type { BffFetchClient } from '@/lib/bff/types'
@@ -139,6 +141,20 @@ describe('CustomerService.changeEmail', () => {
 
     await expect(service.changeEmail(EMAIL_REQUEST)).rejects.toBeInstanceOf(
       EmailInUseError
+    )
+  })
+
+  it('throws EmailUnchangedError on 400 with the email-unchanged code', async () => {
+    const { service } = createService(
+      jsonResponse(400, {
+        statusCode: 400,
+        message: 'Bad Request',
+        code: EMAIL_UNCHANGED_CODE,
+      })
+    )
+
+    await expect(service.changeEmail(EMAIL_REQUEST)).rejects.toBeInstanceOf(
+      EmailUnchangedError
     )
   })
 

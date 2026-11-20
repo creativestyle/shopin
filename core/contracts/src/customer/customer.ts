@@ -80,3 +80,6 @@ export const INVALID_CURRENT_PASSWORD_CODE = 'INVALID_CURRENT_PASSWORD'
 
 /** Machine-readable code the BFF returns (with 409) when the new email is taken. */
 export const EMAIL_IN_USE_CODE = 'EMAIL_IN_USE'
+
+/** Machine-readable code the BFF returns (with 400) when the new email is the current one. */
+export const EMAIL_UNCHANGED_CODE = 'EMAIL_UNCHANGED'

@@ -1,6 +1,7 @@
 import {
   CommercetoolsCustomerService,
   EmailInUseException,
+  EmailUnchangedException,
   InvalidCurrentPasswordException,
 } from '@integrations/commercetools-api'
 
@@ -31,8 +32,10 @@ function createService({
     userClientService as never,
     serverClientService as never
   )
-  jest.spyOn(service, 'getCurrentCustomer').mockResolvedValue(CURRENT)
-  return { service, post, loginPost, execute }
+  const getCurrentCustomer = jest
+    .spyOn(service, 'getCurrentCustomer')
+    .mockResolvedValue(CURRENT)
+  return { service, post, loginPost, execute, getCurrentCustomer }
 }
 
 function ctError(statusCode: number, code: string, field?: string) {
@@ -91,14 +94,17 @@ describe('CommercetoolsCustomerService.changeCustomerEmail', () => {
   it.each([
     ['the same email', CURRENT.email],
     ['a change in letter case only', 'john@EXAMPLE.com'],
-  ])('treats %s as a no-op so verification is not reset', async (_, email) => {
-    const { service, post } = createService()
+  ])(
+    'rejects %s with EmailUnchangedException so verification is not reset',
+    async (_, email) => {
+      const { service, post } = createService()
 
-    const result = await service.changeCustomerEmail({ ...REQUEST, email })
-
-    expect(post).not.toHaveBeenCalled()
-    expect(result).toBe(CURRENT)
-  })
+      await expect(
+        service.changeCustomerEmail({ ...REQUEST, email })
+      ).rejects.toBeInstanceOf(EmailUnchangedException)
+      expect(post).not.toHaveBeenCalled()
+    }
+  )
 
   it('maps DuplicateField on email to EmailInUseException', async () => {
     const { service } = createService({
@@ -112,12 +118,64 @@ describe('CommercetoolsCustomerService.changeCustomerEmail', () => {
     )
   })
 
-  it('rethrows a ConcurrentModification unchanged, not as email in use', async () => {
+  describe('on 409 ConcurrentModification', () => {
     const conflict = ctError(409, 'ConcurrentModification')
-    const { service } = createService({
-      execute: jest.fn().mockRejectedValue(conflict),
+
+    it('retries once with a freshly read version', async () => {
+      const { service, post, getCurrentCustomer } = createService({
+        execute: jest
+          .fn()
+          .mockRejectedValueOnce(conflict)
+          .mockResolvedValueOnce({ body: UPDATED_BODY }),
+      })
+      getCurrentCustomer
+        .mockResolvedValueOnce(CURRENT)
+        .mockResolvedValueOnce({ ...CURRENT, version: 8 })
+
+      await expect(service.changeCustomerEmail(REQUEST)).resolves.toMatchObject(
+        { email: 'new@example.com' }
+      )
+
+      expect(post).toHaveBeenCalledTimes(2)
+      expect(post).toHaveBeenLastCalledWith({
+        body: {
+          actions: [{ action: 'changeEmail', email: REQUEST.email }],
+          version: 8,
+        },
+      })
     })
 
-    await expect(service.changeCustomerEmail(REQUEST)).rejects.toBe(conflict)
+    it('still maps a taken email on the retry', async () => {
+      const { service } = createService({
+        execute: jest
+          .fn()
+          .mockRejectedValueOnce(conflict)
+          .mockRejectedValueOnce(ctError(400, 'DuplicateField', 'email')),
+      })
+
+      await expect(service.changeCustomerEmail(REQUEST)).rejects.toBeInstanceOf(
+        EmailInUseException
+      )
+    })
+
+    it('rethrows a second 409 unchanged without retrying again', async () => {
+      const execute = jest.fn().mockRejectedValue(conflict)
+      const { service } = createService({ execute })
+
+      await expect(service.changeCustomerEmail(REQUEST)).rejects.toBe(conflict)
+      expect(execute).toHaveBeenCalledTimes(2)
+    })
+  })
+
+  it('does not retry a taken email', async () => {
+    const execute = jest
+      .fn()
+      .mockRejectedValue(ctError(409, 'DuplicateField', 'email'))
+    const { service } = createService({ execute })
+
+    await expect(service.changeCustomerEmail(REQUEST)).rejects.toBeInstanceOf(
+      EmailInUseException
+    )
+    expect(execute).toHaveBeenCalledTimes(1)
   })
 })

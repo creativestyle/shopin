@@ -6,6 +6,7 @@ import { ChangeEmailForm } from '../customer-change-email-form'
 import { customerKeys } from '../customer-keys'
 import { InvalidCurrentPasswordError } from '../lib/invalid-current-password-error'
 import { EmailInUseError } from '../lib/email-in-use-error'
+import { EmailUnchangedError } from '../lib/email-unchanged-error'
 
 const mockChangeEmail = jest.fn()
 
@@ -81,6 +82,20 @@ describe('ChangeEmailForm', () => {
     expect(addToast).not.toHaveBeenCalled()
   })
 
+  it('shows an unchanged email on the field, focuses it and shows no success', async () => {
+    mockChangeEmail.mockRejectedValue(new EmailUnchangedError())
+    const { user } = renderForm()
+
+    await submitForm(user)
+
+    expect(
+      await screen.findByText(`${NS}.errors.emailUnchanged`)
+    ).toBeInTheDocument()
+    expect(input('newEmail')).toHaveFocus()
+    expect(addToast).not.toHaveBeenCalled()
+    expect(screen.queryByText(`${NS}.verifyNotice`)).not.toBeInTheDocument()
+  })
+
   it('shows a wrong current password on the field, focuses it and shows no toast', async () => {
     mockChangeEmail.mockRejectedValue(new InvalidCurrentPasswordError())
     const { user } = renderForm()
@@ -136,7 +151,7 @@ describe('ChangeEmailForm', () => {
     expect(input('newEmail')).toHaveValue('')
   })
 
-  it('shows no confirmation notice when the email is still verified (unchanged)', async () => {
+  it('shows no confirmation notice when the email is still verified', async () => {
     mockChangeEmail.mockResolvedValue({
       customer: { ...UPDATED_CUSTOMER, isEmailVerified: true },
     })

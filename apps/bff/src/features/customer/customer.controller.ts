@@ -34,6 +34,7 @@ import {
   UpdateCustomerRequest,
   UpdateCustomerRequestSchema,
   EMAIL_IN_USE_CODE,
+  EMAIL_UNCHANGED_CODE,
   INVALID_CURRENT_PASSWORD_CODE,
 } from '@core/contracts/customer/customer'
 import { TokenRefreshInterceptor } from '../../common/token-management/token-refresh.interceptor'
@@ -174,7 +175,7 @@ export class CustomerController {
       'Email changed; the new address must be verified before the next sign-in',
   })
   @ApiBadRequestResponse({
-    description: `Invalid request body, or wrong current password (code: ${INVALID_CURRENT_PASSWORD_CODE})`,
+    description: `Invalid request body, wrong current password (code: ${INVALID_CURRENT_PASSWORD_CODE}), or email unchanged (code: ${EMAIL_UNCHANGED_CODE})`,
   })
   @ApiConflictResponse({
     description: `Email already in use (code: ${EMAIL_IN_USE_CODE})`,
@@ -332,6 +333,9 @@ function getEmailChangeFailureReason(err: unknown): AuthFailureReason {
   }
   if (hasErrorCode(err, EMAIL_IN_USE_CODE)) {
     return 'user_exists'
+  }
+  if (hasErrorCode(err, EMAIL_UNCHANGED_CODE)) {
+    return 'validation_failed'
   }
   return 'error'
 }

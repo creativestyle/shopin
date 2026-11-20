@@ -478,6 +478,7 @@
         "errors": {
           "emailInvalid": "Bitte geben Sie eine gültige E-Mail-Adresse ein",
           "emailInUse": "Diese E-Mail-Adresse wird bereits verwendet",
+          "emailUnchanged": "Das ist bereits Ihre E-Mail-Adresse",
           "currentPasswordRequired": "Aktuelles Passwort ist erforderlich",
           "wrongCurrentPassword": "Das ist nicht Ihr aktuelles Passwort. Bitte versuchen Sie es erneut."
         }

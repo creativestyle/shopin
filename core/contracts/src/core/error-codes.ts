@@ -1,5 +1,6 @@
 import {
   EMAIL_IN_USE_CODE,
+  EMAIL_UNCHANGED_CODE,
   INVALID_CURRENT_PASSWORD_CODE,
 } from '../customer/customer'
 
@@ -9,4 +10,5 @@ import {
 export const PUBLIC_ERROR_CODES: ReadonlySet<string> = new Set([
   INVALID_CURRENT_PASSWORD_CODE,
   EMAIL_IN_USE_CODE,
+  EMAIL_UNCHANGED_CODE,
 ])
