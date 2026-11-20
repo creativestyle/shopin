@@ -124,6 +124,7 @@
       "closeButtonAria": "Galerie schließen"
     },
     "buyBox": {
+      "notSoldHere": "In diesem Shop nicht erhältlich",
       "size": "Größe",
       "findYourSize": "Finde deine Größe",
       "reserveInStore": "Im Store reservieren",
