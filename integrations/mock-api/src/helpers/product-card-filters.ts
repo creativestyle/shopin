@@ -8,7 +8,7 @@ export interface ProductCardFilterOptions {
   priceMax?: number
 }
 
-export function getEffectivePrice(product: ProductCardWithAttributes): number {
+function getEffectivePrice(product: ProductCardWithAttributes): number {
   return (
     product.price.discountedPriceInCents ?? product.price.regularPriceInCents
   )

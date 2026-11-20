@@ -1,4 +1,4 @@
-import { Injectable, Inject, Scope } from '@nestjs/common'
+import { Injectable, Inject, NotFoundException, Scope } from '@nestjs/common'
 import { LANGUAGE_TOKEN } from '@core/i18n'
 import { resolveCurrencyFromLanguage } from '@core/i18n/currency-utils'
 import { resolveCountryFromLanguage } from '@core/i18n/language-tag-utils'
@@ -17,6 +17,7 @@ import { UserClientService } from '../client/user-client.service'
 import { mapCartToResponse } from '../mappers/cart'
 import { mapShippingMethodsToResponse } from '../mappers/shipping-method'
 import { CartApiResponseSchema } from '../schemas/cart'
+import { isNotFoundError } from '../helpers/is-not-found-error'
 import {
   CartUpdateActionSchema,
   type CartUpdateAction,
@@ -97,18 +98,25 @@ export class CartService {
     const currentLanguage = await this.getCurrentLanguage()
     const client = await this.getClient()
     const expandArray = expand ?? CartService.CART_EXPAND
-    const response = await client
-      .me()
-      .carts()
-      .withId({ ID: cartId })
-      .get({
-        queryArgs: {
-          expand: expandArray,
-        },
-      })
-      .execute()
+    try {
+      const response = await client
+        .me()
+        .carts()
+        .withId({ ID: cartId })
+        .get({
+          queryArgs: {
+            expand: expandArray,
+          },
+        })
+        .execute()
 
-    return this.processCartResponse(response.body, currentLanguage)
+      return this.processCartResponse(response.body, currentLanguage)
+    } catch (error) {
+      if (isNotFoundError(error)) {
+        throw new NotFoundException(`Cart not found: ${cartId}`)
+      }
+      throw error
+    }
   }
 
   async createCart(): Promise<CartResponse> {

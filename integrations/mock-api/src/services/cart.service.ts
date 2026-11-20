@@ -143,14 +143,8 @@ export class CartService {
   }
 
   async getActiveCart(): Promise<CartResponse | null> {
-    // For mock, return the most recently created cart (simple implementation)
-    // In a real scenario, this would query by customer ID and cart state
-    const carts = Array.from(cartStore.values())
-    if (carts.length === 0) {
-      return null
-    }
-    // Return the last cart (simplified - in real scenario would filter by customer and state)
-    return carts[carts.length - 1]
+    // Mock carts have no owner, so never hand a shopper someone else's cart
+    return null
   }
 
   async setBillingAddress(
