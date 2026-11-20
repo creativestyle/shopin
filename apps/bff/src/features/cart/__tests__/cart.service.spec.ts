@@ -9,6 +9,8 @@ describe('CartService stale cart recovery', () => {
     getCart: jest.Mock
     createCart: jest.Mock
     addToCart: jest.Mock
+    updateCartItem: jest.Mock
+    removeCartItem: jest.Mock
     getActiveCart: jest.Mock
     getShippingMethods: jest.Mock
   }
@@ -28,6 +30,8 @@ describe('CartService stale cart recovery', () => {
       getCart: jest.fn(),
       createCart: jest.fn().mockResolvedValue({ id: FRESH_ID }),
       addToCart: jest.fn(),
+      updateCartItem: jest.fn(),
+      removeCartItem: jest.fn(),
       getActiveCart: jest.fn().mockResolvedValue(null),
       getShippingMethods: jest.fn(),
     }
@@ -147,6 +151,39 @@ describe('CartService stale cart recovery', () => {
       expect(cartIdService.deleteGuestCartId).not.toHaveBeenCalled()
       expect(dataSourceCartService.createCart).not.toHaveBeenCalled()
       expect(dataSourceCartService.addToCart).toHaveBeenCalledTimes(1)
+    })
+  })
+
+  describe('line-item mutations', () => {
+    beforeEach(() => {
+      dataSourceCartService.getCart.mockRejectedValue(
+        new NotFoundException('Cart not found')
+      )
+    })
+
+    it('updateCartItem returns a new empty cart instead of retrying on a stale id', async () => {
+      dataSourceCartService.updateCartItem.mockRejectedValue(
+        new NotFoundException('Cart not found')
+      )
+
+      await expect(
+        service.updateCartItem({ lineItemId: 'li-1', quantity: 2 })
+      ).resolves.toEqual({ id: FRESH_ID })
+      expect(cartIdService.deleteGuestCartId).toHaveBeenCalledTimes(1)
+      expect(cartIdService.setGuestCartId).toHaveBeenCalledWith(FRESH_ID)
+      expect(dataSourceCartService.updateCartItem).toHaveBeenCalledTimes(1)
+    })
+
+    it('removeCartItem returns a new empty cart instead of retrying on a stale id', async () => {
+      dataSourceCartService.removeCartItem.mockRejectedValue(
+        new NotFoundException('Cart not found')
+      )
+
+      await expect(
+        service.removeCartItem({ lineItemId: 'li-1' })
+      ).resolves.toEqual({ id: FRESH_ID })
+      expect(cartIdService.deleteGuestCartId).toHaveBeenCalledTimes(1)
+      expect(dataSourceCartService.removeCartItem).toHaveBeenCalledTimes(1)
     })
   })
 

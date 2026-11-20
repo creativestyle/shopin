@@ -79,18 +79,22 @@ export class CartService extends BaseAuthenticatedService {
   }
 
   async updateCartItem(request: UpdateCartItemRequest): Promise<CartResponse> {
-    return this.withCartId((cartId) =>
-      this.getCartService().updateCartItem(
-        cartId,
-        request.lineItemId,
-        request.quantity
-      )
+    return this.withCartId(
+      (cartId) =>
+        this.getCartService().updateCartItem(
+          cartId,
+          request.lineItemId,
+          request.quantity
+        ),
+      { retry: false }
     )
   }
 
   async removeCartItem(request: RemoveCartItemRequest): Promise<CartResponse> {
-    return this.withCartId((cartId) =>
-      this.getCartService().removeCartItem(cartId, request.lineItemId)
+    return this.withCartId(
+      (cartId) =>
+        this.getCartService().removeCartItem(cartId, request.lineItemId),
+      { retry: false }
     )
   }
 
@@ -225,13 +229,10 @@ export class CartService extends BaseAuthenticatedService {
     }
   }
 
-  /**
-   * Runs a cart mutation. If the stored cart no longer exists (e.g. mock cart lost on
-   * BFF restart), clears the cookie and retries once on a new cart. A 404 for a nested
-   * resource (line item, shipping method) is rethrown so the existing cart is kept.
-   */
+  /** On a stale cart id: new cart, then retry once (or return it empty when `retry: false`) */
   private async withCartId(
-    operation: (cartId: string) => Promise<CartResponse>
+    operation: (cartId: string) => Promise<CartResponse>,
+    { retry = true }: { retry?: boolean } = {}
   ): Promise<CartResponse> {
     const cartId = await this.getOrCreateCartId()
     try {
@@ -242,7 +243,7 @@ export class CartService extends BaseAuthenticatedService {
       }
       await this.clearCartId()
       const cart = await this.createCart()
-      return await operation(cart.id)
+      return retry ? await operation(cart.id) : cart
     }
   }
 
