@@ -39,6 +39,7 @@ export function DeliveryMethodItem({
           >
             <DeliveryMethodLabel
               name={description}
+              deliveryTime={method.deliveryTime}
               priceInCents={method.price.centAmount}
               currency={method.price.currencyCode}
               freeAboveInCents={method.freeAbove?.centAmount}

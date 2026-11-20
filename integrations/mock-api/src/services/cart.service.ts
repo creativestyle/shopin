@@ -199,10 +199,6 @@ export class CartService {
           'de-DE': 'DHL Standardlieferung',
           'en-US': 'DHL Standard Delivery',
         },
-        localizedDescription: {
-          'de-DE': 'DHL Standardlieferung (2-3 Werktage)',
-          'en-US': 'DHL Standard Delivery (2-3 business days)',
-        },
         price: {
           centAmount: 0,
           currencyCode: currency,
@@ -214,10 +210,6 @@ export class CartService {
         localizedName: {
           'de-DE': 'DHL Expresslieferung',
           'en-US': 'DHL Express Delivery',
-        },
-        localizedDescription: {
-          'de-DE': 'DHL Expresslieferung (1 Werktag)',
-          'en-US': 'DHL Express Delivery (1 business day)',
         },
         price: {
           centAmount: 300,
@@ -262,6 +254,10 @@ export class CartService {
           name: getLocalizedString(localizedName, currentLanguage),
           description: getLocalizedString(
             localizedDescription,
+            currentLanguage
+          ),
+          deliveryTime: getLocalizedString(
+            MOCK_DELIVERY_TIMES[method.id],
             currentLanguage
           ),
         })

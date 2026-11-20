@@ -95,7 +95,7 @@ export function DeliveryMethodActive() {
     return <LoadingSpinner className='size-6' />
   }
 
-  if (error) {
+  if (error && !shippingMethodsData) {
     return <ErrorDisplay>{t('loadError')}</ErrorDisplay>
   }
 

@@ -35,7 +35,7 @@ export class OrderService {
     'paymentInfo.payments[*]',
   ] satisfies string[]
 
-  // Order detail additionally resolves the shipping method for its description
+  // Order detail resolves the shipping method for its deliveryTime custom field
   private static readonly ORDER_DETAIL_EXPAND = [
     ...OrderService.ORDER_EXPAND,
     'shippingInfo.shippingMethod',

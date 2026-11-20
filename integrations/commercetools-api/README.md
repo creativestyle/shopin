@@ -32,6 +32,20 @@ When this var is unset, every language falls back to the `ctStoreKey` defined in
 
 If a Store has **no countries configured** or the Store fetch fails, the storefront logs a warning and `shippingCountries` is `[]` — the shipping country dropdown in checkout will be empty. Likewise, if the commercetools project fetch fails or returns no countries, `projectCountries` is `[]` and billing address forms and customer account address management will render with an empty country dropdown. A sensible fallback varies per project; callers that need a guaranteed non-empty list should pass an explicit `countries` prop to `AddressForm`.
 
+## Shipping method delivery time
+
+The delivery estimate shown next to each option in the checkout delivery step, on the order confirmation page and in the account's last-order summary comes from a custom field on the shipping method. Commercetools has no built-in field for it, so the project needs this custom Type:
+
+| Setting          | Value                                                  |
+| ---------------- | ------------------------------------------------------ |
+| Resource type id | `shipping-method`                                      |
+| Field name       | `deliveryTime` (`SHIPPING_METHOD_DELIVERY_TIME_FIELD`) |
+| Field type       | `LocalizedString`                                      |
+
+Create the Type in **Merchant Center → Settings → Project settings → Custom Types** (or through the API), then set a value per language on each shipping method under **Settings → Project settings → Shipping methods**, e.g. `en-US: "2-3 business days"`, `de-DE: "2-3 Werktage"`. The storefront wraps the value as "Delivery in {time}", so enter only the time span.
+
+Without the Type, or for a method without a value, no delivery time is shown and everything else works as before. A field with a different type (e.g. a plain `String`) is ignored rather than failing the cart or order request.
+
 ## Service Provider
 
 The module includes `CommercetoolsServiceProvider` that implements the `DataSourceServiceProvider` interface, providing access to all Commercetools services through a unified interface.

@@ -87,7 +87,7 @@ export function CheckoutComplete({ orderId, token }: CheckoutCompleteProps) {
             </p>
             {order.shippingInfo?.deliveryTime && (
               <p className='mb-6 text-sm font-bold text-green-700'>
-                {order.shippingInfo.deliveryTime}
+                {t('deliveryTime', { time: order.shippingInfo.deliveryTime })}
               </p>
             )}
             <div className='mb-6'>

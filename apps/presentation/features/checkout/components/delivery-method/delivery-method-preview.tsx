@@ -25,19 +25,16 @@ export function DeliveryMethodPreview() {
             selectedMethod?.name ||
             shippingInfo.shippingMethodName
           }
+          deliveryTime={
+            selectedMethod?.deliveryTime ?? shippingInfo.deliveryTime
+          }
           priceInCents={shippingInfo.price.regularPriceInCents}
           currency={shippingInfo.price.currency || cart.currency}
           fractionDigits={shippingInfo.price.fractionDigits}
-          freeAboveInCents={
-            shippingInfo.freeAbove?.regularPriceInCents ??
-            selectedMethod?.freeAbove?.centAmount
-          }
+          freeAboveInCents={selectedMethod?.freeAbove?.centAmount}
           freeAboveCurrency={
-            shippingInfo.freeAbove?.currency ||
-            selectedMethod?.freeAbove?.currencyCode ||
-            cart.currency
+            selectedMethod?.freeAbove?.currencyCode || cart.currency
           }
-          freeAboveFractionDigits={shippingInfo.freeAbove?.fractionDigits}
           variant='preview'
         />
       )}

@@ -6,6 +6,7 @@ import type {
 } from '@core/contracts/cart/cart'
 import { AddressBaseSchema } from '@core/contracts/address/address-base'
 import type { LocalizedStringApiResponse } from '../schemas/localized-string'
+import { SHIPPING_METHOD_DELIVERY_TIME_FIELD } from '../schemas/shipping-method-custom'
 import { getLocalizedString } from '../helpers/get-localized-string'
 import { getLocalizedProductSlug } from '../helpers/get-localized-product-slug'
 import { calculateTaxFromCart } from '../helpers/calculate-tax-from-cart'
@@ -156,7 +157,9 @@ function mapShippingInfo(
     shippingMethodId: shippingInfo.shippingMethod.id,
     shippingMethodName: shippingInfo.shippingMethodName,
     deliveryTime: getLocalizedString(
-      shippingInfo.shippingMethod.obj?.custom?.fields?.deliveryTime,
+      shippingInfo.shippingMethod.obj?.custom?.fields?.[
+        SHIPPING_METHOD_DELIVERY_TIME_FIELD
+      ],
       language
     ),
     price: createBasicPrice(shippingInfo.price.centAmount, {

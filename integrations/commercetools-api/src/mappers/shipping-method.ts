@@ -5,6 +5,10 @@ import type {
 } from '@core/contracts/cart/shipping-method'
 import { ShippingMethodsResponseSchema } from '@core/contracts/cart/shipping-method'
 import { LocalizedStringApiResponseSchema } from '../schemas/localized-string'
+import {
+  SHIPPING_METHOD_DELIVERY_TIME_FIELD,
+  ShippingMethodCustomApiResponseSchema,
+} from '../schemas/shipping-method-custom'
 import { getLocalizedString } from '../helpers/get-localized-string'
 
 const TypedMoneyApiResponseSchema = z.object({
@@ -28,6 +32,7 @@ export const ShippingMethodApiResponseSchema = z.object({
   localizedName: LocalizedStringApiResponseSchema.optional(),
   localizedDescription: LocalizedStringApiResponseSchema.optional(),
   zoneRates: z.array(ZoneRateApiResponseSchema),
+  custom: ShippingMethodCustomApiResponseSchema,
   isDefault: z.boolean().optional(),
 })
 
@@ -67,10 +72,16 @@ function mapShippingMethodToResponse(
     language
   )
 
+  const deliveryTime = getLocalizedString(
+    shippingMethod.custom?.fields?.[SHIPPING_METHOD_DELIVERY_TIME_FIELD],
+    language
+  )
+
   return {
     id: shippingMethod.id,
     name,
     description,
+    deliveryTime,
     price: {
       centAmount: price.centAmount,
       currencyCode: price.currencyCode,
