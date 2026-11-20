@@ -12,6 +12,7 @@ import {
   formatItemAttributes,
   getProductHref,
   getUnitPrice,
+  labelForAttribute,
 } from './cart-item-utils'
 import { formatPriceWithPrefix } from '@/lib/price-formatter'
 import { DecoratedPrice } from '@/components/ui/price/decorated-price'
@@ -22,19 +23,14 @@ interface CartItemProps {
   item: LineItemResponse
 }
 
-const KNOWN_ATTRIBUTE_KEYS = ['color', 'size'] as const
-
 export function CartItem({ item }: CartItemProps) {
   const locale = useLocale()
   const t = useTranslations('cart')
   const productHref = getProductHref(item.productSlug)
   const { totalPrice, originalPrice } = calculateItemPrices(item)
-  const variantText = formatItemAttributes(item.attributes, (key) => {
-    const normalizedKey = key.toLowerCase()
-    return (KNOWN_ATTRIBUTE_KEYS as readonly string[]).includes(normalizedKey)
-      ? t(`item.${normalizedKey}` as 'item.color' | 'item.size')
-      : key
-  })
+  const variantText = formatItemAttributes(item.attributes, (key) =>
+    labelForAttribute(key, t)
+  )
   const unitPriceFormatted = formatPriceWithPrefix(getUnitPrice(item), locale, {
     currency: item.price.currency,
     fractionDigits: item.price.fractionDigits,

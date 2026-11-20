@@ -1,5 +1,9 @@
 import type { LineItemResponse } from '@core/contracts/cart/cart'
-import { formatItemAttributes, getUnitPrice } from '../cart-item-utils'
+import {
+  formatItemAttributes,
+  getUnitPrice,
+  labelForAttribute,
+} from '../cart-item-utils'
 
 function createItem(
   price: Partial<LineItemResponse['price']>
@@ -12,6 +16,9 @@ function createItem(
     price: { regularPriceInCents: 2000, currency: 'EUR', ...price },
   }
 }
+
+const translate = (key: 'item.color' | 'item.size') =>
+  key === 'item.color' ? 'Colour' : 'Size'
 
 describe('getUnitPrice', () => {
   it('returns the regular price when there is no discount', () => {
@@ -50,5 +57,29 @@ describe('formatItemAttributes', () => {
     const spy = jest.fn((key: string) => key)
     formatItemAttributes({ Color: 'Blue' }, spy)
     expect(spy).toHaveBeenCalledWith('Color')
+  })
+
+  it('translates capitalised known keys with labelForAttribute', () => {
+    expect(
+      formatItemAttributes({ Color: 'Blue', SIZE: 'M' }, (key) =>
+        labelForAttribute(key, translate)
+      )
+    ).toBe('Colour: Blue · Size: M')
+  })
+})
+
+describe('labelForAttribute', () => {
+  it('translates known keys', () => {
+    expect(labelForAttribute('color', translate)).toBe('Colour')
+    expect(labelForAttribute('size', translate)).toBe('Size')
+  })
+
+  it('translates known keys case-insensitively', () => {
+    expect(labelForAttribute('Color', translate)).toBe('Colour')
+    expect(labelForAttribute('SIZE', translate)).toBe('Size')
+  })
+
+  it('returns unknown keys unchanged', () => {
+    expect(labelForAttribute('Material', translate)).toBe('Material')
   })
 })

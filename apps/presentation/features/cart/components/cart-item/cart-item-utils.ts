@@ -44,6 +44,27 @@ export function formatItemAttributes(
     .join(' · ')
 }
 
+const KNOWN_ATTRIBUTE_KEYS = ['color', 'size'] as const
+
+type KnownAttributeKey = (typeof KNOWN_ATTRIBUTE_KEYS)[number]
+
+function isKnownAttributeKey(key: string): key is KnownAttributeKey {
+  return (KNOWN_ATTRIBUTE_KEYS as readonly string[]).includes(key)
+}
+
+/**
+ * Translated label for an attribute key (case-insensitive), or the raw key if unknown.
+ */
+export function labelForAttribute(
+  key: string,
+  translate: (key: `item.${KnownAttributeKey}`) => string
+): string {
+  const normalizedKey = key.toLowerCase()
+  return isKnownAttributeKey(normalizedKey)
+    ? translate(`item.${normalizedKey}`)
+    : key
+}
+
 /**
  * Generate product href from line item
  */
