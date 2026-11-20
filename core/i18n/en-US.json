@@ -1,4 +1,35 @@
 {
+  "cookieConsent": {
+    "banner": {
+      "title": "We value your privacy",
+      "description": "We use cookies to run the store and, with your permission, to analyse traffic and personalise content. You can accept all cookies, reject non-essential ones, or choose which categories to allow. Learn more in our <link>privacy policy</link>."
+    },
+    "actions": {
+      "acceptAll": "Accept all",
+      "essentialOnly": "Only essential",
+      "customise": "Customise",
+      "savePreferences": "Save preferences"
+    },
+    "preferences": {
+      "title": "Cookie preferences",
+      "description": "Choose which categories of cookies you allow. Essential cookies are always active because the store cannot function without them."
+    },
+    "categories": {
+      "essential": {
+        "name": "Essential",
+        "description": "Required for core features like your cart, checkout, and security. These cannot be turned off."
+      },
+      "analytics": {
+        "name": "Analytics",
+        "description": "Help us understand how the store is used so we can improve it. No data is collected without your consent."
+      },
+      "marketing": {
+        "name": "Marketing",
+        "description": "Used to show you relevant offers and measure the performance of our campaigns."
+      }
+    },
+    "footerLink": "Cookie preferences"
+  },
   "legalBar": {
     "copyright": "© 2026 SHOPin storefront accelerator."
   },
@@ -7,8 +38,8 @@
     "yes": "Yes",
     "no": "No",
     "description": "Your e-commerce platform with a modern design system.",
+    "skipToContent": "Skip to main content",
     "homepage": "Home",
-    "logoAlt": "SHOPIN",
     "logoHomeLink": "SHOPIN - Home",
     "close": "Close",
     "searchPlaceholder": "What are you looking for?",
@@ -19,6 +50,12 @@
     "noSuggestions": "<bold>0</bold> Results",
     "noSearchProducts": "Sorry - we couldn't find any results for <bold>\"{query}\"</bold>.",
     "scrollableDialogContent": "Scrollable dialog content",
+    "quantitySwitcher": {
+      "label": "Quantity",
+      "decreaseTo": "{label}: decrease to {value}",
+      "increaseTo": "{label}: increase to {value}",
+      "currentValue": "{label}: current value is {value}"
+    },
     "scrollLeft": "Scroll left",
     "scrollRight": "Scroll right",
     "hidePassword": "Hide password",
@@ -88,6 +125,7 @@
       "closeButtonAria": "Close gallery"
     },
     "buyBox": {
+      "notSoldHere": "Not available in this store",
       "size": "Size",
       "findYourSize": "Find your size",
       "reserveInStore": "Reserve in store",
@@ -106,7 +144,7 @@
         "loyaltyBonus": "Collect 3% loyalty bonus"
       },
       "recommendedRetailPrice": "RRP",
-      "omnibusPrice": "30-day best price"
+      "omnibusPrice": "30-day best price:"
     },
     "seo": {
       "about": "About this product"
@@ -188,6 +226,7 @@
       "title": "Order Summary",
       "subtotal": "Subtotal",
       "shipping": "Shipping",
+      "shippingAtCheckout": "Calculated at checkout",
       "tax": "Tax",
       "discount": "Discount",
       "total": "Total",
@@ -201,9 +240,9 @@
       "removeItem": "Failed to remove item",
       "fetchCart": "Failed to fetch cart"
     },
+    "moreProductsCount": "More ({count}+)",
     "addToCartModal": {
       "toastMessage": "Good choice. Item has been added to cart.",
-      "dialogDescription": "Review your cart contents after adding an item.",
       "moreProducts": "More products",
       "goToCart": "Go to cart"
     },
@@ -216,6 +255,7 @@
     "cart": "Cart"
   },
   "account": {
+    "passwordHint": "{min}-{max} characters, including at least 1 letter.",
     "signIn": {
       "title": "Sign In",
       "description": "Use your account and collect points for this purchase",
@@ -254,6 +294,8 @@
       "title": "Register",
       "backToSignIn": "Back to Sign In",
       "backToCheckout": "Back to checkout",
+      "signInLink": "Sign in",
+      "salutationLabel": "Salutation",
       "salutationOptions": {
         "Ms": "Ms.",
         "Mr": "Mr.",
@@ -279,7 +321,9 @@
         "lastNameRequired": "Last name is required",
         "emailInvalid": "Please enter a valid email address",
         "dateOfBirthInvalid": "Please enter a valid date in DD-MM-YYYY format",
-        "passwordMinLength": "Password must be at least 8 characters",
+        "passwordMinLength": "Password must be at least {min} characters",
+        "passwordMaxLength": "Password must be at most {max} characters",
+        "passwordRequiresLetter": "Password must contain at least 1 letter",
         "acceptTermsRequired": "You must accept the terms and conditions",
         "confirmPasswordRequired": "Please confirm your password",
         "passwordsDoNotMatch": "Passwords do not match",
@@ -354,7 +398,9 @@
         "invalidToken": "Invalid reset link. Please request a new password reset.",
         "confirmPasswordRequired": "Please confirm your password",
         "passwordsDoNotMatch": "Passwords do not match",
-        "newPasswordMinLength": "Password must be at least 8 characters",
+        "newPasswordMinLength": "Password must be at least {min} characters",
+        "newPasswordMaxLength": "Password must be at most {max} characters",
+        "newPasswordRequiresLetter": "Password must contain at least 1 letter",
         "tooManyRequests": "Too many requests. Please wait a moment and try again.",
         "internalServerError": "An error occurred. Please try again later"
       }
@@ -405,7 +451,7 @@
       },
       "changePassword": {
         "changePasswordTitle": "Password",
-        "changePasswordDescription": "Here you can set a new password (min. 8 characters including at least 1 letter/max 18 characters, no special characters). For security reasons, you need to enter your old password.",
+        "changePasswordDescription": "Here you can set a new password. For security reasons, you need to enter your old password.",
         "currentPassword": "Current Password",
         "newPassword": "New Password",
         "confirmNewPassword": "Confirm New Password",
@@ -415,9 +461,31 @@
         "submitButtonLabel": "Change Password",
         "errors": {
           "currentPasswordRequired": "Current password is required",
-          "newPasswordMinLength": "New password must be at least 8 characters",
+          "wrongCurrentPassword": "That is not your current password. Please try again.",
+          "newPasswordMinLength": "New password must be at least {min} characters",
+          "newPasswordMaxLength": "New password must be at most {max} characters",
+          "newPasswordRequiresLetter": "New password must contain at least 1 letter",
           "confirmPasswordRequired": "Please confirm your new password",
           "passwordsDoNotMatch": "Passwords do not match"
+        }
+      },
+      "changeEmail": {
+        "title": "Email Address",
+        "description": "Here you can change the email address you sign in with. For security reasons, you need to enter your password. You will have to confirm the new address before your next sign-in.",
+        "newEmail": "New Email Address",
+        "currentPassword": "Current Password",
+        "saving": "Saving...",
+        "submitButtonLabel": "Change Email",
+        "changeEmailSuccess": "Email address changed successfully",
+        "changeEmailError": "Failed to change email address",
+        "verifyNotice": "Please confirm your new email address. You cannot sign in again until it is confirmed.",
+        "verifyEmailButton": "Confirm email address",
+        "errors": {
+          "emailInvalid": "Please enter a valid email address",
+          "emailInUse": "This email address is already in use",
+          "emailUnchanged": "This is already your email address",
+          "currentPasswordRequired": "Current password is required",
+          "wrongCurrentPassword": "That is not your current password. Please try again."
         }
       },
       "addresses": {
@@ -700,6 +768,7 @@
     "removeError": "Failed to remove from wishlist"
   },
   "productCard": {
-    "linkAriaLabel": "View details for {name}"
+    "linkAriaLabel": "View details for {name}",
+    "omnibusPrice": "30-day best price:"
   }
 }

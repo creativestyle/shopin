@@ -93,10 +93,14 @@ export function CartItem({ item }: CartItemProps) {
               currency={item.price.currency}
               fractionDigits={item.price.fractionDigits}
               locale={locale}
+              stacked
               variant={
-                item.price.discountedPriceInCents ? 'discount' : 'regular'
+                item.price.discountedPriceInCents !== undefined
+                  ? 'discount'
+                  : 'regular'
               }
               className='text-sm font-bold md:text-base'
+              originalPriceClassName='text-xs/[1.6] text-gray-500'
             />
           </div>
         </div>

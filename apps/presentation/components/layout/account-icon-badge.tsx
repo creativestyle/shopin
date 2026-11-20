@@ -23,7 +23,7 @@ export function AccountIconBadge({
       {children}
       {isLoggedIn && !isLoading && (
         <div
-          className='absolute -top-0.5 -right-0.5 z-10 h-2.5 w-2.5 rounded-full border-2 border-white bg-gray-950'
+          className='absolute -top-0.5 -right-0.5 z-10 h-2.5 w-2.5 rounded-full border-2 border-white bg-green-600'
           aria-label='Logged in'
         />
       )}

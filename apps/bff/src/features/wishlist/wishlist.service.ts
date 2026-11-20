@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common'
+import { Injectable, Logger, NotFoundException } from '@nestjs/common'
 import { DataSourceFactory } from '../../data-source/data-source.factory'
 import type {
   WishlistResponse,
@@ -37,23 +37,89 @@ export class WishlistService extends BaseAuthenticatedService {
     }
 
     const wishlistService = this.getWishlistService()
-    return await wishlistService.getWishlist(wishlistId, page, limit)
+    try {
+      return await wishlistService.getWishlist(wishlistId, page, limit)
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        await this.clearStaleWishlistId(wishlistId)
+        return null
+      }
+      throw error
+    }
   }
 
   async addToWishlist(
     request: AddToWishlistRequest
   ): Promise<WishlistResponse> {
-    const wishlistId = await this.getOrCreateWishlistId()
-    const wishlistService = this.getWishlistService()
-    return await wishlistService.addToWishlist(wishlistId, request)
+    return this.withWishlistId((wishlistId) =>
+      this.getWishlistService().addToWishlist(wishlistId, request)
+    )
   }
 
   async removeFromWishlist(
     request: RemoveFromWishlistRequest
   ): Promise<WishlistResponse> {
+    return this.withWishlistId((wishlistId) =>
+      this.getWishlistService().removeFromWishlist(wishlistId, request)
+    )
+  }
+
+  /**
+   * Runs an operation against the current wishlist. If the stored wishlist ID no longer
+   * exists in the data source (e.g. deleted, or created by another data source),
+   * the stale cookie is cleared and the operation is retried once on a fresh wishlist.
+   *
+   * A 404 from the operation can also mean a nested resource is missing (e.g. a line
+   * item that was already removed). Only reset the wishlist ID when the wishlist
+   * itself is confirmed missing; otherwise rethrow so the existing wishlist is kept.
+   */
+  private async withWishlistId(
+    operation: (wishlistId: string) => Promise<WishlistResponse>
+  ): Promise<WishlistResponse> {
     const wishlistId = await this.getOrCreateWishlistId()
-    const wishlistService = this.getWishlistService()
-    return await wishlistService.removeFromWishlist(wishlistId, request)
+    try {
+      return await operation(wishlistId)
+    } catch (error) {
+      if (
+        !(error instanceof NotFoundException) ||
+        (await this.wishlistExists(wishlistId))
+      ) {
+        throw error
+      }
+      await this.clearStaleWishlistId(wishlistId)
+      return await operation(await this.getOrCreateWishlistId())
+    }
+  }
+
+  private async wishlistExists(wishlistId: string): Promise<boolean> {
+    try {
+      await this.getWishlistService().getWishlist(wishlistId)
+      return true
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        return false
+      }
+      throw error
+    }
+  }
+
+  /**
+   * Clears every cookie that holds the stale wishlist ID. getWishlistId() can fall
+   * back to the guest cookie for a logged-in user, so the source cookie is matched
+   * by value rather than inferred from the login status.
+   */
+  private async clearStaleWishlistId(wishlistId: string): Promise<void> {
+    this.logger.warn(`Clearing stale wishlist ID: ${wishlistId}`)
+    const [loggedInWishlistId, guestWishlistId] = await Promise.all([
+      this.wishlistIdService.getLoggedInWishlistId(),
+      this.wishlistIdService.getGuestWishlistId(),
+    ])
+    if (loggedInWishlistId === wishlistId) {
+      await this.wishlistIdService.deleteLoggedInWishlistId()
+    }
+    if (guestWishlistId === wishlistId) {
+      await this.wishlistIdService.deleteGuestWishlistId()
+    }
   }
 
   /**

@@ -10,7 +10,7 @@ export function mapProductToCard(
 ): ProductCardResponse {
   const masterVariant = product.masterVariant
   const variantCount = 1 + (product.variants?.length || 0)
-  const price = mapVariantPriceToShopin(masterVariant, currentLanguage)
+  const price = mapVariantPriceToShopin(masterVariant)
 
   return {
     id: product.id,
@@ -25,8 +25,8 @@ export function mapProductToCard(
     },
     price,
     badges: mapBadges(
-      price.regularPriceInCents,
-      price.discountedPriceInCents,
+      price?.regularPriceInCents,
+      price?.discountedPriceInCents,
       product.createdAt
     ),
     variantId: String(masterVariant.id),
