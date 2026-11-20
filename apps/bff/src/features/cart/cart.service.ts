@@ -12,6 +12,7 @@ import type {
   ShippingMethodsResponse,
   SetShippingMethodRequest,
 } from '@core/contracts/cart/shipping-method'
+import type { GetCartOptions } from '@core/contracts/core/data-source-interfaces'
 import { CartIdService } from '../cart-id/cart-id.service'
 import { TokenProvider } from '../../common/token-management/token-provider'
 import { TokenStorageService } from '../../common/token-management/token-storage.service'
@@ -28,14 +29,14 @@ export class CartService extends BaseAuthenticatedService {
     super(tokenProvider, tokenStorageService, dataSourceFactory)
   }
 
-  async getCart(): Promise<CartResponse | null> {
+  async getCart(options?: GetCartOptions): Promise<CartResponse | null> {
     const cartId = await this.getCartId()
     if (!cartId) {
       return null
     }
 
     const cartService = this.getCartService()
-    return await cartService.getCart(cartId)
+    return await cartService.getCart(cartId, options)
   }
 
   async getOrCreateCart(): Promise<CartResponse> {

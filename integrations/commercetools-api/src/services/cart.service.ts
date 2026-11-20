@@ -9,6 +9,7 @@ import type {
   SetShippingAddressRequest,
 } from '@core/contracts/cart/cart'
 import { CartResponseSchema } from '@core/contracts/cart/cart'
+import type { GetCartOptions as ContractGetCartOptions } from '@core/contracts/core/data-source-interfaces'
 import type {
   ShippingMethodsResponse,
   SetShippingMethodRequest,
@@ -28,9 +29,8 @@ import {
   type CartUpdateAction,
 } from '../schemas/cart-update-action'
 
-interface GetCartOptions {
+interface GetCartOptions extends ContractGetCartOptions {
   expand?: string[]
-  withInventory?: boolean
 }
 
 function toStockKey(sku: string, supplyChannelId?: string): string {
