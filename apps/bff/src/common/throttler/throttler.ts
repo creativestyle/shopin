@@ -20,7 +20,7 @@ const THROTTLER_SKIP = 'THROTTLER:SKIP'
  * Secure endpoints (auth, payment, order, change-password) also depend on this flag.
  * Ensures the "secure" throttler runs only on routes that use @SecureRateLimit()
  * when rate limiting is enabled.
- * Requests carrying a matching BFF_INTERNAL_SECRET header are never throttled.
+ * Requests carrying a matching BFF_INTERNAL_SECRET header skip throttling on non-secure routes only.
  */
 @Injectable()
 export class OptionalThrottlerGuard extends ThrottlerGuard {
@@ -39,16 +39,6 @@ export class OptionalThrottlerGuard extends ThrottlerGuard {
     if (rateLimitEnabled !== 'true') {
       return true
     }
-    // Server-side calls on a shopper's behalf would otherwise share the Next server's IP bucket
-    const request = context.switchToHttp().getRequest<Request>()
-    if (
-      isTrustedInternalRequest(
-        request.headers,
-        this.config.get<string>('BFF_INTERNAL_SECRET')
-      )
-    ) {
-      return true
-    }
     const handler = context.getHandler()
     const classRef = context.getClass()
     const reflector = (
@@ -63,6 +53,17 @@ export class OptionalThrottlerGuard extends ThrottlerGuard {
       [handler, classRef]
     )
     const isSecureRoute = skipDefault === true
+    // Internal calls would otherwise share the Next server's IP bucket; secure routes keep their limits
+    const request = context.switchToHttp().getRequest<Request>()
+    if (
+      !isSecureRoute &&
+      isTrustedInternalRequest(
+        request.headers,
+        this.config.get<string>('BFF_INTERNAL_SECRET')
+      )
+    ) {
+      return true
+    }
     const throttlers = (
       this as unknown as { throttlers: Array<{ name?: string }> }
     ).throttlers

@@ -3,6 +3,7 @@ import type { ConfigService } from '@nestjs/config'
 import { Reflector } from '@nestjs/core'
 import { ThrottlerGuard, type ThrottlerStorage } from '@nestjs/throttler'
 import { OptionalThrottlerGuard } from '../throttler'
+import { SecureRateLimit } from '../secure-rate-limit.decorator'
 
 const SECRET = 'internal-secret'
 
@@ -20,14 +21,23 @@ function createGuard(env: Record<string, string | undefined>) {
   )
 }
 
-function createContext(headers: Record<string, string>): ExecutionContext {
-  class TestController {}
+class TestController {
+  getCart() {}
+
+  @SecureRateLimit()
+  signIn() {}
+}
+
+function createContext(
+  headers: Record<string, string>,
+  handler: () => void = TestController.prototype.getCart
+): ExecutionContext {
   return {
     switchToHttp: () => ({
       getRequest: () => ({ headers, ip: '10.0.0.1' }),
       getResponse: () => ({ header: jest.fn() }),
     }),
-    getHandler: () => function handler() {},
+    getHandler: () => handler,
     getClass: () => TestController,
   } as unknown as ExecutionContext
 }
@@ -56,6 +66,23 @@ describe('OptionalThrottlerGuard', () => {
       guard.canActivate(createContext({ 'x-bff-internal-secret': SECRET }))
     ).resolves.toBe(true)
     expect(throttle).not.toHaveBeenCalled()
+  })
+
+  it('still throttles a secure route for a request carrying the internal secret', async () => {
+    const guard = createGuard({
+      BFF_RATE_LIMIT_ENABLED: 'true',
+      BFF_INTERNAL_SECRET: SECRET,
+    })
+    await guard.onModuleInit()
+
+    await guard.canActivate(
+      createContext(
+        { 'x-bff-internal-secret': SECRET },
+        TestController.prototype.signIn
+      )
+    )
+
+    expect(throttle).toHaveBeenCalledTimes(1)
   })
 
   it.each([
