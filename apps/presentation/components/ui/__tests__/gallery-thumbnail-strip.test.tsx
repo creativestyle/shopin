@@ -4,17 +4,22 @@ import { GalleryThumbnailStrip } from '@/components/ui/gallery-thumbnail-strip'
 
 import type { ImgHTMLAttributes } from 'react'
 
-Object.defineProperty(window, 'matchMedia', {
-  writable: true,
-  value: jest.fn().mockImplementation((query) => ({
-    matches: false,
-    media: query,
-    onchange: null,
-    addEventListener: jest.fn(),
-    removeEventListener: jest.fn(),
-    dispatchEvent: jest.fn(),
-  })),
-})
+const mockMatchMedia = (prefersReducedMotion = false) => {
+  Object.defineProperty(window, 'matchMedia', {
+    writable: true,
+    value: jest.fn().mockImplementation((query: string) => ({
+      matches:
+        prefersReducedMotion && query === '(prefers-reduced-motion: reduce)',
+      media: query,
+      onchange: null,
+      addEventListener: jest.fn(),
+      removeEventListener: jest.fn(),
+      dispatchEvent: jest.fn(),
+    })),
+  })
+}
+
+mockMatchMedia()
 
 global.requestAnimationFrame = jest.fn((cb) => {
   setTimeout(cb, 0)
@@ -22,6 +27,7 @@ global.requestAnimationFrame = jest.fn((cb) => {
 })
 
 Element.prototype.scrollTo = jest.fn()
+Element.prototype.scrollIntoView = jest.fn()
 
 jest.mock('next-intl', () => ({
   useTranslations:
@@ -167,5 +173,45 @@ describe('GalleryThumbnailStrip', () => {
     expect(screen.getByRole('button', { pressed: true })).toHaveAccessibleName(
       'Image 0'
     )
+  })
+
+  describe('scrolling the selected thumbnail into view', () => {
+    afterEach(() => {
+      mockMatchMedia()
+    })
+
+    const changeSelection = () => {
+      const props = { images: createImages(4), onSelect: jest.fn() }
+      const { rerender } = render(
+        <GalleryThumbnailStrip
+          {...props}
+          selectedIndex={0}
+        />
+      )
+      rerender(
+        <GalleryThumbnailStrip
+          {...props}
+          selectedIndex={2}
+        />
+      )
+    }
+
+    it('scrolls smoothly by default', () => {
+      changeSelection()
+
+      expect(Element.prototype.scrollIntoView).toHaveBeenLastCalledWith(
+        expect.objectContaining({ behavior: 'smooth' })
+      )
+    })
+
+    it('scrolls instantly when the user prefers reduced motion', () => {
+      mockMatchMedia(true)
+
+      changeSelection()
+
+      expect(Element.prototype.scrollIntoView).toHaveBeenLastCalledWith(
+        expect.objectContaining({ behavior: 'auto' })
+      )
+    })
   })
 })
