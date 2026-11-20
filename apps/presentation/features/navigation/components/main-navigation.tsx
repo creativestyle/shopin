@@ -211,17 +211,19 @@ export const MainNavigation: React.FC<MainNavigationProps> = ({
                     <div className='text-center text-sm font-bold text-gray-900'>
                       {activeItem.featuredProduct.name}
                     </div>
-                    <div className='text-center text-base font-bold text-gray-900'>
-                      {(
-                        (activeItem.featuredProduct.price
-                          .discountedPriceInCents ??
-                          activeItem.featuredProduct.price
-                            .regularPriceInCents) / 100
-                      ).toFixed(
-                        activeItem.featuredProduct.price.fractionDigits
-                      )}{' '}
-                      {activeItem.featuredProduct.price.currency}
-                    </div>
+                    {activeItem.featuredProduct.price && (
+                      <div className='text-center text-base font-bold text-gray-900'>
+                        {(
+                          (activeItem.featuredProduct.price
+                            .discountedPriceInCents ??
+                            activeItem.featuredProduct.price
+                              .regularPriceInCents) / 100
+                        ).toFixed(
+                          activeItem.featuredProduct.price.fractionDigits
+                        )}{' '}
+                        {activeItem.featuredProduct.price.currency}
+                      </div>
+                    )}
                   </Link>
                 )}
               </div>

@@ -125,6 +125,7 @@
       "closeButtonAria": "Close gallery"
     },
     "buyBox": {
+      "notSoldHere": "Not available in this store",
       "size": "Size",
       "findYourSize": "Find your size",
       "reserveInStore": "Reserve in store",
