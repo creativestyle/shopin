@@ -10,6 +10,7 @@ export const AUTH_ACTIONS = [
   'register',
   'confirm_email',
   'password_change',
+  'email_change',
   'token_refresh',
   'forgot_password',
   'reset_password',

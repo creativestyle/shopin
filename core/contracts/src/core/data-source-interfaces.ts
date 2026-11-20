@@ -37,6 +37,7 @@ import type {
   ResetPasswordResponse,
 } from '@core/contracts/auth/reset-password'
 import type {
+  ChangeCustomerEmailRequest,
   ChangeCustomerPasswordRequest,
   CustomerResponse,
   UpdateCustomerRequest,
@@ -187,6 +188,9 @@ export interface CustomerService {
   changeCustomerPassword(
     changeCustomerPasswordRequest: ChangeCustomerPasswordRequest
   ): Promise<void>
+  changeCustomerEmail(
+    changeCustomerEmailRequest: ChangeCustomerEmailRequest
+  ): Promise<CustomerResponse>
 }
 
 export interface CustomerAddressService {
