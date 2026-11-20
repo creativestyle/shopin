@@ -78,7 +78,7 @@ export function writeConsent(categories: ConsentCategories): void {
     (secure ? '; Secure' : '')
 }
 
-/** Clears the stored consent so the banner reappears (used by "reset"). */
+/** Clears the stored consent so the banner reappears on the next render. Not wired to any control; tests use it to reset state. */
 export function clearConsent(): void {
   if (typeof document === 'undefined') {
     return
