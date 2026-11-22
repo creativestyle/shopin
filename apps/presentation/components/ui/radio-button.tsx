@@ -22,12 +22,24 @@ const radioGroupVariants = cva('grid', {
 function RadioGroup({
   className,
   orientation,
+  invalid,
+  ariaDescribedBy,
   ...props
 }: React.ComponentProps<typeof RadioGroupPrimitive.Root> &
-  VariantProps<typeof radioGroupVariants>) {
+  VariantProps<typeof radioGroupVariants> & {
+    invalid?: boolean
+    ariaDescribedBy?: string
+  }) {
+  const { isInvalid, describedBy: effectiveDescribedBy } = useFieldValidation({
+    invalid,
+    ariaDescribedBy,
+  })
+
   return (
     <RadioGroupPrimitive.Root
       data-slot='radio-group'
+      aria-invalid={isInvalid || undefined}
+      aria-describedby={effectiveDescribedBy || undefined}
       className={cn(radioGroupVariants({ orientation }), className)}
       {...props}
     />

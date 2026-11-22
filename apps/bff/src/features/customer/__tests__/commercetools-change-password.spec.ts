@@ -9,7 +9,10 @@ function createService(execute: jest.Mock) {
   const post = jest.fn().mockReturnValue({ execute })
   const client = { me: () => ({ password: () => ({ post }) }) }
   const userClientService = { getClient: jest.fn().mockResolvedValue(client) }
-  const service = new CommercetoolsCustomerService(userClientService as never)
+  const service = new CommercetoolsCustomerService(
+    userClientService as never,
+    {} as never
+  )
   const getCurrentCustomer = jest
     .spyOn(service, 'getCurrentCustomer')
     .mockResolvedValue({ version: 7 } as never)

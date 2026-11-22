@@ -40,7 +40,6 @@
     "description": "Ihre E-Commerce-Plattform mit einem modernen Design-System.",
     "skipToContent": "Zum Hauptinhalt springen",
     "homepage": "Startseite",
-    "logoAlt": "SHOPIN",
     "logoHomeLink": "SHOPIN - Startseite",
     "close": "Schließen",
     "searchPlaceholder": "Wonach suchen Sie?",
@@ -126,6 +125,7 @@
       "thumbnailAria": "Bild {current} von {total}"
     },
     "buyBox": {
+      "notSoldHere": "In diesem Shop nicht erhältlich",
       "size": "Größe",
       "findYourSize": "Finde deine Größe",
       "reserveInStore": "Im Store reservieren",
@@ -270,6 +270,8 @@
       "noAccount": "Noch kein Konto?",
       "signUp": "Registrieren",
       "success": "Sie wurden erfolgreich angemeldet.",
+      "emailVerified": "Ihre E-Mail-Adresse wurde bestätigt. Sie können sich jetzt anmelden.",
+      "passwordReset": "Ihr Passwort wurde aktualisiert. Sie können sich jetzt anmelden.",
       "errors": {
         "emailRequired": "E-Mail ist erforderlich",
         "emailInvalid": "Bitte geben Sie eine gültige E-Mail-Adresse ein",
@@ -352,6 +354,7 @@
       "errors": {
         "tokenRequired": "E-Mail-Bestätigungstoken ist erforderlich. Bitte verwenden Sie den Link aus Ihrer E-Mail.",
         "tokenExpired": "Ihr Bestätigungslink ist abgelaufen. Geben Sie Ihre E-Mail-Adresse ein, um einen neuen zu erhalten.",
+        "tokenInvalid": "Dieser Bestätigungslink ist nicht mehr gültig. Wenn Sie Ihre E-Mail-Adresse bereits bestätigt haben, können Sie sich anmelden. Andernfalls geben Sie unten Ihre E-Mail-Adresse ein, um einen neuen Link zu erhalten.",
         "resendFailed": "Bestätigungs-E-Mail konnte nicht gesendet werden. Bitte versuchen Sie es erneut.",
         "confirmFailed": "E-Mail-Bestätigung fehlgeschlagen. Bitte versuchen Sie es erneut oder verwenden Sie den Link aus Ihrer E-Mail.",
         "validationFailed": "Bitte überprüfen Sie Ihre Eingabe",
@@ -387,7 +390,6 @@
       "submitting": "Wird zurückgesetzt...",
       "backToSignIn": "Zurück zur Anmeldung",
       "requestNewLink": "Neuen Link anfordern",
-      "success": "Passwort erfolgreich zurückgesetzt. Sie können sich jetzt mit Ihrem neuen Passwort anmelden.",
       "errors": {
         "tokenRequired": "Passwort-Zurücksetzen-Token ist erforderlich. Bitte verwenden Sie den Link aus Ihrer E-Mail.",
         "resetPasswordFailed": "Passwort konnte nicht zurückgesetzt werden. Bitte versuchen Sie es erneut oder fordern Sie einen neuen Link an.",
@@ -466,6 +468,25 @@
           "passwordsDoNotMatch": "Die Passwörter stimmen nicht überein"
         }
       },
+      "changeEmail": {
+        "title": "E-Mail-Adresse",
+        "description": "Hier können Sie die E-Mail-Adresse ändern, mit der Sie sich anmelden. Aus Sicherheitsgründen müssen Sie Ihr Passwort eingeben. Vor Ihrer nächsten Anmeldung müssen Sie die neue Adresse bestätigen.",
+        "newEmail": "Neue E-Mail-Adresse",
+        "currentPassword": "Aktuelles Passwort",
+        "saving": "Speichern...",
+        "submitButtonLabel": "E-Mail ändern",
+        "changeEmailSuccess": "E-Mail-Adresse erfolgreich geändert",
+        "changeEmailError": "Fehler beim Ändern der E-Mail-Adresse",
+        "verifyNotice": "Bitte bestätigen Sie Ihre neue E-Mail-Adresse. Sie können sich erst wieder anmelden, wenn sie bestätigt ist.",
+        "verifyEmailButton": "E-Mail-Adresse bestätigen",
+        "errors": {
+          "emailInvalid": "Bitte geben Sie eine gültige E-Mail-Adresse ein",
+          "emailInUse": "Diese E-Mail-Adresse wird bereits verwendet",
+          "emailUnchanged": "Das ist bereits Ihre E-Mail-Adresse",
+          "currentPasswordRequired": "Aktuelles Passwort ist erforderlich",
+          "wrongCurrentPassword": "Das ist nicht Ihr aktuelles Passwort. Bitte versuchen Sie es erneut."
+        }
+      },
       "addresses": {
         "title": "Rechnungsadresse",
         "addAddress": "Adresse hinzufügen",
@@ -475,8 +496,10 @@
         "showMore": "Mehr",
         "showLess": "Weniger",
         "edit": "Bearbeiten",
+        "editAriaLabel": "Bearbeiten: {address}",
         "close": "Abbrechen",
         "delete": "Löschen",
+        "deleteAriaLabel": "Löschen: {address}",
         "defaultShipping": "Standard Versand",
         "defaultBilling": "Standard Rechnung",
         "addSuccess": "Adresse erfolgreich hinzugefügt",

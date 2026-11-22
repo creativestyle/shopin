@@ -40,7 +40,6 @@
     "description": "Your e-commerce platform with a modern design system.",
     "skipToContent": "Skip to main content",
     "homepage": "Home",
-    "logoAlt": "SHOPIN",
     "logoHomeLink": "SHOPIN - Home",
     "close": "Close",
     "searchPlaceholder": "What are you looking for?",
@@ -127,6 +126,7 @@
       "thumbnailAria": "Image {current} of {total}"
     },
     "buyBox": {
+      "notSoldHere": "Not available in this store",
       "size": "Size",
       "findYourSize": "Find your size",
       "reserveInStore": "Reserve in store",
@@ -271,6 +271,8 @@
       "noAccount": "Don't have an account?",
       "signUp": "Sign up",
       "success": "You have been logged in successfully.",
+      "emailVerified": "Your email has been confirmed. You can now sign in.",
+      "passwordReset": "Your password has been updated. You can now sign in.",
       "errors": {
         "emailRequired": "Email is required",
         "emailInvalid": "Please enter a valid email address",
@@ -353,6 +355,7 @@
       "errors": {
         "tokenRequired": "Email verification token is required. Please use the link from your email.",
         "tokenExpired": "Your verification link has expired. Enter your email to receive a new one.",
+        "tokenInvalid": "This verification link is no longer valid. If you have already confirmed your email, you can sign in. Otherwise, enter your email below to receive a new link.",
         "resendFailed": "Failed to resend verification email. Please try again.",
         "confirmFailed": "Failed to confirm email. Please try again or use the link from your email.",
         "validationFailed": "Please check your input",
@@ -388,7 +391,6 @@
       "submitting": "Resetting...",
       "backToSignIn": "Back to Sign In",
       "requestNewLink": "Request a new reset link",
-      "success": "Password reset successfully. You can now sign in with your new password.",
       "errors": {
         "tokenRequired": "Password reset token is required. Please use the link from your email.",
         "resetPasswordFailed": "Failed to reset password. Please try again or request a new reset link.",
@@ -467,6 +469,25 @@
           "passwordsDoNotMatch": "Passwords do not match"
         }
       },
+      "changeEmail": {
+        "title": "Email Address",
+        "description": "Here you can change the email address you sign in with. For security reasons, you need to enter your password. You will have to confirm the new address before your next sign-in.",
+        "newEmail": "New Email Address",
+        "currentPassword": "Current Password",
+        "saving": "Saving...",
+        "submitButtonLabel": "Change Email",
+        "changeEmailSuccess": "Email address changed successfully",
+        "changeEmailError": "Failed to change email address",
+        "verifyNotice": "Please confirm your new email address. You cannot sign in again until it is confirmed.",
+        "verifyEmailButton": "Confirm email address",
+        "errors": {
+          "emailInvalid": "Please enter a valid email address",
+          "emailInUse": "This email address is already in use",
+          "emailUnchanged": "This is already your email address",
+          "currentPasswordRequired": "Current password is required",
+          "wrongCurrentPassword": "That is not your current password. Please try again."
+        }
+      },
       "addresses": {
         "title": "Billing Address",
         "addAddress": "Add Address",
@@ -476,8 +497,10 @@
         "showMore": "More",
         "showLess": "Less",
         "edit": "Edit",
+        "editAriaLabel": "Edit {address}",
         "close": "Close",
         "delete": "Delete",
+        "deleteAriaLabel": "Delete {address}",
         "defaultShipping": "Default Shipping",
         "defaultBilling": "Default Billing",
         "addSuccess": "Address added successfully",
