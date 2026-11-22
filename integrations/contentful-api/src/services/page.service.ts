@@ -11,7 +11,7 @@ import {
 import {
   collectLinkIdsFromPageResponse,
   injectResolvedLinksIntoPageResponse,
-} from '../helpers/page-asset-resolution'
+} from '../helpers/page-link-resolution'
 import { mapTeaserEntryToResponse } from '../mappers/teaser'
 import { mapPageItemToContentPageResponse } from '../mappers/page'
 import { PageBySlugQuery } from '../graphql/page-by-slug.query'

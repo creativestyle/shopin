@@ -6,6 +6,7 @@ import {
   type AssetItem,
   type EntryItem,
 } from '../schemas'
+import { toSafeUrl } from './to-safe-url'
 
 /** Rich text field as returned by Contentful GraphQL; `links` is injected after resolution. */
 type RichTextField = { json?: unknown; links?: RichTextLinks }
@@ -89,8 +90,8 @@ function getEntryUrl(entry: EntryItem): string | undefined {
   if (entry.__typename === 'Page' && entry.slug) {
     return `/${entry.slug}`
   }
-  if (entry.__typename === 'Link' && entry.url) {
-    return entry.url
+  if (entry.__typename === 'Link') {
+    return toSafeUrl(entry.url)
   }
   return undefined
 }

@@ -8,6 +8,7 @@ import {
   type RichTextNode,
   type RichTextLinks,
 } from '../../schemas/rich-text'
+import { toSafeUrl } from '../../helpers/to-safe-url'
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -144,25 +145,24 @@ function getNodeTextContent(node: RichTextNode): string {
   return (node.content ?? []).map(getNodeTextContent).join('')
 }
 
-function dataWithoutRefs<T extends Record<string, unknown>>(
+const LINK_SOURCE_KEYS = new Set(['target', 'uri', 'url'])
+
+function dataWithoutLinkSource<T extends Record<string, unknown>>(
   data: T
 ): Record<string, unknown> {
   return Object.fromEntries(
-    Object.entries(data).filter(([key]) => key !== 'target' && key !== 'uri')
+    Object.entries(data).filter(([key]) => !LINK_SOURCE_KEYS.has(key))
   )
 }
 
+// Unresolved or unsafe links become a hyperlink without url
 function normalizeLinkNode(node: RichTextNode): RichTextNode {
   const nodeType = getNormalizedNodeType(node)
-  if (!LINK_NODE_TYPE_SET.has(nodeType) || !node.data) {
+  if (!LINK_NODE_TYPE_SET.has(nodeType)) {
     return node
   }
-  const data = LinkNodeDataSchema.parse(node.data)
-  const resolvedUrl = data.url ?? data.uri
-  if (!resolvedUrl) {
-    return node
-  }
-
+  const data = LinkNodeDataSchema.parse(node.data ?? {})
+  const url = toSafeUrl(data.url ?? data.uri)
   const label =
     getNodeTextContent(node) ||
     (nodeType === 'asset-hyperlink' ? (data.alt ?? '') : '')
@@ -170,9 +170,9 @@ function normalizeLinkNode(node: RichTextNode): RichTextNode {
     ...node,
     nodeType: 'hyperlink',
     data: {
-      ...dataWithoutRefs(data),
+      ...dataWithoutLinkSource(data),
       label,
-      url: resolvedUrl,
+      ...(url && { url }),
     },
   }
 }
@@ -197,7 +197,7 @@ export function mergeRichTextLinks(
   return RichTextDocumentResponseSchema.parse(transformed)
 }
 
-/** Normalizes Contentful link nodes to contract shape: nodeType 'hyperlink' with label and url in data. */
+/** Normalizes Contentful link nodes to contract shape: nodeType 'hyperlink' with label, and url only when resolved and safe. */
 export function normalizeRichTextLinkData(
   doc: RichTextDocumentResponse
 ): RichTextDocumentResponse {
