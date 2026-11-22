@@ -42,7 +42,7 @@ export function mapFooterItemToFooterResponse(
   footer: FooterItemApiResponse
 ): FooterResponse {
   const resolveLinkUrl = (footerLink: FooterLinkApiResponse): string => {
-    const pageSlug = footerLink.linkedPage?.slug?.trim()
+    const pageSlug = footerLink.linkedPage?.slug?.trim().replace(/^\/+/, '')
     if (pageSlug) {
       return `/${pageSlug}`
     }
@@ -69,7 +69,7 @@ export function mapFooterItemToFooterResponse(
       : base.target
     return {
       ...base,
-      label: base.label || linkLabel(footerLink),
+      label: base.label.trim() || linkLabel(footerLink),
       url,
       target,
     }
@@ -81,10 +81,12 @@ export function mapFooterItemToFooterResponse(
 
   const sections: FooterSectionResponse[] = (
     footer.footerLinksCollection?.items ?? []
-  ).map((footerSection) => ({
-    title: (footerSection.title ?? '').trim(),
-    links: toCmsLinks(footerSection.linksCollection?.items),
-  }))
+  )
+    .map((footerSection) => ({
+      title: (footerSection.title ?? '').trim(),
+      links: toCmsLinks(footerSection.linksCollection?.items),
+    }))
+    .filter((section) => section.title || section.links.length)
 
   const legalLinks = toCmsLinks(footer.legalLinksCollection?.items)
 
@@ -104,6 +106,21 @@ export function mapFooterItemToFooterResponse(
       }
     : undefined
 
+  const customerServicePhone = optionalString(footer.customerServicePhone)
+  const customerServiceHours = optionalString(footer.customerServiceHours)
+  const customerServiceContactUs = toCmsLinks(
+    footer.customerServiceContactUs && [footer.customerServiceContactUs]
+  )[0]
+  const customerService =
+    customerServicePhone || customerServiceHours || customerServiceContactUs
+      ? {
+          title: optionalString(footer.customerServiceTitle) ?? '',
+          phone: customerServicePhone,
+          hours: customerServiceHours,
+          contactUs: customerServiceContactUs,
+        }
+      : undefined
+
   const built = {
     sections,
     legalLinks,
@@ -119,16 +136,7 @@ export function mapFooterItemToFooterResponse(
             signUpLabel: optionalString(footer.newsletterSignUpLabel),
           }
         : undefined,
-    customerService: optionalString(footer.customerServiceTitle)
-      ? {
-          title: optionalString(footer.customerServiceTitle) ?? '',
-          phone: optionalString(footer.customerServicePhone),
-          hours: optionalString(footer.customerServiceHours),
-          contactUs: toCmsLinks(
-            footer.customerServiceContactUs && [footer.customerServiceContactUs]
-          )[0],
-        }
-      : undefined,
+    customerService,
     paymentMethods,
     country: optionalString(footer.languageTitle)
       ? { title: optionalString(footer.languageTitle) ?? '' }

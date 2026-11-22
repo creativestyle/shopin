@@ -4,6 +4,12 @@ import { CmsLink } from '@/features/content/cms-link'
 import PhoneIcon from '../../../public/icons/phone.svg'
 import ArrowRightIcon from '../../../public/icons/arrow-right.svg'
 
+// Drops a trunk "(0)" and everything but digits and a leading "+"
+function toTelHref(phone: string) {
+  const digits = phone.replace(/\(0\)/g, '').replace(/[^\d+]/g, '')
+  return `tel:${digits.replace(/(?!^)\+/g, '')}`
+}
+
 export function CustomerServiceBlock({
   customerService,
 }: {
@@ -13,13 +19,15 @@ export function CustomerServiceBlock({
 
   return (
     <div className='space-y-4'>
-      <h3 className='text-sm leading-tight font-bold text-gray-900'>
-        {customerService.title}
-      </h3>
+      {customerService.title && (
+        <h3 className='text-sm leading-tight font-bold text-gray-900'>
+          {customerService.title}
+        </h3>
+      )}
       <div className='space-y-2.5'>
         {customerService.phone && (
           <a
-            href={`tel:${customerService.phone}`}
+            href={toTelHref(customerService.phone)}
             aria-label={t('callUs', { phone: customerService.phone })}
             className='flex w-fit items-center gap-2.5 text-gray-600 transition-colors hover:text-gray-900'
           >
