@@ -22,7 +22,9 @@ import { variantHeaders } from '@/lib/variant/variant-key'
  * fetches (store config, nav, layout). Neither needs user-scoped tracing; the BFF
  * generates its own ID for those. Reading headers()/cookies() to extract a client ID
  * would also opt every caller into dynamic rendering, defeating revalidate = 3600.
- * User-scoped correlation IDs live exclusively in useBffFetchClient (client side).
+ * User-scoped correlation IDs live in useBffFetchClient (client side).
+ * Exception: the checkout server guard (features/checkout/checkout-server-guard.ts) is a
+ * per-user call on a dynamic route; it forwards cookies and the correlation ID itself.
  *
  * @param opts.locale - Locale override when not using next-intl context (e.g. i18n/request.ts).
  * @param opts.isDraft - Controls draft header:

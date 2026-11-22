@@ -1,7 +1,7 @@
 'use client'
 
 import { useTranslations } from 'next-intl'
-import { useState } from 'react'
+import { useState, type RefObject } from 'react'
 import { useCustomerAddresses } from '@/features/customer/customer-use-customer-addresses'
 import { sortAddresses } from '@/features/address/address-utils'
 import { Button } from '@/components/ui/button'
@@ -34,6 +34,7 @@ interface AddressStepManageAddressesModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   onAddressAdded?: (addressId: string) => void
+  restoreFocusRef?: RefObject<HTMLElement | null>
 }
 
 type FormMode =
@@ -45,6 +46,7 @@ export function AddressStepManageAddressesModal({
   open,
   onOpenChange,
   onAddressAdded,
+  restoreFocusRef,
 }: AddressStepManageAddressesModalProps) {
   const t = useTranslations('account.myAccount')
   const {
@@ -117,6 +119,7 @@ export function AddressStepManageAddressesModal({
     >
       <SheetContent
         className='w-full max-w-2xl overflow-y-auto'
+        restoreFocusRef={restoreFocusRef}
         onPointerDownOutside={(e) => e.preventDefault()}
         onInteractOutside={(e) => e.preventDefault()}
         aria-describedby={undefined}

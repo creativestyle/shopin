@@ -2,6 +2,10 @@ import {
   CustomerResponse,
   UpdateCustomerRequest,
   ChangeCustomerPasswordRequest,
+  ChangeCustomerEmailRequest,
+  ChangeCustomerEmailResponse,
+  EMAIL_IN_USE_CODE,
+  EMAIL_UNCHANGED_CODE,
   INVALID_CURRENT_PASSWORD_CODE,
 } from '@core/contracts/customer/customer'
 import {
@@ -13,6 +17,8 @@ import {
 import { BaseService } from '@/lib/bff/services/base-service'
 import { parseErrorCode } from '@/lib/bff/utils/error-response'
 import { InvalidCurrentPasswordError } from './invalid-current-password-error'
+import { EmailInUseError } from './email-in-use-error'
+import { EmailUnchangedError } from './email-unchanged-error'
 
 /**
  * Service for customer BFF operations.
@@ -65,6 +71,34 @@ export class CustomerService extends BaseService {
         }
       },
     })
+  }
+
+  /**
+   * Change the sign-in email
+   * Throws InvalidCurrentPasswordError, EmailInUseError or EmailUnchangedError so the
+   * form can show them on the fields. The new email must be verified before the next sign-in.
+   */
+  async changeEmail(
+    data: ChangeCustomerEmailRequest
+  ): Promise<ChangeCustomerEmailResponse> {
+    return await this.put<ChangeCustomerEmailResponse>(
+      '/customer/me/email',
+      data,
+      {
+        onError: async (res) => {
+          const code = await parseErrorCode(res)
+          if (res.status === 400 && code === INVALID_CURRENT_PASSWORD_CODE) {
+            throw new InvalidCurrentPasswordError()
+          }
+          if (res.status === 409 && code === EMAIL_IN_USE_CODE) {
+            throw new EmailInUseError()
+          }
+          if (res.status === 400 && code === EMAIL_UNCHANGED_CODE) {
+            throw new EmailUnchangedError()
+          }
+        },
+      }
+    )
   }
 
   /**

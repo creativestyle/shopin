@@ -40,7 +40,6 @@
     "description": "Ihre E-Commerce-Plattform mit einem modernen Design-System.",
     "skipToContent": "Zum Hauptinhalt springen",
     "homepage": "Startseite",
-    "logoAlt": "SHOPIN",
     "logoHomeLink": "SHOPIN - Startseite",
     "close": "Schließen",
     "searchPlaceholder": "Wonach suchen Sie?",
@@ -125,6 +124,7 @@
       "closeButtonAria": "Galerie schließen"
     },
     "buyBox": {
+      "notSoldHere": "In diesem Shop nicht erhältlich",
       "size": "Größe",
       "findYourSize": "Finde deine Größe",
       "reserveInStore": "Im Store reservieren",
@@ -463,6 +463,25 @@
           "newPasswordRequiresLetter": "Neues Passwort muss mindestens 1 Buchstaben enthalten",
           "confirmPasswordRequired": "Bitte bestätigen Sie Ihr neues Passwort",
           "passwordsDoNotMatch": "Die Passwörter stimmen nicht überein"
+        }
+      },
+      "changeEmail": {
+        "title": "E-Mail-Adresse",
+        "description": "Hier können Sie die E-Mail-Adresse ändern, mit der Sie sich anmelden. Aus Sicherheitsgründen müssen Sie Ihr Passwort eingeben. Vor Ihrer nächsten Anmeldung müssen Sie die neue Adresse bestätigen.",
+        "newEmail": "Neue E-Mail-Adresse",
+        "currentPassword": "Aktuelles Passwort",
+        "saving": "Speichern...",
+        "submitButtonLabel": "E-Mail ändern",
+        "changeEmailSuccess": "E-Mail-Adresse erfolgreich geändert",
+        "changeEmailError": "Fehler beim Ändern der E-Mail-Adresse",
+        "verifyNotice": "Bitte bestätigen Sie Ihre neue E-Mail-Adresse. Sie können sich erst wieder anmelden, wenn sie bestätigt ist.",
+        "verifyEmailButton": "E-Mail-Adresse bestätigen",
+        "errors": {
+          "emailInvalid": "Bitte geben Sie eine gültige E-Mail-Adresse ein",
+          "emailInUse": "Diese E-Mail-Adresse wird bereits verwendet",
+          "emailUnchanged": "Das ist bereits Ihre E-Mail-Adresse",
+          "currentPasswordRequired": "Aktuelles Passwort ist erforderlich",
+          "wrongCurrentPassword": "Das ist nicht Ihr aktuelles Passwort. Bitte versuchen Sie es erneut."
         }
       },
       "addresses": {
