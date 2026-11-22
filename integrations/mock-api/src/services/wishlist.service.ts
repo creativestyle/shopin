@@ -90,7 +90,7 @@ export class WishlistService {
     const productWithCurrency = {
       ...productCard,
       id: productId, // Use the actual product ID from the request
-      price: { ...productCard.price, currency },
+      price: productCard.price && { ...productCard.price, currency },
     }
 
     const lineItemId = `wishlist-item-${randomUUID()}`

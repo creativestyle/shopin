@@ -106,17 +106,19 @@ export function ProductCollectionContent({
               products={products}
               locale={locale}
               eagerCount={4}
-              renderCardActions={(product) => (
-                <AddToCart
-                  productId={product.id}
-                  productSlug={product.slug}
-                  productName={product.name}
-                  variantId={product.variantId}
-                  variantCount={product.variantCount}
-                  variant='primary'
-                  className='w-full'
-                />
-              )}
+              renderCardActions={(product) =>
+                product.price ? (
+                  <AddToCart
+                    productId={product.id}
+                    productSlug={product.slug}
+                    productName={product.name}
+                    variantId={product.variantId}
+                    variantCount={product.variantCount}
+                    variant='primary'
+                    className='w-full'
+                  />
+                ) : null
+              }
             />
           )}
           {totalPages > 1 && (

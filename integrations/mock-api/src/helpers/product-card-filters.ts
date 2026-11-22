@@ -8,7 +8,12 @@ export interface ProductCardFilterOptions {
   priceMax?: number
 }
 
-function getEffectivePrice(product: ProductCardWithAttributes): number {
+function getEffectivePrice(
+  product: ProductCardWithAttributes
+): number | undefined {
+  if (!product.price) {
+    return undefined
+  }
   return (
     product.price.discountedPriceInCents ?? product.price.regularPriceInCents
   )
@@ -18,10 +23,12 @@ export function calculatePriceRange(products: ProductCardWithAttributes[]): {
   minPriceInCents: number
   maxPriceInCents: number
 } {
-  if (products.length === 0) {
+  const prices = products
+    .map(getEffectivePrice)
+    .filter((price): price is number => price !== undefined)
+  if (prices.length === 0) {
     return { minPriceInCents: 0, maxPriceInCents: 0 }
   }
-  const prices = products.map(getEffectivePrice)
   return {
     minPriceInCents: Math.min(...prices),
     maxPriceInCents: Math.max(...prices),
@@ -59,10 +66,16 @@ export function filterProductCards(
     if (filters && !matchesAttributeFilters(product, filters)) {
       return false
     }
-    if (saleOnly && product.price.discountedPriceInCents === undefined) {
+    if (saleOnly && product.price?.discountedPriceInCents === undefined) {
       return false
     }
+    if (priceMin === undefined && priceMax === undefined) {
+      return true
+    }
     const price = getEffectivePrice(product)
+    if (price === undefined) {
+      return false
+    }
     if (priceMin !== undefined && price < priceMin) {
       return false
     }

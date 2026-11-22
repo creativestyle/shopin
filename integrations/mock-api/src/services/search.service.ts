@@ -99,7 +99,7 @@ export class SearchService implements SearchProvider {
         id: p.id,
         slug: p.slug,
         name: p.name,
-        price: { ...p.price, currency },
+        price: p.price && { ...p.price, currency },
         image: p.image,
         variantId: p.variantId,
         variantCount: p.variantCount,
