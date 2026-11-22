@@ -127,7 +127,9 @@ export function CartItem({ item }: CartItemProps) {
               locale={locale}
               stacked
               variant={
-                item.price.discountedPriceInCents ? 'discount' : 'regular'
+                item.price.discountedPriceInCents !== undefined
+                  ? 'discount'
+                  : 'regular'
               }
               className='text-sm font-bold md:text-base'
               originalPriceClassName='text-xs/[1.6] text-gray-500'

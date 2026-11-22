@@ -66,7 +66,7 @@ function DecoratedPrice({
       {originalPrice !== undefined && (
         <span
           className={cn(
-            'order-1 text-right text-sm/[1.6] text-gray-600 line-through',
+            'text-right text-sm/[1.6] text-gray-600 line-through',
             originalPriceClassName
           )}
         >
@@ -77,10 +77,7 @@ function DecoratedPrice({
         </span>
       )}
       <span
-        className={cn(
-          variants({ variant, size, className }),
-          'order-2 text-right'
-        )}
+        className={cn(variants({ variant, size, className }), 'text-right')}
         {...props}
       >
         <span>{formattedPrice}</span>

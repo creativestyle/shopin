@@ -13,9 +13,11 @@ export function calculateItemPrices(item: LineItemResponse): {
     (item.price.discountedPriceInCents ?? item.price.regularPriceInCents) *
     item.quantity
 
-  const originalPrice = item.price.discountedPriceInCents
-    ? item.price.regularPriceInCents * item.quantity
-    : undefined
+  // A discount to 0 (free) is still a discount: compare with undefined, not truthiness.
+  const originalPrice =
+    item.price.discountedPriceInCents !== undefined
+      ? item.price.regularPriceInCents * item.quantity
+      : undefined
 
   return { totalPrice, originalPrice }
 }

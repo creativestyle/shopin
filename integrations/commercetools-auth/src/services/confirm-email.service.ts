@@ -23,7 +23,7 @@ export class CommercetoolsConfirmEmailService {
     const client = this.serverClientService.getClient()
 
     try {
-      const response = await client
+      await client
         .customers()
         .emailConfirm()
         .post({
@@ -33,17 +33,14 @@ export class CommercetoolsConfirmEmailService {
         })
         .execute()
 
-      const customer = response.body
-      const alreadyVerified = customer?.isEmailVerified === true
-
-      return { success: true, alreadyVerified }
+      return { success: true }
     } catch (error) {
       if (this.errorMatcher.isExpiredEmailTokenError(error)) {
         return { success: false, statusCode: 400, message: 'token_expired' }
       }
 
       if (this.errorMatcher.isInvalidTokenError(error)) {
-        return { success: false, statusCode: 400 }
+        return { success: false, statusCode: 400, message: 'token_invalid' }
       }
 
       this.logger.error({ err: error }, 'Error confirming email')

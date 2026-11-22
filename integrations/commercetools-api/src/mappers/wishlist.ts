@@ -5,16 +5,15 @@ import type {
 import type { WishlistResponse } from '@core/contracts/wishlist/wishlist'
 import { WishlistResponseSchema } from '@core/contracts/wishlist/wishlist'
 import { resolveCurrencyFromLanguage } from '@core/i18n/currency-utils'
+import { resolveCountryFromLanguage } from '@core/i18n/language-tag-utils'
 import { getLocalizedString as mapLocalized } from '../helpers/get-localized-string'
-import { buildInClause } from '../helpers/build-in-clause'
-import { ProductProjectionPagedQueryApiResponseSchema } from '../schemas/product-projection'
+import { fetchProjectionsByIds } from '../helpers/fetch-projections'
+import type { ProductProjectionApiResponse } from '../schemas/product-projection'
 import type { ByProjectKeyRequestBuilder } from '@commercetools/platform-sdk'
 
 type ValidLineItem = Omit<ShoppingListLineItem, 'productId' | 'variant'> & {
   productId: string
-  variant: NonNullable<ShoppingListLineItem['variant']> & {
-    prices: NonNullable<NonNullable<ShoppingListLineItem['variant']>['prices']>
-  }
+  variant: NonNullable<ShoppingListLineItem['variant']>
 }
 
 /**
@@ -26,51 +25,36 @@ export async function mapShoppingListToWishlist(
   currentLanguage: string,
   client: ByProjectKeyRequestBuilder
 ): Promise<WishlistResponse> {
-  // Get currency for current language to filter prices
-  const currency = resolveCurrencyFromLanguage(currentLanguage)
-
-  // Drop items whose product was deleted/unpublished (no variant) or have no prices (schema requires price).
+  // Drop items whose product was deleted/unpublished (no variant). Items without a price in
+  // the store currency stay on the list and show no price.
   const lineItems = (shoppingList.lineItems ?? []).filter(
-    (item): item is ValidLineItem =>
-      !!item.productId && !!item.variant && !!item.variant.prices?.length
+    (item): item is ValidLineItem => !!item.productId && !!item.variant
   )
 
-  // Shopping list expansion doesn't return slugs, so fetch product projections separately.
-  const productIds = lineItems.map((item) => item.productId)
-  const productSlugMap = new Map<string, string>()
-
-  if (productIds.length > 0) {
-    const whereClause = buildInClause('id', productIds)
-
-    const productResponse = await client
-      .productProjections()
-      .get({
-        queryArgs: {
-          where: whereClause,
-          staged: false,
-          localeProjection: currentLanguage,
-          limit: productIds.length,
-        },
-      })
-      .execute()
-
-    const pagedResponse = ProductProjectionPagedQueryApiResponseSchema.parse(
-      productResponse.body
-    )
-
-    // Build map of productId -> slug
-    pagedResponse.results.forEach((product) => {
-      const slug = mapLocalized(product.slug, currentLanguage) || product.id
-      productSlugMap.set(product.id, slug)
-    })
-  }
+  // Shopping list expansion returns neither slugs nor a selected price, so fetch the
+  // product projections with Price Selection: the wishlist then shows the same price
+  // as the product page, the one commercetools picked for this store.
+  const productIds = [...new Set(lineItems.map((item) => item.productId))]
+  const projections = await fetchProjectionsByIds(
+    client,
+    productIds,
+    currentLanguage,
+    resolveCurrencyFromLanguage(currentLanguage),
+    resolveCountryFromLanguage(currentLanguage)
+  )
+  const projectionById = new Map<string, ProductProjectionApiResponse>(
+    projections.map((product) => [product.id, product])
+  )
 
   const items = lineItems.map((lineItem) => {
     const productName = mapLocalized(lineItem.name, currentLanguage) ?? ''
-    const variantPrice =
-      lineItem.variant.prices.find((p) => p.value.currencyCode === currency) ??
-      lineItem.variant.prices[0]
-    const price = {
+    const projection = projectionById.get(lineItem.productId)
+    const variantPrice = projection
+      ? [projection.masterVariant, ...(projection.variants ?? [])].find(
+          (variant) => variant.id === lineItem.variant.id
+        )?.price
+      : undefined
+    const price = variantPrice && {
       regularPriceInCents: variantPrice.value.centAmount,
       discountedPriceInCents: variantPrice.discounted?.value.centAmount,
       currency: variantPrice.value.currencyCode,
@@ -82,7 +66,9 @@ export async function mapShoppingListToWishlist(
       product: {
         id: lineItem.productId,
         name: productName,
-        slug: productSlugMap.get(lineItem.productId) ?? '',
+        slug: projection
+          ? mapLocalized(projection.slug, currentLanguage) || projection.id
+          : '',
         image: {
           src: lineItem.variant.images?.[0]?.url ?? '/placeholder-product.png',
           alt: productName,
