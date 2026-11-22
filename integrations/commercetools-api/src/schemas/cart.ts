@@ -2,6 +2,7 @@ import { z } from 'zod'
 import { SALUTATION_OPTIONS } from '@config/constants'
 import { LocalizedStringApiResponseSchema } from './localized-string'
 import { ProductVariantApiResponseSchema } from './product-variant'
+import { ProductTypeReferenceApiResponseSchema } from './product-type'
 
 const TypedMoneyApiResponseSchema = z.object({
   centAmount: z.number(),
@@ -43,30 +44,13 @@ export const CartLineItemProductApiResponseSchema = z.object({
       current: z
         .object({
           slug: LocalizedStringApiResponseSchema.optional(),
+          masterVariant: ProductVariantApiResponseSchema.optional(),
+          variants: z.array(ProductVariantApiResponseSchema).optional(),
         })
         .optional(),
     })
     .optional(),
-  productType: z
-    .object({
-      obj: z
-        .object({
-          attributes: z
-            .array(
-              z.object({
-                name: z.string(),
-                type: z.object({
-                  name: z.string(),
-                }),
-                isRequired: z.boolean().optional(),
-                attributeConstraint: z.string().optional(),
-              })
-            )
-            .optional(),
-        })
-        .optional(),
-    })
-    .optional(),
+  productType: ProductTypeReferenceApiResponseSchema.optional(),
 })
 
 export const InventoryModeApiResponseSchema = z.enum([

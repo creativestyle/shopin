@@ -38,7 +38,7 @@ export function CartItemCompact({
   } = useCartItemRemoval({ item })
 
   const isDiscounted = Boolean(item.price.discountedPriceInCents)
-  const attributes = Object.entries(item.attributes ?? {})
+  const variantAttributes = item.variantAttributes ?? []
 
   const priceClassName = cn(
     'shrink-0 text-sm font-bold',
@@ -110,14 +110,18 @@ export function CartItemCompact({
                 >
                   {item.name}
                 </Link>
-                {attributes.length > 0 && (
-                  <div className='mt-3 text-xs text-gray-700'>
-                    {attributes.map(([label, value]) => (
-                      <div key={label}>
-                        {label}: {value}
+                {variantAttributes.length > 0 && (
+                  <dl className='mt-3 text-xs text-gray-700'>
+                    {variantAttributes.map(({ name, label, value }) => (
+                      <div
+                        key={name}
+                        className='flex gap-1'
+                      >
+                        <dt>{label}:</dt>
+                        <dd>{value}</dd>
                       </div>
                     ))}
-                  </div>
+                  </dl>
                 )}
               </div>
             )}

@@ -25,10 +25,6 @@ import {
 } from '@config/constants'
 import { CartApiResponseSchema, type CartApiResponse } from '../schemas/cart'
 import {
-  ProductProjectionPagedQueryApiResponseSchema,
-  type ProductProjectionApiResponse,
-} from '../schemas/product-projection'
-import {
   CartUpdateActionSchema,
   type CartUpdateAction,
 } from '../schemas/cart-update-action'
@@ -90,54 +86,13 @@ export class CartService {
     return CartApiResponseSchema.parse(response.body).version
   }
 
-  // Line items lack sibling variants and attribute labels, so load their products
-  private async getLineItemProducts(
-    cart: CartApiResponse
-  ): Promise<Record<string, ProductProjectionApiResponse> | undefined> {
-    const productIds = [
-      ...new Set(cart.lineItems?.map((item) => item.productId) ?? []),
-    ]
-    if (productIds.length === 0) {
-      return undefined
-    }
-
-    try {
-      const response = await this.serverClientService
-        .getClient()
-        .productProjections()
-        .get({
-          queryArgs: {
-            where: buildInClause('id', productIds),
-            staged: false,
-            expand: ['productType'],
-            limit: productIds.length,
-          },
-        })
-        .execute()
-
-      const { results } = ProductProjectionPagedQueryApiResponseSchema.parse(
-        response.body
-      )
-      return Object.fromEntries(results.map((product) => [product.id, product]))
-    } catch {
-      return undefined
-    }
-  }
-
   private async processCartResponse(
     responseBody: unknown,
     currentLanguage: string,
-    { withProducts = true, withInventory = false } = {}
+    withInventory = false
   ): Promise<CartResponse> {
     const validatedCart = CartApiResponseSchema.parse(responseBody)
-    const productsById = withProducts
-      ? await this.getLineItemProducts(validatedCart)
-      : undefined
-    const mappedCart = mapCartToResponse(
-      validatedCart,
-      currentLanguage,
-      productsById
-    )
+    const mappedCart = mapCartToResponse(validatedCart, currentLanguage)
     const cart = withInventory
       ? await this.enrichWithInventory(validatedCart, mappedCart)
       : mappedCart
@@ -261,9 +216,11 @@ export class CartService {
       })
       .execute()
 
-    return this.processCartResponse(response.body, currentLanguage, {
-      withInventory,
-    })
+    return this.processCartResponse(
+      response.body,
+      currentLanguage,
+      withInventory
+    )
   }
 
   async getCart(
@@ -286,10 +243,11 @@ export class CartService {
       })
       .execute()
 
-    return this.processCartResponse(response.body, currentLanguage, {
-      withProducts: expand.length > 0,
-      withInventory,
-    })
+    return this.processCartResponse(
+      response.body,
+      currentLanguage,
+      withInventory
+    )
   }
 
   async createCart(): Promise<CartResponse> {

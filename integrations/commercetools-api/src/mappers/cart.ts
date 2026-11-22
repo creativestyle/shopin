@@ -3,6 +3,7 @@ import type {
   BillingAddressResponse,
   ShippingAddressResponse,
   LineItemResponse,
+  LineItemVariantAttributeResponse,
 } from '@core/contracts/cart/cart'
 import { AddressBaseSchema } from '@core/contracts/address/address-base'
 import type { LocalizedStringApiResponse } from '../schemas/localized-string'
@@ -12,7 +13,6 @@ import { calculateTaxFromCart } from '../helpers/calculate-tax-from-cart'
 import { createBasicPrice } from '../helpers/create-basic-price'
 import { stringifySelectableAttributeValue } from '../helpers/stringify-selectable-attribute-value'
 import type { CartApiResponse } from '../schemas/cart'
-import type { ProductProjectionApiResponse } from '../schemas/product-projection'
 import { mapVariantsToShopin } from './variants'
 import { parseColorPair } from '../helpers/color-utils'
 
@@ -20,26 +20,15 @@ const LINE_ITEM_DISPLAY_ATTRIBUTES = ['color', 'size']
 
 type CartLineItemApiResponse = NonNullable<CartApiResponse['lineItems']>[number]
 
-// PDP option attributes keyed by localized label; color/size without product data
-function mapLineItemAttributes(
+// Selectable attributes that differ across the expanded product's variants
+function mapLineItemVariantAttributes(
   item: CartLineItemApiResponse,
-  language: string,
-  product: ProductProjectionApiResponse | undefined
-): Record<string, string> {
-  const defs = product?.productType?.obj?.attributes
-
-  if (!product || !defs || !item.variant) {
-    const attributes: Record<string, string> = {}
-    for (const attr of item.variant?.attributes ?? []) {
-      if (!LINE_ITEM_DISPLAY_ATTRIBUTES.includes(attr.name.toLowerCase())) {
-        continue
-      }
-      const value = stringifySelectableAttributeValue(attr.value, language)
-      if (value) {
-        attributes[attr.name] = value
-      }
-    }
-    return attributes
+  language: string
+): LineItemVariantAttributeResponse[] | undefined {
+  const product = item.product?.masterData?.current
+  const defs = item.product?.productType?.obj?.attributes
+  if (!product?.masterVariant || !defs || !item.variant) {
+    return undefined
   }
 
   const defsByName = Object.fromEntries(defs.map((d) => [d.name, d]))
@@ -51,14 +40,13 @@ function mapLineItemAttributes(
       defsByName
     ).find((v) => v.id === variantId)?.attributes ?? {}
 
-  return Object.fromEntries(
-    Object.entries(variantAttributes)
-      .filter(([, value]) => value)
-      .map(([name, value]) => [
-        getLocalizedString(defsByName[name]?.label, language) ?? name,
-        parseColorPair(value)?.label ?? value,
-      ])
-  )
+  return Object.entries(variantAttributes)
+    .filter(([, value]) => value)
+    .map(([name, value]) => ({
+      name,
+      label: getLocalizedString(defsByName[name]?.label, language) ?? name,
+      value: parseColorPair(value)?.label ?? value,
+    }))
 }
 
 /**
@@ -100,8 +88,7 @@ function mapShippingAddress(
  */
 export function mapLineItems(
   cart: CartApiResponse,
-  language: string,
-  productsById?: Record<string, ProductProjectionApiResponse>
+  language: string
 ): LineItemResponse[] {
   return (
     cart.lineItems?.map((item) => {
@@ -118,11 +105,17 @@ export function mapLineItems(
 
       const productSlug = getLocalizedProductSlug(item.product, language)
 
-      const attributes = mapLineItemAttributes(
-        item,
-        language,
-        productsById?.[item.productId]
-      )
+      const attributes: Record<string, string> = {}
+      for (const attr of item.variant?.attributes ?? []) {
+        if (!LINE_ITEM_DISPLAY_ATTRIBUTES.includes(attr.name.toLowerCase())) {
+          continue
+        }
+        const value = stringifySelectableAttributeValue(attr.value, language)
+        if (value) {
+          attributes[attr.name] = value
+        }
+      }
+      const variantAttributes = mapLineItemVariantAttributes(item, language)
 
       return {
         id: item.id,
@@ -138,6 +131,9 @@ export function mapLineItems(
         imageUrl: item.variant?.images?.[0]?.url,
         name,
         attributes: Object.keys(attributes).length > 0 ? attributes : undefined,
+        variantAttributes: variantAttributes?.length
+          ? variantAttributes
+          : undefined,
       }
     }) || []
   )
@@ -254,10 +250,9 @@ export function mapPaymentInfo(
 
 export function mapCartToResponse(
   cart: CartApiResponse,
-  language: string,
-  productsById?: Record<string, ProductProjectionApiResponse>
+  language: string
 ): CartResponse {
-  const lineItems = mapLineItems(cart, language, productsById)
+  const lineItems = mapLineItems(cart, language)
 
   const lineItemsSubtotalCents = calculateLineItemsSubtotal(cart.lineItems)
   const customLineItemsSubtotalCents = calculateCustomLineItemsSubtotal(
