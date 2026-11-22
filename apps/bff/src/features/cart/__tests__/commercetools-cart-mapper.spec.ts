@@ -102,6 +102,31 @@ describe('mapCartToResponse discounts', () => {
     expect(result.discountAmount?.regularPriceInCents).toBe(700)
   })
 
+  it('counts a shipping discount and keeps the full shipping price', () => {
+    const cart = {
+      id: 'cart-1',
+      version: 1,
+      totalPrice: money(2000),
+      lineItems: [lineItem()],
+      shippingInfo: {
+        shippingMethodName: 'Express',
+        price: money(500),
+        discountedPrice: { value: money(0) },
+        shippingMethod: { typeId: 'shipping-method', id: 'sm-1' },
+      },
+    } as CartApiResponse
+
+    const result = mapCartToResponse(cart, 'en-US')
+
+    expect(result.discountAmount?.regularPriceInCents).toBe(500)
+    expect(result.shippingInfo?.price.regularPriceInCents).toBe(500)
+    expect(
+      result.subtotal.regularPriceInCents -
+        (result.discountAmount?.regularPriceInCents ?? 0) +
+        (result.shippingInfo?.price.regularPriceInCents ?? 0)
+    ).toBe(result.grandTotal.regularPriceInCents)
+  })
+
   it('reports no discount when none applies', () => {
     const cart = {
       id: 'cart-1',

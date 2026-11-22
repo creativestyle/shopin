@@ -169,7 +169,12 @@ export interface CartService {
     cartId: string,
     request: SetShippingMethodRequest
   ): Promise<CartResponse>
-  addDiscountCode(cartId: string, code: string): Promise<CartResponse>
+  /** `replaceDiscountCodeIds` are removed in the same update, so a stale code cannot reapply alongside the new one. */
+  addDiscountCode(
+    cartId: string,
+    code: string,
+    replaceDiscountCodeIds?: string[]
+  ): Promise<CartResponse>
   removeDiscountCode(
     cartId: string,
     discountCodeId: string

@@ -133,6 +133,10 @@ const ShippingInfoApiResponseSchema = z
   .object({
     shippingMethodName: z.string(),
     price: TypedMoneyApiResponseSchema,
+    // Set only when a cart discount reduces shipping; `price` stays undiscounted.
+    discountedPrice: z
+      .object({ value: TypedMoneyApiResponseSchema })
+      .optional(),
     shippingMethod: z
       .object({
         typeId: z.literal('shipping-method'),

@@ -37,7 +37,7 @@ describe('CartService.applyDiscountCode', () => {
     await expect(service.applyDiscountCode({ code: 'SAVE10' })).resolves.toBe(
       CART
     )
-    expect(addDiscountCode).toHaveBeenCalledWith('cart-1', 'SAVE10')
+    expect(addDiscountCode).toHaveBeenCalledWith('cart-1', 'SAVE10', [])
   })
 
   it('rejects with alreadyApplied when a working code is on the cart', async () => {
@@ -55,7 +55,7 @@ describe('CartService.applyDiscountCode', () => {
     expect(addDiscountCode).not.toHaveBeenCalled()
   })
 
-  it('lets a new code through when the existing one no longer applies', async () => {
+  it('replaces a code that no longer applies instead of keeping it next to the new one', async () => {
     const { service, addDiscountCode } = createService({
       cart: {
         ...CART,
@@ -65,7 +65,7 @@ describe('CartService.applyDiscountCode', () => {
 
     await service.applyDiscountCode({ code: 'SAVE10' })
 
-    expect(addDiscountCode).toHaveBeenCalledWith('cart-1', 'SAVE10')
+    expect(addDiscountCode).toHaveBeenCalledWith('cart-1', 'SAVE10', ['dc-1'])
   })
 
   it('translates DiscountCodeError into a frontend-safe reason', async () => {

@@ -126,6 +126,25 @@ describe('CartService.addDiscountCode', () => {
     expect(post).toHaveBeenCalledTimes(1)
   })
 
+  it('removes replaced codes in the same update, before adding the new one', async () => {
+    const { service, post } = createService(() =>
+      Promise.resolve({
+        body: apiCart([{ id: 'dc-2', code: 'SAVE10', state: 'MatchesCart' }]),
+      })
+    )
+
+    await service.addDiscountCode('cart-1', 'SAVE10', ['dc-1'])
+
+    expect(post).toHaveBeenCalledTimes(1)
+    expect(sentActions(post, 0)).toEqual([
+      {
+        action: 'removeDiscountCode',
+        discountCode: { typeId: 'discount-code', id: 'dc-1' },
+      },
+      { action: 'addDiscountCode', code: 'SAVE10' },
+    ])
+  })
+
   it('removes a code CT accepted but did not apply, then throws notApplicable', async () => {
     const { service, post } = createService(
       () =>

@@ -441,15 +441,24 @@ export class CartService {
   }
 
   /** A code CT accepts but does not apply is rolled back, so the cart never holds a dud. */
-  async addDiscountCode(cartId: string, code: string): Promise<CartResponse> {
-    const actionData: CartUpdateAction = {
-      action: 'addDiscountCode',
-      code,
-    }
+  async addDiscountCode(
+    cartId: string,
+    code: string,
+    replaceDiscountCodeIds: string[] = []
+  ): Promise<CartResponse> {
+    const actions: CartUpdateAction[] = [
+      ...replaceDiscountCodeIds.map(
+        (id): CartUpdateAction => ({
+          action: 'removeDiscountCode',
+          discountCode: { typeId: 'discount-code', id },
+        })
+      ),
+      { action: 'addDiscountCode', code },
+    ]
 
     let responseBody: unknown
     try {
-      responseBody = await this.updateCartWithActionsRaw(cartId, [actionData])
+      responseBody = await this.updateCartWithActionsRaw(cartId, actions)
     } catch (error) {
       throw toDiscountCodeError(error)
     }

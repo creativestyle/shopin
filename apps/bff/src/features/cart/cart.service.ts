@@ -130,13 +130,19 @@ export class CartService extends BaseAuthenticatedService {
     const cartService = this.getCartService()
 
     const cart = await cartService.getCart(cartId)
-    // Codes that no longer apply do not block a replacement.
     if (cart.discountCodes?.some((entry) => entry.applied)) {
       throw new FrontendSafeException('alreadyApplied')
     }
 
+    // Stale codes are replaced, not kept: CT would reapply them once the cart matches again.
+    const staleCodeIds = (cart.discountCodes ?? []).map((entry) => entry.id)
+
     try {
-      return await cartService.addDiscountCode(cartId, request.code)
+      return await cartService.addDiscountCode(
+        cartId,
+        request.code,
+        staleCodeIds
+      )
     } catch (error) {
       if (error instanceof DiscountCodeError) {
         throw new FrontendSafeException(error.reason)

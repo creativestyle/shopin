@@ -145,6 +145,20 @@ export function calculateLineItemsDiscount(
   )
 }
 
+/** Shipping saving from a cart discount; the shipping row keeps showing the full price. */
+export function calculateShippingDiscount(
+  shippingInfo: CartApiResponse['shippingInfo']
+): number {
+  if (!shippingInfo?.discountedPrice) {
+    return 0
+  }
+  return Math.max(
+    0,
+    shippingInfo.price.centAmount -
+      shippingInfo.discountedPrice.value.centAmount
+  )
+}
+
 /**
  * Calculates subtotal from custom line items
  */
@@ -280,6 +294,7 @@ export function mapCartToResponse(
   const taxCents = calculateTaxFromCart(cart)
   const totalDiscountCents =
     lineItemsDiscountCents +
+    calculateShippingDiscount(cart.shippingInfo) +
     (cart.discountOnTotalPrice?.discountedAmount.centAmount ?? 0)
   const discountCents = totalDiscountCents > 0 ? totalDiscountCents : undefined
   const grandTotalCents =
