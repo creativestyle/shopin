@@ -11,7 +11,7 @@ import { ResetPasswordRequestSchema } from '@core/contracts/auth/reset-password'
 import { PASSWORD_RULE_VALUES } from '@core/contracts/core/password'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Toast, addToast } from '@/components/ui/toast'
+import { Toast } from '@/components/ui/toast'
 import { HttpError } from '@/lib/error-utils'
 import { revalidateDependentField } from '@/lib/form-utils'
 import { useResetPassword } from './hooks/use-reset-password'
@@ -81,7 +81,7 @@ export const ResetPasswordForm: FC<ResetPasswordFormProps> = ({
     if (!result.data.success) {
       if (result.data.message === 'token_expired') {
         setFormError('expiredToken')
-      } else if (result.data.statusCode === 400) {
+      } else if (result.data.message === 'token_invalid') {
         setFormError('invalidToken')
       } else {
         setFormError('generic')
@@ -89,10 +89,6 @@ export const ResetPasswordForm: FC<ResetPasswordFormProps> = ({
       return
     }
 
-    addToast({
-      type: 'success',
-      children: t('success'),
-    })
     onSuccess?.()
   }
 
