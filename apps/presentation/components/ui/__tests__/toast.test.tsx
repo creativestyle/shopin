@@ -82,6 +82,26 @@ describe('Toast Component', () => {
       expect(toast).toHaveAttribute('aria-atomic', 'true')
     })
 
+    it('announces the error type assertively by default', () => {
+      render(<Toast type='error'>Error message</Toast>)
+
+      const toast = screen.getByRole('alert')
+      expect(toast).toHaveAttribute('aria-live', 'assertive')
+    })
+
+    it('allows the error type to opt out of assertive announcement', () => {
+      render(
+        <Toast
+          type='error'
+          critical={false}
+        >
+          Error message
+        </Toast>
+      )
+
+      expect(screen.getByRole('status')).toHaveAttribute('aria-live', 'polite')
+    })
+
     it('renders without icon when withIcon is false', () => {
       render(<Toast withIcon={false}>No icon message</Toast>)
 
