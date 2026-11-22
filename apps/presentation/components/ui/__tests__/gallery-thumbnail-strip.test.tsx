@@ -188,11 +188,17 @@ describe('GalleryThumbnailStrip', () => {
           selectedIndex={0}
         />
       )
+      jest.mocked(Element.prototype.scrollIntoView).mockClear()
       rerender(
         <GalleryThumbnailStrip
           {...props}
           selectedIndex={2}
         />
+      )
+      const scrollIntoView = jest.mocked(Element.prototype.scrollIntoView)
+      expect(scrollIntoView).toHaveBeenCalledTimes(1)
+      expect(scrollIntoView.mock.contexts[0]).toBe(
+        screen.getAllByRole('button')[2].parentElement
       )
     }
 
