@@ -1,10 +1,7 @@
 import { buildCanonicalUrl } from '@/lib/site-url'
 import type { JsonLdData } from './json-ld'
-import {
-  DEFAULT_OG_IMAGE,
-  SEARCH_QUERY_PARAM,
-  SITE_NAME,
-} from './site-metadata'
+import { SEARCH_PARAM_QUERY } from '@config/constants'
+import { DEFAULT_OG_IMAGE, SITE_NAME } from './site-metadata'
 
 export interface BuildSiteJsonLdParams {
   baseUrl: string | undefined
@@ -44,7 +41,7 @@ export function buildSiteJsonLd({
         '@type': 'SearchAction',
         'target': {
           '@type': 'EntryPoint',
-          'urlTemplate': `${searchUrl}?${SEARCH_QUERY_PARAM}={search_term_string}`,
+          'urlTemplate': `${searchUrl}?${SEARCH_PARAM_QUERY}={search_term_string}`,
         },
         'query-input': 'required name=search_term_string',
       },

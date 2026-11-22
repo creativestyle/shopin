@@ -14,6 +14,13 @@ export const SITEMAP_REVALIDATE_SECONDS = 3600
 export const SITEMAP_COLLECTION_PAGE_SIZE = MAX_ITEMS_PER_PAGE
 
 /**
+ * Deepest result a category listing can be paged to (commercetools Product Search
+ * caps `offset` at 10,000). Products beyond it are left out of the sitemap with a
+ * warning; lower this for a data source with a smaller window.
+ */
+export const SITEMAP_MAX_COLLECTION_RESULTS = 10000
+
+/**
  * Hard limit of URLs per sitemap file in the sitemaps.org protocol, shared
  * evenly across locales so a large catalog cannot crowd one locale out entirely.
  * Beyond this, split the sitemap with Next.js `generateSitemaps()`.
@@ -43,6 +50,9 @@ export const SITEMAP_DISCOVER_SUBCATEGORY_PRODUCTS = false
  * first few; an unbounded gallery would inflate every PDP's HTML payload.
  */
 export const JSONLD_MAX_IMAGES = 10
+
+/** Max length of a generated meta description before it is truncated. */
+export const META_DESCRIPTION_MAX_LENGTH = 160
 
 /** Max description characters embedded in JSON-LD (search engines truncate well below this). */
 export const JSONLD_MAX_DESCRIPTION_LENGTH = 5000

@@ -5,7 +5,7 @@ import {
   buildProductPath,
   getCategorySlugFromPath,
   getProductSlugFromPath,
-  listLocales,
+  stripLocalePrefix,
   urlPrefixToRfc,
 } from '@config/constants'
 import { getProductPage } from '@/features/product/get-product-page'
@@ -14,18 +14,6 @@ import { getContentPage } from '@/features/content/get-content-page'
 import { isHomepageSlug } from '@/features/content/homepage-slug'
 import { runWithRequestVariantFromSegment } from '@/lib/request-context/variant'
 import { isVariantSegment } from '@/lib/variant/variant-key'
-
-function stripLocalePrefix(path: string): string {
-  for (const { urlPrefix } of listLocales()) {
-    if (path === `/${urlPrefix}`) {
-      return ''
-    }
-    if (path.startsWith(`/${urlPrefix}/`)) {
-      return path.slice(urlPrefix.length + 1)
-    }
-  }
-  return path
-}
 
 async function resolveTargetPath(
   rest: string,

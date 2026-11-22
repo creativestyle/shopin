@@ -1,7 +1,11 @@
 import type { MainNavigationResponse } from '@core/contracts/navigation/main-navigation'
 import type { FooterResponse } from '@core/contracts/content/layout'
-import { isCategoryPath, isProductPath } from '@config/constants'
-import { isNonIndexablePath, stripLocalePrefix } from '../non-indexable-paths'
+import {
+  isCategoryPath,
+  isProductPath,
+  stripLocalePrefix,
+} from '@config/constants'
+import { isNonIndexablePath } from '../non-indexable-paths'
 
 type NavigationItem = {
   href: string

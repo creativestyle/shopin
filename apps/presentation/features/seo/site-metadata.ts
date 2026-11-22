@@ -19,9 +19,3 @@ export const DEFAULT_OG_IMAGE = {
   height: 630,
   alt: SITE_NAME,
 } as const
-
-/** Search results query parameter — also used by the WebSite SearchAction target. */
-export const SEARCH_QUERY_PARAM = 'q'
-
-/** Max length of a generated meta description before it is truncated. */
-export const META_DESCRIPTION_MAX_LENGTH = 160

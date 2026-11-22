@@ -1,4 +1,4 @@
-import { META_DESCRIPTION_MAX_LENGTH } from './site-metadata'
+import { META_DESCRIPTION_MAX_LENGTH } from '@config/constants'
 
 /** Named/numeric entities common in CMS and catalog copy. */
 const NAMED_ENTITIES: Record<string, string> = {
@@ -42,7 +42,7 @@ function decodeEntities(value: string): string {
  * is safe in a meta tag. Tags are removed before decoding, so an encoded "&lt;b&gt;"
  * cannot turn back into markup that a second pass would strip.
  */
-export function toPlainText(value: string): string {
+function toPlainText(value: string): string {
   return decodeEntities(value.replace(/<[^>]*>/g, ' '))
     .replace(/\s+/g, ' ')
     .trim()

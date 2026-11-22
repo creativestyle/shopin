@@ -6,6 +6,7 @@ import {
   SITEMAP_CATEGORY_CONCURRENCY,
   SITEMAP_COLLECTION_PAGE_SIZE,
   SITEMAP_DISCOVER_SUBCATEGORY_PRODUCTS,
+  SITEMAP_MAX_COLLECTION_RESULTS,
   SITEMAP_MAX_URLS,
   SITEMAP_REVALIDATE_SECONDS,
 } from '@config/constants'
@@ -252,8 +253,15 @@ async function collectCategoryProductSlugs(
   if (!categorySlug) {
     return []
   }
-  const maxPages = Math.ceil(urlBudget / SITEMAP_COLLECTION_PAGE_SIZE)
+  const reachablePages = Math.floor(
+    SITEMAP_MAX_COLLECTION_RESULTS / SITEMAP_COLLECTION_PAGE_SIZE
+  )
+  const maxPages = Math.min(
+    Math.ceil(urlBudget / SITEMAP_COLLECTION_PAGE_SIZE),
+    reachablePages
+  )
   const slugs: string[] = []
+  let total = 0
 
   for (let page = 1; page <= maxPages; page++) {
     const collection = await service.getCollectionPage(
@@ -265,6 +273,7 @@ async function collectCategoryProductSlugs(
     if (!collection) {
       break
     }
+    total = collection.total
     for (const product of collection.productList) {
       slugs.push(product.slug)
     }
@@ -274,6 +283,14 @@ async function collectCategoryProductSlugs(
     ) {
       break
     }
+  }
+
+  const reachableResults = reachablePages * SITEMAP_COLLECTION_PAGE_SIZE
+  if (total > reachableResults && slugs.length < urlBudget) {
+    logger.warn(
+      { categoryPath, total, reachable: reachableResults },
+      'Sitemap: category has more products than its listing can be paged to; the rest are not in the sitemap. Enable SITEMAP_DISCOVER_SUBCATEGORY_PRODUCTS or split the category'
+    )
   }
 
   return slugs

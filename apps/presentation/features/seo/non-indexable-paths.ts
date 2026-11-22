@@ -1,4 +1,4 @@
-import { listLocales } from '@config/constants'
+import { stripLocalePrefix } from '@config/constants'
 
 /**
  * Paths that must stay out of the index: transactional flows, authenticated
@@ -31,15 +31,6 @@ export const NON_INDEXABLE_PATHS = [
   '/wishlist',
 ] as const
 
-/**
- * Locale set built once at module load. These helpers run per link while
- * collecting sitemap URLs, so rebuilding the locale list on every call would make
- * discovery cost scale with catalog size for no reason.
- */
-const LOCALE_URL_PREFIXES: ReadonlySet<string> = new Set(
-  listLocales().map((locale) => locale.urlPrefix)
-)
-
 /** True when `path` is (or sits under) a non-indexable route, locale prefix ignored. */
 export function isNonIndexablePath(path: string): boolean {
   const withoutLocale = stripLocalePrefix(path)
@@ -47,13 +38,4 @@ export function isNonIndexablePath(path: string): boolean {
     (blocked) =>
       withoutLocale === blocked || withoutLocale.startsWith(`${blocked}/`)
   )
-}
-
-/** Removes a leading locale prefix ("/de/foo" → "/foo"); returns other paths unchanged. */
-export function stripLocalePrefix(path: string): string {
-  const normalized = path.startsWith('/') ? path : `/${path}`
-  const [, firstSegment, ...rest] = normalized.split('/')
-  return firstSegment && LOCALE_URL_PREFIXES.has(firstSegment)
-    ? `/${rest.join('/')}`
-    : normalized
 }

@@ -1,7 +1,8 @@
 /**
  * @jest-environment node
  */
-import { isNonIndexablePath, stripLocalePrefix } from '../non-indexable-paths'
+import { stripLocalePrefix } from '@config/constants'
+import { isNonIndexablePath } from '../non-indexable-paths'
 
 describe('stripLocalePrefix', () => {
   it('removes a leading locale prefix', () => {
@@ -14,8 +15,8 @@ describe('stripLocalePrefix', () => {
     expect(stripLocalePrefix('about')).toBe('/about')
   })
 
-  it('maps a bare locale prefix to the root', () => {
-    expect(stripLocalePrefix('/de')).toBe('/')
+  it('maps a bare locale prefix to an empty path', () => {
+    expect(stripLocalePrefix('/de')).toBe('')
   })
 
   it('leaves segments that only start with a locale code unchanged', () => {
