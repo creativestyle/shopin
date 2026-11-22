@@ -1,15 +1,14 @@
 'use client'
 
-import { useSelectedLayoutSegments } from 'next/navigation'
 import { DemoDisclaimerModal } from '@demo/demo-disclaimer'
-
-const LEGAL_SEGMENTS = new Set(['privacy', 'imprint', 'terms'])
+import { useIsLegalRoute } from '@/hooks/use-is-legal-route'
+import { useConsent } from '@/features/cookie-consent/use-consent'
 
 export function DemoDisclaimerModalWrapper() {
-  const segments = useSelectedLayoutSegments()
-  // useSelectedLayoutSegments includes route groups (e.g. "(main)") — skip them
-  const firstSegment = segments.find((s) => !s.startsWith('('))
-  if (firstSegment && LEGAL_SEGMENTS.has(firstSegment)) {
+  const isLegalRoute = useIsLegalRoute()
+  const { isReady, isBannerVisible } = useConsent()
+  // Wait for the cookie banner so the two blocking modals never stack.
+  if (isLegalRoute || !isReady || isBannerVisible) {
     return null
   }
   return <DemoDisclaimerModal />

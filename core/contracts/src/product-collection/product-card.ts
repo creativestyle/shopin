@@ -6,7 +6,8 @@ import { ProductImageResponseSchema } from '../product/product-image'
 
 export const ProductCardResponseSchema = BaseEntityResponseSchema.extend({
   image: ProductImageResponseSchema,
-  price: BasicPriceResponseSchema,
+  // Absent when the product has no price in the store currency (not sellable there).
+  price: BasicPriceResponseSchema.optional(),
   badges: z.array(BadgeResponseSchema).optional(),
   variantId: z.string().optional(),
   variantCount: z.number().optional(),

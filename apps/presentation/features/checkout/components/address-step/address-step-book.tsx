@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { RadioGroup } from '@/components/ui/radio-button'
 import ChevronUpIcon from '@/public/icons/chevron-up.svg'
@@ -43,6 +43,7 @@ export function AddressStepBook({
   const { handleNextStep } = useCheckoutNavigation(stepId)
   const { cart } = useCart()
   const [sheetOpen, setSheetOpen] = useState(false)
+  const manageButtonRef = useRef<HTMLButtonElement>(null)
 
   const {
     setUserSelectedAddressId,
@@ -79,6 +80,7 @@ export function AddressStepBook({
       >
         <div className='mb-4 sm:absolute sm:top-6 sm:right-6 sm:mb-0'>
           <Button
+            ref={manageButtonRef}
             variant='secondary'
             onClick={() => setSheetOpen(true)}
             aria-label={t('addresses.manage')}
@@ -137,6 +139,7 @@ export function AddressStepBook({
         open={sheetOpen}
         onOpenChange={setSheetOpen}
         onAddressAdded={setUserSelectedAddressId}
+        restoreFocusRef={manageButtonRef}
       />
     </>
   )
