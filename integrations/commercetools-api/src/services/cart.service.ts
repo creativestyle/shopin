@@ -83,14 +83,21 @@ export class CartService {
 
   private async getCartVersion(cartId: string): Promise<number> {
     const client = await this.getClient()
-    const response = await client
-      .me()
-      .carts()
-      .withId({ ID: cartId })
-      .get()
-      .execute()
+    try {
+      const response = await client
+        .me()
+        .carts()
+        .withId({ ID: cartId })
+        .get()
+        .execute()
 
-    return CartApiResponseSchema.parse(response.body).version
+      return CartApiResponseSchema.parse(response.body).version
+    } catch (error) {
+      if (isNotFoundError(error)) {
+        throw new NotFoundException(`Cart not found: ${cartId}`)
+      }
+      throw error
+    }
   }
 
   private async processCartResponse(
