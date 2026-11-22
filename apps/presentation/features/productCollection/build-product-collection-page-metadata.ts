@@ -22,6 +22,8 @@ export interface BuildProductCollectionPageMetadataParams {
   hasRefinements: boolean
   /** Translated page indicator appended to the title on page 2+, e.g. "Page 2 of 5". */
   pageLabel?: string
+  /** Translated description used when the category has no meta description. */
+  fallbackDescription?: string
 }
 
 /**
@@ -47,6 +49,7 @@ export function buildProductCollectionPageMetadata({
   totalPages,
   hasRefinements,
   pageLabel,
+  fallbackDescription,
 }: BuildProductCollectionPageMetadataParams): Metadata {
   const { seo } = pageData
   const isOutOfRangePage = page > totalPages
@@ -72,7 +75,7 @@ export function buildProductCollectionPageMetadata({
   const baseTitle = seo?.metaTitle ?? pageData.categoryName ?? slug
   const title =
     page > MIN_PAGE && pageLabel ? `${baseTitle} – ${pageLabel}` : baseTitle
-  const description = seo?.metaDescription
+  const description = seo?.metaDescription ?? fallbackDescription
   const ogImage = seo?.ogImage?.url
 
   return {

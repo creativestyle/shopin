@@ -26,6 +26,7 @@ import {
 import { executeFacetedSearch } from '../helpers/faceted-search'
 import { mapCategoryTree } from '../mappers/product-collection'
 import { buildCategoryBreadcrumb } from '../mappers/category-breadcrumb'
+import { mapMetaSeo } from '../mappers/seo'
 import { FilterableAttributesCacheService } from './filterable-attributes-cache.service'
 
 @Injectable({ scope: Scope.REQUEST })
@@ -189,6 +190,7 @@ export class ProductCollectionService {
         getLocalizedString(category.name as LocalizedString, currentLanguage) ||
         undefined,
       slugByLocale,
+      seo: mapMetaSeo(category, currentLanguage),
     }
   }
 }

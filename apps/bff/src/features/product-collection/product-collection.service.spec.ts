@@ -52,6 +52,7 @@ describe('ProductCollectionService', () => {
       productList: [{ id: 'p1' }],
       breadcrumb: [{ label: 'Category', path: '/c/category' }],
       total: 100,
+      seo: { metaDescription: 'Category description' },
     })
     factory.getServices.mockReturnValue({
       productService: {
@@ -85,6 +86,7 @@ describe('ProductCollectionService', () => {
       currentCategoryId: undefined,
       categoryName: undefined,
       slugByLocale: undefined,
+      seo: { metaDescription: 'Category description' },
     })
   })
 })

@@ -95,6 +95,21 @@ describe('buildProductCollectionPageMetadata', () => {
     ])
   })
 
+  it('uses the fallback description on every description tag', () => {
+    const metadata = build({ fallbackDescription: 'Shop Audio at SHOPin.' })
+    expect(metadata.description).toBe('Shop Audio at SHOPin.')
+    expect(metadata.openGraph?.description).toBe('Shop Audio at SHOPin.')
+    expect(metadata.twitter?.description).toBe('Shop Audio at SHOPin.')
+  })
+
+  it('prefers the category meta description over the fallback', () => {
+    const metadata = build({
+      pageData: { ...pageData, seo: { metaDescription: 'From the CMS' } },
+      fallbackDescription: 'Shop Audio at SHOPin.',
+    })
+    expect(metadata.description).toBe('From the CMS')
+  })
+
   it('falls back to the route slug without a category name', () => {
     const metadata = build({
       pageData: { ...pageData, categoryName: undefined },

@@ -197,7 +197,8 @@
       "sizeShowLess": "Weniger anzeigen",
       "resetAll": "Alle löschen",
       "applyFilters": "Filter anwenden"
-    }
+    },
+    "metaDescription": "{categoryName} bei {siteName} kaufen und das gesamte Sortiment online entdecken."
   },
   "cart": {
     "title": "Warenkorb",

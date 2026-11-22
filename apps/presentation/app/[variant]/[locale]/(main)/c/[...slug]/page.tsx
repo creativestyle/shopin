@@ -10,6 +10,7 @@ import {
 import { getProductCollectionPage } from '@/features/productCollection/get-product-collection-page'
 import { buildProductCollectionPageMetadata } from '@/features/productCollection/build-product-collection-page-metadata'
 import { tryGetSiteBaseUrl } from '@/lib/site-url'
+import { SITE_NAME } from '@/features/seo/site-metadata'
 import { logger } from '@/lib/logger'
 
 export async function generateMetadata({
@@ -44,7 +45,10 @@ export async function generateMetadata({
       MIN_PAGE,
       Math.ceil(pageData.total / ITEMS_PER_PAGE)
     )
-    const t = await getTranslations('pagination')
+    const [t, tCollection] = await Promise.all([
+      getTranslations('pagination'),
+      getTranslations('productCollection'),
+    ])
 
     return buildProductCollectionPageMetadata({
       pageData,
@@ -55,6 +59,10 @@ export async function generateMetadata({
       totalPages,
       hasRefinements: hasActiveRefinements(parsed),
       pageLabel: t('pageOf', { currentPage: parsed.page, totalPages }),
+      fallbackDescription: tCollection('metaDescription', {
+        categoryName: pageData.categoryName ?? slugString,
+        siteName: SITE_NAME,
+      }),
     })
   } catch (error) {
     logger.error(
