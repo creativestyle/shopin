@@ -1,6 +1,7 @@
 'use client'
 
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useSearchParams } from 'next/navigation'
+import { useRouter } from '@/lib/navigation'
 import { RegisterForm } from '@/features/auth/auth-register-form'
 import { markRegistrationCompleted } from '@/features/auth/auth-registration-flag'
 import { setIsCheckoutFromSearchParams } from '@/features/checkout/checkout-param-utils'

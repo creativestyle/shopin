@@ -1,17 +1,17 @@
 import { Injectable, Inject, ConflictException } from '@nestjs/common'
-import { COMMERCETOOLS_CLIENT, Client } from '@integrations/commercetools-api'
+import {
+  COMMERCETOOLS_CLIENT,
+  Client,
+  isDuplicateEmailError,
+} from '@integrations/commercetools-api'
 import type {
   RegisterRequest,
   RegisterResponse,
 } from '@core/contracts/auth/register'
-import { CommercetoolsErrorMatcher } from '../utils/commercetools-error-matcher'
 
 @Injectable()
 export class CommercetoolsRegisterService {
-  constructor(
-    @Inject(COMMERCETOOLS_CLIENT) private readonly client: Client,
-    private readonly errorMatcher: CommercetoolsErrorMatcher
-  ) {}
+  constructor(@Inject(COMMERCETOOLS_CLIENT) private readonly client: Client) {}
 
   async register(registerRequest: RegisterRequest): Promise<RegisterResponse> {
     const customerDraft: {
@@ -41,7 +41,7 @@ export class CommercetoolsRegisterService {
 
       return { success: true }
     } catch (error: unknown) {
-      if (this.errorMatcher.isDuplicateEmailError(error)) {
+      if (isDuplicateEmailError(error)) {
         throw new ConflictException('Email is already in use')
       }
       throw error

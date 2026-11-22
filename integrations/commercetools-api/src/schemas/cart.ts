@@ -69,11 +69,19 @@ export const CartLineItemProductApiResponseSchema = z.object({
     .optional(),
 })
 
+export const InventoryModeApiResponseSchema = z.enum([
+  'None',
+  'TrackOnly',
+  'ReserveOnOrder',
+])
+
 export const CartLineItemApiResponseSchema = z.object({
   id: z.string(),
   productId: z.string(),
   variantId: z.number().optional(),
   quantity: z.number().int().positive(),
+  supplyChannel: z.object({ id: z.string() }).optional(),
+  inventoryMode: InventoryModeApiResponseSchema.optional(),
   name: LocalizedStringApiResponseSchema.optional(),
   product: CartLineItemProductApiResponseSchema.optional(),
   variant: CartLineItemVariantApiResponseSchema.optional(),
@@ -116,6 +124,21 @@ const ShippingInfoApiResponseSchema = z
       .object({
         typeId: z.literal('shipping-method'),
         id: z.string(),
+        // Only present when the request expands shippingInfo.shippingMethod
+        obj: z
+          .object({
+            localizedDescription: z.record(z.string(), z.string()).optional(),
+            custom: z
+              .object({
+                fields: z
+                  .object({
+                    deliveryTime: z.record(z.string(), z.string()).optional(),
+                  })
+                  .optional(),
+              })
+              .optional(),
+          })
+          .optional(),
       })
       .optional(),
   })
@@ -185,6 +208,7 @@ export const CartApiResponseSchema = z.object({
   version: z.number(),
   lineItems: z.array(CartLineItemApiResponseSchema).optional(),
   customLineItems: z.array(CustomLineItemApiResponseSchema).optional(),
+  inventoryMode: InventoryModeApiResponseSchema.optional(),
   totalPrice: TypedMoneyApiResponseSchema,
   taxedPrice: z
     .object({

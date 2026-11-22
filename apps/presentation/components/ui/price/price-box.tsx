@@ -45,11 +45,9 @@ function PriceBox({
     omnibusPriceLabel?: string
     locale: string
   }) {
-  const variant = disabled
-    ? 'disabled'
-    : price.discountedPriceInCents
-      ? 'discount'
-      : 'regular'
+  // A discount to 0 (free) is still a discount: compare with undefined, not truthiness.
+  const hasDiscount = price.discountedPriceInCents !== undefined
+  const variant = disabled ? 'disabled' : hasDiscount ? 'discount' : 'regular'
 
   return (
     <div>
@@ -80,37 +78,33 @@ function PriceBox({
         )}
 
         <DecoratedPrice
-          price={
-            price.discountedPriceInCents
-              ? price.discountedPriceInCents
-              : price.regularPriceInCents
-          }
+          price={price.discountedPriceInCents ?? price.regularPriceInCents}
           currency={price.currency}
           fractionDigits={price.fractionDigits}
           variant={variant}
           size={size}
           locale={locale}
-          {...(price.discountedPriceInCents && {
+          {...(hasDiscount && {
             originalPrice: price.regularPriceInCents,
           })}
           taxNote={footer}
         />
 
-        {price.discountedPriceInCents !== undefined &&
-          price.omnibusPriceInCents !== undefined &&
-          omnibusPriceLabel && (
-            <FormattedPrice
-              value={price.omnibusPriceInCents}
-              currency={price.currency}
-              fractionDigits={price.fractionDigits}
-              prefix={`${omnibusPriceLabel}`}
-              locale={locale}
-              className='mt-0.5 text-xs/[1.6]'
-            />
-          )}
-
         {footer && <span className='sr-only text-gray-900'>{footer}</span>}
       </div>
+
+      {price.discountedPriceInCents !== undefined &&
+        price.omnibusPriceInCents !== undefined &&
+        omnibusPriceLabel && (
+          <FormattedPrice
+            value={price.omnibusPriceInCents}
+            currency={price.currency}
+            fractionDigits={price.fractionDigits}
+            prefix={omnibusPriceLabel}
+            locale={locale}
+            className='mt-1 text-xs/[1.6]'
+          />
+        )}
 
       {price.recommendedRetailPriceInCents !== undefined &&
         recommendedRetailPriceLabel && (

@@ -131,9 +131,10 @@ export class CartPaymentService {
     const validatedRequest = SetPaymentMethodRequestSchema.parse(request)
 
     // Get the cart to retrieve the total amount, currency, and existing payments
-    const cart = await this.cartService.getCart(cartId, [
-      'paymentInfo.payments[*]',
-    ])
+    const cart = await this.cartService.getCart(cartId, {
+      expand: ['paymentInfo.payments[*]'],
+      withInventory: false,
+    })
 
     // System only handles one payment per cart
     const existingPayment = cart.paymentInfo?.payments?.[0]
@@ -213,9 +214,10 @@ export class CartPaymentService {
    */
   async verifyAndUpdatePaymentAmounts(cartId: string): Promise<void> {
     // Get cart with expanded payments to verify amounts
-    const cart = await this.cartService.getCart(cartId, [
-      'paymentInfo.payments[*]',
-    ])
+    const cart = await this.cartService.getCart(cartId, {
+      expand: ['paymentInfo.payments[*]'],
+      withInventory: false,
+    })
 
     const cartTotal = cart.grandTotal.regularPriceInCents
     const currencyCode = cart.currency

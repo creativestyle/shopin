@@ -13,10 +13,12 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { useRegister } from './hooks/use-register'
 import { RegisterRequestSchema } from '@core/contracts/auth/register'
+import { PASSWORD_RULE_VALUES } from '@core/contracts/core/password'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Toast, addToast } from '@/components/ui/toast'
 import { HttpError } from '@/lib/error-utils'
+import { revalidateDependentField } from '@/lib/form-utils'
 import { z } from 'zod'
 import { SALUTATION_OPTIONS } from '@config/constants'
 
@@ -37,6 +39,7 @@ interface RegisterFormProps {
 
 export function RegisterForm({ onSuccess }: RegisterFormProps) {
   const t = useTranslations('account.signUp')
+  const tAccount = useTranslations('account')
   const { registerMutation } = useRegister()
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [showErrorToast, setShowErrorToast] = useState(false)
@@ -69,6 +72,18 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
       return
     }
     const response = result.data
+    if (
+      !response.success &&
+      response.errorTranslationKey === 'errors.conflict'
+    ) {
+      form.setError('email', {
+        type: 'server',
+        message: 'account.signUp.errors.conflict',
+      })
+      form.setFocus('email')
+      return
+    }
+
     if (!response.success && response.errorTranslationKey) {
       setErrorMessage(
         t(response.errorTranslationKey as Parameters<typeof t>[0])
@@ -78,7 +93,7 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
     }
 
     if (!response.success) {
-      setErrorMessage(response.message ?? t('errors.internalServerError'))
+      setErrorMessage(t('errors.internalServerError'))
       setShowErrorToast(true)
       return
     }
@@ -95,6 +110,7 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
       {showErrorToast && errorMessage && (
         <Toast
           type='error'
+          critical
           withCloseButton={false}
           withIcon={false}
           className='max-w-full sm:max-w-full'
@@ -112,7 +128,14 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
           control={form.control}
           render={({ field, fieldState }) => (
             <Field data-invalid={fieldState.invalid}>
+              <p
+                id='salutation-label'
+                className='mb-3 text-base/[1.5] text-gray-500'
+              >
+                {t('salutationLabel')}
+              </p>
               <RadioGroup
+                aria-labelledby='salutation-label'
                 orientation='horizontal'
                 value={field.value}
                 onValueChange={field.onChange}
@@ -180,6 +203,16 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
         <FormField
           name='email'
           control={form.control}
+          errorContent={
+            form.formState.errors.email?.type === 'server' ? (
+              <Link
+                href='/sign-in'
+                className='underline'
+              >
+                {t('signInLink')}
+              </Link>
+            ) : null
+          }
           render={({ field, validationState }) => (
             <TextInput
               {...field}
@@ -209,9 +242,15 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
         <FormField
           name='password'
           control={form.control}
+          description={tAccount('passwordHint', PASSWORD_RULE_VALUES)}
+          errorValues={PASSWORD_RULE_VALUES}
           render={({ field, validationState }) => (
             <PasswordInput
               {...field}
+              onChange={(e) => {
+                field.onChange(e)
+                revalidateDependentField(form, 'confirmPassword')
+              }}
               id='password'
               label={t('passwordLabel')}
               required

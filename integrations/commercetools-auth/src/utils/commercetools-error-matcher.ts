@@ -3,7 +3,7 @@ import { Injectable } from '@nestjs/common'
 interface HttpError {
   statusCode: number
   body?: {
-    errors?: Array<{ code: string; field?: string }>
+    errors?: Array<{ code: string }>
     // OAuth error format (used by commercetools OAuth endpoints)
     error?: string
   }
@@ -47,6 +47,13 @@ export class CommercetoolsErrorMatcher {
       return false
     }
 
+    // Spent and unknown password/email tokens return 404 ResourceNotFound.
+    if (error.statusCode === 404) {
+      return (
+        error.body?.errors?.some((e) => e.code === 'ResourceNotFound') ?? false
+      )
+    }
+
     return (
       error.statusCode === 400 &&
       (error.body?.errors?.some((e) => e.code === 'InvalidToken') ?? false)
@@ -79,25 +86,5 @@ export class CommercetoolsErrorMatcher {
       ) ??
         false)
     )
-  }
-
-  isDuplicateEmailError(error: unknown): boolean {
-    if (!this.isHttpError(error)) {
-      return false
-    }
-
-    if (error.statusCode === 409) {
-      return true
-    }
-
-    if (error.statusCode === 400) {
-      return (
-        error.body?.errors?.some(
-          (e) => e.code === 'DuplicateField' && e.field === 'email'
-        ) ?? false
-      )
-    }
-
-    return false
   }
 }
