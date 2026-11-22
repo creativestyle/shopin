@@ -647,7 +647,7 @@ export const VIDEO: VideoTeaser = {
   type: 'video',
   title: 'New in',
   videoUrl:
-    'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
+    'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4',
   thumbnailUrl: 'https://placehold.co/1280x720/1e3a5f/94a3b8?text=Video',
   autoplay: false,
   controls: true,

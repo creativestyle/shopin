@@ -15,3 +15,7 @@ type Story = StoryObj<typeof meta>
 export const Default: Story = {
   args: { teaser: VIDEO },
 }
+
+export const Autoplay: Story = {
+  args: { teaser: { ...VIDEO, autoplay: true, controls: false } },
+}
