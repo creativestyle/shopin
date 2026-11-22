@@ -6,15 +6,30 @@ const REGISTRATION_COMPLETED_KEY = 'registration-completed'
 
 const subscribe = () => () => {}
 
-const getSnapshot = (): boolean =>
-  sessionStorage.getItem(REGISTRATION_COMPLETED_KEY) === 'true'
+const getSnapshot = (): boolean => {
+  try {
+    return sessionStorage.getItem(REGISTRATION_COMPLETED_KEY) === 'true'
+  } catch {
+    return false
+  }
+}
 
 /** Marks that registration finished in this tab, so the success page can be shown. */
 export function markRegistrationCompleted(): void {
-  if (typeof window === 'undefined') {
-    return
+  try {
+    sessionStorage.setItem(REGISTRATION_COMPLETED_KEY, 'true')
+  } catch {
+    // Storage unavailable; the success page will redirect home.
   }
-  sessionStorage.setItem(REGISTRATION_COMPLETED_KEY, 'true')
+}
+
+/** Clears the flag once the flow moves past the success page. */
+export function clearRegistrationCompleted(): void {
+  try {
+    sessionStorage.removeItem(REGISTRATION_COMPLETED_KEY)
+  } catch {
+    // Storage unavailable; nothing to clear.
+  }
 }
 
 /** Returns null until the flag can be read on the client. */
