@@ -37,6 +37,7 @@ import type {
   ResetPasswordResponse,
 } from '@core/contracts/auth/reset-password'
 import type {
+  ChangeCustomerEmailRequest,
   ChangeCustomerPasswordRequest,
   CustomerResponse,
   UpdateCustomerRequest,
@@ -135,8 +136,13 @@ export interface NavigationService {
   getNavigation(): Promise<MainNavigationResponse>
 }
 
+export interface GetCartOptions {
+  // Adds stock-based maxQuantity to line items; implementations may ignore it
+  withInventory?: boolean
+}
+
 export interface CartService {
-  getCart(cartId: string): Promise<CartResponse>
+  getCart(cartId: string, options?: GetCartOptions): Promise<CartResponse>
   createCart(): Promise<CartResponse>
   addToCart(
     cartId: string,
@@ -182,6 +188,9 @@ export interface CustomerService {
   changeCustomerPassword(
     changeCustomerPasswordRequest: ChangeCustomerPasswordRequest
   ): Promise<void>
+  changeCustomerEmail(
+    changeCustomerEmailRequest: ChangeCustomerEmailRequest
+  ): Promise<CustomerResponse>
 }
 
 export interface CustomerAddressService {

@@ -27,4 +27,35 @@ describe('DecoratedPrice', () => {
     const element = screen.getByText(/12,50 €/)
     expect(element.parentElement).toHaveClass('custom-class')
   })
+
+  it('renders the original price, the price and the VAT note in that order', () => {
+    const { container } = render(
+      <DecoratedPrice
+        price={1250}
+        originalPrice={2000}
+        taxNote='inkl. MwSt.'
+        currency='EUR'
+        locale='de'
+      />
+    )
+
+    const originalPrice = screen.getByText(/20,00 €/)
+    const price = screen.getByText(/12,50 €/)
+    const taxNote = screen.getByText('inkl. MwSt.')
+
+    expect(originalPrice.compareDocumentPosition(price)).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING
+    )
+    expect(price.compareDocumentPosition(taxNote)).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING
+    )
+    // A flex `order-*` class would override the DOM order checked above.
+    const orderClasses = Array.from(container.querySelectorAll('*')).flatMap(
+      (element) =>
+        Array.from(element.classList).filter((name) =>
+          /^(?:[a-z0-9-]+:)*-?order-/.test(name)
+        )
+    )
+    expect(orderClasses).toEqual([])
+  })
 })

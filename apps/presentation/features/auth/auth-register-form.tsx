@@ -13,10 +13,12 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { useRegister } from './hooks/use-register'
 import { RegisterRequestSchema } from '@core/contracts/auth/register'
+import { PASSWORD_RULE_VALUES } from '@core/contracts/core/password'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Toast, addToast } from '@/components/ui/toast'
 import { HttpError } from '@/lib/error-utils'
+import { revalidateDependentField } from '@/lib/form-utils'
 import { z } from 'zod'
 import { SALUTATION_OPTIONS } from '@config/constants'
 
@@ -37,6 +39,7 @@ interface RegisterFormProps {
 
 export function RegisterForm({ onSuccess }: RegisterFormProps) {
   const t = useTranslations('account.signUp')
+  const tAccount = useTranslations('account')
   const { registerMutation } = useRegister()
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [showErrorToast, setShowErrorToast] = useState(false)
@@ -239,9 +242,15 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
         <FormField
           name='password'
           control={form.control}
+          description={tAccount('passwordHint', PASSWORD_RULE_VALUES)}
+          errorValues={PASSWORD_RULE_VALUES}
           render={({ field, validationState }) => (
             <PasswordInput
               {...field}
+              onChange={(e) => {
+                field.onChange(e)
+                revalidateDependentField(form, 'confirmPassword')
+              }}
               id='password'
               label={t('passwordLabel')}
               required

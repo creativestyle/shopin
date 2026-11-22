@@ -178,18 +178,23 @@ function FieldError({
   className,
   error,
   variant = 'default',
+  values,
   children,
   ...props
 }: React.ComponentProps<'div'> & {
   error: { message?: string }
   variant?: 'default' | 'checkbox' | 'radio'
+  /** ICU values for the translated error message. */
+  values?: Record<string, string | number>
 }) {
   const context = useFieldContext()
   const t = useTranslations()
 
   let errorMessage: string | undefined
   if (error?.message) {
-    errorMessage = (t as (key: string) => string)(error.message)
+    errorMessage = (
+      t as (key: string, values?: Record<string, string | number>) => string
+    )(error.message, values)
   }
 
   return (
