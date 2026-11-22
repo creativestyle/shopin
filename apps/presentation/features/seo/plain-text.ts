@@ -10,6 +10,15 @@ const NAMED_ENTITIES: Record<string, string> = {
   nbsp: ' ',
 }
 
+const MAX_CODE_POINT = 0x10ffff
+
+// Out-of-range entities are left as-is: String.fromCodePoint would throw on them.
+function decodeCodePoint(match: string, codePoint: number): string {
+  return Number.isNaN(codePoint) || codePoint > MAX_CODE_POINT
+    ? match
+    : String.fromCodePoint(codePoint)
+}
+
 /**
  * Decodes HTML entities so meta tags read as text rather than markup.
  * Without this, a catalog description containing "Black &amp; White" ends up in
@@ -19,12 +28,10 @@ function decodeEntities(value: string): string {
   return value.replace(/&(#\d+|#x[0-9a-f]+|[a-z]+);/gi, (match, entity) => {
     const token = String(entity)
     if (token.startsWith('#x') || token.startsWith('#X')) {
-      const codePoint = parseInt(token.slice(2), 16)
-      return Number.isNaN(codePoint) ? match : String.fromCodePoint(codePoint)
+      return decodeCodePoint(match, parseInt(token.slice(2), 16))
     }
     if (token.startsWith('#')) {
-      const codePoint = parseInt(token.slice(1), 10)
-      return Number.isNaN(codePoint) ? match : String.fromCodePoint(codePoint)
+      return decodeCodePoint(match, parseInt(token.slice(1), 10))
     }
     return NAMED_ENTITIES[token.toLowerCase()] ?? match
   })
