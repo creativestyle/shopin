@@ -1,28 +1,43 @@
 import { Module, Global, Scope } from '@nestjs/common'
-import { faker, fakerDE } from '@faker-js/faker'
+import type { Faker } from '@faker-js/faker' with {
+  'resolution-mode': 'import',
+}
 import { LANGUAGE_TOKEN } from '@core/i18n'
 import type { LanguageProvider } from '@apps/bff/src/common/language/language.provider'
 
 export const MOCK_API = 'MOCK_API'
 
-export class MockApi {
-  private readonly faker: typeof faker
+type FakerLocales = { faker: Faker; fakerDE: Faker }
 
-  constructor(languageProvider: LanguageProvider) {
-    this.faker = this.getFakerInstance(languageProvider)
+// @faker-js/faker is ESM-only; load it once via dynamic import from this CommonJS module
+let fakerLocales: Promise<FakerLocales> | undefined
+const loadFakerLocales = () =>
+  (fakerLocales ??= import('@faker-js/faker').then(({ faker, fakerDE }) => ({
+    faker,
+    fakerDE,
+  })))
+
+export class MockApi {
+  private readonly faker: Faker
+
+  constructor(languageProvider: LanguageProvider, locales: FakerLocales) {
+    this.faker = this.getFakerInstance(languageProvider, locales)
   }
 
-  private getFakerInstance(languageProvider: LanguageProvider) {
+  private getFakerInstance(
+    languageProvider: LanguageProvider,
+    locales: FakerLocales
+  ) {
     const currentLanguage = languageProvider.getCurrentLanguage()
     switch (currentLanguage) {
       case 'de-DE':
-        return fakerDE
+        return locales.fakerDE
       default:
-        return faker
+        return locales.faker
     }
   }
 
-  getFaker(): typeof faker {
+  getFaker(): Faker {
     return this.faker
   }
 }
@@ -34,8 +49,8 @@ export class MockApi {
       provide: MOCK_API,
       scope: Scope.REQUEST,
       inject: [LANGUAGE_TOKEN],
-      useFactory: (languageProvider: LanguageProvider) =>
-        new MockApi(languageProvider),
+      useFactory: async (languageProvider: LanguageProvider) =>
+        new MockApi(languageProvider, await loadFakerLocales()),
     },
   ],
   exports: [MOCK_API],

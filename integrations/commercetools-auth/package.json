@@ -17,7 +17,7 @@
   "dependencies": {
     "@core/contracts": "*",
     "@integrations/commercetools-api": "*",
-    "zod": "^4.1.12"
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "@core/eslint-config": "*",

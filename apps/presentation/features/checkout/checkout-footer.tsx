@@ -1,6 +1,7 @@
 import { Link } from '@/lib/navigation'
 import { getTranslations } from 'next-intl/server'
 import { StandardContainer } from '@/components/ui/standard-container'
+import { CookieFooterTrigger } from '@/features/cookie-consent/cookie-footer-trigger'
 
 export async function CheckoutFooter() {
   const t = await getTranslations('checkout.footer')
@@ -35,6 +36,7 @@ export async function CheckoutFooter() {
             >
               {t('privacyPolicy')}
             </Link>
+            <CookieFooterTrigger className='hover:text-gray-300' />
           </div>
         </div>
       </StandardContainer>

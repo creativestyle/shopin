@@ -44,4 +44,41 @@ describe('ProductCard', () => {
     expect(link).toHaveAttribute('href', '/p/nice-product')
     expect(screen.getByText('Nice Product')).toBeInTheDocument()
   })
+  it('shows no amount when the product has no price in the store currency', () => {
+    const data: ProductCardResponse = {
+      slug: 'nice-product',
+      name: 'Nice Product',
+      image: { src: '/img.jpg', alt: 'alt' },
+      id: '1',
+    }
+
+    const { container } = render(
+      <ProductCard
+        data={data}
+        locale='de'
+      />
+    )
+
+    expect(screen.getByText('Nice Product')).toBeInTheDocument()
+    expect(container.textContent).not.toMatch(/€|\d+,\d{2}/)
+  })
+
+  it('shows the amount when the product has a price', () => {
+    const data: ProductCardResponse = {
+      slug: 'nice-product',
+      name: 'Nice Product',
+      price: { regularPriceInCents: 1000, currency: 'EUR', fractionDigits: 2 },
+      image: { src: '/img.jpg', alt: 'alt' },
+      id: '1',
+    }
+
+    render(
+      <ProductCard
+        data={data}
+        locale='de'
+      />
+    )
+
+    expect(screen.getByText(/10,00\s€/)).toBeInTheDocument()
+  })
 })
