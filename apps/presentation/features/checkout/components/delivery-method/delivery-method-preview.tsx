@@ -25,9 +25,7 @@ export function DeliveryMethodPreview() {
             selectedMethod?.name ||
             shippingInfo.shippingMethodName
           }
-          deliveryTime={
-            selectedMethod?.deliveryTime ?? shippingInfo.deliveryTime
-          }
+          deliveryTime={selectedMethod?.deliveryTime}
           priceInCents={shippingInfo.price.regularPriceInCents}
           currency={shippingInfo.price.currency || cart.currency}
           fractionDigits={shippingInfo.price.fractionDigits}

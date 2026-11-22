@@ -42,7 +42,7 @@ The delivery estimate shown next to each option in the checkout delivery step, o
 | Field name       | `deliveryTime` (`SHIPPING_METHOD_DELIVERY_TIME_FIELD`) |
 | Field type       | `LocalizedString`                                      |
 
-Create the Type in **Merchant Center → Settings → Project settings → Custom Types** (or through the API), then set a value per language on each shipping method under **Settings → Project settings → Shipping methods**, e.g. `en-US: "2-3 business days"`, `de-DE: "2-3 Werktage"`. The storefront wraps the value as "Delivery in {time}", so enter only the time span.
+Create the Type in **Merchant Center → Settings → Project settings → Custom Types** (or through the API), then set a value per language on each shipping method under **Settings → Project settings → Shipping methods**, e.g. `en-US: "2-3 business days"`, `de-DE: "2-3 Werktage"`. The storefront puts the value after a label ("Delivery in {time}" in English, "Lieferzeit: {time}" in German), so enter only the time span.
 
 Without the Type, or for a method without a value, no delivery time is shown and everything else works as before. A field with a different type (e.g. a plain `String`) is ignored rather than failing the cart or order request.
 
