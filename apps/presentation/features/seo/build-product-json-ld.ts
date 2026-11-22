@@ -54,7 +54,7 @@ function resolveImages(
  * Product structured data for the PDP (Google Merchant / Rich Results "Product" type).
  *
  * Covers everything the product contract carries: name, description, gallery
- * images and an Offer with the effective price (discounted when present) and currency.
+ * images and, when the product is priced, an Offer with the effective price and currency.
  *
  * Not emitted because no data source provides it yet — adding either means extending
  * `ProductDetailsResponse` in core/contracts plus the commercetools/mock mappers:
@@ -69,8 +69,6 @@ export function buildProductJsonLd({
   baseUrl,
 }: BuildProductJsonLdParams): JsonLdData {
   const { price } = product
-  const effectivePriceInCents =
-    price.discountedPriceInCents ?? price.regularPriceInCents
   const images = resolveImages(product, baseUrl)
   // Bounded: the same description is already in the visible HTML, so an unbounded
   // copy here would double the payload of long catalog copy for no ranking gain.
@@ -87,11 +85,16 @@ export function buildProductJsonLd({
     ...(description && { description }),
     ...(images.length > 0 && { image: images }),
     ...(url && { '@id': url, url }),
-    'offers': {
-      '@type': 'Offer',
-      'price': formatMinorUnits(effectivePriceInCents, price.fractionDigits),
-      'priceCurrency': price.currency,
-      ...(url && { url }),
-    },
+    ...(price && {
+      offers: {
+        '@type': 'Offer',
+        'price': formatMinorUnits(
+          price.discountedPriceInCents ?? price.regularPriceInCents,
+          price.fractionDigits
+        ),
+        'priceCurrency': price.currency,
+        ...(url && { url }),
+      },
+    }),
   }
 }

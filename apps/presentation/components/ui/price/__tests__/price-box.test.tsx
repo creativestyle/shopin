@@ -107,6 +107,32 @@ describe('PriceBox', () => {
     expect(decoratedPrice).toHaveAttribute('data-price', '800')
   })
 
+  it('shows a discount to 0 as a discount, not the regular price', () => {
+    render(
+      <PriceBox
+        price={{ ...mockPrice, discountedPriceInCents: 0 }}
+        locale='de'
+      />
+    )
+
+    const decoratedPrice = screen.getByTestId('decorated-price')
+    expect(decoratedPrice).toHaveAttribute('data-price', '0')
+    expect(decoratedPrice).toHaveAttribute('data-variant', 'discount')
+  })
+
+  it('shows a free product at 0 with the regular variant', () => {
+    render(
+      <PriceBox
+        price={{ ...mockPrice, regularPriceInCents: 0 }}
+        locale='de'
+      />
+    )
+
+    const decoratedPrice = screen.getByTestId('decorated-price')
+    expect(decoratedPrice).toHaveAttribute('data-price', '0')
+    expect(decoratedPrice).toHaveAttribute('data-variant', 'regular')
+  })
+
   it('uses regular price when no discount', () => {
     render(
       <PriceBox

@@ -69,10 +69,12 @@ export default async function Page({
       variantId={variantId}
       renderCtas={(product) => (
         <>
-          <AddToCart
-            className='flex-1'
-            productId={product.id}
-          />
+          {product.price && (
+            <AddToCart
+              className='flex-1'
+              productId={product.id}
+            />
+          )}
           <AddToWishlist
             productId={product.id}
             variantId={product.variantId}

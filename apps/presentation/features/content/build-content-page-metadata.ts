@@ -27,9 +27,10 @@ export function buildContentPageMetadata({
   const canonicalSlug = isHomepage ? '' : pageData.slug
   const slugByLocale = isHomepage ? undefined : pageData.slugByLocale
 
-  const canonical = baseUrl
+  const derivedCanonical = baseUrl
     ? buildCanonicalUrl(baseUrl, localePrefix, canonicalSlug)
     : undefined
+  const canonical = pageData.seo?.canonicalUrl ?? derivedCanonical
   const languages = baseUrl
     ? buildHreflangLanguages(baseUrl, canonicalSlug, slugByLocale)
     : undefined

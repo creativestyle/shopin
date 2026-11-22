@@ -5,6 +5,7 @@ import * as RadioGroupPrimitive from '@radix-ui/react-radio-group'
 import { cva, type VariantProps } from 'class-variance-authority'
 
 import { cn } from '@/lib/utils'
+import { useFieldValidation } from './field'
 
 const radioGroupVariants = cva('grid', {
   variants: {
@@ -21,12 +22,24 @@ const radioGroupVariants = cva('grid', {
 function RadioGroup({
   className,
   orientation,
+  invalid,
+  ariaDescribedBy,
   ...props
 }: React.ComponentProps<typeof RadioGroupPrimitive.Root> &
-  VariantProps<typeof radioGroupVariants>) {
+  VariantProps<typeof radioGroupVariants> & {
+    invalid?: boolean
+    ariaDescribedBy?: string
+  }) {
+  const { isInvalid, describedBy: effectiveDescribedBy } = useFieldValidation({
+    invalid,
+    ariaDescribedBy,
+  })
+
   return (
     <RadioGroupPrimitive.Root
       data-slot='radio-group'
+      aria-invalid={isInvalid || undefined}
+      aria-describedby={effectiveDescribedBy || undefined}
       className={cn(radioGroupVariants({ orientation }), className)}
       {...props}
     />
@@ -36,14 +49,22 @@ function RadioGroup({
 function RadioGroupItem({
   className,
   invalid,
+  ariaDescribedBy,
   ...props
 }: React.ComponentProps<typeof RadioGroupPrimitive.Item> & {
   invalid?: boolean
+  ariaDescribedBy?: string
 }) {
+  const { isInvalid, describedBy: effectiveDescribedBy } = useFieldValidation({
+    invalid,
+    ariaDescribedBy,
+  })
+
   return (
     <RadioGroupPrimitive.Item
       data-slot='radio-group-item'
-      aria-invalid={invalid || undefined}
+      aria-invalid={isInvalid || undefined}
+      aria-describedby={effectiveDescribedBy || undefined}
       className={cn(
         'group peer size-5 shrink-0 -translate-y-0.5 rounded-full border-2 outline-none',
         'border-gray-300',

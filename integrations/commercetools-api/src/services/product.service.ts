@@ -75,14 +75,11 @@ export class ProductService {
         ([, value]) => typeof value === 'string' && value.length > 0
       )
     ) as Record<string, string>
-    // Price mapping with discount if available (minor units)
-    const firstPrice = selectedVariant.prices?.[0]
-    const regularPriceCents = firstPrice?.value.centAmount
-    const discountedCents = firstPrice?.discounted?.value.centAmount
-
+    // One price for the price box and the badges, so they can never disagree.
+    const price = mapVariantPriceToShopin(selectedVariant)
     const badges = mapBadges(
-      regularPriceCents,
-      discountedCents,
+      price?.regularPriceInCents,
+      price?.discountedPriceInCents,
       product.createdAt
     )
 
@@ -128,7 +125,7 @@ export class ProductService {
             product.metaDescription as LocalizedStringApiResponse | undefined,
             currentLanguage
           ) || undefined,
-        price: mapVariantPriceToShopin(selectedVariant, currentLanguage),
+        price,
         gallery: mapVariantToGallery(selectedVariant, name),
         badges,
         // deliveryEstimate is not available from commercetools by default

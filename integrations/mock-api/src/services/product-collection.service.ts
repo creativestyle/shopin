@@ -56,7 +56,12 @@ export class ProductCollectionService {
     })
   }
 
-  private getEffectivePrice(product: ProductCardWithAttributes): number {
+  private getEffectivePrice(
+    product: ProductCardWithAttributes
+  ): number | undefined {
+    if (!product.price) {
+      return undefined
+    }
     return (
       product.price.discountedPriceInCents ?? product.price.regularPriceInCents
     )
@@ -66,10 +71,12 @@ export class ProductCollectionService {
     minPriceInCents: number
     maxPriceInCents: number
   } {
-    if (products.length === 0) {
+    const prices = products
+      .map((p) => this.getEffectivePrice(p))
+      .filter((price): price is number => price !== undefined)
+    if (prices.length === 0) {
       return { minPriceInCents: 0, maxPriceInCents: 0 }
     }
-    const prices = products.map((p) => this.getEffectivePrice(p))
     return {
       minPriceInCents: Math.min(...prices),
       maxPriceInCents: Math.max(...prices),
@@ -112,13 +119,16 @@ export class ProductCollectionService {
 
     if (saleOnly) {
       filteredProducts = filteredProducts.filter(
-        (product) => product.price.discountedPriceInCents !== undefined
+        (product) => product.price?.discountedPriceInCents !== undefined
       )
     }
 
     if (priceMin !== undefined || priceMax !== undefined) {
       filteredProducts = filteredProducts.filter((product) => {
         const price = this.getEffectivePrice(product)
+        if (price === undefined) {
+          return false
+        }
         if (priceMin !== undefined && price < priceMin) {
           return false
         }
@@ -140,7 +150,7 @@ export class ProductCollectionService {
       id: p.id,
       slug: p.slug,
       name: p.name,
-      price: { ...p.price, currency },
+      price: p.price && { ...p.price, currency },
       image: p.image,
     }))
 

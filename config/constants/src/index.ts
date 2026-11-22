@@ -54,3 +54,6 @@ export * from './seo'
 
 // Re-export catalog route constants
 export * from './routes'
+
+// Re-export internal request constants
+export * from './internal-request'
