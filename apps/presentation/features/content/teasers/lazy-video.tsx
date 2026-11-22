@@ -1,9 +1,10 @@
 'use client'
 
-import { useRef, useState, useEffect } from 'react'
+import { useRef, useState, useEffect, useSyncExternalStore } from 'react'
 import Image from 'next/image'
 import { contentImageLoader } from '../lib/content-image-loader'
 import PlayIcon from '@/public/icons/play.svg'
+import PauseIcon from '@/public/icons/pause.svg'
 import { cn } from '@/lib/utils'
 import { useLocale, useTranslations } from 'next-intl'
 
@@ -19,7 +20,23 @@ interface LazyVideoProps {
   aspectRatio?: string
 }
 
-type PlaybackStatus = 'idle' | 'loading' | 'playing'
+type PlaybackStatus = 'idle' | 'loading' | 'playing' | 'paused'
+
+const REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)'
+
+function subscribeReducedMotion(onChange: () => void) {
+  const query = window.matchMedia?.(REDUCED_MOTION_QUERY)
+  query?.addEventListener('change', onChange)
+  return () => query?.removeEventListener('change', onChange)
+}
+
+function usePrefersReducedMotion() {
+  return useSyncExternalStore(
+    subscribeReducedMotion,
+    () => window.matchMedia?.(REDUCED_MOTION_QUERY).matches ?? false,
+    () => false
+  )
+}
 
 export function LazyVideo({
   src,
@@ -37,12 +54,29 @@ export function LazyVideo({
   const [frameReady, setFrameReady] = useState(false)
   const [error, setError] = useState(false)
   const [status, setStatus] = useState<PlaybackStatus>('idle')
+  const [autoplayBlocked, setAutoplayBlocked] = useState(false)
+  const reducedMotion = usePrefersReducedMotion()
   const t = useTranslations('teaser')
   const locale = useLocale()
+
+  // Ambient mode: muted loop that starts on its own; otherwise click-to-play
+  const ambient = autoPlay && !reducedMotion && !autoplayBlocked
 
   const handlePlayClick = () => {
     setInView(true)
     setStatus('loading')
+  }
+
+  const handleToggleClick = () => {
+    const el = ref.current
+    if (!el) {
+      return
+    }
+    if (el.paused) {
+      el.play().catch(() => setStatus('paused'))
+    } else {
+      el.pause()
+    }
   }
 
   useEffect(() => {
@@ -67,18 +101,33 @@ export function LazyVideo({
   }, [inView])
 
   useEffect(() => {
-    if (status === 'loading' && inView) {
-      ref.current?.play().catch(() => setStatus('idle'))
+    const el = ref.current
+    if (!inView || !el) {
+      return
     }
-  }, [status, inView])
+    if (status === 'loading' || (ambient && status === 'idle')) {
+      el.play().catch(() => {
+        setStatus('idle')
+        if (ambient) {
+          setAutoplayBlocked(true)
+        }
+      })
+    }
+  }, [status, inView, ambient])
 
-  const showPlayButton = !autoPlay && status === 'idle'
-  const showPoster = !!poster && status !== 'playing'
+  const showPlayButton = !ambient && status === 'idle'
+  const showToggle = ambient && !controls
+  const showPoster = !!poster && (status === 'idle' || status === 'loading')
   const showSkeleton = !poster && !frameReady && !error
+  const isPlaying = status === 'playing'
 
   return (
     <div
-      className='relative w-full overflow-hidden rounded-lg'
+      // Above a sibling overlay link once the shopper has to click to play
+      className={cn(
+        'relative w-full overflow-hidden rounded-lg',
+        !ambient && 'z-20'
+      )}
       style={{ aspectRatio }}
     >
       {showSkeleton && (
@@ -94,15 +143,20 @@ export function LazyVideo({
           <video
             ref={ref}
             src={inView ? src : undefined}
-            autoPlay={autoPlay}
             muted={autoPlay}
             loop={autoPlay}
-            controls={controls || (!autoPlay && status !== 'idle')}
-            preload={autoPlay || !poster ? 'metadata' : 'none'}
+            controls={controls || (!ambient && status !== 'idle')}
+            preload={ambient || !poster ? 'metadata' : 'none'}
             playsInline
+            // Captions track needs CORS, so video and .vtt hosts must send Access-Control-Allow-Origin
             crossOrigin={captionsUrl ? 'anonymous' : undefined}
             onLoadedData={() => setFrameReady(true)}
             onPlaying={() => setStatus('playing')}
+            onPause={() =>
+              setStatus((current) =>
+                current === 'playing' ? 'paused' : current
+              )
+            }
             onError={() => setError(true)}
             className={cn(
               'absolute inset-0 h-full w-full object-cover',
@@ -145,6 +199,26 @@ export function LazyVideo({
                   aria-hidden='true'
                 />
               </span>
+            </button>
+          )}
+          {showToggle && (
+            <button
+              type='button'
+              className='absolute right-3 bottom-3 z-20 flex h-10 w-10 cursor-pointer items-center justify-center rounded-full bg-black/50 text-white backdrop-blur-sm'
+              onClick={handleToggleClick}
+              aria-label={isPlaying ? t('video.pause') : t('video.play')}
+            >
+              {isPlaying ? (
+                <PauseIcon
+                  className='h-5 w-5'
+                  aria-hidden='true'
+                />
+              ) : (
+                <PlayIcon
+                  className='h-5 w-5'
+                  aria-hidden='true'
+                />
+              )}
             </button>
           )}
         </>
