@@ -3,6 +3,7 @@ import type {
   BillingAddressResponse,
   ShippingAddressResponse,
   LineItemResponse,
+  LineItemVariantAttributeResponse,
 } from '@core/contracts/cart/cart'
 import { AddressBaseSchema } from '@core/contracts/address/address-base'
 import type { LocalizedStringApiResponse } from '../schemas/localized-string'
@@ -13,8 +14,41 @@ import { calculateTaxFromCart } from '../helpers/calculate-tax-from-cart'
 import { createBasicPrice } from '../helpers/create-basic-price'
 import { stringifySelectableAttributeValue } from '../helpers/stringify-selectable-attribute-value'
 import type { CartApiResponse } from '../schemas/cart'
+import { mapVariantsToShopin } from './variants'
+import { parseColorPair } from '../helpers/color-utils'
 
 const LINE_ITEM_DISPLAY_ATTRIBUTES = ['color', 'size']
+
+type CartLineItemApiResponse = NonNullable<CartApiResponse['lineItems']>[number]
+
+// Selectable attributes that differ across the expanded product's variants
+function mapLineItemVariantAttributes(
+  item: CartLineItemApiResponse,
+  language: string
+): LineItemVariantAttributeResponse[] | undefined {
+  const product = item.product?.masterData?.current
+  const defs = item.product?.productType?.obj?.attributes
+  if (!product?.masterVariant || !defs || !item.variant) {
+    return undefined
+  }
+
+  const defsByName = Object.fromEntries(defs.map((d) => [d.name, d]))
+  const variantId = String(item.variant.id)
+  const variantAttributes =
+    mapVariantsToShopin(
+      [product.masterVariant, ...(product.variants ?? [])],
+      language,
+      defsByName
+    ).find((v) => v.id === variantId)?.attributes ?? {}
+
+  return Object.entries(variantAttributes)
+    .filter(([, value]) => value)
+    .map(([name, value]) => ({
+      name,
+      label: getLocalizedString(defsByName[name]?.label, language) ?? name,
+      value: parseColorPair(value)?.label ?? value,
+    }))
+}
 
 /**
  * Maps API address to contract billing address
@@ -82,6 +116,7 @@ export function mapLineItems(
           attributes[attr.name] = value
         }
       }
+      const variantAttributes = mapLineItemVariantAttributes(item, language)
 
       return {
         id: item.id,
@@ -97,6 +132,9 @@ export function mapLineItems(
         imageUrl: item.variant?.images?.[0]?.url,
         name,
         attributes: Object.keys(attributes).length > 0 ? attributes : undefined,
+        variantAttributes: variantAttributes?.length
+          ? variantAttributes
+          : undefined,
       }
     }) || []
   )

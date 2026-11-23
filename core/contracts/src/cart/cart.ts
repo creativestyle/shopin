@@ -6,6 +6,16 @@ import {
   AddressRequestSchema,
 } from '../address/address-base'
 
+export const LineItemVariantAttributeResponseSchema = z.object({
+  name: z.string(),
+  label: z.string(),
+  value: z.string(),
+})
+
+export type LineItemVariantAttributeResponse = z.infer<
+  typeof LineItemVariantAttributeResponseSchema
+>
+
 export const LineItemResponseSchema = z.object({
   id: z.string(),
   productId: z.string(),
@@ -17,6 +27,8 @@ export const LineItemResponseSchema = z.object({
   name: z.string(),
   imageUrl: z.string().optional(),
   attributes: z.record(z.string(), z.string()).optional(),
+  // Attributes that tell this variant apart from its siblings, with display labels
+  variantAttributes: z.array(LineItemVariantAttributeResponseSchema).optional(),
   maxQuantity: z.number().int().nonnegative().optional(),
 })
 

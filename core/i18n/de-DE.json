@@ -253,7 +253,8 @@
     "addToCartModal": {
       "toastMessage": "Gute Wahl. Artikel wurde zum Warenkorb hinzugefügt.",
       "moreProducts": "Mehr Produkte",
-      "goToCart": "Zum Warenkorb"
+      "goToCart": "Zum Warenkorb",
+      "continue": "Weiter einkaufen"
     },
     "empty": {
       "title": "Ihr Warenkorb enthält aktuell keine Artikel.",
