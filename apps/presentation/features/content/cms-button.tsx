@@ -11,14 +11,12 @@ export interface CmsButtonProps {
   /** CTA from CMS: link + optional variant/style (CmsButtonResponse). */
   cta: CmsButtonResponse
   className?: string
-  /** Render as a non-interactive label, for use inside an already-linked card. */
-  asLabel?: boolean
 }
 
 /**
  * Renders a CMS CTA as the design-system Button around CmsLink. Contract: CmsButtonResponse.
  */
-export function CmsButton({ cta, className, asLabel }: CmsButtonProps) {
+export function CmsButton({ cta, className }: CmsButtonProps) {
   const { link, variant, style, size } = cta
 
   return (
@@ -29,7 +27,7 @@ export function CmsButton({ cta, className, asLabel }: CmsButtonProps) {
       size={(size ?? 'default') as ButtonSize}
       className={className}
     >
-      {asLabel ? <span>{link.label}</span> : <CmsLink link={link} />}
+      <CmsLink link={link} />
     </Button>
   )
 }
