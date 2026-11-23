@@ -19,7 +19,7 @@ export async function TopBar({ className, messages }: TopBarProps) {
       ariaLabel={t('ariaLabel')}
       className={className}
     >
-      <StandardContainer className='flex items-center justify-center will-change-transform'>
+      <StandardContainer className='flex items-center justify-center'>
         <ul className='flex flex-wrap items-center justify-center gap-x-6 gap-y-1 text-center text-xs font-normal text-white'>
           {messages.map((msg, i) => (
             <li
