@@ -107,28 +107,17 @@ export class DataSourceFactory {
     const baseServices = serviceProvider.getServices()
 
     // Always use commercetools customerService regardless of data source
-    const { customerService, customerAddressService, orderService } =
+    const { customerService, customerAddressService } =
       this.commercetoolsServiceProvider.getServices()
 
     // Always use mock paymentService regardless of data source
     const { paymentService } = this.mockServiceProvider.getServices()
 
-    // For mock-set, wrap the CT productSearchService as a SearchProvider
-    const searchService: SearchProvider =
-      'searchService' in baseServices
-        ? (baseServices as CommercetoolsWithCMSServices).searchService
-        : new CtSearchProvider(
-            this.commercetoolsServiceProvider.getServices().productSearchService
-          )
-
     return {
       ...baseServices,
       customerService,
       customerAddressService,
-      cartPaymentService: baseServices.cartPaymentService,
       paymentService,
-      orderService,
-      searchService,
     }
   }
 

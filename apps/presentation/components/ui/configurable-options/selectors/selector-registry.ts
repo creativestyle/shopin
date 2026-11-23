@@ -10,6 +10,7 @@ export type SelectorComponentProps = {
   value?: string
   onChange?: (value: string) => void
   className?: string
+  /** Ignored by ColorSelector: swatches always sit in an inline row. */
   layout?: 'inline' | 'grid'
 }
 
