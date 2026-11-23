@@ -1,12 +1,14 @@
+// Connect-phase only; resets mid-request fall through to the generic failure path
 const UNREACHABLE_CODES = new Set([
   'ECONNREFUSED',
-  'ECONNRESET',
   'ENOTFOUND',
   'EAI_AGAIN',
   'ETIMEDOUT',
   'UND_ERR_CONNECT_TIMEOUT',
-  'UND_ERR_SOCKET',
 ])
+
+const DEV_HINT =
+  ' Is the BFF running? In dev, check the @apps/bff output — TypeScript errors prevent it from starting.'
 
 function readCode(value: unknown): string | undefined {
   if (value && typeof value === 'object' && 'code' in value) {
@@ -39,10 +41,8 @@ export class BffUnreachableError extends Error {
     readonly code: string,
     options?: ErrorOptions
   ) {
-    super(
-      `BFF unreachable at ${bffUrl} (${code}). Is the BFF running? In dev, check the @apps/bff output — TypeScript errors prevent it from starting.`,
-      options
-    )
+    const hint = process.env.NODE_ENV === 'production' ? '' : DEV_HINT
+    super(`BFF unreachable at ${bffUrl} (${code}).${hint}`, options)
     this.name = 'BffUnreachableError'
     Object.setPrototypeOf(this, BffUnreachableError.prototype)
   }
