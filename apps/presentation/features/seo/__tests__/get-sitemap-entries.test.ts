@@ -2,6 +2,7 @@
  * @jest-environment node
  */
 import {
+  listLocales,
   SITEMAP_COLLECTION_PAGE_SIZE,
   SITEMAP_MAX_COLLECTION_RESULTS,
 } from '@config/constants'
@@ -28,6 +29,7 @@ jest.mock('../lib/sitemap-service', () => ({
 }))
 
 const BASE = 'https://shop.example'
+const LOCALE_COUNT = listLocales().length
 
 function mockCategoryWithTotal(total: number) {
   service.getCollectionPage.mockImplementation(
@@ -45,7 +47,7 @@ function mockCategoryWithTotal(total: number) {
 }
 
 function productCallsPerLocale() {
-  return service.getCollectionPage.mock.calls.length / 2
+  return service.getCollectionPage.mock.calls.length / LOCALE_COUNT
 }
 
 describe('getSitemapEntries product paging', () => {
@@ -65,7 +67,9 @@ describe('getSitemapEntries product paging', () => {
     expect(productCallsPerLocale()).toBe(
       Math.ceil(250 / SITEMAP_COLLECTION_PAGE_SIZE)
     )
-    expect(entries.filter((e) => e.url.includes('/p/'))).toHaveLength(500)
+    expect(entries.filter((e) => e.url.includes('/p/'))).toHaveLength(
+      250 * LOCALE_COUNT
+    )
     expect(logger.warn).not.toHaveBeenCalled()
   })
 

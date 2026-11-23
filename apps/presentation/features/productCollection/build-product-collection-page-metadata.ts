@@ -39,6 +39,9 @@ export interface BuildProductCollectionPageMetadataParams {
  *    that is meant to be indexed.
  *  - Pages past the end of the result set (?page=9999, which crawlers do try) are
  *    empty and get the refined treatment: noindex, and canonical back to page 1.
+ *  - `seo.canonicalUrl` replaces the clean category URL (page 1 and the target of
+ *    refined/out-of-range pages); paginated pages keep their self canonical.
+ *  - Page 2+ append the page label to title and description so they don't duplicate page 1.
  */
 export function buildProductCollectionPageMetadata({
   pageData,
@@ -55,12 +58,13 @@ export function buildProductCollectionPageMetadata({
   const isOutOfRangePage = page > totalPages
   const isIndexableUrl = !hasRefinements && !isOutOfRangePage
 
-  const categoryUrl = baseUrl
+  const derivedCategoryUrl = baseUrl
     ? buildCanonicalUrl(baseUrl, localePrefix, CATEGORY_PATH_PREFIX, slug)
     : undefined
+  const categoryUrl = seo?.canonicalUrl ?? derivedCategoryUrl
   const canonical =
-    categoryUrl && isIndexableUrl && page > MIN_PAGE
-      ? `${categoryUrl}?${SEARCH_PARAM_PAGE}=${page}`
+    derivedCategoryUrl && isIndexableUrl && page > MIN_PAGE
+      ? `${derivedCategoryUrl}?${SEARCH_PARAM_PAGE}=${page}`
       : categoryUrl
   const languages =
     baseUrl && isIndexableUrl && page === MIN_PAGE
@@ -72,10 +76,11 @@ export function buildProductCollectionPageMetadata({
         )
       : undefined
 
-  const baseTitle = seo?.metaTitle ?? pageData.categoryName ?? slug
-  const title =
-    page > MIN_PAGE && pageLabel ? `${baseTitle} – ${pageLabel}` : baseTitle
-  const description = seo?.metaDescription ?? fallbackDescription
+  const withPageLabel = (text: string) =>
+    page > MIN_PAGE && pageLabel ? `${text} – ${pageLabel}` : text
+  const title = withPageLabel(seo?.metaTitle ?? pageData.categoryName ?? slug)
+  const baseDescription = seo?.metaDescription ?? fallbackDescription
+  const description = baseDescription && withPageLabel(baseDescription)
   const ogImage = seo?.ogImage?.url
 
   return {

@@ -102,6 +102,33 @@ describe('buildProductCollectionPageMetadata', () => {
     expect(metadata.twitter?.description).toBe('Shop Audio at SHOPin.')
   })
 
+  it('appends the page label to the description on page 2+', () => {
+    const metadata = build({
+      page: 2,
+      pageLabel: 'Page 2 of 5',
+      fallbackDescription: 'Shop Audio at SHOPin.',
+    })
+    expect(metadata.description).toBe('Shop Audio at SHOPin. – Page 2 of 5')
+    expect(metadata.openGraph?.description).toBe(
+      'Shop Audio at SHOPin. – Page 2 of 5'
+    )
+  })
+
+  it('uses a seo canonical override for the category URL only', () => {
+    const override = 'https://shop.example/c/all-audio'
+    const withOverride = { ...pageData, seo: { canonicalUrl: override } }
+    expect(build({ pageData: withOverride }).alternates?.canonical).toBe(
+      override
+    )
+    expect(
+      build({ pageData: withOverride, hasRefinements: true }).alternates
+        ?.canonical
+    ).toBe(override)
+    expect(
+      build({ pageData: withOverride, page: 2 }).alternates?.canonical
+    ).toBe(`${CATEGORY_URL}?page=2`)
+  })
+
   it('prefers the category meta description over the fallback', () => {
     const metadata = build({
       pageData: { ...pageData, seo: { metaDescription: 'From the CMS' } },

@@ -73,6 +73,23 @@ describe('buildProductPageMetadata', () => {
     expect(metadata.twitter?.images).toEqual(['https://cdn.example/og.jpg'])
   })
 
+  it('uses a seo canonical override', () => {
+    const metadata = buildProductPageMetadata({
+      pageData: {
+        ...pageData,
+        seo: { canonicalUrl: 'https://shop.example/p/red-shoes-classic' },
+      },
+      localePrefix: 'en',
+      baseUrl: BASE,
+    })
+    expect(metadata.alternates?.canonical).toBe(
+      'https://shop.example/p/red-shoes-classic'
+    )
+    expect(metadata.openGraph?.url).toBe(
+      'https://shop.example/p/red-shoes-classic'
+    )
+  })
+
   it('uses the default social image for a product without images', () => {
     const metadata = buildProductPageMetadata({
       pageData: {

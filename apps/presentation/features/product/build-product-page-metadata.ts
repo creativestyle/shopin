@@ -17,7 +17,7 @@ export interface BuildProductPageMetadataParams {
  *
  * The canonical deliberately drops the `variantId` query parameter that variant
  * links carry (e.g. /p/baby-grand-piano?variantId=2) so all variant URLs of a
- * product consolidate into a single indexed page.
+ * product consolidate into a single indexed page. `seo.canonicalUrl` overrides it.
  *
  * openGraph/twitter are restated in full because Next.js merges metadata
  * shallowly — a page that sets `openGraph` replaces the root layout's object.
@@ -29,7 +29,7 @@ export function buildProductPageMetadata({
 }: BuildProductPageMetadataParams): Metadata {
   const { product, seo } = pageData
 
-  const canonical = baseUrl
+  const derivedCanonical = baseUrl
     ? buildCanonicalUrl(
         baseUrl,
         localePrefix,
@@ -37,6 +37,7 @@ export function buildProductPageMetadata({
         product.slug
       )
     : undefined
+  const canonical = seo?.canonicalUrl ?? derivedCanonical
   const languages = baseUrl
     ? buildHreflangLanguages(
         baseUrl,
