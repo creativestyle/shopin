@@ -16,8 +16,12 @@ import {
   createShopinProductCardList,
   generateMockCategoryTree,
   buildFacetsFromProducts,
-  type ProductCardWithAttributes,
+  withShopinVariantSummary,
 } from '../generators'
+import {
+  calculatePriceRange,
+  filterProductCards,
+} from '../helpers/product-card-filters'
 
 @Injectable()
 export class ProductCollectionService {
@@ -25,63 +29,6 @@ export class ProductCollectionService {
     @Inject(MOCK_API) private readonly mockApi: MockApi,
     @Inject(LANGUAGE_TOKEN) private readonly languageProvider: LanguageProvider
   ) {}
-
-  private applyFilters(
-    products: ProductCardWithAttributes[],
-    filters?: Filters
-  ): ProductCardWithAttributes[] {
-    if (!filters) {
-      return products
-    }
-
-    return products.filter((product) => {
-      for (const [attrName, values] of Object.entries(filters)) {
-        if (!values || values.length === 0) {
-          continue
-        }
-
-        const productValue =
-          product.attributes[attrName as keyof typeof product.attributes]
-        if (!productValue) {
-          continue
-        }
-
-        // Exact match since values include format like "White:#FFFFFF"
-        const matches = values.some((v) => v === productValue)
-        if (!matches) {
-          return false
-        }
-      }
-      return true
-    })
-  }
-
-  private getEffectivePrice(
-    product: ProductCardWithAttributes
-  ): number | undefined {
-    if (!product.price) {
-      return undefined
-    }
-    return (
-      product.price.discountedPriceInCents ?? product.price.regularPriceInCents
-    )
-  }
-
-  private calculatePriceRange(products: ProductCardWithAttributes[]): {
-    minPriceInCents: number
-    maxPriceInCents: number
-  } {
-    const prices = products
-      .map((p) => this.getEffectivePrice(p))
-      .filter((price): price is number => price !== undefined)
-    if (prices.length === 0) {
-      return { minPriceInCents: 0, maxPriceInCents: 0 }
-    }
-    return {
-      minPriceInCents: Math.min(...prices),
-      maxPriceInCents: Math.max(...prices),
-    }
-  }
 
   async getProductCollection(
     productCollectionSlug: string,
@@ -113,38 +60,23 @@ export class ProductCollectionService {
     faker.seed(generateSeed(`${productCollectionSlug}-all`))
     const allProducts = createShopinProductCardList(faker, 100)
 
-    const priceRange = this.calculatePriceRange(allProducts)
-
-    let filteredProducts = this.applyFilters(allProducts, filters)
-
-    if (saleOnly) {
-      filteredProducts = filteredProducts.filter(
-        (product) => product.price?.discountedPriceInCents !== undefined
-      )
-    }
-
-    if (priceMin !== undefined || priceMax !== undefined) {
-      filteredProducts = filteredProducts.filter((product) => {
-        const price = this.getEffectivePrice(product)
-        if (price === undefined) {
-          return false
-        }
-        if (priceMin !== undefined && price < priceMin) {
-          return false
-        }
-        if (priceMax !== undefined && price > priceMax) {
-          return false
-        }
-        return true
-      })
-    }
+    const priceRange = calculatePriceRange(allProducts)
+    const filteredProducts = filterProductCards(allProducts, {
+      filters,
+      saleOnly,
+      priceMin,
+      priceMax,
+    })
 
     const facets = buildFacetsFromProducts(allProducts, filteredProducts)
 
     const total = filteredProducts.length
 
     const offset = (page - 1) * limit
-    const paginatedProducts = filteredProducts.slice(offset, offset + limit)
+    const paginatedProducts = withShopinVariantSummary(
+      faker,
+      filteredProducts.slice(offset, offset + limit)
+    )
 
     const productList = paginatedProducts.map((p) => ({
       id: p.id,
@@ -152,6 +84,8 @@ export class ProductCollectionService {
       name: p.name,
       price: p.price && { ...p.price, currency },
       image: p.image,
+      variantId: p.variantId,
+      variantCount: p.variantCount,
     }))
 
     return {

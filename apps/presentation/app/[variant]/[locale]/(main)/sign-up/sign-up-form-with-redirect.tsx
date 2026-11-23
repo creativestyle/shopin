@@ -3,6 +3,7 @@
 import { useSearchParams } from 'next/navigation'
 import { useRouter } from '@/lib/navigation'
 import { RegisterForm } from '@/features/auth/auth-register-form'
+import { markRegistrationCompleted } from '@/features/auth/auth-registration-flag'
 import { setIsCheckoutFromSearchParams } from '@/features/checkout/checkout-param-utils'
 
 /**
@@ -18,6 +19,7 @@ export function SignUpFormWithRedirect() {
       params.set('token', emailToken)
     }
     setIsCheckoutFromSearchParams(params, searchParams)
+    markRegistrationCompleted()
     router.push(`/sign-up/success?${params.toString()}`)
   }
 

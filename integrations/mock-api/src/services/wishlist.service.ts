@@ -12,7 +12,10 @@ import type {
 } from '@core/contracts/wishlist/wishlist'
 import { randomUUID } from 'crypto'
 import { generateSeed } from '../helpers/generateSeed'
-import { createShopinProductCardList } from '../generators'
+import {
+  createShopinProductCardList,
+  withShopinVariantSummary,
+} from '../generators'
 
 // Simple in-memory store for mock wishlists
 // Wishlist IDs can be stored in localStorage on the client side
@@ -80,7 +83,10 @@ export class WishlistService {
     const currentLanguage = this.languageProvider.getCurrentLanguage()
     const currency = resolveCurrencyFromLanguage(currentLanguage)
 
-    const [productCard] = createShopinProductCardList(faker, 1)
+    const [productCard] = withShopinVariantSummary(
+      faker,
+      createShopinProductCardList(faker, 1)
+    )
     const productWithCurrency = {
       ...productCard,
       id: productId, // Use the actual product ID from the request

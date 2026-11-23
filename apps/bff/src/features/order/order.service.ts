@@ -1,4 +1,8 @@
-import { Injectable, ConflictException } from '@nestjs/common'
+import {
+  Injectable,
+  ConflictException,
+  NotFoundException,
+} from '@nestjs/common'
 import { DataSourceFactory } from '../../data-source/data-source.factory'
 import { CartIdService } from '../cart-id/cart-id.service'
 import { TokenProvider } from '../../common/token-management/token-provider'
@@ -18,6 +22,11 @@ export class OrderService {
   ) {}
 
   async createOrder(request: CreateOrderRequest): Promise<OrderResponse> {
+    // Only the caller's own cart can be ordered; same 404 as an unknown cart
+    if ((await this.getOwnCartId()) !== request.cartId) {
+      throw new NotFoundException(`Cart not found: ${request.cartId}`)
+    }
+
     const { orderService } = this.dataSourceFactory.getServices()
 
     try {
@@ -49,6 +58,13 @@ export class OrderService {
       }
       throw error
     }
+  }
+
+  private async getOwnCartId(): Promise<string | undefined> {
+    const isLoggedIn = (await this.tokenProvider.getAuthStatus()) === true
+    return isLoggedIn
+      ? await this.cartIdService.getLoggedInCartId()
+      : await this.cartIdService.getGuestCartId()
   }
 
   async getOrder(orderId: string): Promise<OrderResponse> {

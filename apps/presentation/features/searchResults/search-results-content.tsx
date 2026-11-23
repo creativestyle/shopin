@@ -112,6 +112,9 @@ export function SearchResultsContent({
                   productId={product.id}
                   productSlug={product.slug}
                   productName={product.name}
+                  variantId={product.variantId}
+                  variantCount={product.variantCount}
+                  className='w-full'
                 />
               ) : null
             }
