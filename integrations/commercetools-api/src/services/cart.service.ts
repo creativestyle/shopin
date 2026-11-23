@@ -16,9 +16,13 @@ import type {
 } from '@core/contracts/cart/cart'
 import {
   CartResponseSchema,
+  CartVersionConflictError,
   DiscountCodeError,
 } from '@core/contracts/cart/cart'
-import type { GetCartOptions as ContractGetCartOptions } from '@core/contracts/core/data-source-interfaces'
+import type {
+  AddDiscountCodeOptions,
+  GetCartOptions as ContractGetCartOptions,
+} from '@core/contracts/core/data-source-interfaces'
 import type {
   ShippingMethodsResponse,
   SetShippingMethodRequest,
@@ -37,7 +41,10 @@ import {
   CART_LINE_ITEM_MAX_QUANTITY,
 } from '@config/constants'
 import { CartApiResponseSchema, type CartApiResponse } from '../schemas/cart'
-import { isNotFoundError } from '../helpers/is-not-found-error'
+import {
+  isConcurrentModificationError,
+  isNotFoundError,
+} from '../helpers/is-not-found-error'
 import {
   CartUpdateActionSchema,
   type CartUpdateAction,
@@ -220,11 +227,12 @@ export class CartService {
   /** Returns the raw CT response so callers can read fields the mapped shape drops. */
   private async updateCartWithActionsRaw(
     cartId: string,
-    actionsData: unknown[]
+    actionsData: unknown[],
+    expectedVersion?: number
   ): Promise<unknown> {
     const client = await this.getClient()
 
-    const cartVersion = await this.getCartVersion(cartId)
+    const cartVersion = expectedVersion ?? (await this.getCartVersion(cartId))
 
     const validatedActions = actionsData.map((actionData) =>
       CartUpdateActionSchema.parse(actionData)
@@ -465,7 +473,10 @@ export class CartService {
   async addDiscountCode(
     cartId: string,
     code: string,
-    replaceDiscountCodeIds: string[] = []
+    {
+      replaceDiscountCodeIds = [],
+      expectedVersion,
+    }: AddDiscountCodeOptions = {}
   ): Promise<CartResponse> {
     const actions: CartUpdateAction[] = [
       ...replaceDiscountCodeIds.map(
@@ -479,8 +490,15 @@ export class CartService {
 
     let responseBody: unknown
     try {
-      responseBody = await this.updateCartWithActionsRaw(cartId, actions)
+      responseBody = await this.updateCartWithActionsRaw(
+        cartId,
+        actions,
+        expectedVersion
+      )
     } catch (error) {
+      if (isConcurrentModificationError(error)) {
+        throw new CartVersionConflictError()
+      }
       throw toDiscountCodeError(error)
     }
 

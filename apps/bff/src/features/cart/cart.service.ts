@@ -1,7 +1,14 @@
-import { Injectable, NotFoundException } from '@nestjs/common'
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common'
 import { DataSourceFactory } from '../../data-source/data-source.factory'
 import type { CartResponse } from '@core/contracts/cart/cart'
-import { DiscountCodeError } from '@core/contracts/cart/cart'
+import {
+  CartVersionConflictError,
+  DiscountCodeError,
+} from '@core/contracts/cart/cart'
 import type {
   AddToCartRequest,
   UpdateCartItemRequest,
@@ -147,6 +154,28 @@ export class CartService extends BaseAuthenticatedService {
     request: ApplyDiscountCodeRequest
   ): Promise<CartResponse> {
     const cartId = await this.getOrCreateCartId()
+    try {
+      return await this.checkAndAddDiscountCode(cartId, request.code)
+    } catch (error) {
+      if (!(error instanceof CartVersionConflictError)) {
+        throw error
+      }
+    }
+    // The cart changed since the check; re-run it once against the new state.
+    try {
+      return await this.checkAndAddDiscountCode(cartId, request.code)
+    } catch (error) {
+      if (error instanceof CartVersionConflictError) {
+        throw new ConflictException()
+      }
+      throw error
+    }
+  }
+
+  private async checkAndAddDiscountCode(
+    cartId: string,
+    code: string
+  ): Promise<CartResponse> {
     const cartService = this.getCartService()
 
     const cart = await cartService.getCart(cartId)
@@ -158,11 +187,11 @@ export class CartService extends BaseAuthenticatedService {
     const staleCodeIds = (cart.discountCodes ?? []).map((entry) => entry.id)
 
     try {
-      return await cartService.addDiscountCode(
-        cartId,
-        request.code,
-        staleCodeIds
-      )
+      // The checked version makes check and write atomic: a parallel apply gets a conflict.
+      return await cartService.addDiscountCode(cartId, code, {
+        replaceDiscountCodeIds: staleCodeIds,
+        expectedVersion: cart.version,
+      })
     } catch (error) {
       if (error instanceof DiscountCodeError) {
         throw new FrontendSafeException(error.reason)

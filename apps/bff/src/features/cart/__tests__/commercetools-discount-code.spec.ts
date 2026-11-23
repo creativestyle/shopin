@@ -1,5 +1,8 @@
 import { Logger } from '@nestjs/common'
-import { DiscountCodeError } from '@core/contracts/cart/cart'
+import {
+  CartVersionConflictError,
+  DiscountCodeError,
+} from '@core/contracts/cart/cart'
 import {
   CartService,
   findRejectedDiscountCode,
@@ -103,7 +106,7 @@ describe('CartService.addDiscountCode', () => {
       {} as never,
       { getCurrentLanguage: () => 'en-US' } as never
     )
-    return { service, post }
+    return { service, post, getVersion }
   }
 
   const sentActions = (post: jest.Mock, call: number) =>
@@ -133,7 +136,9 @@ describe('CartService.addDiscountCode', () => {
       })
     )
 
-    await service.addDiscountCode('cart-1', 'SAVE10', ['dc-1'])
+    await service.addDiscountCode('cart-1', 'SAVE10', {
+      replaceDiscountCodeIds: ['dc-1'],
+    })
 
     expect(post).toHaveBeenCalledTimes(1)
     expect(sentActions(post, 0)).toEqual([
@@ -143,6 +148,34 @@ describe('CartService.addDiscountCode', () => {
       },
       { action: 'addDiscountCode', code: 'SAVE10' },
     ])
+  })
+
+  it('sends the version the caller checked instead of re-reading it', async () => {
+    const { service, post, getVersion } = createService(() =>
+      Promise.resolve({
+        body: apiCart([{ id: 'dc-1', code: 'SAVE10', state: 'MatchesCart' }]),
+      })
+    )
+
+    await service.addDiscountCode('cart-1', 'SAVE10', { expectedVersion: 2 })
+
+    expect(post.mock.calls[0][0].body.version).toBe(2)
+    expect(getVersion).not.toHaveBeenCalled()
+  })
+
+  it('throws CartVersionConflictError when the cart moved past the checked version', async () => {
+    const { service } = createService(() =>
+      Promise.reject({
+        statusCode: 409,
+        body: { errors: [{ code: 'ConcurrentModification' }] },
+      })
+    )
+
+    const error = await service
+      .addDiscountCode('cart-1', 'SAVE10', { expectedVersion: 2 })
+      .catch((caught: unknown) => caught)
+
+    expect(error).toBeInstanceOf(CartVersionConflictError)
   })
 
   it('removes a code CT accepted but did not apply, then throws notApplicable', async () => {

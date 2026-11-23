@@ -19,3 +19,15 @@ export function isConflictError(
     (error.statusCode === 400 || error.statusCode === 409)
   )
 }
+
+/** A 409 because the resource version sent is no longer the current one. */
+export function isConcurrentModificationError(error: unknown): boolean {
+  if (!hasStatusCode(error) || error.statusCode !== 409) {
+    return false
+  }
+  const errors = (error as { body?: { errors?: { code?: string }[] } }).body
+    ?.errors
+  return (
+    errors?.some((entry) => entry.code === 'ConcurrentModification') ?? false
+  )
+}

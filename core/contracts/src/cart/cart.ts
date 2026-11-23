@@ -198,6 +198,14 @@ export class DiscountCodeError extends Error {
   }
 }
 
+/** Thrown when the cart changed after the version the caller checked. */
+export class CartVersionConflictError extends Error {
+  constructor() {
+    super('Cart was modified concurrently')
+    this.name = 'CartVersionConflictError'
+  }
+}
+
 /**
  * Set billing address request schema - excludes isDefaultShipping and isDefaultBilling
  * as these fields are only relevant for customer addresses, not cart billing addresses
