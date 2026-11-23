@@ -106,13 +106,18 @@ export function SearchResultsContent({
           <ProductGrid
             products={results.products}
             locale={locale}
-            renderCardActions={(product) => (
-              <AddToCart
-                productId={product.id}
-                productSlug={product.slug}
-                productName={product.name}
-              />
-            )}
+            renderCardActions={(product) =>
+              product.price ? (
+                <AddToCart
+                  productId={product.id}
+                  productSlug={product.slug}
+                  productName={product.name}
+                  variantId={product.variantId}
+                  variantCount={product.variantCount}
+                  className='w-full'
+                />
+              ) : null
+            }
           />
           {totalPages > 1 && (
             <PaginationWrapper

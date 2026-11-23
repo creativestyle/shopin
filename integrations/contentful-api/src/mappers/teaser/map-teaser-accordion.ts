@@ -7,6 +7,7 @@ import {
   type TeaserAccordionApiResponse,
   AccordionItemBodySchema,
 } from '../../schemas/teaser/teaser-accordion'
+import { mergeRichTextLinks, normalizeRichTextLinkData } from './rich-text'
 
 /** Maps Contentful TeaserAccordion entry to contract AccordionTeaser. */
 export function mapTeaserAccordion(
@@ -36,7 +37,11 @@ export function mapTeaserAccordion(
           const docParsed = RichTextDocumentResponseSchema.safeParse(
             bodyParsed.data.json
           )
-          body = docParsed.success ? docParsed.data : undefined
+          body = docParsed.success
+            ? normalizeRichTextLinkData(
+                mergeRichTextLinks(docParsed.data, bodyParsed.data.links)
+              )
+            : undefined
         }
       }
       return {

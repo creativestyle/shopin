@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type RefObject } from 'react'
 import {
   Sheet,
   SheetBody,
@@ -24,6 +24,7 @@ interface VariantSelectorModalProps {
   productId: string
   productSlug: string
   productName: string
+  restoreFocusRef?: RefObject<HTMLElement | null>
 }
 
 export function VariantSelectorModal({
@@ -32,6 +33,7 @@ export function VariantSelectorModal({
   productId,
   productSlug,
   productName,
+  restoreFocusRef,
 }: VariantSelectorModalProps) {
   const t = useTranslations('product')
   const [productData, setProductData] = useState<ProductPageResponse | null>(
@@ -105,7 +107,10 @@ export function VariantSelectorModal({
       open={open}
       onOpenChange={onOpenChange}
     >
-      <SheetContent className='md:max-w-md'>
+      <SheetContent
+        className='md:max-w-md'
+        restoreFocusRef={restoreFocusRef}
+      >
         <SheetHeader className='text-center'>
           <SheetTitle className='font-normal'>{productName}</SheetTitle>
         </SheetHeader>

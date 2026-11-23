@@ -18,7 +18,7 @@ export function createShopinProductGallery(
     vIdx >= 0
       ? [
           {
-            src: `${generate()}?variant=${vIdx + 1}`,
+            src: generate(),
             alt: `${name} variant ${vIdx + 1}`,
           },
           ...baseImages,

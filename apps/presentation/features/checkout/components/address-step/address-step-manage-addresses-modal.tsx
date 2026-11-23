@@ -1,7 +1,7 @@
 'use client'
 
 import { useTranslations } from 'next-intl'
-import { useState } from 'react'
+import { useState, type RefObject } from 'react'
 import { useCustomerAddresses } from '@/features/customer/customer-use-customer-addresses'
 import { sortAddresses } from '@/features/address/address-utils'
 import { Button } from '@/components/ui/button'
@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/sheet'
 import { AddressForm } from '@/features/address/address-form'
 import { CustomerAddressItem } from '@/features/customer/customer-address-item'
+import { CustomerAddressDefaultActions } from '@/features/customer/customer-address-default-actions'
 import {
   AddressResponse,
   AddAddressRequest,
@@ -33,6 +34,7 @@ interface AddressStepManageAddressesModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   onAddressAdded?: (addressId: string) => void
+  restoreFocusRef?: RefObject<HTMLElement | null>
 }
 
 type FormMode =
@@ -44,6 +46,7 @@ export function AddressStepManageAddressesModal({
   open,
   onOpenChange,
   onAddressAdded,
+  restoreFocusRef,
 }: AddressStepManageAddressesModalProps) {
   const t = useTranslations('account.myAccount')
   const {
@@ -77,9 +80,6 @@ export function AddressStepManageAddressesModal({
   const handleFormSubmit = async (data: AddressBase) => {
     const addressData = {
       ...data,
-      // Ensure default address options are always booleans
-      isDefaultShipping: data.isDefaultShipping ?? false,
-      isDefaultBilling: data.isDefaultBilling ?? false,
       ...(formMode?.type === 'editing' && { id: formMode.address.id }),
     }
 
@@ -119,6 +119,7 @@ export function AddressStepManageAddressesModal({
     >
       <SheetContent
         className='w-full max-w-2xl overflow-y-auto'
+        restoreFocusRef={restoreFocusRef}
         onPointerDownOutside={(e) => e.preventDefault()}
         onInteractOutside={(e) => e.preventDefault()}
         aria-describedby={undefined}
@@ -146,23 +147,35 @@ export function AddressStepManageAddressesModal({
             <ErrorDisplay>{t('addresses.loadError')}</ErrorDisplay>
           )}
           {!isLoading && !error && formMode && (
-            <AddressForm
-              key={
-                formMode.type === 'editing'
-                  ? formMode.address.id
-                  : 'new-address'
-              }
-              formId='customer-address-form'
-              showDefaultAddressOptions={true}
-              defaultValues={getAddressFormDefaultValues(
-                formMode.type === 'editing' ? formMode.address : undefined,
-                customer,
-                defaultShippingAddressId,
-                defaultBillingAddressId
+            <>
+              <AddressForm
+                key={
+                  formMode.type === 'editing'
+                    ? formMode.address.id
+                    : 'new-address'
+                }
+                formId='customer-address-form'
+                showDefaultAddressOptions={formMode.type === 'creating'}
+                defaultValues={getAddressFormDefaultValues(
+                  formMode.type === 'editing' ? formMode.address : undefined,
+                  customer
+                )}
+                onStateChange={setFormState}
+                onSubmit={handleFormSubmit}
+              />
+              {formMode.type === 'editing' && (
+                <CustomerAddressDefaultActions
+                  addressId={formMode.address.id}
+                  isDefaultShipping={
+                    formMode.address.id === defaultShippingAddressId
+                  }
+                  isDefaultBilling={
+                    formMode.address.id === defaultBillingAddressId
+                  }
+                  className='mt-6 border-t border-gray-200 pt-4'
+                />
               )}
-              onStateChange={setFormState}
-              onSubmit={handleFormSubmit}
-            />
+            </>
           )}
           {!isLoading && !error && !formMode && (
             <>
