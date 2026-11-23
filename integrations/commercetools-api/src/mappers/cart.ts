@@ -4,17 +4,52 @@ import type {
   ShippingAddressResponse,
   LineItemResponse,
   DiscountCodeResponse,
+  LineItemVariantAttributeResponse,
 } from '@core/contracts/cart/cart'
 import { AddressBaseSchema } from '@core/contracts/address/address-base'
 import type { LocalizedStringApiResponse } from '../schemas/localized-string'
+import { SHIPPING_METHOD_DELIVERY_TIME_FIELD } from '../schemas/shipping-method-custom'
 import { getLocalizedString } from '../helpers/get-localized-string'
 import { getLocalizedProductSlug } from '../helpers/get-localized-product-slug'
 import { calculateTaxFromCart } from '../helpers/calculate-tax-from-cart'
 import { createBasicPrice } from '../helpers/create-basic-price'
 import { stringifySelectableAttributeValue } from '../helpers/stringify-selectable-attribute-value'
 import type { CartApiResponse } from '../schemas/cart'
+import { mapVariantsToShopin } from './variants'
+import { parseColorPair } from '../helpers/color-utils'
 
 const LINE_ITEM_DISPLAY_ATTRIBUTES = ['color', 'size']
+
+type CartLineItemApiResponse = NonNullable<CartApiResponse['lineItems']>[number]
+
+// Selectable attributes that differ across the expanded product's variants
+function mapLineItemVariantAttributes(
+  item: CartLineItemApiResponse,
+  language: string
+): LineItemVariantAttributeResponse[] | undefined {
+  const product = item.product?.masterData?.current
+  const defs = item.product?.productType?.obj?.attributes
+  if (!product?.masterVariant || !defs || !item.variant) {
+    return undefined
+  }
+
+  const defsByName = Object.fromEntries(defs.map((d) => [d.name, d]))
+  const variantId = String(item.variant.id)
+  const variantAttributes =
+    mapVariantsToShopin(
+      [product.masterVariant, ...(product.variants ?? [])],
+      language,
+      defsByName
+    ).find((v) => v.id === variantId)?.attributes ?? {}
+
+  return Object.entries(variantAttributes)
+    .filter(([, value]) => value)
+    .map(([name, value]) => ({
+      name,
+      label: getLocalizedString(defsByName[name]?.label, language) ?? name,
+      value: parseColorPair(value)?.label ?? value,
+    }))
+}
 
 /**
  * Maps API address to contract billing address
@@ -82,6 +117,7 @@ export function mapLineItems(
           attributes[attr.name] = value
         }
       }
+      const variantAttributes = mapLineItemVariantAttributes(item, language)
 
       return {
         id: item.id,
@@ -97,6 +133,9 @@ export function mapLineItems(
         imageUrl: item.variant?.images?.[0]?.url,
         name,
         attributes: Object.keys(attributes).length > 0 ? attributes : undefined,
+        variantAttributes: variantAttributes?.length
+          ? variantAttributes
+          : undefined,
       }
     }) || []
   )
@@ -185,7 +224,8 @@ export function calculateItemCount(lineItems: LineItemResponse[]): number {
  * Only maps if shippingMethod is present to ensure we have a valid ID
  */
 function mapShippingInfo(
-  shippingInfo: CartApiResponse['shippingInfo']
+  shippingInfo: CartApiResponse['shippingInfo'],
+  language: string
 ): CartResponse['shippingInfo'] {
   if (!shippingInfo || !shippingInfo.shippingMethod) {
     return undefined
@@ -194,6 +234,12 @@ function mapShippingInfo(
   return {
     shippingMethodId: shippingInfo.shippingMethod.id,
     shippingMethodName: shippingInfo.shippingMethodName,
+    deliveryTime: getLocalizedString(
+      shippingInfo.shippingMethod.obj?.custom?.fields?.[
+        SHIPPING_METHOD_DELIVERY_TIME_FIELD
+      ],
+      language
+    ),
     price: createBasicPrice(shippingInfo.price.centAmount, {
       currency: shippingInfo.price.currencyCode,
     })!,
@@ -303,7 +349,7 @@ export function mapCartToResponse(
   const currency = cart.totalPrice.currencyCode
   const itemCount = calculateItemCount(lineItems)
 
-  const shippingInfo = mapShippingInfo(cart.shippingInfo)
+  const shippingInfo = mapShippingInfo(cart.shippingInfo, language)
   const paymentInfo = mapPaymentInfo(cart.paymentInfo)
 
   return {

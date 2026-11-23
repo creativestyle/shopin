@@ -81,7 +81,7 @@ export function PromoCodeSection({
         value='promo-code'
         className='border-0'
       >
-        <AccordionTrigger className='p-0 text-sm/[1.6] font-normal text-gray-700 normal-case underline'>
+        <AccordionTrigger className='flex-none gap-1 p-0 text-sm/[1.6] font-normal text-gray-700 normal-case underline [&>svg]:ml-0'>
           {label}
         </AccordionTrigger>
         <AccordionContent className='pt-2 pb-0'>

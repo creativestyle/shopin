@@ -98,7 +98,7 @@ export function AddToCartModal({
             actions={
               <CartActions
                 variant='modal'
-                onLinkClick={() => onOpenChange(false)}
+                onClose={() => onOpenChange(false)}
               />
             }
           />

@@ -136,4 +136,27 @@ describe('CarouselNavigation', () => {
       expect(getNextButton()).not.toBeInTheDocument()
     })
   })
+
+  describe('size', () => {
+    it('renders large hover-revealed buttons by default', () => {
+      render(<CarouselNavigation {...defaultProps} />)
+
+      const nextButton = getNextButton()
+      expect(nextButton).toHaveClass('size-14', 'opacity-0')
+    })
+
+    it('renders small always-visible buttons when size is sm', () => {
+      render(
+        <CarouselNavigation
+          {...defaultProps}
+          size='sm'
+        />
+      )
+
+      const nextButton = getNextButton()
+      expect(nextButton).toHaveClass('size-8')
+      expect(nextButton).not.toHaveClass('size-14')
+      expect(nextButton).not.toHaveClass('opacity-0')
+    })
+  })
 })

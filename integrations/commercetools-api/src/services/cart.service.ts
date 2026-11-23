@@ -1,4 +1,10 @@
-import { Injectable, Inject, Logger, Scope } from '@nestjs/common'
+import {
+  Injectable,
+  Inject,
+  Logger,
+  NotFoundException,
+  Scope,
+} from '@nestjs/common'
 import { LANGUAGE_TOKEN } from '@core/i18n'
 import { resolveCurrencyFromLanguage } from '@core/i18n/currency-utils'
 import { resolveCountryFromLanguage } from '@core/i18n/language-tag-utils'
@@ -31,6 +37,7 @@ import {
   CART_LINE_ITEM_MAX_QUANTITY,
 } from '@config/constants'
 import { CartApiResponseSchema, type CartApiResponse } from '../schemas/cart'
+import { isNotFoundError } from '../helpers/is-not-found-error'
 import {
   CartUpdateActionSchema,
   type CartUpdateAction,
@@ -85,14 +92,21 @@ export class CartService {
 
   private async getCartVersion(cartId: string): Promise<number> {
     const client = await this.getClient()
-    const response = await client
-      .me()
-      .carts()
-      .withId({ ID: cartId })
-      .get()
-      .execute()
+    try {
+      const response = await client
+        .me()
+        .carts()
+        .withId({ ID: cartId })
+        .get()
+        .execute()
 
-    return CartApiResponseSchema.parse(response.body).version
+      return CartApiResponseSchema.parse(response.body).version
+    } catch (error) {
+      if (isNotFoundError(error)) {
+        throw new NotFoundException(`Cart not found: ${cartId}`)
+      }
+      throw error
+    }
   }
 
   private async processCartResponse(
@@ -260,22 +274,29 @@ export class CartService {
   ): Promise<CartResponse> {
     const currentLanguage = await this.getCurrentLanguage()
     const client = await this.getClient()
-    const response = await client
-      .me()
-      .carts()
-      .withId({ ID: cartId })
-      .get({
-        queryArgs: {
-          expand,
-        },
-      })
-      .execute()
+    try {
+      const response = await client
+        .me()
+        .carts()
+        .withId({ ID: cartId })
+        .get({
+          queryArgs: {
+            expand,
+          },
+        })
+        .execute()
 
-    return this.processCartResponse(
-      response.body,
-      currentLanguage,
-      withInventory
-    )
+      return this.processCartResponse(
+        response.body,
+        currentLanguage,
+        withInventory
+      )
+    } catch (error) {
+      if (isNotFoundError(error)) {
+        throw new NotFoundException(`Cart not found: ${cartId}`)
+      }
+      throw error
+    }
   }
 
   async createCart(): Promise<CartResponse> {

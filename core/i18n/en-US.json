@@ -33,6 +33,9 @@
   "legalBar": {
     "copyright": "© 2026 SHOPin storefront accelerator."
   },
+  "footer": {
+    "callUs": "Call us: {phone}"
+  },
   "common": {
     "welcomeMessage": "Welcome to our application!",
     "yes": "Yes",
@@ -54,7 +57,8 @@
       "label": "Quantity",
       "decreaseTo": "{label}: decrease to {value}",
       "increaseTo": "{label}: increase to {value}",
-      "currentValue": "{label}: current value is {value}"
+      "currentValue": "{label}: current value is {value}",
+      "remove": "{label}: remove"
     },
     "scrollLeft": "Scroll left",
     "scrollRight": "Scroll right",
@@ -62,6 +66,7 @@
     "showPassword": "Show password",
 
     "viewAll": "View all",
+    "temporaryEmailServiceNotice": "Button and link are temporary until email service provider is set up",
     "logoAlt": "Shopin logo",
     "navigation": "Navigation",
     "mobileNavigationMenu": "Mobile navigation menu",
@@ -122,7 +127,8 @@
       "loadMore": "Load more photos",
       "dialogTitle": "Image Gallery",
       "dialogDescription": "Browse through product images",
-      "closeButtonAria": "Close gallery"
+      "closeButtonAria": "Close gallery",
+      "thumbnailAria": "Image {current} of {total}"
     },
     "buyBox": {
       "notSoldHere": "Not available in this store",
@@ -207,8 +213,12 @@
     "continueShopping": "Continue shopping",
     "item": {
       "quantity": "Quantity",
+      "quantityFor": "Quantity of {name}",
       "remove": "Remove",
       "removeAction": "Remove item",
+      "removeNamed": "Remove {name}",
+      "unitPrice": "Unit price",
+      "perUnit": "each",
       "addToWishlist": "Add to wishlist",
       "artNumber": "Art. No.",
       "color": "Color",
@@ -263,7 +273,8 @@
     "addToCartModal": {
       "toastMessage": "Good choice. Item has been added to cart.",
       "moreProducts": "More products",
-      "goToCart": "Go to cart"
+      "goToCart": "Go to cart",
+      "continue": "Continue shopping"
     },
     "empty": {
       "title": "Your cart is currently empty.",
@@ -675,8 +686,10 @@
       "title": "Delivery",
       "free": "Free",
       "freeShippingThreshold": "Free shipping over {amount}",
+      "deliveryTime": "Delivery in {time}",
       "noMethodsAvailable": "No shipping methods available for your shipping address. This may be due to your language/currency selection. Please try selecting a different language or currency.",
-      "saveError": "Failed to save shipping method. Please try again."
+      "saveError": "Failed to save shipping method. Please try again.",
+      "loadError": "Failed to load shipping methods. Please try again."
     },
     "billing": {
       "title": "Billing Address",
@@ -732,7 +745,7 @@
       "confirmationMessage": "Order No. {orderNumber} has been placed. A confirmation email will be sent shortly to {email}.",
       "orderDetails": "Order Details",
       "orderNumber": "Order Number: {orderNumber}",
-      "deliveryTime": "Delivery in 2-3 working days",
+      "deliveryTime": "Delivery in {time}",
       "delivery": "Delivery",
       "deliveryAddress": "{name}, {address}, {city}, {country}",
       "deliveryMethod": "Delivery Method",
@@ -790,5 +803,26 @@
   "productCard": {
     "linkAriaLabel": "View details for {name}",
     "omnibusPrice": "30-day best price:"
+  },
+  "dataSourceSelector": {
+    "title": "Data Source Configuration",
+    "intro": "Select which data source the application should use for fetching products, categories and content.",
+    "select": "Select",
+    "selected": "Selected",
+    "currentSelection": "Current selection:",
+    "sources": {
+      "mock-set": {
+        "name": "Mock API",
+        "description": "Use mock data for development and testing"
+      },
+      "commercetools-set": {
+        "name": "commercetools API",
+        "description": "Use commercetools API for product data"
+      },
+      "commercetools-algolia-set": {
+        "name": "commercetools API + Algolia",
+        "description": "Use commercetools API with Algolia-powered search"
+      }
+    }
   }
 }
