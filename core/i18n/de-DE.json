@@ -33,6 +33,9 @@
   "legalBar": {
     "copyright": "© 2026 SHOPin storefront accelerator."
   },
+  "footer": {
+    "callUs": "Rufen Sie uns an: {phone}"
+  },
   "common": {
     "welcomeMessage": "Willkommen in unserer Anwendung!",
     "yes": "Ja",
@@ -54,13 +57,15 @@
       "label": "Menge",
       "decreaseTo": "{label}: auf {value} verringern",
       "increaseTo": "{label}: auf {value} erhöhen",
-      "currentValue": "{label}: aktueller Wert ist {value}"
+      "currentValue": "{label}: aktueller Wert ist {value}",
+      "remove": "{label}: entfernen"
     },
     "scrollLeft": "Nach links scrollen",
     "scrollRight": "Nach rechts scrollen",
     "hidePassword": "Passwort ausblenden",
     "showPassword": "Passwort anzeigen",
     "viewAll": "Alle anzeigen",
+    "temporaryEmailServiceNotice": "Schaltfläche und Link sind vorläufig, bis der E-Mail-Dienst eingerichtet ist",
     "logoAlt": "Shopin Logo",
     "navigation": "Navigation",
     "mobileNavigationMenu": "Mobile Navigation Menü",
@@ -121,7 +126,8 @@
       "loadMore": "Mehr Fotos laden",
       "dialogTitle": "Bildergalerie",
       "dialogDescription": "Durch Produktbilder blättern",
-      "closeButtonAria": "Galerie schließen"
+      "closeButtonAria": "Galerie schließen",
+      "thumbnailAria": "Bild {current} von {total}"
     },
     "buyBox": {
       "notSoldHere": "In diesem Shop nicht erhältlich",
@@ -206,8 +212,12 @@
     "continueShopping": "Weiter einkaufen",
     "item": {
       "quantity": "Menge",
+      "quantityFor": "Menge von {name}",
       "remove": "Entfernen",
       "removeAction": "Artikel entfernen",
+      "removeNamed": "{name} entfernen",
+      "unitPrice": "Stückpreis",
+      "perUnit": "pro Stück",
       "addToWishlist": "Zur Wunschliste hinzufügen",
       "artNumber": "Art.-Nr.",
       "color": "Farbe",
@@ -656,8 +666,10 @@
       "title": "Lieferung",
       "free": "Kostenlos",
       "freeShippingThreshold": "Kostenloser Versand ab {amount}",
+      "deliveryTime": "Lieferzeit: {time}",
       "noMethodsAvailable": "Keine Versandarten für Ihre Lieferadresse verfügbar. Dies kann an Ihrer Sprach-/Währungsauswahl liegen. Bitte versuchen Sie, eine andere Sprache oder Währung auszuwählen.",
-      "saveError": "Fehler beim Speichern der Versandart. Bitte versuchen Sie es erneut."
+      "saveError": "Fehler beim Speichern der Versandart. Bitte versuchen Sie es erneut.",
+      "loadError": "Fehler beim Laden der Versandarten. Bitte versuchen Sie es erneut."
     },
     "billing": {
       "title": "Rechnungsadresse",
@@ -713,7 +725,7 @@
       "confirmationMessage": "Die Bestellung Nr. {orderNumber} wurde aufgegeben. Eine Bestätigungs-E-Mail wird in Kürze an {email} gesendet werden.",
       "orderDetails": "Bestelldetails",
       "orderNumber": "Bestellungsnummer: {orderNumber}",
-      "deliveryTime": "Lieferung in 2-3 Werktagen",
+      "deliveryTime": "Lieferzeit: {time}",
       "delivery": "Lieferung",
       "deliveryAddress": "{name}, {address}, {city}, {country}",
       "deliveryMethod": "Lieferart",
@@ -771,5 +783,26 @@
   "productCard": {
     "linkAriaLabel": "{name} ansehen",
     "omnibusPrice": "30-Tage Bestpreis:"
+  },
+  "dataSourceSelector": {
+    "title": "Datenquelle konfigurieren",
+    "intro": "Wählen Sie aus, welche Datenquelle die Anwendung für Produkte, Kategorien und Inhalte verwenden soll.",
+    "select": "Auswählen",
+    "selected": "Ausgewählt",
+    "currentSelection": "Aktuelle Auswahl:",
+    "sources": {
+      "mock-set": {
+        "name": "Mock-API",
+        "description": "Mock-Daten für Entwicklung und Tests verwenden"
+      },
+      "commercetools-set": {
+        "name": "commercetools-API",
+        "description": "commercetools-API für Produktdaten verwenden"
+      },
+      "commercetools-algolia-set": {
+        "name": "commercetools-API + Algolia",
+        "description": "commercetools-API mit Algolia-Suche verwenden"
+      }
+    }
   }
 }

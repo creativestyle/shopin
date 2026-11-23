@@ -7,6 +7,7 @@ import type {
 } from '@core/contracts/cart/cart'
 import { AddressBaseSchema } from '@core/contracts/address/address-base'
 import type { LocalizedStringApiResponse } from '../schemas/localized-string'
+import { SHIPPING_METHOD_DELIVERY_TIME_FIELD } from '../schemas/shipping-method-custom'
 import { getLocalizedString } from '../helpers/get-localized-string'
 import { getLocalizedProductSlug } from '../helpers/get-localized-product-slug'
 import { calculateTaxFromCart } from '../helpers/calculate-tax-from-cart'
@@ -183,7 +184,8 @@ export function calculateItemCount(lineItems: LineItemResponse[]): number {
  * Only maps if shippingMethod is present to ensure we have a valid ID
  */
 function mapShippingInfo(
-  shippingInfo: CartApiResponse['shippingInfo']
+  shippingInfo: CartApiResponse['shippingInfo'],
+  language: string
 ): CartResponse['shippingInfo'] {
   if (!shippingInfo || !shippingInfo.shippingMethod) {
     return undefined
@@ -192,6 +194,12 @@ function mapShippingInfo(
   return {
     shippingMethodId: shippingInfo.shippingMethod.id,
     shippingMethodName: shippingInfo.shippingMethodName,
+    deliveryTime: getLocalizedString(
+      shippingInfo.shippingMethod.obj?.custom?.fields?.[
+        SHIPPING_METHOD_DELIVERY_TIME_FIELD
+      ],
+      language
+    ),
     price: createBasicPrice(shippingInfo.price.centAmount, {
       currency: shippingInfo.price.currencyCode,
     })!,
@@ -268,7 +276,7 @@ export function mapCartToResponse(
   const currency = cart.totalPrice.currencyCode
   const itemCount = calculateItemCount(lineItems)
 
-  const shippingInfo = mapShippingInfo(cart.shippingInfo)
+  const shippingInfo = mapShippingInfo(cart.shippingInfo, language)
   const paymentInfo = mapPaymentInfo(cart.paymentInfo)
 
   return {

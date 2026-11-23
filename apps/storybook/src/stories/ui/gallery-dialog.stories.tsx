@@ -1,30 +1,43 @@
 import type { Meta, StoryObj } from '@storybook/react'
 import { useState } from 'react'
-import { GalleryDialog } from '@/components/ui/gallery-dialog'
+import {
+  GalleryDialog,
+  type GalleryDialogProps,
+} from '@/components/ui/gallery-dialog'
 import { Button } from '@/components/ui/button'
+
+const createImages = (count: number) =>
+  Array.from({ length: count }, (_, i) => ({
+    src: './product-image.png',
+    alt: `Image ${i + 1}`,
+  }))
 
 const meta: Meta<typeof GalleryDialog> = {
   title: 'UI/GalleryDialog',
   component: GalleryDialog,
   tags: ['autodocs'],
+  args: {
+    images: createImages(10),
+    startIndex: 0,
+  },
+  argTypes: {
+    isOpen: { control: false },
+    onClose: { control: false },
+  },
+  render: (args) => <GalleryDialogStory {...args} />,
 }
 
 export default meta
 type Story = StoryObj<typeof meta>
 
-const GalleryDialogStory = () => {
+function GalleryDialogStory(args: GalleryDialogProps) {
   const [isOpen, setIsOpen] = useState(false)
-  const images = [
-    { src: './product-image.png', alt: 'Image 1' },
-    { src: './product-image.png', alt: 'Image 2' },
-  ]
 
   return (
     <>
       <Button onClick={() => setIsOpen(true)}>Open Gallery</Button>
       <GalleryDialog
-        images={images}
-        startIndex={0}
+        {...args}
         isOpen={isOpen}
         onClose={() => setIsOpen(false)}
       />
@@ -32,6 +45,10 @@ const GalleryDialogStory = () => {
   )
 }
 
-export const Default: Story = {
-  render: () => <GalleryDialogStory />,
+export const Default: Story = {}
+
+export const FewImages: Story = {
+  args: {
+    images: createImages(4),
+  },
 }

@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import { Carousel, CarouselSlide } from '../'
 
 // Mock window.matchMedia
@@ -158,6 +158,81 @@ describe('Carousel', () => {
       )
 
       expect(screen.getByRole('region')).toBeInTheDocument()
+    })
+  })
+
+  describe('fullbleed', () => {
+    it('applies ui-fullbleed by default', () => {
+      render(
+        <Carousel>
+          <CarouselSlide>Slide 1</CarouselSlide>
+        </Carousel>
+      )
+
+      expect(screen.getByRole('region')).toHaveClass('ui-fullbleed')
+    })
+
+    it('omits ui-fullbleed when fullbleed is false', () => {
+      render(
+        <Carousel fullbleed={false}>
+          <CarouselSlide>Slide 1</CarouselSlide>
+        </Carousel>
+      )
+
+      expect(screen.getByRole('region')).not.toHaveClass('ui-fullbleed')
+    })
+  })
+
+  describe('navigationStep', () => {
+    const SLIDE_WIDTH = 100
+
+    const renderScrollableCarousel = (navigationStep?: number) => {
+      render(
+        <Carousel
+          gridConfig={3}
+          scrollbar={false}
+          navigationStep={navigationStep}
+        >
+          {Array.from({ length: 6 }, (_, i) => (
+            <CarouselSlide key={i}>Slide {i + 1}</CarouselSlide>
+          ))}
+        </Carousel>
+      )
+
+      const scroller = screen
+        .getByRole('region')
+        .querySelector<HTMLElement>('[role=group]')!
+      Object.defineProperty(scroller, 'scrollWidth', { value: 600 })
+      Object.defineProperty(scroller, 'clientWidth', { value: 300 })
+      scroller.scrollTo = jest.fn()
+      screen.getAllByRole('group', { name: /slideXofY/ }).forEach((slide) => {
+        jest
+          .spyOn(slide, 'getBoundingClientRect')
+          .mockReturnValue({ width: SLIDE_WIDTH } as DOMRect)
+      })
+      fireEvent.scroll(scroller)
+
+      return scroller
+    }
+
+    it('scrolls by a whole group of slides by default', () => {
+      const scroller = renderScrollableCarousel()
+
+      fireEvent.click(screen.getByRole('button', { name: /nextSlide/ }))
+
+      expect(scroller.scrollTo).toHaveBeenCalledWith(
+        expect.objectContaining({ left: SLIDE_WIDTH * 3 })
+      )
+    })
+
+    it('scrolls by one slide when navigationStep is 1', () => {
+      const scroller = renderScrollableCarousel(1)
+
+      fireEvent.click(screen.getByRole('button', { name: /nextSlide/ }))
+
+      expect(scroller.scrollTo).toHaveBeenCalledWith(
+        expect.objectContaining({ left: SLIDE_WIDTH })
+      )
     })
   })
 })

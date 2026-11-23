@@ -1,29 +1,5 @@
 import { z } from 'zod'
-
-const richTextLinksAssetsSchema = z.object({
-  assets: z
-    .object({
-      block: z
-        .array(
-          z.object({
-            sys: z.object({ id: z.string().optional() }).optional(),
-            url: z.string().optional().nullable(),
-            title: z.string().optional().nullable(),
-          })
-        )
-        .optional(),
-      hyperlink: z
-        .array(
-          z.object({
-            sys: z.object({ id: z.string().optional() }).optional(),
-            url: z.string().optional().nullable(),
-            title: z.string().optional().nullable(),
-          })
-        )
-        .optional(),
-    })
-    .optional(),
-})
+import { RichTextLinksSchema } from '../rich-text'
 
 export const TeaserRichTextApiResponseSchema = z.object({
   __typename: z.literal('TeaserRichText'),
@@ -31,7 +7,7 @@ export const TeaserRichTextApiResponseSchema = z.object({
   richText: z
     .object({
       json: z.unknown().optional().nullable(),
-      links: richTextLinksAssetsSchema.optional(),
+      links: RichTextLinksSchema.optional(),
     })
     .optional()
     .nullable(),

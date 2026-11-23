@@ -99,6 +99,86 @@ describe('QuantitySwitcher', () => {
     })
   })
 
+  describe('Remove at minimum', () => {
+    it('calls onRemove instead of onDecrease when value equals min', async () => {
+      const handleDecrease = jest.fn()
+      const handleRemove = jest.fn()
+      render(
+        <QuantitySwitcher
+          value={1}
+          min={1}
+          onDecrease={handleDecrease}
+          onIncrease={jest.fn()}
+          onRemove={handleRemove}
+          removeLabel='Remove Shirt'
+        />
+      )
+
+      await user.click(screen.getByRole('button', { name: 'Remove Shirt' }))
+
+      expect(handleRemove).toHaveBeenCalledTimes(1)
+      expect(handleDecrease).not.toHaveBeenCalled()
+    })
+
+    it('enables the button and uses removeLabel as its name at min', () => {
+      render(
+        <QuantitySwitcher
+          value={1}
+          min={1}
+          onDecrease={jest.fn()}
+          onIncrease={jest.fn()}
+          onRemove={jest.fn()}
+          removeLabel='Remove Shirt'
+        />
+      )
+
+      expect(screen.getByRole('button', { name: 'Remove Shirt' })).toBeEnabled()
+      expect(
+        screen.queryByRole('button', { name: /decrease/i })
+      ).not.toBeInTheDocument()
+    })
+
+    it('calls onDecrease when value is above min even with onRemove', async () => {
+      const handleDecrease = jest.fn()
+      const handleRemove = jest.fn()
+      render(
+        <QuantitySwitcher
+          value={2}
+          min={1}
+          onDecrease={handleDecrease}
+          onIncrease={jest.fn()}
+          onRemove={handleRemove}
+          removeLabel='Remove Shirt'
+        />
+      )
+
+      await user.click(screen.getByRole('button', { name: /decrease/i }))
+
+      expect(handleDecrease).toHaveBeenCalledTimes(1)
+      expect(handleRemove).not.toHaveBeenCalled()
+    })
+
+    it('keeps the button disabled at min when disabled is true', async () => {
+      const handleRemove = jest.fn()
+      render(
+        <QuantitySwitcher
+          value={1}
+          min={1}
+          disabled
+          onDecrease={jest.fn()}
+          onIncrease={jest.fn()}
+          onRemove={handleRemove}
+          removeLabel='Remove Shirt'
+        />
+      )
+
+      const removeButton = screen.getByRole('button', { name: 'Remove Shirt' })
+      expect(removeButton).toBeDisabled()
+      await user.click(removeButton)
+      expect(handleRemove).not.toHaveBeenCalled()
+    })
+  })
+
   describe('Input validation', () => {
     it('calls onChange with validated value on blur', async () => {
       const handleChange = jest.fn()

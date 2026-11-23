@@ -9,7 +9,10 @@ import { getSelectorLayoutClass } from './selector-utils'
 
 export type ColorOption = ColorOptionItemResponse
 
-export interface ColorSelectorProps extends SelectorComponentProps {
+export interface ColorSelectorProps extends Omit<
+  SelectorComponentProps,
+  'layout'
+> {
   options: ColorOption[]
 }
 
@@ -18,10 +21,9 @@ export const ColorSelector: React.FC<ColorSelectorProps> = ({
   value,
   onChange,
   className,
-  layout = 'inline',
 }) => {
   return (
-    <div className={cn(getSelectorLayoutClass(layout), className)}>
+    <div className={cn(getSelectorLayoutClass('inline'), className)}>
       {options.map((opt) => {
         const isSelected = value === opt.label
         return (

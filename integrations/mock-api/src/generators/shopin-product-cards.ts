@@ -1,6 +1,7 @@
 import type { ProductCardResponse } from '@core/contracts/product-collection/product-card'
 import type { MockApi } from '../client/client.module'
 import { createShopinBasicPrice } from './shopin-basic-price'
+import { getShopinProductVariantSummary } from './shopin-product-details'
 
 type Faker = ReturnType<MockApi['getFaker']>
 
@@ -63,4 +64,15 @@ export function createShopinProductCardList(
     },
     { count }
   )
+}
+
+/** Re-seeds faker, so call it only after all other generation is done. */
+export function withShopinVariantSummary<T extends ProductCardResponse>(
+  faker: Faker,
+  cards: T[]
+): T[] {
+  return cards.map((card) => ({
+    ...card,
+    ...getShopinProductVariantSummary(faker, card.slug),
+  }))
 }
