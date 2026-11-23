@@ -6,7 +6,10 @@ jest.mock('react', () => ({ cache: <T>(fn: T) => fn }))
 jest.mock('@config/constants', () => ({
   listLocales: jest.fn(),
   urlPrefixToRfc: jest.fn(),
+  PREVIEW_TOKEN_COOKIE: 'preview_token',
 }))
+jest.mock('next/headers', () => ({ cookies: jest.fn() }))
+jest.mock('@/lib/draft-mode', () => ({ isPreviewTokenValid: jest.fn() }))
 jest.mock('@/features/product/get-product-page', () => ({
   getProductPage: jest.fn(),
 }))
@@ -31,6 +34,8 @@ import { getProductPage } from '@/features/product/get-product-page'
 import { getProductCollectionPage } from '@/features/productCollection/get-product-collection-page'
 import { getContentPage } from '@/features/content/get-content-page'
 import { isHomepageSlug } from '@/features/content/homepage-slug'
+import { cookies } from 'next/headers'
+import { isPreviewTokenValid } from '@/lib/draft-mode'
 
 function mocks() {
   const config = jest.requireMock('@config/constants') as {
@@ -46,7 +51,18 @@ function mocks() {
     getProductCollectionPage: jest.mocked(getProductCollectionPage),
     getContentPage: jest.mocked(getContentPage),
     isHomepageSlug: jest.mocked(isHomepageSlug),
+    cookies: jest.mocked(cookies),
+    isPreviewTokenValid: jest.mocked(isPreviewTokenValid),
   }
+}
+
+function withPreviewCookie(valid: boolean) {
+  const m = mocks()
+  m.cookies.mockResolvedValue({
+    get: (name: string) =>
+      name === 'preview_token' ? { name, value: 'tok' } : undefined,
+  } as any)
+  m.isPreviewTokenValid.mockReturnValue(valid)
 }
 
 describe('resolveLocalizedPath', () => {
@@ -62,6 +78,7 @@ describe('resolveLocalizedPath', () => {
     )
     m.isHomepageSlug.mockReturnValue(false)
     m.isVariantSegment.mockReturnValue(true)
+    withPreviewCookie(false)
   })
 
   it('sets variant context via ALS so getRequestVariant() reads it inside the loader when variantSegment is provided', async () => {
@@ -195,5 +212,85 @@ describe('resolveLocalizedPath', () => {
     expect(result).toBe('/de/p/product-slug')
     expect(m.getProductPage).not.toHaveBeenCalled()
     expect(m.decodeVariant).not.toHaveBeenCalled()
+  })
+
+  describe('draft session', () => {
+    it('resolves an explicit /preview path from draft content and keeps the segment', async () => {
+      const m = mocks()
+      withPreviewCookie(true)
+      m.getContentPage.mockResolvedValue({
+        slugByLocale: { 'en-US': 'about-us' },
+      } as any)
+
+      const result = await resolveLocalizedPath({
+        path: '/de/preview/ueber-uns',
+        targetUrlPrefix: 'en',
+        variantSegment: null,
+      })
+
+      expect(m.getContentPage).toHaveBeenCalledWith('ueber-uns', true)
+      expect(result).toBe('/en/preview/about-us')
+    })
+
+    it('loads draft content for a clean URL when the cookie is valid', async () => {
+      const m = mocks()
+      withPreviewCookie(true)
+      m.getContentPage.mockResolvedValue({
+        slugByLocale: { 'en-US': 'about-us' },
+      } as any)
+
+      const result = await resolveLocalizedPath({
+        path: '/de/ueber-uns',
+        targetUrlPrefix: 'en',
+        variantSegment: null,
+      })
+
+      expect(m.getContentPage).toHaveBeenCalledWith('ueber-uns', true)
+      expect(result).toBe('/en/about-us')
+    })
+
+    it('loads published content when the cookie is invalid', async () => {
+      const m = mocks()
+      withPreviewCookie(false)
+      m.getContentPage.mockResolvedValue({
+        slugByLocale: { 'en-US': 'about-us' },
+      } as any)
+
+      await resolveLocalizedPath({
+        path: '/de/preview/ueber-uns',
+        targetUrlPrefix: 'en',
+        variantSegment: null,
+      })
+
+      expect(m.getContentPage).toHaveBeenCalledWith('ueber-uns', false)
+    })
+
+    it('keeps app routes on published content during a draft session', async () => {
+      const m = mocks()
+      withPreviewCookie(true)
+      m.getContentPage.mockRejectedValue(new Error('no page'))
+
+      await resolveLocalizedPath({
+        path: '/de/cart',
+        targetUrlPrefix: 'en',
+        variantSegment: null,
+      })
+
+      expect(m.getContentPage).toHaveBeenCalledWith('cart', false)
+    })
+
+    it('keeps /preview in the fallback when the loader throws', async () => {
+      const m = mocks()
+      withPreviewCookie(true)
+      m.getContentPage.mockRejectedValue(new Error('BFF error'))
+
+      const result = await resolveLocalizedPath({
+        path: '/de/preview/ueber-uns',
+        targetUrlPrefix: 'en',
+        variantSegment: null,
+      })
+
+      expect(result).toBe('/en/preview/ueber-uns')
+    })
   })
 })

@@ -25,6 +25,7 @@
  * is generated per BFF request so the raw secret never travels on the wire.
  */
 
+import 'server-only'
 import {
   createDraftToken,
   timingSafeEqualSecrets,
@@ -37,26 +38,6 @@ import {
 } from '@config/constants'
 
 export { DRAFT_COOKIE_MAX_AGE_SEC, DRAFT_MODE_HEADER }
-
-/**
- * HttpOnly cookie carrying the signed preview token on HTTPS (production).
- * On HTTPS, /api/draft sets this with SameSite=None;Secure so it is forwarded
- * even inside Contentful's cross-site iframe. Not usable on plain HTTP.
- */
-export const PREVIEW_TOKEN_COOKIE = 'preview_token'
-
-/**
- * URL search param carrying the signed preview token on HTTP (local dev).
- * On HTTP, SameSite=None;Secure is unavailable so the token travels via URL param.
- * The proxy injects it into the internal rewrite URL (HTTPS: from cookie; HTTP: already
- * present in the URL or injected from the session cookie). The preview page validates
- * the token. The StripPreviewToken client component removes it from the address bar
- * after hydration; the session cookie keeps the session alive for reloads.
- */
-export const PREVIEW_TOKEN_INTERNAL_PARAM = '__pt'
-
-/** Non-HttpOnly UI hint set by the proxy while a draft session is active; never a credential. */
-export const PREVIEW_ACTIVE_COOKIE = 'preview_active'
 
 /** True when FRONTEND_URL is https; only the protocol is read, so any domain can serve preview. */
 export function isSiteHttps(): boolean {

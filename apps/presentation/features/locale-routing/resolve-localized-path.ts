@@ -1,8 +1,13 @@
 'use server'
 
 import { cookies } from 'next/headers'
-import { listLocales, urlPrefixToRfc } from '@config/constants'
-import { isPreviewTokenValid, PREVIEW_TOKEN_COOKIE } from '@/lib/draft-mode'
+import {
+  listLocales,
+  PREVIEW_TOKEN_COOKIE,
+  urlPrefixToRfc,
+} from '@config/constants'
+import { isPreviewTokenValid } from '@/lib/draft-mode'
+import { isAppRouteSegment } from '@/lib/app-route-segments'
 import { getProductPage } from '@/features/product/get-product-page'
 import { getProductCollectionPage } from '@/features/productCollection/get-product-collection-page'
 import { getContentPage } from '@/features/content/get-content-page'
@@ -88,7 +93,10 @@ export async function resolveLocalizedPath({
 
   const resolve = async () => {
     try {
-      const isDraft = isPreview && (await hasValidPreviewCookie())
+      // Draft sessions show clean URLs, so the cookie decides; app routes stay live as in the proxy
+      const isDraft =
+        !isAppRouteSegment(rest.split('/')[1]) &&
+        (await hasValidPreviewCookie())
       const targetPath = await resolveTargetPath(rest, targetRfc, isDraft)
       return targetPath !== null ? `${prefix}${targetPath}` : fallback
     } catch {

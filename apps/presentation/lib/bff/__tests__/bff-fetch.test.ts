@@ -3,8 +3,7 @@
  */
 import { bffFetch } from '../core/bff-fetch'
 import { AcceptLanguageUtils } from '@core/i18n'
-import { I18N_CONFIG } from '@config/constants'
-import { getDraftModeHeaderValue, DRAFT_MODE_HEADER } from '@/lib/draft-mode'
+import { I18N_CONFIG, DRAFT_MODE_HEADER } from '@config/constants'
 
 jest.mock('next/headers', () => ({
   cookies: async () => ({
@@ -14,11 +13,6 @@ jest.mock('next/headers', () => ({
 }))
 
 // No variant-key mock needed — bffFetch no longer imports from variant-key.
-
-jest.mock('@/lib/draft-mode', () => ({
-  getDraftModeHeaderValue: jest.fn(() => 'signed-draft-token'),
-  DRAFT_MODE_HEADER: 'x-next-draft-mode',
-}))
 
 function mockFetch() {
   return global.fetch as jest.MockedFunction<typeof fetch>
@@ -52,7 +46,6 @@ describe('bffFetch', () => {
       json: async () => ({}),
       text: async () => '{}',
     }) as unknown as typeof fetch
-    jest.mocked(getDraftModeHeaderValue).mockReturnValue('signed-draft-token')
   })
 
   afterEach(() => {
@@ -144,13 +137,12 @@ describe('bffFetch', () => {
   })
 
   describe('draft mode', () => {
-    it('adds draft mode header when isDraft option is true', async () => {
-      jest.mocked(getDraftModeHeaderValue).mockReturnValue('signed-draft-token')
-      await bffFetch('http://bff', 'nav', { isDraft: true })
+    it('adds draft mode header when draftToken is set', async () => {
+      await bffFetch('http://bff', 'nav', { draftToken: 'signed-draft-token' })
       expect(lastCallHeaders()[DRAFT_MODE_HEADER]).toBe('signed-draft-token')
     })
 
-    it('omits draft mode header when isDraft option is absent', async () => {
+    it('omits draft mode header when draftToken is absent', async () => {
       await bffFetch('http://bff', 'nav')
       expect(lastCallHeaders()[DRAFT_MODE_HEADER]).toBeUndefined()
     })

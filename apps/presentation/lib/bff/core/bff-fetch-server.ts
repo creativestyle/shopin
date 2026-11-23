@@ -4,6 +4,7 @@ import { bffFetch as baseBffFetch, type BffFetchOptions } from './bff-fetch'
 import { getBffServerUrl } from './bff-utils-server'
 import { getLocale } from 'next-intl/server'
 import { logger } from '@/lib/logger'
+import { getDraftModeHeaderValue } from '@/lib/draft-mode'
 import { getRequestVariant } from '@/lib/request-context/variant'
 import { variantHeaders } from '@/lib/variant/variant-key'
 
@@ -55,7 +56,7 @@ export async function createBffFetchServer(opts?: {
           extraOpts.variantHeaders = resolvedVariantHeaders
         }
         if (opts?.isDraft === true) {
-          extraOpts.isDraft = true
+          extraOpts.draftToken = getDraftModeHeaderValue()
         }
         return await baseBffFetch(
           baseUrl,

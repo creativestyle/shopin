@@ -5,6 +5,9 @@ import {
   listLocales,
   getLocale,
   CORRELATION_ID_HEADER,
+  PREVIEW_ACTIVE_COOKIE,
+  PREVIEW_TOKEN_COOKIE,
+  PREVIEW_TOKEN_INTERNAL_PARAM,
 } from '@config/constants'
 import { routing } from '@/i18n/routing'
 import {
@@ -19,32 +22,15 @@ import {
 } from '@/lib/variant/variant-key'
 import {
   isSiteHttps,
-  PREVIEW_ACTIVE_COOKIE,
-  PREVIEW_TOKEN_COOKIE,
-  PREVIEW_TOKEN_INTERNAL_PARAM,
   DRAFT_COOKIE_MAX_AGE_SEC,
   isPreviewTokenValid,
 } from '@/lib/draft-mode'
+import { isAppRouteSegment } from '@/lib/app-route-segments'
 
 const intlMiddleware = createMiddleware(routing)
 
 const knownLocalePrefixes = new Set(listLocales().map((l) => l.urlPrefix))
 const defaultLocalePrefix = getLocale(I18N_CONFIG.defaultLocale).urlPrefix
-
-// App routes with no CMS draft representation; they render normally during a draft session.
-const APP_ROUTE_SEGMENTS = new Set([
-  'account',
-  'cart',
-  'checkout',
-  'demo',
-  'forgot-password',
-  'reset-password',
-  'search',
-  'setup',
-  'sign-in',
-  'sign-up',
-  'wishlist',
-])
 
 // ─── Small helpers ────────────────────────────────────────────────────────────
 
@@ -105,7 +91,7 @@ function buildRequestContext(
   // Under an active draft cookie, clean content URLs are funneled into the /preview subtree;
   // app routes (cart, account, …) keep normal routing and show the banner client-side.
   const routeSegment = firstIsLocale ? segments[1] : firstSegment
-  const isAppRoute = !!routeSegment && APP_ROUTE_SEGMENTS.has(routeSegment)
+  const isAppRoute = isAppRouteSegment(routeSegment)
   const isPreview = isPathPreview || (isDraftActive && !isAppRoute)
 
   // Preview always uses the default variant — no A/B testing in editorial preview sessions.
@@ -133,24 +119,19 @@ function syncDraftMarkerCookie(
   response: NextResponse,
   isActive: boolean
 ): void {
-  if (isActive) {
-    const isSiteSsl = isSiteHttps()
-    response.cookies.set({
-      name: PREVIEW_ACTIVE_COOKIE,
-      value: '1',
-      path: '/',
-      maxAge: DRAFT_COOKIE_MAX_AGE_SEC,
-      secure: isSiteSsl,
-      sameSite: isSiteSsl ? 'none' : 'lax',
-    })
-  } else if (request.cookies.has(PREVIEW_ACTIVE_COOKIE)) {
-    response.cookies.set({
-      name: PREVIEW_ACTIVE_COOKIE,
-      value: '',
-      path: '/',
-      maxAge: 0,
-    })
+  if (!isActive && !request.cookies.has(PREVIEW_ACTIVE_COOKIE)) {
+    return
   }
+  // Same attributes on set and clear, or the clear is rejected in the CMS iframe
+  const isSiteSsl = isSiteHttps()
+  response.cookies.set({
+    name: PREVIEW_ACTIVE_COOKIE,
+    value: isActive ? '1' : '',
+    path: '/',
+    maxAge: isActive ? DRAFT_COOKIE_MAX_AGE_SEC : 0,
+    secure: isSiteSsl,
+    sameSite: isSiteSsl ? 'none' : 'lax',
+  })
 }
 
 // ─── Rewrite helper ───────────────────────────────────────────────────────────

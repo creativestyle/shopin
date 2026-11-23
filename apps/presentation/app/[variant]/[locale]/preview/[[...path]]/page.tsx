@@ -2,10 +2,10 @@ import { notFound, redirect } from 'next/navigation'
 import { cookies } from 'next/headers'
 import { initRouteContext } from '@/lib/request-context/route-context'
 import {
-  isPreviewTokenValid,
   PREVIEW_TOKEN_COOKIE,
   PREVIEW_TOKEN_INTERNAL_PARAM,
-} from '@/lib/draft-mode'
+} from '@config/constants'
+import { isPreviewTokenValid } from '@/lib/draft-mode'
 import { HttpError } from '@/lib/error-utils'
 import { getHomepageSlugForLocale } from '@/features/content/homepage-slug'
 import { parsePlpSearchParams } from '@/features/productCollection/parse-search-params'

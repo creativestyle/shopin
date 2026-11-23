@@ -7,39 +7,33 @@
  * before routing, so a forged/stale cookie no longer funnels clean URLs into /preview; but a
  * leftover cookie can still surface on a direct /preview/… visit, where the preview page
  * detects the missing/invalid token and redirects here to clear it (a Server Component cannot
- * clear an HttpOnly cookie, only a route handler can). isSafeDraftRedirectPath guards the
- * redirect target against open-redirect / path traversal.
+ * clear an HttpOnly cookie, only a route handler can). The real isSafeDraftRedirectPath and
+ * relativeRedirect guard the redirect target against open-redirect / path traversal.
  */
 import { NextRequest } from 'next/server'
 
-jest.mock('@/lib/draft-mode', () => ({
-  isSafeDraftRedirectPath: jest.fn(),
-  isSiteHttps: jest.requireActual('@/lib/draft-mode').isSiteHttps,
-  PREVIEW_ACTIVE_COOKIE: 'preview_active',
-  PREVIEW_TOKEN_COOKIE: 'preview_token',
-  PREVIEW_TOKEN_INTERNAL_PARAM: '__pt',
-}))
-
 import { GET } from '../route'
 
-function safePathMock() {
-  return (
-    jest.requireMock('@/lib/draft-mode') as {
-      isSafeDraftRedirectPath: jest.Mock
-    }
-  ).isSafeDraftRedirectPath
-}
+const ORIGIN = 'https://shop.example.com'
 
 function makeRequest(params: Record<string, string>): NextRequest {
-  const url = new URL('/api/draft/exit', 'https://shop.example.com')
+  const url = new URL('/api/draft/exit', ORIGIN)
   Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v))
   return new NextRequest(url.toString())
 }
 
 function locationUrl(res: Response): URL {
-  const location = res.headers.get('location') ?? ''
-  expect(location.startsWith('/')).toBe(true)
-  return new URL(location, 'http://placeholder')
+  const url = new URL(res.headers.get('location') ?? '', ORIGIN)
+  expect(url.origin).toBe(ORIGIN)
+  return url
+}
+
+function clearedCookie(res: Response, name: string): string {
+  const cookie = res.headers
+    .getSetCookie()
+    .find((c) => c.startsWith(`${name}=`))
+  expect(cookie).toBeDefined()
+  return (cookie ?? '').toLowerCase()
 }
 
 function locationPath(res: Response): string {
@@ -51,17 +45,45 @@ function locationParams(res: Response): URLSearchParams {
 }
 
 describe('GET /api/draft/exit', () => {
-  beforeEach(() => {
-    jest.clearAllMocks()
-    safePathMock().mockReturnValue(true)
+  const originalFrontendUrl = process.env.FRONTEND_URL
+
+  afterEach(() => {
+    if (originalFrontendUrl === undefined) {
+      delete process.env.FRONTEND_URL
+    } else {
+      process.env.FRONTEND_URL = originalFrontendUrl
+    }
   })
 
-  it('clears the preview_token cookie (empty value, Max-Age=0, Path=/)', () => {
+  it.each(['preview_token', 'preview_active'])(
+    'clears the %s cookie (empty value, Max-Age=0, Path=/)',
+    (name) => {
+      const res = GET(makeRequest({ locale: 'de', slug: 'about' }))
+      const cookie = clearedCookie(res, name)
+      expect(cookie).toContain(`${name}=;`)
+      expect(cookie).toContain('max-age=0')
+      expect(cookie).toContain('path=/')
+    }
+  )
+
+  it('clears both cookies with Secure; SameSite=None when FRONTEND_URL is https', () => {
+    process.env.FRONTEND_URL = 'https://shop.example.com'
     const res = GET(makeRequest({ locale: 'de', slug: 'about' }))
-    const cookie = (res.headers.get('set-cookie') ?? '').toLowerCase()
-    expect(cookie).toContain('preview_token=;')
-    expect(cookie).toContain('max-age=0')
-    expect(cookie).toContain('path=/')
+    for (const name of ['preview_token', 'preview_active']) {
+      const cookie = clearedCookie(res, name)
+      expect(cookie).toContain('secure')
+      expect(cookie).toContain('samesite=none')
+    }
+  })
+
+  it('clears both cookies with SameSite=Lax and no Secure when FRONTEND_URL is http', () => {
+    process.env.FRONTEND_URL = 'http://localhost:3000'
+    const res = GET(makeRequest({ locale: 'de', slug: 'about' }))
+    for (const name of ['preview_token', 'preview_active']) {
+      const cookie = clearedCookie(res, name)
+      expect(cookie).toContain('samesite=lax')
+      expect(cookie).not.toContain('secure')
+    }
   })
 
   it('307-redirects to /<locale>/<slug> for a non-default locale', () => {
@@ -91,13 +113,37 @@ describe('GET /api/draft/exit', () => {
   })
 
   it('falls back to / when the target is unsafe (open-redirect guard)', () => {
-    safePathMock().mockReturnValue(false)
     const res = GET(makeRequest({ locale: 'de', slug: '../../evil' }))
     expect(locationPath(res)).toBe('/')
     // The cookie is still cleared regardless of redirect target.
-    expect((res.headers.get('set-cookie') ?? '').toLowerCase()).toContain(
-      'max-age=0'
-    )
+    expect(clearedCookie(res, 'preview_token')).toContain('max-age=0')
+  })
+
+  it.each([
+    ['\\evil.com', ''],
+    ['/\\evil.com', ''],
+    ['\tevil.com', ''],
+    ['xx', 'about'],
+  ])(
+    'falls back to / for a locale that is not a configured prefix (%j)',
+    (locale, slug) => {
+      const res = GET(makeRequest({ locale, slug }))
+      expect(locationPath(res)).toBe('/')
+    }
+  )
+
+  it('keeps a backslash slug on the request origin', () => {
+    const res = GET(makeRequest({ locale: 'de', slug: '\\evil.com' }))
+    expect(locationPath(res)).toBe('/de/%5Cevil.com')
+  })
+
+  it.each([
+    ['de', 'über-uns', '/de/%C3%BCber-uns'],
+    ['en', '日本/ページ', '/%E6%97%A5%E6%9C%AC/%E3%83%9A%E3%83%BC%E3%82%B8'],
+  ])('percent-encodes a non-ASCII slug (%s/%s)', (locale, slug, expected) => {
+    const res = GET(makeRequest({ locale, slug }))
+    expect(res.status).toBe(307)
+    expect(res.headers.get('location')).toBe(expected)
   })
 
   it('falls back to / when locale is missing', () => {

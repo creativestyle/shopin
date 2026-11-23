@@ -1,15 +1,17 @@
 import { NextRequest } from 'next/server'
-import { I18N_CONFIG, getLocale } from '@config/constants'
 import {
-  isSafeDraftRedirectPath,
-  isSiteHttps,
+  I18N_CONFIG,
+  getLocale,
+  listLocales,
   PREVIEW_ACTIVE_COOKIE,
   PREVIEW_TOKEN_COOKIE,
   PREVIEW_TOKEN_INTERNAL_PARAM,
-} from '@/lib/draft-mode'
-import { relativeRedirect } from '@/lib/relative-redirect'
+} from '@config/constants'
+import { isSafeDraftRedirectPath, isSiteHttps } from '@/lib/draft-mode'
+import { encodePathSegments, relativeRedirect } from '@/lib/relative-redirect'
 
 const defaultLocalePrefix = getLocale(I18N_CONFIG.defaultLocale).urlPrefix
+const localePrefixes = new Set(listLocales().map((l) => l.urlPrefix))
 
 /**
  * Exit draft preview: clears the preview_token cookie and 307-redirects to a clean path.
@@ -21,10 +23,11 @@ const defaultLocalePrefix = getLocale(I18N_CONFIG.defaultLocale).urlPrefix
  * is gone, the redirected clean URL routes normally. Also usable as an explicit "exit preview"
  * action for editors.
  *
- * Query params: `locale` and `slug` are control params describing where to return. The target is
- * validated with isSafeDraftRedirectPath to block open-redirect/path-traversal; anything unsafe
- * falls back to the site root. The default locale prefix is omitted to match intlMiddleware's
- * localePrefix:'as-needed' and avoid a needless extra redirect hop.
+ * Query params: `locale` and `slug` are control params describing where to return. `locale` must be
+ * a configured URL prefix and the slug passes isSafeDraftRedirectPath; anything else falls back to
+ * the site root. Slug segments are percent-encoded and relativeRedirect rejects any off-host
+ * target. The default locale prefix is omitted to match intlMiddleware's localePrefix:'as-needed'
+ * and avoid a needless extra redirect hop.
  *
  * Any other query params are content state (collection page/sort/filter, product variantId) and
  * are preserved on the returned URL so a broken preview session drops the user back at the same
@@ -39,12 +42,9 @@ export function GET(request: NextRequest) {
   const slug = (searchParams.get('slug') ?? '').replace(/^\/+|\/+$/g, '')
 
   let target = '/'
-  if (locale && isSafeDraftRedirectPath(locale, slug)) {
-    if (locale === defaultLocalePrefix) {
-      target = slug ? `/${slug}` : '/'
-    } else {
-      target = slug ? `/${locale}/${slug}` : `/${locale}`
-    }
+  if (localePrefixes.has(locale) && isSafeDraftRedirectPath(locale, slug)) {
+    const path = slug ? `/${encodePathSegments(slug)}` : ''
+    target = locale === defaultLocalePrefix ? path || '/' : `/${locale}${path}`
   }
 
   // Carry through the original content query params, dropping our control params and the token.

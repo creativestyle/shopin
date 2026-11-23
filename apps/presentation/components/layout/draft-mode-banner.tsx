@@ -1,38 +1,32 @@
 'use client'
 
-import { useId, useSyncExternalStore } from 'react'
+import { useId, useSyncExternalStore, type SyntheticEvent } from 'react'
 import { usePathname } from 'next/navigation'
 import { useTranslations } from 'next-intl'
-import { I18N_CONFIG, getLocale, listLocales } from '@config/constants'
-import {
-  PREVIEW_ACTIVE_COOKIE,
-  PREVIEW_TOKEN_INTERNAL_PARAM,
-} from '@/lib/draft-mode'
+import { PREVIEW_ACTIVE_COOKIE } from '@config/constants'
+import { buildExitHref } from '@/lib/draft-exit-href'
 import { StandardContainer } from '@/components/ui/standard-container'
 
-const localePrefixes = new Set(listLocales().map((l) => l.urlPrefix))
-const defaultLocalePrefix = getLocale(I18N_CONFIG.defaultLocale).urlPrefix
+const subscribeNoop = () => () => {}
 
-function buildExitHref(pathname: string, search: URLSearchParams): string {
-  const segments = pathname.split('/').filter(Boolean)
-  const locale =
-    segments[0] && localePrefixes.has(segments[0])
-      ? segments.shift()!
-      : defaultLocalePrefix
-  if (segments[0] === 'preview') {
-    segments.shift()
-  }
-  const params = new URLSearchParams(search)
-  params.delete(PREVIEW_TOKEN_INTERNAL_PARAM)
-  params.set('locale', locale)
-  params.set('slug', segments.join('/'))
-  return `/api/draft/exit?${params.toString()}`
+// Inside the CMS live-preview iframe, exiting would swap the editor's pane to published content
+function isFramed(): boolean {
+  return window.self !== window.top
 }
 
 export function DraftModeBanner() {
   const t = useTranslations('draftMode')
   const pathname = usePathname()
   const labelId = useId()
+  const framed = useSyncExternalStore(subscribeNoop, isFramed, () => false)
+
+  // Query read at interaction time: useSearchParams would need Suspense and hydrate late
+  const refreshHref = (e: SyntheticEvent<HTMLAnchorElement>) => {
+    e.currentTarget.href = buildExitHref(
+      pathname,
+      new URLSearchParams(window.location.search)
+    )
+  }
 
   return (
     <section
@@ -47,25 +41,21 @@ export function DraftModeBanner() {
           {t('label')}
         </p>
         {/* Plain anchor: the exit route handler must run to clear the HttpOnly cookie */}
-        <a
-          href={buildExitHref(pathname, new URLSearchParams())}
-          onClick={(e) => {
-            // Query read at click time: useSearchParams would need Suspense and hydrate late
-            e.currentTarget.href = buildExitHref(
-              pathname,
-              new URLSearchParams(window.location.search)
-            )
-          }}
-          className='font-semibold underline underline-offset-2 focus-visible:ring-2 focus-visible:ring-gray-900 focus-visible:outline-none'
-        >
-          {t('exit')}
-        </a>
+        {!framed && (
+          <a
+            href={buildExitHref(pathname, new URLSearchParams())}
+            onClick={refreshHref}
+            onAuxClick={refreshHref}
+            onContextMenu={refreshHref}
+            className='font-semibold underline underline-offset-2 focus-visible:ring-2 focus-visible:ring-gray-900 focus-visible:outline-none'
+          >
+            {t('exit')}
+          </a>
+        )}
       </StandardContainer>
     </section>
   )
 }
-
-const subscribeNoop = () => () => {}
 
 function hasDraftMarkerCookie(): boolean {
   return document.cookie

@@ -13,6 +13,9 @@ jest.mock('@/lib/request-context/variant', () => ({
   getRequestVariant: jest.fn(),
 }))
 jest.mock('@/lib/variant/variant-key', () => ({ variantHeaders: jest.fn() }))
+jest.mock('@/lib/draft-mode', () => ({
+  getDraftModeHeaderValue: jest.fn(() => 'signed-draft-token'),
+}))
 
 import { createBffFetchServer } from '../bff-fetch-server'
 import type { BffFetchOptions } from '../bff-fetch'
@@ -119,32 +122,32 @@ describe('createBffFetchServer', () => {
   // ─── isDraft flag ──────────────────────────────────────────────────────
 
   describe('isDraft flag', () => {
-    it('sets isDraft: true when opts.isDraft is true', async () => {
+    it('signs a draft token when opts.isDraft is true', async () => {
       mocks().getRequestVariant.mockReturnValue(VARIANT_RESOLVED)
       const client = await createBffFetchServer({ isDraft: true })
       await client.fetch('/nav')
-      expect(lastCallOptions().isDraft).toBe(true)
+      expect(lastCallOptions().draftToken).toBe('signed-draft-token')
     })
 
-    it('sets variantHeaders and isDraft when variant context and isDraft are both set', async () => {
+    it('sets variantHeaders and draftToken when variant context and isDraft are both set', async () => {
       mocks().getRequestVariant.mockReturnValue(VARIANT_RESOLVED)
       const client = await createBffFetchServer({ isDraft: true })
       await client.fetch('/nav')
       expect(lastCallOptions().variantHeaders).toEqual(VARIANT_HEADERS)
-      expect(lastCallOptions().isDraft).toBe(true)
+      expect(lastCallOptions().draftToken).toBe('signed-draft-token')
     })
 
-    it('sets isDraft: true even when variant context is undefined', async () => {
+    it('signs a draft token even when variant context is undefined', async () => {
       const client = await createBffFetchServer({ isDraft: true })
       await client.fetch('/nav')
-      expect(lastCallOptions().isDraft).toBe(true)
+      expect(lastCallOptions().draftToken).toBe('signed-draft-token')
       expect(lastCallOptions().variantHeaders).toBeUndefined()
     })
 
-    it('does not set isDraft when opts.isDraft is false or absent', async () => {
+    it('does not set draftToken when opts.isDraft is false or absent', async () => {
       const client = await createBffFetchServer({ isDraft: false })
       await client.fetch('/nav')
-      expect(lastCallOptions().isDraft).toBeUndefined()
+      expect(lastCallOptions().draftToken).toBeUndefined()
     })
   })
 

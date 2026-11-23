@@ -1,18 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { rfcToUrlPrefix, I18N_CONFIG, getLocale } from '@config/constants'
+import {
+  rfcToUrlPrefix,
+  I18N_CONFIG,
+  getLocale,
+  listLocales,
+  PREVIEW_TOKEN_COOKIE,
+  PREVIEW_TOKEN_INTERNAL_PARAM,
+} from '@config/constants'
 import { getHomepageSlugForLocale } from '@/features/content/homepage-slug'
 import {
   createPreviewToken,
   isDraftSecretValid,
   isSafeDraftRedirectPath,
   isSiteHttps,
-  PREVIEW_TOKEN_COOKIE,
-  PREVIEW_TOKEN_INTERNAL_PARAM,
   DRAFT_COOKIE_MAX_AGE_SEC,
 } from '@/lib/draft-mode'
-import { relativeRedirect } from '@/lib/relative-redirect'
+import { encodePathSegments, relativeRedirect } from '@/lib/relative-redirect'
 
 const defaultLocalePrefix = getLocale(I18N_CONFIG.defaultLocale).urlPrefix
+const localePrefixes = new Set(listLocales().map((l) => l.urlPrefix))
 
 /**
  * Draft Mode endpoint for headless CMS preview.
@@ -53,6 +59,9 @@ export function GET(request: NextRequest) {
 
   // CMS preview typically sends en-US, de-DE; our app uses URL prefix en, de
   const locale = rfcToUrlPrefix(localeParam)
+  if (!localePrefixes.has(locale)) {
+    return new NextResponse('Invalid slug or locale', { status: 400 })
+  }
 
   // Normalize slug: trim slashes; empty slug → locale homepage (e.g. en→homepage, de→startseite)
   const normalizedSlug =
@@ -64,10 +73,11 @@ export function GET(request: NextRequest) {
 
   const token = createPreviewToken()
   // Omit the default locale prefix — intlMiddleware would strip it anyway (localePrefix: 'as-needed').
+  const encodedSlug = encodePathSegments(normalizedSlug)
   const previewPath =
     locale === defaultLocalePrefix
-      ? `/preview/${normalizedSlug}`
-      : `/${locale}/preview/${normalizedSlug}`
+      ? `/preview/${encodedSlug}`
+      : `/${locale}/preview/${encodedSlug}`
 
   // Delivery is keyed on the FRONTEND_URL protocol (server-controlled), not on request headers
   // (x-forwarded-host/proto can be spoofed). On HTTPS we always use the SameSite=None;Secure

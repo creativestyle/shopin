@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { PREVIEW_TOKEN_INTERNAL_PARAM } from '@/lib/draft-mode'
+import { PREVIEW_TOKEN_INTERNAL_PARAM } from '@config/constants'
 
 /**
  * Strips the __pt token from the address bar after the preview page mounts.

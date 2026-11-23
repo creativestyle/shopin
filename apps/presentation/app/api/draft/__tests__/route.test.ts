@@ -23,8 +23,6 @@ jest.mock('@/lib/draft-mode', () => ({
   isSafeDraftRedirectPath: jest.fn(),
   createPreviewToken: jest.fn(),
   isSiteHttps: jest.requireActual('@/lib/draft-mode').isSiteHttps,
-  PREVIEW_TOKEN_COOKIE: 'preview_token',
-  PREVIEW_TOKEN_INTERNAL_PARAM: '__pt',
   DRAFT_COOKIE_MAX_AGE_SEC: 86400,
 }))
 
@@ -112,6 +110,15 @@ describe('GET /api/draft', () => {
       expect(await res.text()).toBe('Missing slug or locale')
     })
 
+    it.each(['xx-XX', '\\evil.com', '/\\evil.com'])(
+      'returns 400 for a locale that is not configured (%j)',
+      async (locale) => {
+        const res = GET(makeRequest({ ...validParams(), locale }))
+        expect(res.status).toBe(400)
+        expect(await res.text()).toBe('Invalid slug or locale')
+      }
+    )
+
     it('returns 400 when isSafeDraftRedirectPath returns false', async () => {
       draftModeMocks().isSafeDraftRedirectPath.mockReturnValue(false)
       const res = GET(makeRequest(validParams()))
@@ -135,6 +142,32 @@ describe('GET /api/draft', () => {
       // A slug of '///' passes the !slug guard but normalises to '' → homepage fallback.
       const res = GET(makeRequest({ ...validParams(), slug: '///' }))
       expect(res.headers.get('location')).toContain('/preview/homepage')
+    })
+  })
+
+  describe('slug encoding', () => {
+    it.each([
+      ['de-DE', 'über-uns', '/de/preview/%C3%BCber-uns'],
+      ['en-US', '日本', '/preview/%E6%97%A5%E6%9C%AC'],
+    ])(
+      'percent-encodes a non-ASCII slug (%s, %s)',
+      (locale, slug, expected) => {
+        const res = GET(makeRequest({ ...validParams(), locale, slug }))
+        expect(res.status).toBe(307)
+        expect(res.headers.get('location')).toBe(expected)
+      }
+    )
+
+    it('keeps the HTTP token on the request origin for a backslash slug (real guard)', () => {
+      delete process.env.FRONTEND_URL
+      draftModeMocks().isSafeDraftRedirectPath.mockImplementation(
+        jest.requireActual('@/lib/draft-mode').isSafeDraftRedirectPath
+      )
+      draftModeMocks().createPreviewToken.mockReturnValue('tok')
+      const res = GET(makeRequest({ ...validParams(), slug: '\\evil.com' }))
+      const url = new URL(res.headers.get('location') ?? '', 'http://shop.test')
+      expect(url.origin).toBe('http://shop.test')
+      expect(url.pathname).toBe('/preview/%5Cevil.com')
     })
   })
 

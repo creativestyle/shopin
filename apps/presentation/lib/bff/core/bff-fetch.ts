@@ -12,12 +12,11 @@
 
 import { I18N_CONFIG, urlPrefixToRfc } from '@config/constants'
 import { AcceptLanguageUtils, LANGUAGE_HEADER } from '@core/i18n'
-import { CORRELATION_ID_HEADER } from '@config/constants'
-import { DRAFT_MODE_HEADER, getDraftModeHeaderValue } from '@/lib/draft-mode'
+import { CORRELATION_ID_HEADER, DRAFT_MODE_HEADER } from '@config/constants'
 
 export type BffFetchOptions = RequestInit & {
-  /** Explicitly enable draft mode (preview route). When true, adds the draft header. */
-  isDraft?: boolean
+  /** Signed draft header token; set only by the server wrapper for the preview route. */
+  draftToken?: string
   /** Resolved variant headers (e.g. X-Data-Source). Set by server-side callers from the URL
    *  [variant] segment and by the client from the active pathname. When absent the BFF defaults
    *  to the default data source (commercetools-set). */
@@ -80,9 +79,6 @@ export async function bffFetch(
   const normalizedPath = path.startsWith('/') ? path : `/${path}`
   const url = `${base}${normalizedPath}`
 
-  // Draft mode is explicit — never inferred from cookies or request context.
-  const isDraftMode = options?.isDraft ?? false
-
   // Convert URL prefix back to RFC format for BFF
   const rfcLocale = locale ? urlPrefixToRfc(locale) : I18N_CONFIG.defaultLocale
   // Build Accept-Language header using the utility
@@ -90,8 +86,6 @@ export async function bffFetch(
     AcceptLanguageUtils.buildClientAcceptLanguageHeader(rfcLocale)
 
   const shouldIncludeCredentials = isSafeOrigin(url)
-
-  const draftHeader = isDraftMode ? getDraftModeHeaderValue() : undefined
 
   // Variant headers are always explicit: server renders get them from the [variant] URL
   // segment (via bff-fetch-server → getRequestVariant → variantHeaders); client renders
@@ -107,7 +101,9 @@ export async function bffFetch(
       [LANGUAGE_HEADER]: acceptLanguageHeader,
       ...headersFromVariant,
       ...(correlationId && { [CORRELATION_ID_HEADER]: correlationId }),
-      ...(draftHeader && { [DRAFT_MODE_HEADER]: draftHeader }),
+      ...(options?.draftToken && {
+        [DRAFT_MODE_HEADER]: options.draftToken,
+      }),
       ...normalizeHeaders(options?.headers),
     },
   }

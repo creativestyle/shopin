@@ -38,6 +38,27 @@ test.describe('Cross-origin iframe preview', () => {
     await expect(frame.getByText(/DRAFT:/i)).toBeVisible({ timeout: 15_000 })
   })
 
+  test('framed preview keeps __pt and draft content after hydration, without an exit link', async ({
+    page,
+  }) => {
+    const token = mintPreviewToken(E2E_DRAFT_SECRET)
+    const previewUrl = buildDirectPreviewUrl('about-us', 'en', token)
+    const fakeCmsUrl = `${FAKE_CMS_BASE}/preview?url=${encodeURIComponent(previewUrl)}`
+
+    await page.goto(fakeCmsUrl, { waitUntil: 'networkidle' })
+
+    const frame = page.frameLocator('iframe#preview-frame')
+    await expect(frame.getByText(/DRAFT:/i)).toBeVisible({ timeout: 15_000 })
+    // The server renders the exit link; it disappears once the framed banner hydrates
+    await expect(frame.getByText('Preview mode', { exact: false })).toBeVisible()
+    await expect(frame.getByRole('link', { name: 'Exit preview' })).toHaveCount(0)
+
+    const appFrame = page.frames().find((f) => f.url().startsWith(APP_BASE))
+    expect(appFrame).toBeDefined()
+    expect(new URL(appFrame!.url()).searchParams.get('__pt')).toBe(token)
+    await expect(frame.getByText(/DRAFT:/i)).toBeVisible()
+  })
+
   test('iframe preview BFF calls carry x-next-draft-mode header', async ({ page }) => {
     const token = mintPreviewToken(E2E_DRAFT_SECRET)
     const previewUrl = buildDirectPreviewUrl('about-us', 'en', token)
