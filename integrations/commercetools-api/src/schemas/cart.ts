@@ -2,6 +2,7 @@ import { z } from 'zod'
 import { SALUTATION_OPTIONS } from '@config/constants'
 import { LocalizedStringApiResponseSchema } from './localized-string'
 import { ProductVariantApiResponseSchema } from './product-variant'
+import { ShippingMethodCustomApiResponseSchema } from './shipping-method-custom'
 
 const TypedMoneyApiResponseSchema = z.object({
   centAmount: z.number(),
@@ -127,16 +128,7 @@ const ShippingInfoApiResponseSchema = z
         // Only present when the request expands shippingInfo.shippingMethod
         obj: z
           .object({
-            localizedDescription: z.record(z.string(), z.string()).optional(),
-            custom: z
-              .object({
-                fields: z
-                  .object({
-                    deliveryTime: z.record(z.string(), z.string()).optional(),
-                  })
-                  .optional(),
-              })
-              .optional(),
+            custom: ShippingMethodCustomApiResponseSchema,
           })
           .optional(),
       })

@@ -1,6 +1,5 @@
 'use client'
 
-import { useLocale } from 'next-intl'
 import { RadioGroupItem } from '@/components/ui/radio-button'
 import { cn } from '@/lib/utils'
 import type { ShippingMethodResponse } from '@core/contracts/cart/shipping-method'
@@ -15,8 +14,7 @@ export function DeliveryMethodItem({
   method,
   selectedMethod,
 }: DeliveryMethodItemProps) {
-  const locale = useLocale()
-  const description = method.localizedDescription?.[locale] || method.name
+  const description = method.description || method.name
 
   return (
     <div
@@ -41,6 +39,7 @@ export function DeliveryMethodItem({
           >
             <DeliveryMethodLabel
               name={description}
+              deliveryTime={method.deliveryTime}
               priceInCents={method.price.centAmount}
               currency={method.price.currencyCode}
               freeAboveInCents={method.freeAbove?.centAmount}
