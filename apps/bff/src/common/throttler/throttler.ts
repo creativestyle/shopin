@@ -8,6 +8,8 @@ import {
   ThrottlerModuleOptions,
   ThrottlerStorage,
 } from '@nestjs/throttler'
+import type { Request } from 'express'
+import { isTrustedInternalRequest } from './internal-request'
 
 /** Skip key: @SecureRateLimit() sets SkipThrottle({ default: true }), so only secure routes have this true. */
 const THROTTLER_SKIP = 'THROTTLER:SKIP'
@@ -18,6 +20,7 @@ const THROTTLER_SKIP = 'THROTTLER:SKIP'
  * Secure endpoints (auth, payment, order, change-password) also depend on this flag.
  * Ensures the "secure" throttler runs only on routes that use @SecureRateLimit()
  * when rate limiting is enabled.
+ * Requests carrying a matching BFF_INTERNAL_SECRET header skip throttling on non-secure routes only.
  */
 @Injectable()
 export class OptionalThrottlerGuard extends ThrottlerGuard {
@@ -50,6 +53,17 @@ export class OptionalThrottlerGuard extends ThrottlerGuard {
       [handler, classRef]
     )
     const isSecureRoute = skipDefault === true
+    // Internal calls would otherwise share the Next server's IP bucket; secure routes keep their limits
+    const request = context.switchToHttp().getRequest<Request>()
+    if (
+      !isSecureRoute &&
+      isTrustedInternalRequest(
+        request.headers,
+        this.config.get<string>('BFF_INTERNAL_SECRET')
+      )
+    ) {
+      return true
+    }
     const throttlers = (
       this as unknown as { throttlers: Array<{ name?: string }> }
     ).throttlers

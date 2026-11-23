@@ -120,6 +120,7 @@ The BFF reads env from the **repo root `.env`**. Variables used by the BFF itsel
 - **`FRONTEND_URL`** – CORS origin for the frontend
 - **`LOG_LEVEL`**, **`LOG_PRETTY_PRINT`** – Logging (via `@core/logger-config`)
 - **`BFF_RATE_LIMIT_*`** – Rate limiting (optional)
+- **`BFF_INTERNAL_SECRET`** – Shared secret for the presentation server's per-shopper calls (checkout guard); requests carrying it skip rate limiting. Set the same value for **both** the presentation and BFF apps; when unset, those calls are rate-limited by the Next.js server's IP and share one bucket
 - **`JWT_ENCRYPTION_KEY`**, **`JWT_SIGNING_KEY`** – Token encryption/signing
 - **`CSRF_TOKEN_ENCRYPTION_KEY`**, **`CSRF_TOKEN_SIGNING_KEY`** – CSRF token handling
 - **`NEXT_DRAFT_MODE_SECRET`** – Contentful draft/preview (only when `ContentfulApiModule` is imported in the BFF)

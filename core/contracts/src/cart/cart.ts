@@ -1,9 +1,20 @@
 import { z } from 'zod'
+import { CART_LINE_ITEM_MAX_QUANTITY } from '@config/constants'
 import { BasicPriceResponseSchema } from '../core/basic-price'
 import {
   AddressBaseSchema,
   AddressRequestSchema,
 } from '../address/address-base'
+
+export const LineItemVariantAttributeResponseSchema = z.object({
+  name: z.string(),
+  label: z.string(),
+  value: z.string(),
+})
+
+export type LineItemVariantAttributeResponse = z.infer<
+  typeof LineItemVariantAttributeResponseSchema
+>
 
 export const LineItemResponseSchema = z.object({
   id: z.string(),
@@ -16,6 +27,9 @@ export const LineItemResponseSchema = z.object({
   name: z.string(),
   imageUrl: z.string().optional(),
   attributes: z.record(z.string(), z.string()).optional(),
+  // Attributes that tell this variant apart from its siblings, with display labels
+  variantAttributes: z.array(LineItemVariantAttributeResponseSchema).optional(),
+  maxQuantity: z.number().int().nonnegative().optional(),
 })
 
 export type LineItemResponse = z.infer<typeof LineItemResponseSchema>
@@ -34,6 +48,7 @@ export const ShippingInfoResponseSchema = z
   .object({
     shippingMethodId: z.string(),
     shippingMethodName: z.string().min(1),
+    deliveryTime: z.string().optional(),
     price: BasicPriceResponseSchema,
     freeAbove: BasicPriceResponseSchema.optional(),
   })
@@ -111,14 +126,19 @@ export type CartResponse = z.infer<typeof CartResponseSchema>
 export const AddToCartRequestSchema = z.object({
   productId: z.string(),
   variantId: z.string().optional(),
-  quantity: z.number().int().positive().default(1),
+  quantity: z
+    .number()
+    .int()
+    .positive()
+    .max(CART_LINE_ITEM_MAX_QUANTITY)
+    .default(1),
 })
 
 export type AddToCartRequest = z.infer<typeof AddToCartRequestSchema>
 
 export const UpdateCartItemRequestSchema = z.object({
   lineItemId: z.string(),
-  quantity: z.number().int().positive(),
+  quantity: z.number().int().positive().max(CART_LINE_ITEM_MAX_QUANTITY),
 })
 
 export type UpdateCartItemRequest = z.infer<typeof UpdateCartItemRequestSchema>

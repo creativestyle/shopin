@@ -50,16 +50,18 @@ export function WishlistContent({ locale, page }: WishlistContentProps) {
                 data={item.product}
                 locale={locale}
                 actions={
-                  <AddToCart
-                    productId={item.product.id}
-                    productSlug={item.product.slug}
-                    productName={item.product.name}
-                    variantId={item.product.variantId}
-                    variantCount={item.product.variantCount}
-                    variant='primary'
-                    className='z-2 w-full'
-                    showLoadingText
-                  />
+                  item.product.price ? (
+                    <AddToCart
+                      productId={item.product.id}
+                      productSlug={item.product.slug}
+                      productName={item.product.name}
+                      variantId={item.product.variantId}
+                      variantCount={item.product.variantCount}
+                      variant='primary'
+                      className='w-full'
+                      showLoadingText
+                    />
+                  ) : undefined
                 }
               />
             ))}
