@@ -8,9 +8,11 @@ export function LinkSectionBlock({
 }) {
   return (
     <div className='space-y-4'>
-      <h3 className='text-sm leading-tight font-bold text-gray-900'>
-        {section.title}
-      </h3>
+      {section.title && (
+        <h3 className='text-sm leading-tight font-bold text-gray-900'>
+          {section.title}
+        </h3>
+      )}
       <div className='flex flex-col gap-2.5 text-sm leading-normal font-normal text-gray-600'>
         {section.links.map((link, j) => (
           <CmsLink

@@ -6,8 +6,15 @@ import { productImageLoader } from '@/lib/product-image-loader'
 import type { LineItemResponse } from '@core/contracts/cart/cart'
 import { CartItemActions } from './cart-item-actions'
 import { CartItemQuantitySwitcher } from './cart-item-quantity-switcher'
-import { useLocale } from 'next-intl'
-import { calculateItemPrices, getProductHref } from './cart-item-utils'
+import { useLocale, useTranslations } from 'next-intl'
+import {
+  calculateItemPrices,
+  formatItemAttributes,
+  getProductHref,
+  getUnitPrice,
+  labelForAttribute,
+} from './cart-item-utils'
+import { formatPriceWithPrefix } from '@/lib/price-formatter'
 import { DecoratedPrice } from '@/components/ui/price/decorated-price'
 import { CartItemRemovalConfirmation } from '../cart-item-removal-confirmation'
 import { useCartItemRemoval } from '../../hooks/use-cart-item-removal'
@@ -18,8 +25,16 @@ interface CartItemProps {
 
 export function CartItem({ item }: CartItemProps) {
   const locale = useLocale()
+  const t = useTranslations('cart')
   const productHref = getProductHref(item.productSlug)
   const { totalPrice, originalPrice } = calculateItemPrices(item)
+  const variantText = formatItemAttributes(item.attributes, (key) =>
+    labelForAttribute(key, t)
+  )
+  const unitPriceFormatted = formatPriceWithPrefix(getUnitPrice(item), locale, {
+    currency: item.price.currency,
+    fractionDigits: item.price.fractionDigits,
+  })
   const {
     showConfirmation,
     isRemoving,
@@ -45,13 +60,25 @@ export function CartItem({ item }: CartItemProps) {
           </div>
         )}
 
-        {/* Product Name */}
-        <Link
-          href={productHref}
-          className='text-sm/[1.6] font-bold text-gray-950 hover:underline md:col-start-2 md:row-start-1 md:text-base'
-        >
-          {item.name}
-        </Link>
+        {/* Product Name, Variant & Unit Price */}
+        <div className='min-w-0 md:col-start-2 md:row-start-1'>
+          <Link
+            href={productHref}
+            className='text-sm/[1.6] font-bold text-gray-950 hover:underline md:text-base'
+          >
+            {item.name}
+          </Link>
+          {variantText && (
+            <p className='mt-1 text-xs text-gray-500 md:text-sm'>
+              {variantText}
+            </p>
+          )}
+          <p className='mt-1 text-xs text-gray-500 md:text-sm'>
+            <span className='sr-only'>{t('item.unitPrice')}: </span>
+            {unitPriceFormatted}
+            <span> {t('item.perUnit')}</span>
+          </p>
+        </div>
 
         {/* Mobile: Actions, Quantity, Price Row - single grid cell with flex layout, sticks to bottom */}
         <div className='col-span-2 row-start-2 flex items-center gap-4 self-end md:contents'>
@@ -62,6 +89,7 @@ export function CartItem({ item }: CartItemProps) {
                 variant='icon-only'
                 productId={item.productId}
                 variantId={item.variantId}
+                itemName={item.name}
                 onRemoveClick={handleRemoveClick}
                 isRemoving={isRemoving}
               />
@@ -71,6 +99,7 @@ export function CartItem({ item }: CartItemProps) {
                 variant='with-text'
                 productId={item.productId}
                 variantId={item.variantId}
+                itemName={item.name}
                 onRemoveClick={handleRemoveClick}
                 isRemoving={isRemoving}
               />
@@ -81,6 +110,9 @@ export function CartItem({ item }: CartItemProps) {
           <div className='flex min-w-0 flex-1 justify-center md:col-start-3 md:row-start-1 md:flex-none md:justify-self-end'>
             <CartItemQuantitySwitcher
               item={item}
+              itemName={item.name}
+              onRemoveClick={handleRemoveClick}
+              isRemoving={isRemoving}
               className='h-10'
             />
           </div>
@@ -95,7 +127,9 @@ export function CartItem({ item }: CartItemProps) {
               locale={locale}
               stacked
               variant={
-                item.price.discountedPriceInCents ? 'discount' : 'regular'
+                item.price.discountedPriceInCents !== undefined
+                  ? 'discount'
+                  : 'regular'
               }
               className='text-sm font-bold md:text-base'
               originalPriceClassName='text-xs/[1.6] text-gray-500'

@@ -85,18 +85,20 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             </p>
           </div>
 
-          <div className='relative flex w-full shrink-0 items-start justify-center'>
-            <PriceBox
-              price={data.price}
-              locale={locale}
-              size='small'
-              omnibusPriceLabel={t('omnibusPrice')}
-              className='min-h-px min-w-px shrink-0 grow basis-0 text-center text-base/[1.6] font-bold text-gray-950'
-            />
-          </div>
+          {data.price && (
+            <div className='relative flex w-full shrink-0 items-start justify-center'>
+              <PriceBox
+                price={data.price}
+                locale={locale}
+                size='small'
+                omnibusPriceLabel={t('omnibusPrice')}
+                className='min-h-px min-w-px shrink-0 grow basis-0 text-center text-base/[1.6] font-bold text-gray-950'
+              />
+            </div>
+          )}
         </div>
         {actions && (
-          <div className='pointer-events-auto relative flex w-full shrink-0 flex-col gap-2'>
+          <div className='pointer-events-auto relative z-2 flex w-full shrink-0 flex-col gap-2'>
             {actions}
           </div>
         )}

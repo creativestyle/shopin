@@ -37,13 +37,17 @@ export async function BuyBox({
         <h1 className='text-xl/[1.2] text-gray-950'>{product.name}</h1>
       </div>
 
-      <PriceBox
-        price={product.price}
-        locale={locale}
-        recommendedRetailPriceLabel={t('buyBox.recommendedRetailPrice')}
-        omnibusPriceLabel={t('buyBox.omnibusPrice')}
-        footer={t('buyBox.taxNote')}
-      />
+      {product.price ? (
+        <PriceBox
+          price={product.price}
+          locale={locale}
+          recommendedRetailPriceLabel={t('buyBox.recommendedRetailPrice')}
+          omnibusPriceLabel={t('buyBox.omnibusPrice')}
+          footer={t('buyBox.taxNote')}
+        />
+      ) : (
+        <p className='text-sm/[1.6] text-gray-600'>{t('buyBox.notSoldHere')}</p>
+      )}
 
       {product.configurableOptions &&
         product.configurableOptions.length > 0 && (

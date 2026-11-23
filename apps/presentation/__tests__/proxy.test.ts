@@ -526,6 +526,14 @@ describe('cookie-based variant (internal rewrite, clean URL)', () => {
     expect(rewritePath(res)).toBe(`/${ALT_VARIANT}/en/product`)
   })
 
+  it('rewrites to the mock-set variant when the mock data-source cookie is present', () => {
+    const res = proxy(
+      makeRequest('/en/product', { cookie: 'data-source=mock-set' })
+    )
+    expect(res.status).not.toBe(302)
+    expect(rewritePath(res)).toBe('/~mock-set/en/product')
+  })
+
   it('rewrites to default-variant when the default data-source cookie is present', () => {
     const res = proxy(
       makeRequest('/en/product', { cookie: 'data-source=commercetools-set' })

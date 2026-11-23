@@ -1,3 +1,5 @@
+import { getTranslations } from 'next-intl/server'
+import type { FooterResponse } from '@core/contracts/content/layout'
 import { StandardContainer } from '../ui/standard-container'
 import { getFooterLayout } from '@/features/content/get-layout'
 import { NewsletterBlock } from './footer/newsletter-block'
@@ -7,12 +9,27 @@ import { PaymentMethodsBlock } from './footer/payment-methods-block'
 import { LegalBar } from './footer/legal-bar'
 import { CountryBlock } from './footer/country-block'
 
+function hasFooterContent(layout: FooterResponse) {
+  return Boolean(
+    layout.sections.length ||
+    layout.legalLinks.length ||
+    layout.copyright ||
+    layout.newsletter ||
+    layout.customerService ||
+    layout.paymentMethods
+  )
+}
+
 export async function Footer({ isDraft = false }: { isDraft?: boolean } = {}) {
   const layout = await getFooterLayout(isDraft)
-  if (!layout) {
+  if (!layout || !hasFooterContent(layout)) {
+    const t = await getTranslations('legalBar')
     return (
-      <footer className='relative w-full bg-gray-100'>
-        <LegalBar legalLinks={[]} />
+      <footer className='relative w-full'>
+        <LegalBar
+          legalLinks={[]}
+          copyright={t('copyright')}
+        />
       </footer>
     )
   }
@@ -35,7 +52,7 @@ export async function Footer({ isDraft = false }: { isDraft?: boolean } = {}) {
           {layout.paymentMethods && (
             <PaymentMethodsBlock paymentMethods={layout.paymentMethods} />
           )}
-          <CountryBlock />
+          <CountryBlock title={layout.country?.title} />
         </div>
       </StandardContainer>
 
