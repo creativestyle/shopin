@@ -42,6 +42,6 @@ export class LayoutService extends ContentfulBaseService {
     if (!footer) {
       return null
     }
-    return mapFooterItemToFooterResponse(footer, this.resolveLocale(locale))
+    return mapFooterItemToFooterResponse(footer)
   }
 }
