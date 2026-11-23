@@ -122,7 +122,8 @@
       "loadMore": "Load more photos",
       "dialogTitle": "Image Gallery",
       "dialogDescription": "Browse through product images",
-      "closeButtonAria": "Close gallery"
+      "closeButtonAria": "Close gallery",
+      "thumbnailAria": "Image {current} of {total}"
     },
     "buyBox": {
       "notSoldHere": "Not available in this store",
