@@ -7,7 +7,8 @@ import { ConfigurableOptionResponseSchema } from './configurable-option'
 
 export const ProductDetailsResponseSchema = BaseEntityResponseSchema.extend({
   variantId: z.string().optional(),
-  price: BasicPriceResponseSchema,
+  // Absent when the product has no price in the store currency (not sellable there).
+  price: BasicPriceResponseSchema.optional(),
   gallery: ProductGalleryResponseSchema,
   description: z.string(),
   seoText: z.string().optional(),

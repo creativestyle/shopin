@@ -44,58 +44,66 @@ export function ResendVerificationEmailForm() {
     setSuccess(true)
   }
 
-  if (success) {
-    return (
-      <div className='flex w-full flex-col gap-4'>
-        <p className='text-center text-sm text-gray-700'>
-          {t('resendSuccess')}
-        </p>
-        {verifyEmailHref && (
-          <TemporaryVerifyEmailButton
-            href={verifyEmailHref}
-            label={t('confirmButton')}
-          />
-        )}
-      </div>
-    )
-  }
-
   return (
-    <form
-      onSubmit={form.handleSubmit(onSubmit)}
-      className='flex w-full flex-col gap-2'
-      noValidate
-    >
-      <FormField
-        name='email'
-        control={form.control}
-        render={({ field, validationState }) => (
-          <TextInput
-            {...field}
-            id='resend-email'
-            label={t('resendEmailLabel')}
-            required
-            autoComplete='email'
-            validationState={validationState}
-          />
-        )}
-      />
-      {error && (
-        <p className='text-sm text-red-600'>{t('errors.resendFailed')}</p>
-      )}
-      <Button
-        type='submit'
-        variant='primary'
-        disabled={
-          form.formState.isSubmitting ||
-          resendVerificationEmailMutation.isPending
-        }
+    <div className='flex w-full flex-col'>
+      <p
+        role='status'
+        className='text-center text-sm text-gray-700 not-empty:mb-4'
       >
-        {form.formState.isSubmitting ||
-        resendVerificationEmailMutation.isPending
-          ? t('resendPending')
-          : t('resendButton')}
-      </Button>
-    </form>
+        {success ? t('resendSuccess') : null}
+      </p>
+      {success ? (
+        verifyEmailHref && (
+          <div className='flex w-full flex-col gap-4'>
+            <TemporaryVerifyEmailButton
+              href={verifyEmailHref}
+              label={t('confirmButton')}
+            />
+          </div>
+        )
+      ) : (
+        <form
+          onSubmit={form.handleSubmit(onSubmit)}
+          className='flex w-full flex-col gap-2'
+          noValidate
+        >
+          <FormField
+            name='email'
+            control={form.control}
+            render={({ field, validationState }) => (
+              <TextInput
+                {...field}
+                id='resend-email'
+                label={t('resendEmailLabel')}
+                required
+                autoComplete='email'
+                validationState={validationState}
+              />
+            )}
+          />
+          {error && (
+            <p
+              role='alert'
+              className='text-sm text-red-600'
+            >
+              {t('errors.resendFailed')}
+            </p>
+          )}
+          <Button
+            type='submit'
+            variant='primary'
+            disabled={
+              form.formState.isSubmitting ||
+              resendVerificationEmailMutation.isPending
+            }
+          >
+            {form.formState.isSubmitting ||
+            resendVerificationEmailMutation.isPending
+              ? t('resendPending')
+              : t('resendButton')}
+          </Button>
+        </form>
+      )}
+    </div>
   )
 }

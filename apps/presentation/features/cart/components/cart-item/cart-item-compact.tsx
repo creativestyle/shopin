@@ -38,6 +38,7 @@ export function CartItemCompact({
   } = useCartItemRemoval({ item })
 
   const isDiscounted = Boolean(item.price.discountedPriceInCents)
+  const variantAttributes = item.variantAttributes ?? []
 
   const priceClassName = cn(
     'shrink-0 text-sm font-bold',
@@ -76,6 +77,7 @@ export function CartItemCompact({
                 variant='icon-only'
                 productId={item.productId}
                 variantId={item.variantId}
+                itemName={item.name}
                 onRemoveClick={handleRemoveClick}
                 isRemoving={isRemoving}
               />
@@ -102,12 +104,27 @@ export function CartItemCompact({
                 />
               </div>
             ) : (
-              <Link
-                href={productHref}
-                className='text-sm/[1.6] font-bold text-gray-950 hover:underline'
-              >
-                {item.name}
-              </Link>
+              <div>
+                <Link
+                  href={productHref}
+                  className='text-sm/[1.6] font-bold text-gray-950 hover:underline'
+                >
+                  {item.name}
+                </Link>
+                {variantAttributes.length > 0 && (
+                  <dl className='mt-3 text-xs text-gray-700'>
+                    {variantAttributes.map(({ name, label, value }) => (
+                      <div
+                        key={name}
+                        className='flex gap-1'
+                      >
+                        <dt>{label}:</dt>
+                        <dd>{value}</dd>
+                      </div>
+                    ))}
+                  </dl>
+                )}
+              </div>
             )}
             <div className='flex w-full flex-row items-center justify-between gap-2'>
               {preview ? (
@@ -117,6 +134,9 @@ export function CartItemCompact({
               ) : (
                 <CartItemQuantitySwitcher
                   item={item}
+                  itemName={item.name}
+                  onRemoveClick={handleRemoveClick}
+                  isRemoving={isRemoving}
                   className='h-10 shrink-0'
                 />
               )}

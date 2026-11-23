@@ -1,6 +1,6 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
+import { useRouter } from '@/lib/navigation'
 import { ForgotPasswordForm } from '@/features/auth/auth-forgot-password-form'
 
 /**

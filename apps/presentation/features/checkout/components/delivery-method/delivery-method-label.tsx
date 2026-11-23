@@ -8,6 +8,7 @@ import { FreeShippingThreshold } from './free-shipping-threshold'
 
 interface DeliveryMethodLabelProps {
   name: string
+  deliveryTime?: string
   priceInCents: number
   currency: string
   fractionDigits?: number
@@ -20,6 +21,7 @@ interface DeliveryMethodLabelProps {
 
 export function DeliveryMethodLabel({
   name,
+  deliveryTime,
   priceInCents,
   currency,
   fractionDigits,
@@ -72,6 +74,11 @@ export function DeliveryMethodLabel({
           {priceText}
         </span>
       </div>
+      {deliveryTime && (
+        <span className='text-xs/[1.6] text-gray-500'>
+          {t('deliveryTime', { time: deliveryTime })}
+        </span>
+      )}
       {hasFreeShippingThreshold && freeAboveInCents && freeAboveCurrency && (
         <FreeShippingThreshold
           amountInCents={freeAboveInCents}

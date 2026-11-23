@@ -10,6 +10,9 @@ import { getStoreConfig } from '@/features/store-config/get-store-config-server'
 import { SkipToContent } from '@/components/layout/skip-to-content'
 import { QueryProvider } from '../../query-provider'
 import { DemoDisclaimerModalWrapper } from './demo-disclaimer-modal-wrapper'
+import { ConsentProvider } from '@/features/cookie-consent/consent-provider'
+import { CookieConsent } from '@/features/cookie-consent/cookie-consent'
+import { DemoTrackingTagsWrapper } from './demo-tracking-tags-wrapper'
 import {
   listLocales,
   urlPrefixToRfc,
@@ -76,11 +79,15 @@ export default async function LocaleLayout({
           >
             <StoreConfigProvider storeConfig={storeConfig}>
               <AddToCartModalProvider>
-                <div className='container-type-inline-size flex min-h-screen flex-col'>
-                  {children}
-                </div>
-                <Toaster position='bottom-right' />
-                <DemoDisclaimerModalWrapper />
+                <ConsentProvider>
+                  <div className='container-type-inline-size flex min-h-screen flex-col'>
+                    {children}
+                  </div>
+                  <Toaster position='bottom-right' />
+                  <DemoDisclaimerModalWrapper />
+                  <CookieConsent />
+                  <DemoTrackingTagsWrapper />
+                </ConsentProvider>
               </AddToCartModalProvider>
             </StoreConfigProvider>
           </NextIntlClientProvider>
