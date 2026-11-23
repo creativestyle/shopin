@@ -1,10 +1,18 @@
 'use client'
 
-import { useId, useSyncExternalStore, type SyntheticEvent } from 'react'
+import {
+  useId,
+  useLayoutEffect,
+  useSyncExternalStore,
+  type SyntheticEvent,
+} from 'react'
 import { usePathname } from 'next/navigation'
 import { useTranslations } from 'next-intl'
-import { PREVIEW_ACTIVE_COOKIE } from '@config/constants'
 import { buildExitHref } from '@/lib/draft-exit-href'
+import {
+  DRAFT_SESSION_ATTRIBUTE,
+  hasDraftMarkerCookie,
+} from '@/lib/draft-session-marker'
 import { StandardContainer } from '@/components/ui/standard-container'
 
 const subscribeNoop = () => () => {}
@@ -57,20 +65,21 @@ export function DraftModeBanner() {
   )
 }
 
-function hasDraftMarkerCookie(): boolean {
-  return document.cookie
-    .split('; ')
-    .some((c) => c === `${PREVIEW_ACTIVE_COOKIE}=1`)
-}
-
-/** Client-side gate for cacheable routes, which must not read cookies on the server. */
+/** Cacheable routes: always rendered, shown by CSS once the inline script marks <html>. */
 export function DraftModeSessionBanner() {
-  // Re-render on navigation so the marker cookie is re-read per page
-  usePathname()
-  const isActive = useSyncExternalStore(
-    subscribeNoop,
-    hasDraftMarkerCookie,
-    () => false
+  const pathname = usePathname()
+  // Re-sync per navigation (session expiry) and after the dev Strict Mode remount clears it
+  useLayoutEffect(() => {
+    document.documentElement.toggleAttribute(
+      DRAFT_SESSION_ATTRIBUTE,
+      hasDraftMarkerCookie(document.cookie)
+    )
+  }, [pathname])
+
+  // The variant selector must match DRAFT_SESSION_ATTRIBUTE
+  return (
+    <div className='hidden [[data-draft-session]_&]:block'>
+      <DraftModeBanner />
+    </div>
   )
-  return isActive ? <DraftModeBanner /> : null
 }

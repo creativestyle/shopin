@@ -64,6 +64,28 @@ test.describe('Preview token — /api/draft HTTP flow', () => {
     await expect(page.getByText(/DRAFT:/i)).toBeVisible({ timeout: 10_000 })
   })
 
+  test('cached app route paints the banner from server HTML during a draft session', async ({
+    page,
+  }) => {
+    await page.goto(buildDraftApiUrl(E2E_DRAFT_SECRET, 'about-us', 'en-US'), {
+      waitUntil: 'networkidle',
+    })
+
+    // Server HTML already carries the banner; the inline <head> script reveals it before paint
+    const html = await (await page.request.get(`${APP_BASE}/cart`)).text()
+    expect(html).toContain('Preview mode')
+
+    await page.goto('/cart', { waitUntil: 'commit' })
+    await expect(page.getByText(/^Preview mode/)).toBeVisible()
+    await expect(page.locator('html')).toHaveAttribute('data-draft-session', '')
+  })
+
+  test('cached app route hides the banner without a draft session', async ({ page }) => {
+    await page.goto('/cart', { waitUntil: 'networkidle' })
+    await expect(page.getByText(/^Preview mode/)).toBeHidden()
+    await expect(page.locator('html')).not.toHaveAttribute('data-draft-session', '')
+  })
+
   test('invalid secret → 401', async ({ request }) => {
     const url = buildDraftApiUrl('wrong-secret', 'about-us', 'en-US')
     const response = await request.get(url, { maxRedirects: 0 })
