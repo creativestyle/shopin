@@ -76,6 +76,7 @@ export function CartItemCompact({
                 variant='icon-only'
                 productId={item.productId}
                 variantId={item.variantId}
+                itemName={item.name}
                 onRemoveClick={handleRemoveClick}
                 isRemoving={isRemoving}
               />
@@ -117,6 +118,9 @@ export function CartItemCompact({
               ) : (
                 <CartItemQuantitySwitcher
                   item={item}
+                  itemName={item.name}
+                  onRemoveClick={handleRemoveClick}
+                  isRemoving={isRemoving}
                   className='h-10 shrink-0'
                 />
               )}

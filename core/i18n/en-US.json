@@ -54,7 +54,8 @@
       "label": "Quantity",
       "decreaseTo": "{label}: decrease to {value}",
       "increaseTo": "{label}: increase to {value}",
-      "currentValue": "{label}: current value is {value}"
+      "currentValue": "{label}: current value is {value}",
+      "remove": "{label}: remove"
     },
     "scrollLeft": "Scroll left",
     "scrollRight": "Scroll right",
@@ -208,8 +209,12 @@
     "continueShopping": "Continue shopping",
     "item": {
       "quantity": "Quantity",
+      "quantityFor": "Quantity of {name}",
       "remove": "Remove",
       "removeAction": "Remove item",
+      "removeNamed": "Remove {name}",
+      "unitPrice": "Unit price",
+      "perUnit": "each",
       "addToWishlist": "Add to wishlist",
       "artNumber": "Art. No.",
       "color": "Color",
