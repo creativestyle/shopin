@@ -30,10 +30,14 @@ function subscribeReducedMotion(onChange: () => void) {
   return () => query?.removeEventListener('change', onChange)
 }
 
+function matchesReducedMotion() {
+  return window.matchMedia?.(REDUCED_MOTION_QUERY).matches ?? false
+}
+
 function usePrefersReducedMotion() {
   return useSyncExternalStore(
     subscribeReducedMotion,
-    () => window.matchMedia?.(REDUCED_MOTION_QUERY).matches ?? false,
+    matchesReducedMotion,
     () => false
   )
 }
@@ -105,7 +109,9 @@ export function LazyVideo({
     if (!inView || !el) {
       return
     }
-    if (status === 'loading' || (ambient && status === 'idle')) {
+    // Hydration still sees the server snapshot, so read the media query directly
+    const autoplayNow = ambient && status === 'idle' && !matchesReducedMotion()
+    if (status === 'loading' || autoplayNow) {
       el.play().catch(() => {
         setStatus('idle')
         if (ambient) {

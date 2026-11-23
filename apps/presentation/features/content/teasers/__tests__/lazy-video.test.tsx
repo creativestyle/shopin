@@ -1,5 +1,7 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { hydrateRoot } from 'react-dom/client'
+import { renderToString } from 'react-dom/server'
 import { LazyVideo } from '../lazy-video'
 
 const SRC = 'https://videos.ctfassets.net/space/video.mp4'
@@ -179,6 +181,33 @@ describe('LazyVideo', () => {
         screen.getByRole('button', { name: 'teaser.video.play' })
       ).toHaveClass('inset-0')
       expect(getVideo(container)).not.toHaveAttribute('controls')
+    })
+
+    it('does not start during hydration when reduced motion is requested', async () => {
+      const video = (
+        <LazyVideo
+          src={SRC}
+          poster={POSTER}
+          autoPlay
+          eager
+        />
+      )
+      const container = document.createElement('div')
+      container.innerHTML = renderToString(video)
+      // Browsers set the property from the parsed attribute; jsdom doesn't
+      container.querySelector('video')!.muted = true
+      document.body.appendChild(container)
+      mockReducedMotion(true)
+
+      await act(async () => {
+        hydrateRoot(container, video)
+      })
+
+      expect(play).not.toHaveBeenCalled()
+      expect(
+        screen.getByRole('button', { name: 'teaser.video.play' })
+      ).toHaveClass('inset-0')
+      container.remove()
     })
 
     it('leaves pausing to the native controls when the CMS enables them', async () => {
