@@ -23,6 +23,7 @@ jest.mock('@/features/auth/auth-register-form', () => ({
 describe('SignUpFormWithRedirect', () => {
   beforeEach(() => {
     jest.clearAllMocks()
+    sessionStorage.clear()
   })
 
   it('redirects to the success page with the email token', async () => {
@@ -32,6 +33,7 @@ describe('SignUpFormWithRedirect', () => {
     await userEvent.click(screen.getByRole('button', { name: 'register' }))
 
     expect(mockPush).toHaveBeenCalledWith('/sign-up/success?token=tok')
+    expect(sessionStorage.getItem('registration-completed')).toBe('true')
   })
 
   it('keeps the checkout param', async () => {

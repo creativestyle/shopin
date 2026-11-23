@@ -7,9 +7,11 @@ export function PaymentMethodsBlock({
 }) {
   return (
     <div className='space-y-4'>
-      <h3 className='text-sm/[1.6] font-bold text-gray-900'>
-        {paymentMethods.title}
-      </h3>
+      {paymentMethods.title && (
+        <h3 className='text-sm/[1.6] font-bold text-gray-900'>
+          {paymentMethods.title}
+        </h3>
+      )}
       <div className='flex flex-wrap gap-2'>
         {paymentMethods.methods.map((method, i) => (
           <div

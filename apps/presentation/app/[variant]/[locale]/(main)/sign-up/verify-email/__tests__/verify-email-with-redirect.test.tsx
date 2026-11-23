@@ -34,6 +34,13 @@ describe('VerifyEmailWithRedirect', () => {
     expect(mockReplace).toHaveBeenCalledWith('/sign-in?verified=true')
   })
 
+  it('clears the registration flag', () => {
+    sessionStorage.setItem('registration-completed', 'true')
+    render(<VerifyEmailWithRedirect />)
+
+    expect(sessionStorage.getItem('registration-completed')).toBeNull()
+  })
+
   it('keeps the checkout param', async () => {
     mockSearchParams = new URLSearchParams('token=abc&isCheckout=true')
     render(<VerifyEmailWithRedirect />)

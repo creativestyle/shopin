@@ -5,7 +5,7 @@ import { useLanguageSwitcher } from '@/hooks/use-language-switcher'
 import { LanguageTrigger } from '@/components/layout/language-trigger'
 import { LanguageListbox } from '@/components/layout/language-listbox'
 
-export function CountryBlock() {
+export function CountryBlock({ title }: { title?: string }) {
   const t = useTranslations('languageSwitcher')
   const {
     languages,
@@ -26,7 +26,7 @@ export function CountryBlock() {
   return (
     <div className='space-y-4'>
       <h3 className='text-sm leading-tight font-bold text-gray-900'>
-        {t('footerTitle')}
+        {title || t('footerTitle')}
       </h3>
       <div className='relative'>
         <LanguageTrigger

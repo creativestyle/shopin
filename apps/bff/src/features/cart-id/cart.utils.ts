@@ -2,6 +2,12 @@ import {
   CART_ID_COOKIE_PREFIX_GUEST,
   CART_ID_COOKIE_PREFIX_LOGGED,
 } from '@config/constants'
+import type { DataSource } from '@config/constants'
+
+// Mock carts live in BFF memory, so they need a cookie separate from commercetools carts.
+const CART_KEY_SUFFIX_BY_DATA_SOURCE: Partial<Record<DataSource, string>> = {
+  'mock-set': 'mock',
+}
 
 /**
  * Generate a cart cookie key based on currency and user type.
@@ -16,14 +22,21 @@ import {
  * Examples:
  * - Guest cart on the US store:     `cart-guest-USD`
  * - Logged-in cart on the EU store: `cart-logged-EUR`
+ * - Guest cart on mock-set:         `cart-guest-USD-mock`
  *
  * @param currency - The ISO 4217 currency code (e.g. 'USD', 'EUR')
  * @param isGuest - Whether the cart is for a guest user (default: true)
+ * @param dataSource - Active data source; sources with their own cart backend get a suffix
  * @returns The cart cookie key
  */
-export function getCartKey(currency: string, isGuest: boolean = true): string {
+export function getCartKey(
+  currency: string,
+  isGuest: boolean = true,
+  dataSource?: DataSource
+): string {
   const prefix = isGuest
     ? CART_ID_COOKIE_PREFIX_GUEST
     : CART_ID_COOKIE_PREFIX_LOGGED
-  return `${prefix}-${currency}`
+  const suffix = dataSource && CART_KEY_SUFFIX_BY_DATA_SOURCE[dataSource]
+  return suffix ? `${prefix}-${currency}-${suffix}` : `${prefix}-${currency}`
 }

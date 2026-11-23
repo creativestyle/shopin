@@ -8,18 +8,35 @@ import { createShopinStyleOptions } from './configurable/shopin-style-options'
 import { createShopinProductGallery } from './shopin-product-gallery'
 import { createShopinProductVariants } from './shopin-product-variants'
 import { createShopinBadges } from './shopin-badges'
+import { generateSeed } from '../helpers/generateSeed'
 
 type Faker = ReturnType<MockApi['getFaker']>
 
-export function createShopinProductDetails(
-  faker: Faker,
-  variantId?: string
-): ProductDetailsResponse {
+function createShopinVariantSet(faker: Faker) {
   const name = faker.commerce.productName()
   const colors = createShopinColorOptions(faker)
   const sizes = createShopinSizeOptions(faker)
   const styles = createShopinStyleOptions(faker, name)
   const variants = createShopinProductVariants(faker, colors, sizes, styles)
+  return { name, colors, sizes, styles, variants }
+}
+
+/** Seeds faker by slug like the mock ProductService, so cards match the PDP. */
+export function getShopinProductVariantSummary(
+  faker: Faker,
+  slug: string
+): { variantId: string; variantCount: number } {
+  faker.seed(generateSeed(slug))
+  const { variants } = createShopinVariantSet(faker)
+  return { variantId: variants[0].id, variantCount: variants.length }
+}
+
+export function createShopinProductDetails(
+  faker: Faker,
+  variantId?: string
+): ProductDetailsResponse {
+  const { name, colors, sizes, styles, variants } =
+    createShopinVariantSet(faker)
   const gallery = createShopinProductGallery(faker, name, variantId)
   const price = createShopinBasicPrice(faker)
 
