@@ -7,6 +7,7 @@ import {
 import { HttpErrorFilter } from '../http-exception.filter'
 import { ZodError } from 'zod'
 import { FrontendInputValidationException } from '../../validation/frontend-input-validation.exception'
+import { FrontendSafeException } from '../../errors/frontend-safe.exception'
 
 function createHttpHostMock() {
   let statusCodeSet: number | undefined
@@ -64,6 +65,20 @@ describe('HttpErrorFilter', () => {
     expect(request.__nestException).toEqual({
       name: 'FrontendInputValidationException',
       message: expect.any(String),
+    })
+  })
+
+  it('returns 400 with only the reason for FrontendSafeException', () => {
+    const { host, getStatus, getJson } = createHttpHostMock()
+    const filter = new HttpErrorFilter()
+
+    filter.catch(new FrontendSafeException('expired'), host)
+
+    expect(getStatus()).toBe(400)
+    expect(getJson()).toEqual({
+      statusCode: 400,
+      message: 'Bad request',
+      reason: 'expired',
     })
   })
 

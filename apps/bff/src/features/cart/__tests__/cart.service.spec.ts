@@ -1,5 +1,165 @@
-import { NotFoundException } from '@nestjs/common'
+import { ConflictException, NotFoundException } from '@nestjs/common'
+import {
+  CartVersionConflictError,
+  DiscountCodeError,
+} from '@core/contracts/cart/cart'
+import type { CartResponse } from '@core/contracts/cart/cart'
 import { CartService } from '../cart.service'
+import { FrontendSafeException } from '../../../common/errors/frontend-safe.exception'
+
+const CART = { id: 'cart-1', version: 7 } as CartResponse
+
+function createService({
+  cart = CART,
+  getCart = jest.fn().mockResolvedValue(cart),
+  addDiscountCode = jest.fn().mockResolvedValue(CART),
+}: {
+  cart?: CartResponse
+  getCart?: jest.Mock
+  addDiscountCode?: jest.Mock
+} = {}) {
+  const dataSourceFactory = {
+    getServices: () => ({ cartService: { getCart, addDiscountCode } }),
+  }
+  const service = new CartService(
+    dataSourceFactory as never,
+    {} as never,
+    {} as never,
+    {} as never
+  )
+  jest.spyOn(service, 'getOrCreateCartId').mockResolvedValue('cart-1')
+  return { service, addDiscountCode }
+}
+
+async function catchError(promise: Promise<unknown>): Promise<unknown> {
+  return promise.catch((error: unknown) => error)
+}
+
+describe('CartService.applyDiscountCode', () => {
+  it('applies the code to the current cart', async () => {
+    const { service, addDiscountCode } = createService()
+
+    await expect(service.applyDiscountCode({ code: 'SAVE10' })).resolves.toBe(
+      CART
+    )
+    expect(addDiscountCode).toHaveBeenCalledWith('cart-1', 'SAVE10', {
+      replaceDiscountCodeIds: [],
+      expectedVersion: 7,
+    })
+  })
+
+  it('rejects with alreadyApplied when a working code is on the cart', async () => {
+    const { service, addDiscountCode } = createService({
+      cart: {
+        ...CART,
+        discountCodes: [{ id: 'dc-1', code: 'SAVE5', applied: true }],
+      },
+    })
+
+    const error = await catchError(service.applyDiscountCode({ code: 'X' }))
+
+    expect(error).toBeInstanceOf(FrontendSafeException)
+    expect((error as FrontendSafeException).reason).toBe('alreadyApplied')
+    expect(addDiscountCode).not.toHaveBeenCalled()
+  })
+
+  it('replaces a code that no longer applies instead of keeping it next to the new one', async () => {
+    const { service, addDiscountCode } = createService({
+      cart: {
+        ...CART,
+        discountCodes: [{ id: 'dc-1', code: 'SAVE5', applied: false }],
+      },
+    })
+
+    await service.applyDiscountCode({ code: 'SAVE10' })
+
+    expect(addDiscountCode).toHaveBeenCalledWith('cart-1', 'SAVE10', {
+      replaceDiscountCodeIds: ['dc-1'],
+      expectedVersion: 7,
+    })
+  })
+
+  it('re-checks once when a parallel update changed the cart, and rejects if a code landed', async () => {
+    const getCart = jest
+      .fn()
+      .mockResolvedValueOnce(CART)
+      .mockResolvedValueOnce({
+        ...CART,
+        version: 8,
+        discountCodes: [{ id: 'dc-2', code: 'OTHER', applied: true }],
+      })
+    const { service, addDiscountCode } = createService({
+      getCart,
+      addDiscountCode: jest
+        .fn()
+        .mockRejectedValue(new CartVersionConflictError()),
+    })
+
+    const error = await catchError(service.applyDiscountCode({ code: 'X' }))
+
+    expect((error as FrontendSafeException).reason).toBe('alreadyApplied')
+    expect(getCart).toHaveBeenCalledTimes(2)
+    expect(addDiscountCode).toHaveBeenCalledTimes(1)
+  })
+
+  it('applies the code on the re-check when the parallel update was unrelated', async () => {
+    const updated = { ...CART, version: 9 }
+    const getCart = jest
+      .fn()
+      .mockResolvedValueOnce(CART)
+      .mockResolvedValueOnce({ ...CART, version: 8 })
+    const addDiscountCode = jest
+      .fn()
+      .mockRejectedValueOnce(new CartVersionConflictError())
+      .mockResolvedValueOnce(updated)
+    const { service } = createService({ getCart, addDiscountCode })
+
+    await expect(service.applyDiscountCode({ code: 'SAVE10' })).resolves.toBe(
+      updated
+    )
+    expect(addDiscountCode).toHaveBeenLastCalledWith('cart-1', 'SAVE10', {
+      replaceDiscountCodeIds: [],
+      expectedVersion: 8,
+    })
+  })
+
+  it('gives up with a 409 when the cart changes again during the re-check', async () => {
+    const { service, addDiscountCode } = createService({
+      addDiscountCode: jest
+        .fn()
+        .mockRejectedValue(new CartVersionConflictError()),
+    })
+
+    const error = await catchError(service.applyDiscountCode({ code: 'X' }))
+
+    expect(error).toBeInstanceOf(ConflictException)
+    expect(addDiscountCode).toHaveBeenCalledTimes(2)
+  })
+
+  it('translates DiscountCodeError into a frontend-safe reason', async () => {
+    const { service } = createService({
+      addDiscountCode: jest
+        .fn()
+        .mockRejectedValue(new DiscountCodeError('expired')),
+    })
+
+    const error = await catchError(service.applyDiscountCode({ code: 'OLD' }))
+
+    expect(error).toBeInstanceOf(FrontendSafeException)
+    expect((error as FrontendSafeException).reason).toBe('expired')
+  })
+
+  it('rethrows other integration errors unchanged', async () => {
+    const failure = new Error('commercetools unavailable')
+    const { service } = createService({
+      addDiscountCode: jest.fn().mockRejectedValue(failure),
+    })
+
+    await expect(service.applyDiscountCode({ code: 'SAVE10' })).rejects.toBe(
+      failure
+    )
+  })
+})
 
 const STALE_ID = 'stale-cart'
 const FRESH_ID = 'fresh-cart'
