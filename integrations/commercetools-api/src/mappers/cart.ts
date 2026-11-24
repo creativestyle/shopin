@@ -3,17 +3,53 @@ import type {
   BillingAddressResponse,
   ShippingAddressResponse,
   LineItemResponse,
+  DiscountCodeResponse,
+  LineItemVariantAttributeResponse,
 } from '@core/contracts/cart/cart'
 import { AddressBaseSchema } from '@core/contracts/address/address-base'
 import type { LocalizedStringApiResponse } from '../schemas/localized-string'
+import { SHIPPING_METHOD_DELIVERY_TIME_FIELD } from '../schemas/shipping-method-custom'
 import { getLocalizedString } from '../helpers/get-localized-string'
 import { getLocalizedProductSlug } from '../helpers/get-localized-product-slug'
 import { calculateTaxFromCart } from '../helpers/calculate-tax-from-cart'
 import { createBasicPrice } from '../helpers/create-basic-price'
 import { stringifySelectableAttributeValue } from '../helpers/stringify-selectable-attribute-value'
 import type { CartApiResponse } from '../schemas/cart'
+import { mapVariantsToShopin } from './variants'
+import { parseColorPair } from '../helpers/color-utils'
 
 const LINE_ITEM_DISPLAY_ATTRIBUTES = ['color', 'size']
+
+type CartLineItemApiResponse = NonNullable<CartApiResponse['lineItems']>[number]
+
+// Selectable attributes that differ across the expanded product's variants
+function mapLineItemVariantAttributes(
+  item: CartLineItemApiResponse,
+  language: string
+): LineItemVariantAttributeResponse[] | undefined {
+  const product = item.product?.masterData?.current
+  const defs = item.product?.productType?.obj?.attributes
+  if (!product?.masterVariant || !defs || !item.variant) {
+    return undefined
+  }
+
+  const defsByName = Object.fromEntries(defs.map((d) => [d.name, d]))
+  const variantId = String(item.variant.id)
+  const variantAttributes =
+    mapVariantsToShopin(
+      [product.masterVariant, ...(product.variants ?? [])],
+      language,
+      defsByName
+    ).find((v) => v.id === variantId)?.attributes ?? {}
+
+  return Object.entries(variantAttributes)
+    .filter(([, value]) => value)
+    .map(([name, value]) => ({
+      name,
+      label: getLocalizedString(defsByName[name]?.label, language) ?? name,
+      value: parseColorPair(value)?.label ?? value,
+    }))
+}
 
 /**
  * Maps API address to contract billing address
@@ -81,6 +117,7 @@ export function mapLineItems(
           attributes[attr.name] = value
         }
       }
+      const variantAttributes = mapLineItemVariantAttributes(item, language)
 
       return {
         id: item.id,
@@ -96,6 +133,9 @@ export function mapLineItems(
         imageUrl: item.variant?.images?.[0]?.url,
         name,
         attributes: Object.keys(attributes).length > 0 ? attributes : undefined,
+        variantAttributes: variantAttributes?.length
+          ? variantAttributes
+          : undefined,
       }
     }) || []
   )
@@ -116,6 +156,45 @@ export function calculateLineItemsSubtotal(
       const unitPrice = item.price?.value.centAmount ?? 0
       return sum + unitPrice * item.quantity
     }, 0) ?? 0
+  )
+}
+
+/** Sum of cart discounts CT has already deducted from line item totals. */
+export function calculateLineItemsDiscount(
+  lineItems: CartApiResponse['lineItems']
+): number {
+  return (
+    lineItems?.reduce(
+      (sum, item) =>
+        sum +
+        // Without totalPrice the subtotal falls back to undiscounted prices.
+        (item.totalPrice ? (item.discountedPricePerQuantity ?? []) : []).reduce(
+          (itemSum, entry) =>
+            itemSum +
+            entry.quantity *
+              entry.discountedPrice.includedDiscounts.reduce(
+                (unitSum, discount) =>
+                  unitSum + discount.discountedAmount.centAmount,
+                0
+              ),
+          0
+        ),
+      0
+    ) ?? 0
+  )
+}
+
+/** Shipping saving from a cart discount; the shipping row keeps showing the full price. */
+export function calculateShippingDiscount(
+  shippingInfo: CartApiResponse['shippingInfo']
+): number {
+  if (!shippingInfo?.discountedPrice) {
+    return 0
+  }
+  return Math.max(
+    0,
+    shippingInfo.price.centAmount -
+      shippingInfo.discountedPrice.value.centAmount
   )
 }
 
@@ -145,7 +224,8 @@ export function calculateItemCount(lineItems: LineItemResponse[]): number {
  * Only maps if shippingMethod is present to ensure we have a valid ID
  */
 function mapShippingInfo(
-  shippingInfo: CartApiResponse['shippingInfo']
+  shippingInfo: CartApiResponse['shippingInfo'],
+  language: string
 ): CartResponse['shippingInfo'] {
   if (!shippingInfo || !shippingInfo.shippingMethod) {
     return undefined
@@ -154,6 +234,12 @@ function mapShippingInfo(
   return {
     shippingMethodId: shippingInfo.shippingMethod.id,
     shippingMethodName: shippingInfo.shippingMethodName,
+    deliveryTime: getLocalizedString(
+      shippingInfo.shippingMethod.obj?.custom?.fields?.[
+        SHIPPING_METHOD_DELIVERY_TIME_FIELD
+      ],
+      language
+    ),
     price: createBasicPrice(shippingInfo.price.centAmount, {
       currency: shippingInfo.price.currencyCode,
     })!,
@@ -210,6 +296,30 @@ export function mapPaymentInfo(
   }
 }
 
+/** Needs `discountCodes[*].discountCode` expanded; CT returns only a reference id otherwise. */
+export function mapDiscountCodes(
+  discountCodes: CartApiResponse['discountCodes']
+): DiscountCodeResponse[] | undefined {
+  if (!discountCodes?.length) {
+    return undefined
+  }
+
+  const mapped = discountCodes.flatMap((info) => {
+    const code = info.discountCode.obj?.code
+    return code
+      ? [
+          {
+            id: info.discountCode.id,
+            code,
+            applied: info.state === 'MatchesCart',
+          },
+        ]
+      : []
+  })
+
+  return mapped.length > 0 ? mapped : undefined
+}
+
 export function mapCartToResponse(
   cart: CartApiResponse,
   language: string
@@ -220,17 +330,26 @@ export function mapCartToResponse(
   const customLineItemsSubtotalCents = calculateCustomLineItemsSubtotal(
     cart.customLineItems
   )
-  const subtotalCents = lineItemsSubtotalCents + customLineItemsSubtotalCents
+  // Line item totals are net of cart discounts; add them back so subtotal − discount + shipping = total.
+  const lineItemsDiscountCents = calculateLineItemsDiscount(cart.lineItems)
+  const subtotalCents =
+    lineItemsSubtotalCents +
+    lineItemsDiscountCents +
+    customLineItemsSubtotalCents
 
   const taxCents = calculateTaxFromCart(cart)
-  const discountCents = cart.discountOnTotalPrice?.discountedAmount.centAmount
+  const totalDiscountCents =
+    lineItemsDiscountCents +
+    calculateShippingDiscount(cart.shippingInfo) +
+    (cart.discountOnTotalPrice?.discountedAmount.centAmount ?? 0)
+  const discountCents = totalDiscountCents > 0 ? totalDiscountCents : undefined
   const grandTotalCents =
     cart.taxedPrice?.totalGross.centAmount ?? cart.totalPrice.centAmount
 
   const currency = cart.totalPrice.currencyCode
   const itemCount = calculateItemCount(lineItems)
 
-  const shippingInfo = mapShippingInfo(cart.shippingInfo)
+  const shippingInfo = mapShippingInfo(cart.shippingInfo, language)
   const paymentInfo = mapPaymentInfo(cart.paymentInfo)
 
   return {
@@ -240,6 +359,7 @@ export function mapCartToResponse(
     subtotal: createBasicPrice(subtotalCents, { currency })!,
     tax: createBasicPrice(taxCents, { currency }),
     discountAmount: createBasicPrice(discountCents, { currency }),
+    discountCodes: mapDiscountCodes(cart.discountCodes),
     grandTotal: createBasicPrice(grandTotalCents, { currency })!,
     currency,
     itemCount,

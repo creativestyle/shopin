@@ -9,6 +9,7 @@ import type { OrderApiResponse, OrdersListApiResponse } from '../schemas/order'
 import { mapCartToResponse } from './cart'
 import { getLocalizedString } from '../helpers/get-localized-string'
 import type { LocalizedStringApiResponse } from '../schemas/localized-string'
+import { SHIPPING_METHOD_DELIVERY_TIME_FIELD } from '../schemas/shipping-method-custom'
 import { createBasicPrice } from '../helpers/create-basic-price'
 
 /**
@@ -123,6 +124,12 @@ export function mapOrderToSummary(
     grandTotal: createBasicPrice(grandTotalCents, { currency })!,
     currency,
     itemCount,
+    deliveryTime: getLocalizedString(
+      order.shippingInfo?.shippingMethod?.obj?.custom?.fields?.[
+        SHIPPING_METHOD_DELIVERY_TIME_FIELD
+      ],
+      language
+    ),
     lineItemImages,
   }
 }

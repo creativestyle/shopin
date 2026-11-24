@@ -55,6 +55,19 @@ npm run migrate -- migrate:demo
 - **List all migrations:** `npm run migrate -- list` — prints every migration file in order (no env needed).
 - `--help` – Show all commands: `npm run migrate -- --help` or `npm run migrate -- help`. Per-command help: `npm run migrate -- migrate --help`.
 
+## Upgrading an existing space
+
+`@integrations/contentful-api` queries fields added by the `03-01-*` schema updates, so run the missing ones **before deploying** code that depends on them. Otherwise GraphQL validation fails for every query that uses the affected fragment.
+
+```bash
+# Teaser Video captions + localized video/thumbnail (adds the `captions` field)
+npm run migrate -- migrate --from 30103
+```
+
+Preview first with `--list`. Use a lower `--from` key (e.g. `30101`) if the space is missing earlier schema updates too.
+
+**Video captions and CORS:** when a Teaser Video has a captions file, the storefront requests both the video and the `.vtt` file with CORS (`crossorigin="anonymous"`), because browsers only load cross-origin caption tracks that way. Contentful asset hosts (`*.ctfassets.net`) send `Access-Control-Allow-Origin: *`. If you serve video or captions from another host, it must send that header too, or the video will fail to load.
+
 ## Layout
 
 - **migrations/lib/** – Shared code (api, apply, content-types/ids, demo, page-teasers). Not run as migrations.
@@ -62,12 +75,13 @@ npm run migrate -- migrate:demo
 - **migrations/01-02-teasers/** – Teaser content types (01-02-01 … 01-02-13).
 - **migrations/01-03-sections/** – Top Bar, Footer (01-03-01 … 01-03-02).
 - **migrations/02-01-demo-content/** – Seed data: 02-01-01 homepage, 02-01-02 about, 02-01-03 support, 02-01-04 top bar, 02-01-05 footer (layout after pages so footer can link to About/Support). Non-migration modules: **homepage/** (constants, link/button/teaser helpers), **shared/** (e.g. rich-text.ts – data used by homepage and about; runner skips it – only runs GG-SS-NN-name.js).
+- **migrations/03-01-schema-updates/** – Changes to existing content types: 03-01-01 … 03-01-02 page canonical URL, 03-01-03 Teaser Video per-locale video/thumbnail and WebVTT captions. Run only by `migrate`, not by `migrate:content-types`.
 
 Filenames: **`GG-SS-NN-name.ts`** (source; built to `.js`). Dirs follow **`GG-SS-description`**. Runner sorts by (GG, SS, NN) and skips `lib/`. New migration = new file with next free triple in the right dir.
 
 **New teaser:** Add `01-02-teasers/01-02-NN-name.ts` (NN 01–13), export the migration function (`export = run`).
 
-**Preview in Contentful:** Settings → Content preview → Page → Preview URL e.g. `https://your-app.com/{locale}/{entry.fields.slug}?preview=true`
+**Preview in Contentful:** Settings → Content preview → Page → Preview URL e.g. `https://your-app.com/api/draft?secret=<NEXT_DRAFT_MODE_SECRET>&slug={entry.fields.slug}&locale={locale}`. Editors leave preview via the "Exit preview" banner (`/api/draft/exit`). See [Draft session behaviour](../../apps/presentation/README.md#draft-session-behaviour) for what a draft session covers.
 
 **German (de-DE) content:** En-US and de-DE texts are defined **side by side** in the same demo migrations (02-01-01 … 02-01-05); entries are created with both locales in one go. Ensure the Contentful space has the **de-DE** locale (Settings → Locales) before running demo migrations.
 

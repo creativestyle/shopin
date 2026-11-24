@@ -15,8 +15,11 @@ export const Carousel = ({
   children,
   id: idProp,
   navigation = true,
+  navigationSize,
   scrollbar = true,
   gridConfig,
+  fullbleed = true,
+  navigationStep,
   className,
   style,
   onSlideChange,
@@ -57,6 +60,7 @@ export const Carousel = ({
     maxSlidesPerView,
     scrollBehaviorPreference,
     onSlideChange,
+    navigationStep,
   })
 
   // Track animation frame ID for cleanup
@@ -99,6 +103,21 @@ export const Carousel = ({
   // Check if navigation/scrollbar is needed (more than one group of slides)
   const needsNavigation = slides.length > slidesPerView
 
+  // Arrow keys move by slide group; Safari does not focus scroll containers on its own
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (event.target !== scrollerRef.current) {
+      return
+    }
+
+    if (event.key === 'ArrowRight') {
+      event.preventDefault()
+      slideToNext()
+    } else if (event.key === 'ArrowLeft') {
+      event.preventDefault()
+      slideToPrev()
+    }
+  }
+
   // Derive minimum slides rendered amount from maxSlidesPerView
   // Ensure we always render enough slides for smooth scrolling
   const minSlidesRenderedAmount = Math.min(slides.length, maxSlidesPerView * 3)
@@ -116,7 +135,8 @@ export const Carousel = ({
       aria-roledescription='carousel'
       aria-label={t('ariaLabel')}
       className={cn(
-        'ui-fullbleed grid grid-cols-1 gap-6',
+        fullbleed ? 'ui-fullbleed' : '',
+        'grid grid-cols-1 gap-6',
         {
           // Always reserve space for scrollbar to prevent CLS
           'grid-rows-[auto_1]': scrollbar,
@@ -140,6 +160,7 @@ export const Carousel = ({
             onSlideToPrev={slideToPrev}
             onSlideToNext={slideToNext}
             carouselId={carouselId}
+            size={navigationSize}
           />
         )}
 
@@ -153,8 +174,11 @@ export const Carousel = ({
             'lord-of-the-focus-ring'
           )}
           role='group'
+          aria-label={t('ariaLabel')}
           aria-live='polite'
           aria-atomic='false'
+          tabIndex={0}
+          onKeyDown={handleKeyDown}
         >
           {slides.map((slide, index) => (
             <div

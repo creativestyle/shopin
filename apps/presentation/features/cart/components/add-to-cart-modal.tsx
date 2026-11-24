@@ -19,9 +19,14 @@ import { ShowMoreProducts } from './show-more-products'
 interface AddToCartModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
+  restoreFocusRef?: React.RefObject<HTMLElement | null>
 }
 
-export function AddToCartModal({ open, onOpenChange }: AddToCartModalProps) {
+export function AddToCartModal({
+  open,
+  onOpenChange,
+  restoreFocusRef,
+}: AddToCartModalProps) {
   const t = useTranslations('cart')
   const { cart, refetch, error } = useCart()
   const productsScrollRef = React.useRef<HTMLDivElement>(null)
@@ -44,14 +49,14 @@ export function AddToCartModal({ open, onOpenChange }: AddToCartModalProps) {
       open={open}
       onOpenChange={onOpenChange}
     >
-      <SheetContent className='md:max-w-md'>
+      <SheetContent
+        className='md:max-w-md'
+        restoreFocusRef={restoreFocusRef}
+      >
         <SheetHeader className='text-center'>
           <SheetTitle className='font-normal'>
-            {`${t('title')} (${cart.itemCount})`}
+            {t('titleWithCount', { count: cart.itemCount })}
           </SheetTitle>
-          <SheetDescription className='sr-only'>
-            {t('addToCartModal.dialogDescription')}
-          </SheetDescription>
         </SheetHeader>
 
         <div
@@ -60,9 +65,10 @@ export function AddToCartModal({ open, onOpenChange }: AddToCartModalProps) {
         >
           <div className='flex w-full shrink-0 items-center gap-4 overflow-clip rounded-lg bg-green-100 p-4'>
             <div className='min-w-0 flex-1'>
-              <p className='text-sm/[1.6] font-normal text-gray-700'>
+              {/* Doubles as the dialog description so the confirmation is announced on open. */}
+              <SheetDescription className='mb-0 text-sm/[1.6] font-normal text-gray-700'>
                 {t('addToCartModal.toastMessage')}
-              </p>
+              </SheetDescription>
             </div>
           </div>
 
@@ -92,7 +98,7 @@ export function AddToCartModal({ open, onOpenChange }: AddToCartModalProps) {
             actions={
               <CartActions
                 variant='modal'
-                onLinkClick={() => onOpenChange(false)}
+                onClose={() => onOpenChange(false)}
               />
             }
           />

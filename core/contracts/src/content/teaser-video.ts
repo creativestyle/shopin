@@ -6,6 +6,7 @@ export const VideoTeaserSchema = z.object({
   title: z.string().optional(),
   videoUrl: z.string().optional(),
   thumbnailUrl: z.string().optional(),
+  captionsUrl: z.string().optional(),
   autoplay: z.boolean(),
   controls: z.boolean(),
   caption: z.string().optional(),

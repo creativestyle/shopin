@@ -1,14 +1,48 @@
 {
+  "cookieConsent": {
+    "banner": {
+      "title": "We value your privacy",
+      "description": "We use cookies to run the store and, with your permission, to analyse traffic and personalise content. You can accept all cookies, reject non-essential ones, or choose which categories to allow. Learn more in our <link>privacy policy</link>."
+    },
+    "actions": {
+      "acceptAll": "Accept all",
+      "essentialOnly": "Only essential",
+      "customise": "Customise",
+      "savePreferences": "Save preferences"
+    },
+    "preferences": {
+      "title": "Cookie preferences",
+      "description": "Choose which categories of cookies you allow. Essential cookies are always active because the store cannot function without them."
+    },
+    "categories": {
+      "essential": {
+        "name": "Essential",
+        "description": "Required for core features like your cart, checkout, and security. These cannot be turned off."
+      },
+      "analytics": {
+        "name": "Analytics",
+        "description": "Help us understand how the store is used so we can improve it. No data is collected without your consent."
+      },
+      "marketing": {
+        "name": "Marketing",
+        "description": "Used to show you relevant offers and measure the performance of our campaigns."
+      }
+    },
+    "footerLink": "Cookie preferences"
+  },
   "legalBar": {
     "copyright": "© 2026 SHOPin storefront accelerator."
+  },
+  "footer": {
+    "callUs": "Call us: {phone}"
   },
   "common": {
     "welcomeMessage": "Welcome to our application!",
     "yes": "Yes",
     "no": "No",
     "description": "Your e-commerce platform with a modern design system.",
+    "skipToContent": "Skip to main content",
     "homepage": "Home",
-    "logoAlt": "SHOPIN",
     "logoHomeLink": "SHOPIN - Home",
     "close": "Close",
     "searchPlaceholder": "What are you looking for?",
@@ -19,12 +53,20 @@
     "noSuggestions": "<bold>0</bold> Results",
     "noSearchProducts": "Sorry - we couldn't find any results for <bold>\"{query}\"</bold>.",
     "scrollableDialogContent": "Scrollable dialog content",
+    "quantitySwitcher": {
+      "label": "Quantity",
+      "decreaseTo": "{label}: decrease to {value}",
+      "increaseTo": "{label}: increase to {value}",
+      "currentValue": "{label}: current value is {value}",
+      "remove": "{label}: remove"
+    },
     "scrollLeft": "Scroll left",
     "scrollRight": "Scroll right",
     "hidePassword": "Hide password",
     "showPassword": "Show password",
 
     "viewAll": "View all",
+    "temporaryEmailServiceNotice": "Button and link are temporary until email service provider is set up",
     "logoAlt": "Shopin logo",
     "navigation": "Navigation",
     "mobileNavigationMenu": "Mobile navigation menu",
@@ -61,6 +103,10 @@
     "description": "The page you are looking for doesn't exist or has been moved.",
     "backHome": "Back to home"
   },
+  "draftMode": {
+    "label": "Preview mode: you are viewing unpublished content",
+    "exit": "Exit preview"
+  },
   "topBar": {
     "ariaLabel": "Site announcement"
   },
@@ -85,9 +131,11 @@
       "loadMore": "Load more photos",
       "dialogTitle": "Image Gallery",
       "dialogDescription": "Browse through product images",
-      "closeButtonAria": "Close gallery"
+      "closeButtonAria": "Close gallery",
+      "thumbnailAria": "Image {current} of {total}"
     },
     "buyBox": {
+      "notSoldHere": "Not available in this store",
       "size": "Size",
       "findYourSize": "Find your size",
       "reserveInStore": "Reserve in store",
@@ -106,7 +154,7 @@
         "loyaltyBonus": "Collect 3% loyalty bonus"
       },
       "recommendedRetailPrice": "RRP",
-      "omnibusPrice": "30-day best price"
+      "omnibusPrice": "30-day best price:"
     },
     "seo": {
       "about": "About this product"
@@ -160,7 +208,8 @@
       "sizeShowLess": "Show less",
       "resetAll": "Reset all",
       "applyFilters": "Apply filters"
-    }
+    },
+    "metaDescription": "Shop {categoryName} at {siteName} and browse the full range online."
   },
   "cart": {
     "title": "Cart",
@@ -169,8 +218,12 @@
     "continueShopping": "Continue shopping",
     "item": {
       "quantity": "Quantity",
+      "quantityFor": "Quantity of {name}",
       "remove": "Remove",
       "removeAction": "Remove item",
+      "removeNamed": "Remove {name}",
+      "unitPrice": "Unit price",
+      "perUnit": "each",
       "addToWishlist": "Add to wishlist",
       "artNumber": "Art. No.",
       "color": "Color",
@@ -188,12 +241,32 @@
       "title": "Order Summary",
       "subtotal": "Subtotal",
       "shipping": "Shipping",
+      "shippingAtCheckout": "Calculated at checkout",
       "tax": "Tax",
       "discount": "Discount",
       "total": "Total",
       "totalInclTax": "Total incl. tax",
       "taxNote": "incl. VAT",
-      "promoCode": "Promo code"
+      "promoCode": "Have a promo code?"
+    },
+    "promoCode": {
+      "label": "Promo code",
+      "placeholder": "Enter your code",
+      "apply": "Apply",
+      "remove": "Remove",
+      "removeAriaLabel": "Remove promo code {code}",
+      "applied": "Promo code {code} applied",
+      "notApplied": "Promo code {code} no longer applies to your cart. Remove it to enter a different code.",
+      "success": "Promo code applied. Your total has been updated.",
+      "removed": "Promo code removed. Your total has been updated.",
+      "errors": {
+        "invalid": "This promo code is not valid. Please check the code and try again.",
+        "expired": "This promo code has expired.",
+        "notApplicable": "This promo code does not apply to the items in your cart.",
+        "alreadyApplied": "A promo code is already applied. Remove it before entering a new one.",
+        "tooManyRequests": "Too many requests. Please wait a moment and try again.",
+        "generic": "We could not apply this promo code. Please try again."
+      }
     },
     "errors": {
       "addToCart": "Failed to add to cart",
@@ -201,11 +274,12 @@
       "removeItem": "Failed to remove item",
       "fetchCart": "Failed to fetch cart"
     },
+    "moreProductsCount": "More ({count}+)",
     "addToCartModal": {
       "toastMessage": "Good choice. Item has been added to cart.",
-      "dialogDescription": "Review your cart contents after adding an item.",
       "moreProducts": "More products",
-      "goToCart": "Go to cart"
+      "goToCart": "Go to cart",
+      "continue": "Continue shopping"
     },
     "empty": {
       "title": "Your cart is currently empty.",
@@ -216,6 +290,7 @@
     "cart": "Cart"
   },
   "account": {
+    "passwordHint": "{min}-{max} characters, including at least 1 letter.",
     "signIn": {
       "title": "Sign In",
       "description": "Use your account and collect points for this purchase",
@@ -230,6 +305,8 @@
       "noAccount": "Don't have an account?",
       "signUp": "Sign up",
       "success": "You have been logged in successfully.",
+      "emailVerified": "Your email has been confirmed. You can now sign in.",
+      "passwordReset": "Your password has been updated. You can now sign in.",
       "errors": {
         "emailRequired": "Email is required",
         "emailInvalid": "Please enter a valid email address",
@@ -252,6 +329,8 @@
       "title": "Register",
       "backToSignIn": "Back to Sign In",
       "backToCheckout": "Back to checkout",
+      "signInLink": "Sign in",
+      "salutationLabel": "Salutation",
       "salutationOptions": {
         "Ms": "Ms.",
         "Mr": "Mr.",
@@ -277,7 +356,9 @@
         "lastNameRequired": "Last name is required",
         "emailInvalid": "Please enter a valid email address",
         "dateOfBirthInvalid": "Please enter a valid date in DD-MM-YYYY format",
-        "passwordMinLength": "Password must be at least 8 characters",
+        "passwordMinLength": "Password must be at least {min} characters",
+        "passwordMaxLength": "Password must be at most {max} characters",
+        "passwordRequiresLetter": "Password must contain at least 1 letter",
         "acceptTermsRequired": "You must accept the terms and conditions",
         "confirmPasswordRequired": "Please confirm your password",
         "passwordsDoNotMatch": "Passwords do not match",
@@ -308,6 +389,7 @@
       "errors": {
         "tokenRequired": "Email verification token is required. Please use the link from your email.",
         "tokenExpired": "Your verification link has expired. Enter your email to receive a new one.",
+        "tokenInvalid": "This verification link is no longer valid. If you have already confirmed your email, you can sign in. Otherwise, enter your email below to receive a new link.",
         "resendFailed": "Failed to resend verification email. Please try again.",
         "confirmFailed": "Failed to confirm email. Please try again or use the link from your email.",
         "validationFailed": "Please check your input",
@@ -343,7 +425,6 @@
       "submitting": "Resetting...",
       "backToSignIn": "Back to Sign In",
       "requestNewLink": "Request a new reset link",
-      "success": "Password reset successfully. You can now sign in with your new password.",
       "errors": {
         "tokenRequired": "Password reset token is required. Please use the link from your email.",
         "resetPasswordFailed": "Failed to reset password. Please try again or request a new reset link.",
@@ -351,7 +432,9 @@
         "invalidToken": "Invalid reset link. Please request a new password reset.",
         "confirmPasswordRequired": "Please confirm your password",
         "passwordsDoNotMatch": "Passwords do not match",
-        "newPasswordMinLength": "Password must be at least 8 characters",
+        "newPasswordMinLength": "Password must be at least {min} characters",
+        "newPasswordMaxLength": "Password must be at most {max} characters",
+        "newPasswordRequiresLetter": "Password must contain at least 1 letter",
         "tooManyRequests": "Too many requests. Please wait a moment and try again.",
         "internalServerError": "An error occurred. Please try again later"
       }
@@ -402,7 +485,7 @@
       },
       "changePassword": {
         "changePasswordTitle": "Password",
-        "changePasswordDescription": "Here you can set a new password (min. 8 characters including at least 1 letter/max 18 characters, no special characters). For security reasons, you need to enter your old password.",
+        "changePasswordDescription": "Here you can set a new password. For security reasons, you need to enter your old password.",
         "currentPassword": "Current Password",
         "newPassword": "New Password",
         "confirmNewPassword": "Confirm New Password",
@@ -412,9 +495,31 @@
         "submitButtonLabel": "Change Password",
         "errors": {
           "currentPasswordRequired": "Current password is required",
-          "newPasswordMinLength": "New password must be at least 8 characters",
+          "wrongCurrentPassword": "That is not your current password. Please try again.",
+          "newPasswordMinLength": "New password must be at least {min} characters",
+          "newPasswordMaxLength": "New password must be at most {max} characters",
+          "newPasswordRequiresLetter": "New password must contain at least 1 letter",
           "confirmPasswordRequired": "Please confirm your new password",
           "passwordsDoNotMatch": "Passwords do not match"
+        }
+      },
+      "changeEmail": {
+        "title": "Email Address",
+        "description": "Here you can change the email address you sign in with. For security reasons, you need to enter your password. You will have to confirm the new address before your next sign-in.",
+        "newEmail": "New Email Address",
+        "currentPassword": "Current Password",
+        "saving": "Saving...",
+        "submitButtonLabel": "Change Email",
+        "changeEmailSuccess": "Email address changed successfully",
+        "changeEmailError": "Failed to change email address",
+        "verifyNotice": "Please confirm your new email address. You cannot sign in again until it is confirmed.",
+        "verifyEmailButton": "Confirm email address",
+        "errors": {
+          "emailInvalid": "Please enter a valid email address",
+          "emailInUse": "This email address is already in use",
+          "emailUnchanged": "This is already your email address",
+          "currentPasswordRequired": "Current password is required",
+          "wrongCurrentPassword": "That is not your current password. Please try again."
         }
       },
       "addresses": {
@@ -426,8 +531,10 @@
         "showMore": "More",
         "showLess": "Less",
         "edit": "Edit",
+        "editAriaLabel": "Edit {address}",
         "close": "Close",
         "delete": "Delete",
+        "deleteAriaLabel": "Delete {address}",
         "defaultShipping": "Default Shipping",
         "defaultBilling": "Default Billing",
         "addSuccess": "Address added successfully",
@@ -584,8 +691,10 @@
       "title": "Delivery",
       "free": "Free",
       "freeShippingThreshold": "Free shipping over {amount}",
+      "deliveryTime": "Delivery in {time}",
       "noMethodsAvailable": "No shipping methods available for your shipping address. This may be due to your language/currency selection. Please try selecting a different language or currency.",
-      "saveError": "Failed to save shipping method. Please try again."
+      "saveError": "Failed to save shipping method. Please try again.",
+      "loadError": "Failed to load shipping methods. Please try again."
     },
     "billing": {
       "title": "Billing Address",
@@ -641,7 +750,7 @@
       "confirmationMessage": "Order No. {orderNumber} has been placed. A confirmation email will be sent shortly to {email}.",
       "orderDetails": "Order Details",
       "orderNumber": "Order Number: {orderNumber}",
-      "deliveryTime": "Delivery in 2-3 working days",
+      "deliveryTime": "Delivery in {time}",
       "delivery": "Delivery",
       "deliveryAddress": "{name}, {address}, {city}, {country}",
       "deliveryMethod": "Delivery Method",
@@ -668,7 +777,10 @@
     },
     "video": {
       "unavailable": "Video unavailable",
-      "play": "Play video"
+      "play": "Play video",
+      "pause": "Pause video",
+      "playTitled": "Play video: {title}",
+      "captions": "Captions"
     }
   },
   "searchResults": {
@@ -697,6 +809,28 @@
     "removeError": "Failed to remove from wishlist"
   },
   "productCard": {
-    "linkAriaLabel": "View details for {name}"
+    "linkAriaLabel": "View details for {name}",
+    "omnibusPrice": "30-day best price:"
+  },
+  "dataSourceSelector": {
+    "title": "Data Source Configuration",
+    "intro": "Select which data source the application should use for fetching products, categories and content.",
+    "select": "Select",
+    "selected": "Selected",
+    "currentSelection": "Current selection:",
+    "sources": {
+      "mock-set": {
+        "name": "Mock API",
+        "description": "Use mock data for development and testing"
+      },
+      "commercetools-set": {
+        "name": "commercetools API",
+        "description": "Use commercetools API for product data"
+      },
+      "commercetools-algolia-set": {
+        "name": "commercetools API + Algolia",
+        "description": "Use commercetools API with Algolia-powered search"
+      }
+    }
   }
 }

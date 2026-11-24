@@ -2,6 +2,8 @@ import { z } from 'zod'
 import { SALUTATION_OPTIONS } from '@config/constants'
 import { LocalizedStringApiResponseSchema } from './localized-string'
 import { ProductVariantApiResponseSchema } from './product-variant'
+import { ProductTypeReferenceApiResponseSchema } from './product-type'
+import { ShippingMethodCustomApiResponseSchema } from './shipping-method-custom'
 
 const TypedMoneyApiResponseSchema = z.object({
   centAmount: z.number(),
@@ -43,41 +45,45 @@ export const CartLineItemProductApiResponseSchema = z.object({
       current: z
         .object({
           slug: LocalizedStringApiResponseSchema.optional(),
+          masterVariant: ProductVariantApiResponseSchema.optional(),
+          variants: z.array(ProductVariantApiResponseSchema).optional(),
         })
         .optional(),
     })
     .optional(),
-  productType: z
-    .object({
-      obj: z
-        .object({
-          attributes: z
-            .array(
-              z.object({
-                name: z.string(),
-                type: z.object({
-                  name: z.string(),
-                }),
-                isRequired: z.boolean().optional(),
-                attributeConstraint: z.string().optional(),
-              })
-            )
-            .optional(),
-        })
-        .optional(),
-    })
-    .optional(),
+  productType: ProductTypeReferenceApiResponseSchema.optional(),
 })
+
+export const InventoryModeApiResponseSchema = z.enum([
+  'None',
+  'TrackOnly',
+  'ReserveOnOrder',
+])
 
 export const CartLineItemApiResponseSchema = z.object({
   id: z.string(),
   productId: z.string(),
   variantId: z.number().optional(),
   quantity: z.number().int().positive(),
+  supplyChannel: z.object({ id: z.string() }).optional(),
+  inventoryMode: InventoryModeApiResponseSchema.optional(),
   name: LocalizedStringApiResponseSchema.optional(),
   product: CartLineItemProductApiResponseSchema.optional(),
   variant: CartLineItemVariantApiResponseSchema.optional(),
   totalPrice: TypedMoneyApiResponseSchema.optional(),
+  // Cart discounts applied to this line item; totalPrice already has them deducted.
+  discountedPricePerQuantity: z
+    .array(
+      z.object({
+        quantity: z.number(),
+        discountedPrice: z.object({
+          includedDiscounts: z.array(
+            z.object({ discountedAmount: TypedMoneyApiResponseSchema })
+          ),
+        }),
+      })
+    )
+    .optional(),
   price: z
     .object({
       value: z.object({
@@ -112,10 +118,20 @@ const ShippingInfoApiResponseSchema = z
   .object({
     shippingMethodName: z.string(),
     price: TypedMoneyApiResponseSchema,
+    // Set only when a cart discount reduces shipping; `price` stays undiscounted.
+    discountedPrice: z
+      .object({ value: TypedMoneyApiResponseSchema })
+      .optional(),
     shippingMethod: z
       .object({
         typeId: z.literal('shipping-method'),
         id: z.string(),
+        // Only present when the request expands shippingInfo.shippingMethod
+        obj: z
+          .object({
+            custom: ShippingMethodCustomApiResponseSchema,
+          })
+          .optional(),
       })
       .optional(),
   })
@@ -180,11 +196,30 @@ const PaymentInfoApiResponseSchema = z
   })
   .optional()
 
+/** `code` is only present when `discountCodes[*].discountCode` is expanded. */
+export const DiscountCodeInfoApiResponseSchema = z.object({
+  discountCode: z.object({
+    typeId: z.literal('discount-code'),
+    id: z.string(),
+    obj: z
+      .object({
+        code: z.string(),
+      })
+      .optional(),
+  }),
+  state: z.string(),
+})
+
+export type DiscountCodeInfoApiResponse = z.infer<
+  typeof DiscountCodeInfoApiResponseSchema
+>
+
 export const CartApiResponseSchema = z.object({
   id: z.string(),
   version: z.number(),
   lineItems: z.array(CartLineItemApiResponseSchema).optional(),
   customLineItems: z.array(CustomLineItemApiResponseSchema).optional(),
+  inventoryMode: InventoryModeApiResponseSchema.optional(),
   totalPrice: TypedMoneyApiResponseSchema,
   taxedPrice: z
     .object({
@@ -197,6 +232,7 @@ export const CartApiResponseSchema = z.object({
       discountedAmount: TypedMoneyApiResponseSchema,
     })
     .optional(),
+  discountCodes: z.array(DiscountCodeInfoApiResponseSchema).optional(),
   billingAddress: AddressApiResponseSchema.optional(),
   shippingAddress: AddressApiResponseSchema.optional(),
   shippingInfo: ShippingInfoApiResponseSchema,

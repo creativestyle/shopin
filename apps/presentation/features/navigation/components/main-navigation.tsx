@@ -9,6 +9,7 @@ import { cn } from '@/lib/utils'
 import { HorizontalScroller } from '@/components/ui/horizontal-scroller'
 import type { MainNavigationResponse } from '@core/contracts/navigation/main-navigation'
 import type { LinkResponse } from '@core/contracts/core/link'
+import { buildProductPath } from '@config/constants'
 
 interface MainNavigationProps extends MainNavigationResponse {
   className?: string
@@ -17,12 +18,19 @@ interface MainNavigationProps extends MainNavigationResponse {
 const ENTER_TIMEOUT = 200
 const LEAVE_TIMEOUT = 150
 
+const subscribeNoop = () => () => {}
+
 export const MainNavigation: React.FC<MainNavigationProps> = ({
   items,
   className,
 }) => {
   const [activeItem, setActiveItem] = React.useState<LinkResponse | null>(null)
-  const [mounted, setMounted] = React.useState(false)
+  // Portal target (document.body) only exists on the client
+  const mounted = React.useSyncExternalStore(
+    subscribeNoop,
+    () => true,
+    () => false
+  )
   const [dropdownTop, setDropdownTop] = React.useState(0)
   const navRef = React.useRef<HTMLDivElement>(null)
   const enterTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(
@@ -76,7 +84,6 @@ export const MainNavigation: React.FC<MainNavigationProps> = ({
   }
 
   React.useEffect(() => {
-    setMounted(true)
     return () => {
       if (enterTimeoutRef.current) {
         clearTimeout(enterTimeoutRef.current)
@@ -187,7 +194,7 @@ export const MainNavigation: React.FC<MainNavigationProps> = ({
                 {/* Right side - Featured product */}
                 {activeItem.featuredProduct && (
                   <Link
-                    href={`/p/${activeItem.featuredProduct.slug}`}
+                    href={buildProductPath(activeItem.featuredProduct.slug)}
                     className='ml-auto flex w-full max-w-80 flex-shrink-0 flex-col items-center gap-4 hover:opacity-80'
                   >
                     <div className='relative aspect-square w-full'>
@@ -205,17 +212,19 @@ export const MainNavigation: React.FC<MainNavigationProps> = ({
                     <div className='text-center text-sm font-bold text-gray-900'>
                       {activeItem.featuredProduct.name}
                     </div>
-                    <div className='text-center text-base font-bold text-gray-900'>
-                      {(
-                        (activeItem.featuredProduct.price
-                          .discountedPriceInCents ??
-                          activeItem.featuredProduct.price
-                            .regularPriceInCents) / 100
-                      ).toFixed(
-                        activeItem.featuredProduct.price.fractionDigits
-                      )}{' '}
-                      {activeItem.featuredProduct.price.currency}
-                    </div>
+                    {activeItem.featuredProduct.price && (
+                      <div className='text-center text-base font-bold text-gray-900'>
+                        {(
+                          (activeItem.featuredProduct.price
+                            .discountedPriceInCents ??
+                            activeItem.featuredProduct.price
+                              .regularPriceInCents) / 100
+                        ).toFixed(
+                          activeItem.featuredProduct.price.fractionDigits
+                        )}{' '}
+                        {activeItem.featuredProduct.price.currency}
+                      </div>
+                    )}
                   </Link>
                 )}
               </div>

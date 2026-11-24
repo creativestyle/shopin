@@ -1,9 +1,10 @@
 import { z } from 'zod'
+import { RichTextLinksSchema } from '../rich-text'
 
 /** Accordion item body: plain string or rich text document wrapper. */
 export const AccordionItemBodySchema = z.union([
   z.string(),
-  z.object({ json: z.unknown() }),
+  z.object({ json: z.unknown(), links: RichTextLinksSchema.optional() }),
 ])
 
 const AccordionItemEntryApiResponseSchema = z.object({

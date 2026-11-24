@@ -1,5 +1,8 @@
 import type { BffFetchClient } from '../types'
-import { CSRF_TOKEN_HEADER_NAME } from '@config/constants'
+import {
+  CORRELATION_ID_HEADER,
+  CSRF_TOKEN_HEADER_NAME,
+} from '@config/constants'
 import { getCsrfToken } from '../utils/csrf-token'
 import { RateLimitError } from '../utils/rate-limit-error'
 
@@ -16,6 +19,8 @@ type ServiceRequestOptions = Omit<RequestInit, 'body' | 'method'> & {
   /**
    * Custom error handler. If provided, called when response is not ok.
    * Can return a value (to handle error gracefully) or throw an error.
+   * Returning undefined falls through to the default handling (RateLimitError on 429,
+   * otherwise a generic error), so a handler only needs to cover the statuses it maps.
    */
   onError?: (response: Response) => Promise<unknown> | unknown
   /**
@@ -101,18 +106,28 @@ export abstract class BaseService {
    */
   private async handleResponse<T>(
     res: Response,
+    method: string,
+    url: string,
     options?: ServiceRequestOptions
   ): Promise<T> {
     if (!res.ok) {
       if (options?.onError) {
-        return (await options.onError(res)) as T
+        const handled = await options.onError(res)
+        if (handled !== undefined) {
+          return handled as T
+        }
       }
 
       if (res.status === 429) {
         throw new RateLimitError()
       }
 
-      throw new Error(`${res.status} ${res.statusText}`)
+      // Status must stay first: HttpError.getStatusCode parses it from the message
+      const correlationId = res.headers.get(CORRELATION_ID_HEADER)
+      const path = url.split('?')[0]
+      throw new Error(
+        `${res.status} ${res.statusText} (BFF ${method} ${path}${correlationId ? `, correlationId: ${correlationId}` : ''})`
+      )
     }
 
     if (options?.allowEmpty) {
@@ -170,10 +185,10 @@ export abstract class BaseService {
           ...options,
         })
 
-        return await this.handleResponse<T>(retryRes, options)
+        return await this.handleResponse<T>(retryRes, method, url, options)
       }
 
-      const result = await this.handleResponse<T>(res, options)
+      const result = await this.handleResponse<T>(res, method, url, options)
 
       // Clear CSRF token after successful mutation (tokens are single-use)
       if (options?.needsCsrf && res.ok) {

@@ -1,9 +1,20 @@
 import { z } from 'zod'
+import { CART_LINE_ITEM_MAX_QUANTITY } from '@config/constants'
 import { BasicPriceResponseSchema } from '../core/basic-price'
 import {
   AddressBaseSchema,
   AddressRequestSchema,
 } from '../address/address-base'
+
+export const LineItemVariantAttributeResponseSchema = z.object({
+  name: z.string(),
+  label: z.string(),
+  value: z.string(),
+})
+
+export type LineItemVariantAttributeResponse = z.infer<
+  typeof LineItemVariantAttributeResponseSchema
+>
 
 export const LineItemResponseSchema = z.object({
   id: z.string(),
@@ -16,6 +27,9 @@ export const LineItemResponseSchema = z.object({
   name: z.string(),
   imageUrl: z.string().optional(),
   attributes: z.record(z.string(), z.string()).optional(),
+  // Attributes that tell this variant apart from its siblings, with display labels
+  variantAttributes: z.array(LineItemVariantAttributeResponseSchema).optional(),
+  maxQuantity: z.number().int().nonnegative().optional(),
 })
 
 export type LineItemResponse = z.infer<typeof LineItemResponseSchema>
@@ -34,6 +48,7 @@ export const ShippingInfoResponseSchema = z
   .object({
     shippingMethodId: z.string(),
     shippingMethodName: z.string().min(1),
+    deliveryTime: z.string().optional(),
     price: BasicPriceResponseSchema,
     freeAbove: BasicPriceResponseSchema.optional(),
   })
@@ -82,6 +97,16 @@ export const PaymentInfoResponseSchema = z
 
 export type PaymentInfoResponse = z.infer<typeof PaymentInfoResponseSchema>
 
+/** `id` is the reference needed to remove the code; `code` is what the shopper typed. */
+export const DiscountCodeResponseSchema = z.object({
+  id: z.string(),
+  code: z.string(),
+  // False when the code is still on the cart but no longer grants its discount.
+  applied: z.boolean(),
+})
+
+export type DiscountCodeResponse = z.infer<typeof DiscountCodeResponseSchema>
+
 export const CartResponseSchema = z.object({
   id: z.string(),
   version: z.number(),
@@ -89,6 +114,8 @@ export const CartResponseSchema = z.object({
   subtotal: BasicPriceResponseSchema,
   tax: BasicPriceResponseSchema.optional(),
   discountAmount: BasicPriceResponseSchema.optional(),
+  // Array even though only one code may be active, so relaxing that is not a breaking change.
+  discountCodes: z.array(DiscountCodeResponseSchema).optional(),
   grandTotal: BasicPriceResponseSchema,
   currency: z.string(),
   itemCount: z.number().int().nonnegative(),
@@ -111,14 +138,19 @@ export type CartResponse = z.infer<typeof CartResponseSchema>
 export const AddToCartRequestSchema = z.object({
   productId: z.string(),
   variantId: z.string().optional(),
-  quantity: z.number().int().positive().default(1),
+  quantity: z
+    .number()
+    .int()
+    .positive()
+    .max(CART_LINE_ITEM_MAX_QUANTITY)
+    .default(1),
 })
 
 export type AddToCartRequest = z.infer<typeof AddToCartRequestSchema>
 
 export const UpdateCartItemRequestSchema = z.object({
   lineItemId: z.string(),
-  quantity: z.number().int().positive(),
+  quantity: z.number().int().positive().max(CART_LINE_ITEM_MAX_QUANTITY),
 })
 
 export type UpdateCartItemRequest = z.infer<typeof UpdateCartItemRequestSchema>
@@ -128,6 +160,51 @@ export const RemoveCartItemRequestSchema = z.object({
 })
 
 export type RemoveCartItemRequest = z.infer<typeof RemoveCartItemRequestSchema>
+
+export const ApplyDiscountCodeRequestSchema = z.object({
+  code: z.string().trim().min(1).max(100),
+})
+
+export type ApplyDiscountCodeRequest = z.infer<
+  typeof ApplyDiscountCodeRequestSchema
+>
+
+export const RemoveDiscountCodeRequestSchema = z.object({
+  discountCodeId: z.string().trim().min(1).max(100),
+})
+
+export type RemoveDiscountCodeRequest = z.infer<
+  typeof RemoveDiscountCodeRequestSchema
+>
+
+export const DISCOUNT_CODE_ERROR_REASONS = [
+  'invalid',
+  'expired',
+  'notApplicable',
+  'alreadyApplied',
+] as const
+
+export const DiscountCodeErrorReasonSchema = z.enum(DISCOUNT_CODE_ERROR_REASONS)
+
+export type DiscountCodeErrorReason = z.infer<
+  typeof DiscountCodeErrorReasonSchema
+>
+
+/** Thrown by data-source implementations when a code cannot be applied. */
+export class DiscountCodeError extends Error {
+  constructor(readonly reason: DiscountCodeErrorReason) {
+    super(`Discount code rejected: ${reason}`)
+    this.name = 'DiscountCodeError'
+  }
+}
+
+/** Thrown when the cart changed after the version the caller checked. */
+export class CartVersionConflictError extends Error {
+  constructor() {
+    super('Cart was modified concurrently')
+    this.name = 'CartVersionConflictError'
+  }
+}
 
 /**
  * Set billing address request schema - excludes isDefaultShipping and isDefaultBilling

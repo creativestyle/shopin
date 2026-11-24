@@ -35,9 +35,16 @@ export class OrderService {
     'paymentInfo.payments[*]',
   ] satisfies string[]
 
+  // Order detail resolves the shipping method for its deliveryTime custom field
+  private static readonly ORDER_DETAIL_EXPAND = [
+    ...OrderService.ORDER_EXPAND,
+    'shippingInfo.shippingMethod',
+  ] satisfies string[]
+
   // Minimal expansion for list view - just need first item image
   private static readonly ORDER_LIST_EXPAND = [
     'lineItems[*].variant',
+    'shippingInfo.shippingMethod',
   ] satisfies string[]
 
   // Default pagination limit for order list
@@ -120,7 +127,7 @@ export class OrderService {
         .withId({ ID: orderId })
         .get({
           queryArgs: {
-            expand: OrderService.ORDER_EXPAND,
+            expand: OrderService.ORDER_DETAIL_EXPAND,
           },
         })
         .execute()

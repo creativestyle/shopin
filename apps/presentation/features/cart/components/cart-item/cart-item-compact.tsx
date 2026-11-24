@@ -6,6 +6,7 @@ import { productImageLoader } from '@/lib/product-image-loader'
 import type { LineItemResponse } from '@core/contracts/cart/cart'
 import { CartItemActions } from './cart-item-actions'
 import { CartItemQuantitySwitcher } from './cart-item-quantity-switcher'
+import { cn } from '@/lib/utils'
 import { useLocale, useTranslations } from 'next-intl'
 import { calculateItemPrices, getProductHref } from './cart-item-utils'
 import { DecoratedPrice } from '@/components/ui/price/decorated-price'
@@ -15,11 +16,14 @@ import { useCartItemRemoval } from '../../hooks/use-cart-item-removal'
 interface CartItemCompactProps {
   item: LineItemResponse
   preview?: boolean
+  /** Removes bottom border — use for the last item when list is collapsed. */
+  isLast?: boolean
 }
 
 export function CartItemCompact({
   item,
   preview = false,
+  isLast = false,
 }: CartItemCompactProps) {
   const locale = useLocale()
   const t = useTranslations('cart')
@@ -33,8 +37,26 @@ export function CartItemCompact({
     handleCancel,
   } = useCartItemRemoval({ item })
 
+  const isDiscounted = Boolean(item.price.discountedPriceInCents)
+  const variantAttributes = item.variantAttributes ?? []
+
+  const priceClassName = cn(
+    'shrink-0 text-sm font-bold',
+    preview && 'md:text-base',
+    isDiscounted ? 'text-red-600' : 'text-gray-950'
+  )
+
+  const originalPriceClassName = preview
+    ? 'text-xs/[1.6] md:text-sm/[1.6] text-gray-500'
+    : 'text-xs/[1.6] text-gray-500'
+
   return (
-    <div className='relative w-full shrink-0 border-b border-gray-100'>
+    <div
+      className={cn(
+        'relative w-full shrink-0 border-gray-100',
+        !isLast && 'border-b'
+      )}
+    >
       <div className='flex w-full flex-col gap-2.5 overflow-clip px-0 py-6'>
         <div className='flex w-full items-stretch gap-4'>
           <div className='flex shrink-0 flex-col justify-between self-stretch'>
@@ -55,18 +77,55 @@ export function CartItemCompact({
                 variant='icon-only'
                 productId={item.productId}
                 variantId={item.variantId}
+                itemName={item.name}
                 onRemoveClick={handleRemoveClick}
                 isRemoving={isRemoving}
               />
             )}
           </div>
           <div className='flex min-w-0 flex-1 flex-col justify-between gap-4'>
-            <Link
-              href={productHref}
-              className='text-sm/[1.6] font-bold text-gray-950 hover:underline'
-            >
-              {item.name}
-            </Link>
+            {preview ? (
+              <div className='flex items-start justify-between gap-4'>
+                <Link
+                  href={productHref}
+                  className='text-sm/[1.6] font-bold text-gray-950 hover:underline'
+                >
+                  {item.name}
+                </Link>
+                <DecoratedPrice
+                  price={totalPrice}
+                  originalPrice={originalPrice}
+                  currency={item.price.currency}
+                  fractionDigits={item.price.fractionDigits}
+                  locale={locale}
+                  stacked
+                  className={priceClassName}
+                  originalPriceClassName={originalPriceClassName}
+                />
+              </div>
+            ) : (
+              <div>
+                <Link
+                  href={productHref}
+                  className='text-sm/[1.6] font-bold text-gray-950 hover:underline'
+                >
+                  {item.name}
+                </Link>
+                {variantAttributes.length > 0 && (
+                  <dl className='mt-3 text-xs text-gray-700'>
+                    {variantAttributes.map(({ name, label, value }) => (
+                      <div
+                        key={name}
+                        className='flex gap-1'
+                      >
+                        <dt>{label}:</dt>
+                        <dd>{value}</dd>
+                      </div>
+                    ))}
+                  </dl>
+                )}
+              </div>
+            )}
             <div className='flex w-full flex-row items-center justify-between gap-2'>
               {preview ? (
                 <div className='text-sm text-gray-700'>
@@ -75,24 +134,31 @@ export function CartItemCompact({
               ) : (
                 <CartItemQuantitySwitcher
                   item={item}
+                  itemName={item.name}
+                  onRemoveClick={handleRemoveClick}
+                  isRemoving={isRemoving}
                   className='h-10 shrink-0'
                 />
               )}
-              <DecoratedPrice
-                price={totalPrice}
-                originalPrice={originalPrice}
-                currency={item.price.currency}
-                fractionDigits={item.price.fractionDigits}
-                locale={locale}
-                variant={
-                  item.price.discountedPriceInCents ? 'discount' : 'regular'
-                }
-                className='shrink-0 text-sm font-bold'
-              />
+              {!preview && (
+                <DecoratedPrice
+                  price={totalPrice}
+                  originalPrice={originalPrice}
+                  currency={item.price.currency}
+                  fractionDigits={item.price.fractionDigits}
+                  locale={locale}
+                  stacked
+                  className={priceClassName}
+                  originalPriceClassName={originalPriceClassName}
+                />
+              )}
             </div>
           </div>
         </div>
       </div>
+      {isLast && (
+        <div className='pointer-events-none absolute right-0 bottom-0 left-0 h-[59px] bg-gradient-to-t from-white to-transparent' />
+      )}
       {!preview && showConfirmation && (
         <CartItemRemovalConfirmation
           item={item}

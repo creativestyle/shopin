@@ -13,9 +13,13 @@ jest.mock('@/lib/request-context/variant', () => ({
   getRequestVariant: jest.fn(),
 }))
 jest.mock('@/lib/variant/variant-key', () => ({ variantHeaders: jest.fn() }))
+jest.mock('@/lib/draft-mode', () => ({
+  getDraftModeHeaderValue: jest.fn(() => 'signed-draft-token'),
+}))
 
 import { createBffFetchServer } from '../bff-fetch-server'
 import type { BffFetchOptions } from '../bff-fetch'
+import { BffUnreachableError } from '../../utils/bff-unreachable-error'
 
 const BASE_URL = 'http://bff-internal'
 const VARIANT_RESOLVED = { dataSource: 'commercetools-set' }
@@ -119,32 +123,32 @@ describe('createBffFetchServer', () => {
   // ─── isDraft flag ──────────────────────────────────────────────────────
 
   describe('isDraft flag', () => {
-    it('sets isDraft: true when opts.isDraft is true', async () => {
+    it('signs a draft token when opts.isDraft is true', async () => {
       mocks().getRequestVariant.mockReturnValue(VARIANT_RESOLVED)
       const client = await createBffFetchServer({ isDraft: true })
       await client.fetch('/nav')
-      expect(lastCallOptions().isDraft).toBe(true)
+      expect(lastCallOptions().draftToken).toBe('signed-draft-token')
     })
 
-    it('sets variantHeaders and isDraft when variant context and isDraft are both set', async () => {
+    it('sets variantHeaders and draftToken when variant context and isDraft are both set', async () => {
       mocks().getRequestVariant.mockReturnValue(VARIANT_RESOLVED)
       const client = await createBffFetchServer({ isDraft: true })
       await client.fetch('/nav')
       expect(lastCallOptions().variantHeaders).toEqual(VARIANT_HEADERS)
-      expect(lastCallOptions().isDraft).toBe(true)
+      expect(lastCallOptions().draftToken).toBe('signed-draft-token')
     })
 
-    it('sets isDraft: true even when variant context is undefined', async () => {
+    it('signs a draft token even when variant context is undefined', async () => {
       const client = await createBffFetchServer({ isDraft: true })
       await client.fetch('/nav')
-      expect(lastCallOptions().isDraft).toBe(true)
+      expect(lastCallOptions().draftToken).toBe('signed-draft-token')
       expect(lastCallOptions().variantHeaders).toBeUndefined()
     })
 
-    it('does not set isDraft when opts.isDraft is false or absent', async () => {
+    it('does not set draftToken when opts.isDraft is false or absent', async () => {
       const client = await createBffFetchServer({ isDraft: false })
       await client.fetch('/nav')
-      expect(lastCallOptions().isDraft).toBeUndefined()
+      expect(lastCallOptions().draftToken).toBeUndefined()
     })
   })
 
@@ -159,6 +163,51 @@ describe('createBffFetchServer', () => {
       await expect(client.fetch('/nav')).rejects.toThrow('network failure')
       expect(m.loggerError).toHaveBeenCalledWith(
         expect.objectContaining({ path: '/nav', error: 'network failure' }),
+        'BFF request failed'
+      )
+    })
+
+    it('throws BffUnreachableError with the cause kept when the BFF refuses the connection', async () => {
+      const m = mocks()
+      const err = new TypeError('fetch failed', {
+        cause: { code: 'ECONNREFUSED' },
+      })
+      m.bffFetch.mockRejectedValue(err)
+      const client = await createBffFetchServer()
+
+      const thrown = await client.fetch('/nav').catch((e: unknown) => e)
+
+      expect(thrown).toBeInstanceOf(BffUnreachableError)
+      expect((thrown as BffUnreachableError).cause).toBe(err)
+      expect((thrown as BffUnreachableError).bffUrl).toBe(BASE_URL)
+      expect((thrown as BffUnreachableError).code).toBe('ECONNREFUSED')
+      expect(m.loggerError).toHaveBeenCalledWith(
+        {
+          path: '/nav',
+          bffUrl: BASE_URL,
+          code: 'ECONNREFUSED',
+          error: 'fetch failed',
+        },
+        'BFF unreachable'
+      )
+    })
+
+    it('rethrows the original error for a mid-request reset', async () => {
+      const m = mocks()
+      const err = new TypeError('fetch failed', {
+        cause: { code: 'ECONNRESET' },
+      })
+      m.bffFetch.mockRejectedValue(err)
+      const client = await createBffFetchServer()
+
+      await expect(client.fetch('/nav')).rejects.toBe(err)
+      expect(m.loggerError).toHaveBeenCalledWith(
+        {
+          path: '/nav',
+          bffUrl: BASE_URL,
+          code: 'ECONNRESET',
+          error: 'fetch failed',
+        },
         'BFF request failed'
       )
     })

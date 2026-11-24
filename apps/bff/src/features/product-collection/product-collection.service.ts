@@ -42,6 +42,7 @@ export class ProductCollectionService {
       currentCategoryId: response.currentCategoryId,
       categoryName: response.categoryName,
       slugByLocale: response.slugByLocale,
+      seo: response.seo,
     }
   }
 }

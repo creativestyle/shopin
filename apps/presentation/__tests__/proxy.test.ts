@@ -30,9 +30,8 @@ jest.mock('@/lib/draft-mode', () => {
   // initialize), so the cap value cannot reference an outer `const` without a TDZ error.
   const maxAge = 60 * 60 // 1h — mirrors DRAFT_COOKIE_MAX_AGE_SEC
   return {
-    PREVIEW_TOKEN_COOKIE: 'preview_token',
-    PREVIEW_TOKEN_INTERNAL_PARAM: '__pt',
     DRAFT_COOKIE_MAX_AGE_SEC: maxAge,
+    isSiteHttps: jest.requireActual('@/lib/draft-mode').isSiteHttps,
     isPreviewTokenValid: (token: string | null | undefined) =>
       !!token && verifyDraftToken(token, mockDraftSecret, maxAge),
   }
@@ -47,6 +46,7 @@ jest.mock('@core/logger-config', () => ({
 // ─── System under test ───────────────────────────────────────────────────────
 // Import AFTER mocks so the module picks up our mock for createMiddleware.
 import proxy from '../proxy'
+import { APP_ROUTE_SEGMENTS } from '@/lib/app-route-segments'
 
 // ─── Constants (real values from @config/constants) ──────────────────────────
 const DEFAULT_VARIANT = '~commercetools-set'
@@ -392,47 +392,45 @@ describe('cookie-driven preview — clean /locale/... path (isDraftActive=true)'
 })
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 3c. Active draft cookie funnels every clean URL into the /preview subtree
+// 3c. Active draft cookie funnels clean content URLs into the /preview subtree
 // ─────────────────────────────────────────────────────────────────────────────
-// Functional routes (cart, checkout, account, …) have no draft (CMS) representation, so they
-// resolve to no content in /preview and render the 404 page — acceptable inside an editorial
-// preview session. The proxy does not special-case them; previewable routes (content, p, c)
-// funnel the same way.
+// App routes (cart, checkout, account, …) have no draft (CMS) representation, so they keep
+// normal routing and render live data; previewable routes (content, p, c) funnel into /preview.
 
-describe('active draft cookie funnels clean URLs into preview', () => {
-  it.each(['cart', 'checkout', 'account', 'sign-in', 'wishlist', 'setup'])(
-    'funnels /en/%s into the /preview subtree',
-    (segment) => {
-      const res = proxy(
-        makeRequest(`/en/${segment}`, {
-          cookie: `preview_token=${ACTIVE_PREVIEW_TOKEN}`,
-        })
-      )
-      expect(rewritePath(res)).toBe(`/${DEFAULT_VARIANT}/en/preview/${segment}`)
-    }
-  )
+describe('active draft cookie: content URLs funnel into preview, app routes do not', () => {
+  it.each(
+    [...APP_ROUTE_SEGMENTS].flatMap((segment) => [
+      ['en', segment],
+      ['de', segment],
+    ])
+  )('keeps app route /%s/%s out of the /preview subtree', (locale, segment) => {
+    const res = proxy(
+      makeRequest(`/${locale}/${segment}`, {
+        cookie: `preview_token=${ACTIVE_PREVIEW_TOKEN}`,
+      })
+    )
+    expect(rewritePath(res)).toBe(`/${DEFAULT_VARIANT}/${locale}/${segment}`)
+  })
 
-  it('funnels nested routes (account/orders) into preview', () => {
+  it('keeps nested app routes (account/orders) out of preview', () => {
     const res = proxy(
       makeRequest('/en/account/orders', {
         cookie: `preview_token=${ACTIVE_PREVIEW_TOKEN}`,
       })
     )
-    expect(rewritePath(res)).toBe(
-      `/${DEFAULT_VARIANT}/en/preview/account/orders`
-    )
+    expect(rewritePath(res)).toBe(`/${DEFAULT_VARIANT}/en/account/orders`)
   })
 
-  it('funnels an unprefixed path (/cart) into preview under an active cookie', () => {
+  it('keeps an unprefixed app route (/cart) out of preview under an active cookie', () => {
     const res = proxy(
       makeRequest('/cart', { cookie: `preview_token=${ACTIVE_PREVIEW_TOKEN}` })
     )
-    expect(rewritePath(res)).toBe(`/${DEFAULT_VARIANT}/en/preview/cart`)
+    expect(rewritePath(res)).toBe(`/${DEFAULT_VARIANT}/en/cart`)
   })
 
   it('injects __pt when funnelling a clean URL into preview', () => {
     const res = proxy(
-      makeRequest('/en/cart', {
+      makeRequest('/en/about-us', {
         cookie: `preview_token=${ACTIVE_PREVIEW_TOKEN}`,
       })
     )
@@ -447,6 +445,72 @@ describe('active draft cookie funnels clean URLs into preview', () => {
       })
     )
     expect(rewritePath(res)).toBe(`/${DEFAULT_VARIANT}/en/preview/p/shoe`)
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 3d. preview_active marker cookie (drives the client-side draft banner)
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('preview_active marker cookie', () => {
+  const originalFrontendUrl = process.env.FRONTEND_URL
+
+  afterEach(() => {
+    if (originalFrontendUrl === undefined) {
+      delete process.env.FRONTEND_URL
+    } else {
+      process.env.FRONTEND_URL = originalFrontendUrl
+    }
+  })
+
+  it('sets the marker with the draft max-age on a clean content URL with a valid token', () => {
+    const res = proxy(
+      makeRequest('/en/about-us', {
+        cookie: `preview_token=${ACTIVE_PREVIEW_TOKEN}`,
+      })
+    )
+    const marker = res.cookies.get('preview_active')
+    expect(marker?.value).toBe('1')
+    expect(marker?.maxAge).toBe(60 * 60)
+  })
+
+  it('sets the marker on an app route (/en/cart) with a valid token', () => {
+    const res = proxy(
+      makeRequest('/en/cart', {
+        cookie: `preview_token=${ACTIVE_PREVIEW_TOKEN}`,
+      })
+    )
+    expect(res.cookies.get('preview_active')?.value).toBe('1')
+  })
+
+  it.each([
+    ['expired', EXPIRED_PREVIEW_TOKEN],
+    ['forged', '99999999999.fakedsig'],
+  ])('clears the marker when the token is %s', (_label, token) => {
+    const res = proxy(
+      makeRequest('/en/about-us', {
+        cookie: `preview_token=${token}; preview_active=1`,
+      })
+    )
+    const marker = res.cookies.get('preview_active')
+    expect(marker?.value).toBe('')
+    expect(marker?.maxAge).toBe(0)
+  })
+
+  it('clears the marker with Secure; SameSite=None on an https site', () => {
+    process.env.FRONTEND_URL = 'https://shop.example.com'
+    const res = proxy(
+      makeRequest('/en/about-us', { cookie: 'preview_active=1' })
+    )
+    const marker = res.cookies.get('preview_active')
+    expect(marker?.maxAge).toBe(0)
+    expect(marker?.secure).toBe(true)
+    expect(marker?.sameSite).toBe('none')
+  })
+
+  it('sets nothing when neither cookie is present', () => {
+    const res = proxy(makeRequest('/en/about-us'))
+    expect(res.cookies.get('preview_active')).toBeUndefined()
   })
 })
 
@@ -477,6 +541,17 @@ describe('intlMiddleware fallthrough', () => {
     // handlePreviewPath ran instead of the redirect passthrough.
     expect(rewritePath(res)).toBe(`/${DEFAULT_VARIANT}/en/preview/foo`)
     expect(res.status).toBe(200)
+    expect(res.headers.get('location')).toBeNull()
+  })
+
+  it('drops an intlMiddleware redirect on an explicit /preview/foo URL', () => {
+    getIntlMiddlewareFn().mockReturnValue(
+      NextResponse.redirect(`${BASE}/en/preview/foo`)
+    )
+    const res = proxy(makeRequest(`/preview/foo?__pt=${FRESH_URL_TOKEN}`))
+    expect(rewritePath(res)).toBe(`/${DEFAULT_VARIANT}/en/preview/foo`)
+    expect(res.status).toBe(200)
+    expect(res.headers.get('location')).toBeNull()
   })
 
   it('rewrites /en/product to /<variant>/en/product when intl returns no rewrite', () => {
@@ -524,6 +599,14 @@ describe('cookie-based variant (internal rewrite, clean URL)', () => {
     )
     expect(res.status).not.toBe(302)
     expect(rewritePath(res)).toBe(`/${ALT_VARIANT}/en/product`)
+  })
+
+  it('rewrites to the mock-set variant when the mock data-source cookie is present', () => {
+    const res = proxy(
+      makeRequest('/en/product', { cookie: 'data-source=mock-set' })
+    )
+    expect(res.status).not.toBe(302)
+    expect(rewritePath(res)).toBe('/~mock-set/en/product')
   })
 
   it('rewrites to default-variant when the default data-source cookie is present', () => {

@@ -1,17 +1,29 @@
-import { Injectable } from '@nestjs/common'
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common'
 import { DataSourceFactory } from '../../data-source/data-source.factory'
 import type { CartResponse } from '@core/contracts/cart/cart'
+import {
+  CartVersionConflictError,
+  DiscountCodeError,
+} from '@core/contracts/cart/cart'
 import type {
   AddToCartRequest,
   UpdateCartItemRequest,
   RemoveCartItemRequest,
   SetBillingAddressRequest,
   SetShippingAddressRequest,
+  ApplyDiscountCodeRequest,
+  RemoveDiscountCodeRequest,
 } from '@core/contracts/cart/cart'
+import { FrontendSafeException } from '../../common/errors/frontend-safe.exception'
 import type {
   ShippingMethodsResponse,
   SetShippingMethodRequest,
 } from '@core/contracts/cart/shipping-method'
+import type { GetCartOptions } from '@core/contracts/core/data-source-interfaces'
 import { CartIdService } from '../cart-id/cart-id.service'
 import { TokenProvider } from '../../common/token-management/token-provider'
 import { TokenStorageService } from '../../common/token-management/token-storage.service'
@@ -28,14 +40,23 @@ export class CartService extends BaseAuthenticatedService {
     super(tokenProvider, tokenStorageService, dataSourceFactory)
   }
 
-  async getCart(): Promise<CartResponse | null> {
+  async getCart(options?: GetCartOptions): Promise<CartResponse | null> {
     const cartId = await this.getCartId()
     if (!cartId) {
       return null
     }
 
     const cartService = this.getCartService()
-    return await cartService.getCart(cartId)
+    try {
+      return await cartService.getCart(cartId, options)
+    } catch (error) {
+      // Stale id (e.g. mock cart lost on BFF restart): drop it so a new cart is created
+      if (error instanceof NotFoundException) {
+        await this.clearCartId()
+        return null
+      }
+      throw error
+    }
   }
 
   async getOrCreateCart(): Promise<CartResponse> {
@@ -58,46 +79,50 @@ export class CartService extends BaseAuthenticatedService {
   }
 
   async addToCart(request: AddToCartRequest): Promise<CartResponse> {
-    const cartId = await this.getOrCreateCartId()
-    const cartService = this.getCartService()
-    return await cartService.addToCart(
-      cartId,
-      request.productId,
-      request.variantId,
-      request.quantity
+    return this.withCartId((cartId) =>
+      this.getCartService().addToCart(
+        cartId,
+        request.productId,
+        request.variantId,
+        request.quantity
+      )
     )
   }
 
   async updateCartItem(request: UpdateCartItemRequest): Promise<CartResponse> {
-    const cartId = await this.getOrCreateCartId()
-    const cartService = this.getCartService()
-    return await cartService.updateCartItem(
-      cartId,
-      request.lineItemId,
-      request.quantity
+    return this.withCartId(
+      (cartId) =>
+        this.getCartService().updateCartItem(
+          cartId,
+          request.lineItemId,
+          request.quantity
+        ),
+      { retry: false }
     )
   }
 
   async removeCartItem(request: RemoveCartItemRequest): Promise<CartResponse> {
-    const cartId = await this.getOrCreateCartId()
-    const cartService = this.getCartService()
-    return await cartService.removeCartItem(cartId, request.lineItemId)
+    return this.withCartId(
+      (cartId) =>
+        this.getCartService().removeCartItem(cartId, request.lineItemId),
+      { retry: false }
+    )
   }
 
   async setBillingAddress(
     request: SetBillingAddressRequest
   ): Promise<CartResponse> {
-    const cartId = await this.getOrCreateCartId()
-    const cartService = this.getCartService()
-    return await cartService.setBillingAddress(cartId, request)
+    return this.withCartId((cartId) =>
+      this.getCartService().setBillingAddress(cartId, request)
+    )
   }
 
   async setShippingAddress(
     request: SetShippingAddressRequest
   ): Promise<CartResponse> {
-    const cartId = await this.getOrCreateCartId()
-    const cartService = this.getCartService()
-    return await cartService.setShippingAddress(cartId, request)
+    return this.withCartId((cartId) =>
+      this.getCartService().setShippingAddress(cartId, request)
+    )
   }
 
   async getShippingMethods(): Promise<ShippingMethodsResponse> {
@@ -105,16 +130,82 @@ export class CartService extends BaseAuthenticatedService {
     if (!cartId) {
       return { shippingMethods: [] }
     }
-    const cartService = this.getCartService()
-    return await cartService.getShippingMethods(cartId)
+    try {
+      return await this.getCartService().getShippingMethods(cartId)
+    } catch (error) {
+      if (await this.isStaleCartError(error, cartId)) {
+        await this.clearCartId()
+        return { shippingMethods: [] }
+      }
+      throw error
+    }
   }
 
   async setShippingMethod(
     request: SetShippingMethodRequest
   ): Promise<CartResponse> {
+    return this.withCartId((cartId) =>
+      this.getCartService().setShippingMethod(cartId, request)
+    )
+  }
+
+  /** Single-code rule is enforced here too, since this endpoint is callable directly. */
+  async applyDiscountCode(
+    request: ApplyDiscountCodeRequest
+  ): Promise<CartResponse> {
+    const cartId = await this.getOrCreateCartId()
+    try {
+      return await this.checkAndAddDiscountCode(cartId, request.code)
+    } catch (error) {
+      if (!(error instanceof CartVersionConflictError)) {
+        throw error
+      }
+    }
+    // The cart changed since the check; re-run it once against the new state.
+    try {
+      return await this.checkAndAddDiscountCode(cartId, request.code)
+    } catch (error) {
+      if (error instanceof CartVersionConflictError) {
+        throw new ConflictException()
+      }
+      throw error
+    }
+  }
+
+  private async checkAndAddDiscountCode(
+    cartId: string,
+    code: string
+  ): Promise<CartResponse> {
+    const cartService = this.getCartService()
+
+    const cart = await cartService.getCart(cartId)
+    if (cart.discountCodes?.some((entry) => entry.applied)) {
+      throw new FrontendSafeException('alreadyApplied')
+    }
+
+    // Stale codes are replaced, not kept: CT would reapply them once the cart matches again.
+    const staleCodeIds = (cart.discountCodes ?? []).map((entry) => entry.id)
+
+    try {
+      // The checked version makes check and write atomic: a parallel apply gets a conflict.
+      return await cartService.addDiscountCode(cartId, code, {
+        replaceDiscountCodeIds: staleCodeIds,
+        expectedVersion: cart.version,
+      })
+    } catch (error) {
+      if (error instanceof DiscountCodeError) {
+        throw new FrontendSafeException(error.reason)
+      }
+      throw error
+    }
+  }
+
+  async removeDiscountCode(
+    request: RemoveDiscountCodeRequest
+  ): Promise<CartResponse> {
     const cartId = await this.getOrCreateCartId()
     const cartService = this.getCartService()
-    return await cartService.setShippingMethod(cartId, request)
+    return await cartService.removeDiscountCode(cartId, request.discountCodeId)
   }
 
   /**
@@ -152,7 +243,7 @@ export class CartService extends BaseAuthenticatedService {
    * Get cart ID from cart ID service, or create a new cart if none exists.
    * This method does not fetch the full cart, only gets/creates the cart ID.
    */
-  private async getOrCreateCartId(): Promise<string> {
+  async getOrCreateCartId(): Promise<string> {
     const cartId = await this.getCartId()
     if (cartId) {
       return cartId
@@ -205,6 +296,42 @@ export class CartService extends BaseAuthenticatedService {
       await this.cartIdService.setLoggedInCartId(cartId)
     } else {
       await this.cartIdService.setGuestCartId(cartId)
+    }
+  }
+
+  /** On a stale cart id: new cart, then retry once (or return it empty when `retry: false`) */
+  private async withCartId(
+    operation: (cartId: string) => Promise<CartResponse>,
+    { retry = true }: { retry?: boolean } = {}
+  ): Promise<CartResponse> {
+    const cartId = await this.getOrCreateCartId()
+    try {
+      return await operation(cartId)
+    } catch (error) {
+      if (!(await this.isStaleCartError(error, cartId))) {
+        throw error
+      }
+      await this.clearCartId()
+      const cart = await this.createCart()
+      return retry ? await operation(cart.id) : cart
+    }
+  }
+
+  private async isStaleCartError(
+    error: unknown,
+    cartId: string
+  ): Promise<boolean> {
+    if (!(error instanceof NotFoundException)) {
+      return false
+    }
+    try {
+      await this.getCartService().getCart(cartId, { withInventory: false })
+      return false
+    } catch (lookupError) {
+      if (lookupError instanceof NotFoundException) {
+        return true
+      }
+      throw lookupError
     }
   }
 

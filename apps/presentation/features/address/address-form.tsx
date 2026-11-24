@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useId } from 'react'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useTranslations, useLocale } from 'next-intl'
@@ -40,8 +40,7 @@ export interface AddressFormProps {
    */
   formId?: string
   /**
-   * Whether to show checkboxes for setting default shipping/billing addresses
-   * Should be true when used in customer account area
+   * Show "use as default" checkboxes. Only for creating an address; existing ones use CustomerAddressDefaultActions.
    */
   showDefaultAddressOptions?: boolean
   /**
@@ -64,6 +63,7 @@ export function AddressForm({
   countries,
 }: AddressFormProps) {
   const t = useTranslations('address.form')
+  const fieldIdPrefix = useId()
   const locale = useLocale()
   const { storeConfig } = useStoreConfig()
   const rfcLocale = urlPrefixToRfc(locale)
@@ -106,8 +106,15 @@ export function AddressForm({
           render={({ field, fieldState }) => (
             <Field data-invalid={fieldState.invalid}>
               <div className='space-y-2'>
+                <span
+                  id={`${fieldIdPrefix}-salutation-label`}
+                  className='block text-xs/[1.5] text-gray-500'
+                >
+                  {t('fields.salutation')}
+                </span>
                 <RadioGroup
-                  id='salutation'
+                  id={`${fieldIdPrefix}-salutation`}
+                  aria-labelledby={`${fieldIdPrefix}-salutation-label`}
                   orientation='horizontal'
                   value={field.value || ''}
                   onValueChange={field.onChange}
@@ -120,12 +127,12 @@ export function AddressForm({
                     >
                       <RadioGroupItem
                         value={salutation}
-                        id={`salutation-${salutation}`}
-                        aria-labelledby={`salutation-${salutation}-label`}
+                        id={`${fieldIdPrefix}-salutation-${salutation}`}
+                        aria-labelledby={`${fieldIdPrefix}-salutation-${salutation}-label`}
                         invalid={fieldState.invalid}
                       />
                       <span
-                        id={`salutation-${salutation}-label`}
+                        id={`${fieldIdPrefix}-salutation-${salutation}-label`}
                         className='text-base text-gray-700 capitalize'
                       >
                         {t(`salutationOptions.${salutation}`)}
@@ -201,6 +208,7 @@ export function AddressForm({
               {...field}
               id='streetNumber'
               label={t('fields.streetNumber')}
+              required
               autoComplete='address-line2'
               validationState={validationState}
             />
@@ -315,7 +323,6 @@ export function AddressForm({
         />
       </Field>
 
-      {/* Default Address Options - Only shown in customer area */}
       {showDefaultAddressOptions && (
         <div className='space-y-3 border-t border-gray-200 pt-4'>
           <Field>
@@ -325,13 +332,13 @@ export function AddressForm({
               render={({ field }) => (
                 <label className='flex cursor-pointer items-center gap-3'>
                   <Checkbox
-                    id='isDefaultShipping'
-                    aria-labelledby='isDefaultShipping-label'
+                    id={`${fieldIdPrefix}-isDefaultShipping`}
+                    aria-labelledby={`${fieldIdPrefix}-isDefaultShipping-label`}
                     checked={field.value || false}
                     onCheckedChange={field.onChange}
                   />
                   <span
-                    id='isDefaultShipping-label'
+                    id={`${fieldIdPrefix}-isDefaultShipping-label`}
                     className='text-sm font-medium text-gray-700'
                   >
                     {t('defaultShipping')}
@@ -347,13 +354,13 @@ export function AddressForm({
               render={({ field }) => (
                 <label className='flex cursor-pointer items-center gap-3'>
                   <Checkbox
-                    id='isDefaultBilling'
-                    aria-labelledby='isDefaultBilling-label'
+                    id={`${fieldIdPrefix}-isDefaultBilling`}
+                    aria-labelledby={`${fieldIdPrefix}-isDefaultBilling-label`}
                     checked={field.value || false}
                     onCheckedChange={field.onChange}
                   />
                   <span
-                    id='isDefaultBilling-label'
+                    id={`${fieldIdPrefix}-isDefaultBilling-label`}
                     className='text-sm font-medium text-gray-700'
                   >
                     {t('defaultBilling')}

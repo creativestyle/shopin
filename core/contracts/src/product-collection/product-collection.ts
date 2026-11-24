@@ -2,6 +2,7 @@ import { z } from 'zod'
 import { ProductCardResponseSchema } from './product-card'
 import { CrumbResponseSchema } from '../core/crumb'
 import { FacetsResponseSchema } from './facet'
+import { PageSeoSchema } from '../page/page'
 
 export const PriceRangeSchema = z.object({
   minPriceInCents: z.number().int().min(0),
@@ -38,6 +39,7 @@ export const ProductCollectionResponseSchema = z.object({
    * Used by the language switcher to resolve the localized category URL.
    */
   slugByLocale: z.record(z.string(), z.string()).optional(),
+  seo: PageSeoSchema.optional(),
 })
 
 export type ProductCollectionResponse = z.infer<

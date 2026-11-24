@@ -1,4 +1,5 @@
 import type { LineItemResponse } from '@core/contracts/cart/cart'
+import { buildProductPath } from '@config/constants'
 
 /**
  * Calculate item prices (total and original if discounted).
@@ -13,16 +14,63 @@ export function calculateItemPrices(item: LineItemResponse): {
     (item.price.discountedPriceInCents ?? item.price.regularPriceInCents) *
     item.quantity
 
-  const originalPrice = item.price.discountedPriceInCents
-    ? item.price.regularPriceInCents * item.quantity
-    : undefined
+  // A discount to 0 (free) is still a discount: compare with undefined, not truthiness.
+  const originalPrice =
+    item.price.discountedPriceInCents !== undefined
+      ? item.price.regularPriceInCents * item.quantity
+      : undefined
 
   return { totalPrice, originalPrice }
+}
+
+/**
+ * Get the per-unit price (discounted if present, otherwise regular).
+ */
+export function getUnitPrice(item: LineItemResponse): number {
+  return item.price.discountedPriceInCents ?? item.price.regularPriceInCents
+}
+
+/**
+ * Build a human-readable variant string from line item attributes
+ * (e.g. "Color: Blue · Size: M"). Known keys are translated via `labelFor`,
+ * unknown keys fall back to the raw key.
+ */
+export function formatItemAttributes(
+  attributes: LineItemResponse['attributes'],
+  labelFor: (key: string) => string
+): string {
+  if (!attributes) {
+    return ''
+  }
+  return Object.entries(attributes)
+    .map(([key, value]) => `${labelFor(key)}: ${value}`)
+    .join(' · ')
+}
+
+const KNOWN_ATTRIBUTE_KEYS = ['color', 'size'] as const
+
+type KnownAttributeKey = (typeof KNOWN_ATTRIBUTE_KEYS)[number]
+
+function isKnownAttributeKey(key: string): key is KnownAttributeKey {
+  return (KNOWN_ATTRIBUTE_KEYS as readonly string[]).includes(key)
+}
+
+/**
+ * Translated label for an attribute key (case-insensitive), or the raw key if unknown.
+ */
+export function labelForAttribute(
+  key: string,
+  translate: (key: `item.${KnownAttributeKey}`) => string
+): string {
+  const normalizedKey = key.toLowerCase()
+  return isKnownAttributeKey(normalizedKey)
+    ? translate(`item.${normalizedKey}`)
+    : key
 }
 
 /**
  * Generate product href from line item
  */
 export function getProductHref(productSlug: string | undefined): string {
-  return productSlug ? `/p/${productSlug}` : '#'
+  return productSlug ? buildProductPath(productSlug) : '#'
 }

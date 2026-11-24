@@ -1,14 +1,4 @@
-/**
- * Type guard to check if an error has a statusCode property
- */
-function hasStatusCode(error: unknown): error is { statusCode: number } {
-  return (
-    error !== null &&
-    typeof error === 'object' &&
-    'statusCode' in error &&
-    typeof (error as { statusCode: unknown }).statusCode === 'number'
-  )
-}
+import { hasStatusCode } from './has-status-code'
 
 /**
  * Checks if an error is a 404 Not Found error from Commercetools
@@ -27,5 +17,17 @@ export function isConflictError(
   return (
     hasStatusCode(error) &&
     (error.statusCode === 400 || error.statusCode === 409)
+  )
+}
+
+/** A 409 because the resource version sent is no longer the current one. */
+export function isConcurrentModificationError(error: unknown): boolean {
+  if (!hasStatusCode(error) || error.statusCode !== 409) {
+    return false
+  }
+  const errors = (error as { body?: { errors?: { code?: string }[] } }).body
+    ?.errors
+  return (
+    errors?.some((entry) => entry.code === 'ConcurrentModification') ?? false
   )
 }

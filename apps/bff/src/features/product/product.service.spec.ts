@@ -44,6 +44,7 @@ describe('ProductService', () => {
     const getProduct = jest.fn().mockResolvedValue({
       product: { id: 'p1' },
       breadcrumb: [{ label: 'Home', path: '/' }],
+      seo: { metaTitle: 'Product title' },
     })
     factory.getServices.mockReturnValue({
       productService: {
@@ -62,6 +63,7 @@ describe('ProductService', () => {
     expect(r).toStrictEqual({
       product: { id: 'p1' },
       breadcrumb: [{ label: 'Home', path: '/' }],
+      seo: { metaTitle: 'Product title' },
     })
   })
 })

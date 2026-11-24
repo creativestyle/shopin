@@ -4,8 +4,14 @@ import { bffFetch as baseBffFetch, type BffFetchOptions } from './bff-fetch'
 import { getBffServerUrl } from './bff-utils-server'
 import { getLocale } from 'next-intl/server'
 import { logger } from '@/lib/logger'
+import { getDraftModeHeaderValue } from '@/lib/draft-mode'
 import { getRequestVariant } from '@/lib/request-context/variant'
 import { variantHeaders } from '@/lib/variant/variant-key'
+import {
+  BffUnreachableError,
+  getNetworkErrorCode,
+  isBffUnreachableCode,
+} from '../utils/bff-unreachable-error'
 
 /**
  * Server-side BFF client
@@ -14,7 +20,8 @@ import { variantHeaders } from '@/lib/variant/variant-key'
  * - Uses the internal BFF URL (NEXT_BFF_INTERNAL_URL)
  * - Automatically gets the current locale from next-intl server context
  * - Reads variant from request context (set by initRouteContext in the [variant]/[locale] layout)
- * - Logs network errors only (BFF never sees these: connection refused, timeout, etc.).
+ * - Logs network errors only (BFF never sees these: connection refused, timeout, etc.)
+ *   and rethrows connection failures as BffUnreachableError.
  *   For 4xx/5xx the BFF already logs; callers can throw or handle as needed.
  *
  * Correlation ID is NOT forwarded here — by design.
@@ -22,7 +29,9 @@ import { variantHeaders } from '@/lib/variant/variant-key'
  * fetches (store config, nav, layout). Neither needs user-scoped tracing; the BFF
  * generates its own ID for those. Reading headers()/cookies() to extract a client ID
  * would also opt every caller into dynamic rendering, defeating revalidate = 3600.
- * User-scoped correlation IDs live exclusively in useBffFetchClient (client side).
+ * User-scoped correlation IDs live in useBffFetchClient (client side).
+ * Exception: the checkout server guard (features/checkout/checkout-server-guard.ts) is a
+ * per-user call on a dynamic route; it forwards cookies and the correlation ID itself.
  *
  * @param opts.locale - Locale override when not using next-intl context (e.g. i18n/request.ts).
  * @param opts.isDraft - Controls draft header:
@@ -53,7 +62,7 @@ export async function createBffFetchServer(opts?: {
           extraOpts.variantHeaders = resolvedVariantHeaders
         }
         if (opts?.isDraft === true) {
-          extraOpts.isDraft = true
+          extraOpts.draftToken = getDraftModeHeaderValue()
         }
         return await baseBffFetch(
           baseUrl,
@@ -62,13 +71,20 @@ export async function createBffFetchServer(opts?: {
           effectiveLocale
         )
       } catch (error) {
+        const code = getNetworkErrorCode(error)
+        const unreachable = isBffUnreachableCode(code)
         logger.error(
           {
             path,
+            bffUrl: baseUrl,
+            code,
             error: error instanceof Error ? error.message : String(error),
           },
-          'BFF request failed'
+          unreachable ? 'BFF unreachable' : 'BFF request failed'
         )
+        if (unreachable) {
+          throw new BffUnreachableError(baseUrl, code, { cause: error })
+        }
         throw error
       }
     },

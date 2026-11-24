@@ -37,6 +37,7 @@ import type {
   ResetPasswordResponse,
 } from '@core/contracts/auth/reset-password'
 import type {
+  ChangeCustomerEmailRequest,
   ChangeCustomerPasswordRequest,
   CustomerResponse,
   UpdateCustomerRequest,
@@ -135,8 +136,20 @@ export interface NavigationService {
   getNavigation(): Promise<MainNavigationResponse>
 }
 
+export interface GetCartOptions {
+  // Adds stock-based maxQuantity to line items; implementations may ignore it
+  withInventory?: boolean
+}
+
+export interface AddDiscountCodeOptions {
+  // Removed in the same update, so a stale code cannot reapply alongside the new one
+  replaceDiscountCodeIds?: string[]
+  // Cart version the caller checked; a newer cart rejects with CartVersionConflictError
+  expectedVersion?: number
+}
+
 export interface CartService {
-  getCart(cartId: string): Promise<CartResponse>
+  getCart(cartId: string, options?: GetCartOptions): Promise<CartResponse>
   createCart(): Promise<CartResponse>
   addToCart(
     cartId: string,
@@ -163,6 +176,15 @@ export interface CartService {
     cartId: string,
     request: SetShippingMethodRequest
   ): Promise<CartResponse>
+  addDiscountCode(
+    cartId: string,
+    code: string,
+    options?: AddDiscountCodeOptions
+  ): Promise<CartResponse>
+  removeDiscountCode(
+    cartId: string,
+    discountCodeId: string
+  ): Promise<CartResponse>
   getActiveCart(): Promise<CartResponse | null>
 }
 
@@ -182,6 +204,9 @@ export interface CustomerService {
   changeCustomerPassword(
     changeCustomerPasswordRequest: ChangeCustomerPasswordRequest
   ): Promise<void>
+  changeCustomerEmail(
+    changeCustomerEmailRequest: ChangeCustomerEmailRequest
+  ): Promise<CustomerResponse>
 }
 
 export interface CustomerAddressService {

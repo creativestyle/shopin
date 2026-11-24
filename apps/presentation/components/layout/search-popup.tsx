@@ -8,7 +8,7 @@ import { Link, useRouter } from '@/lib/navigation'
 import { Logo } from '../ui/logo'
 import { Button } from '../ui/button'
 import { cn } from '@/lib/utils'
-import { MIN_SEARCH_QUERY_LENGTH } from '@config/constants'
+import { MIN_SEARCH_QUERY_LENGTH, SEARCH_PARAM_QUERY } from '@config/constants'
 import { useProductSearch } from '@/features/searchResults/use-product-search'
 import { ProductCard } from '@/components/ui/product-card'
 import SearchIcon from '@/public/icons/search.svg'
@@ -129,7 +129,9 @@ export function SearchPopup({ open, onOpenChange }: SearchPopupProps) {
                 e.preventDefault()
                 if (query.trim().length >= MIN_SEARCH_QUERY_LENGTH) {
                   onOpenChange(false)
-                  router.push(`/search?q=${encodeURIComponent(query.trim())}`)
+                  router.push(
+                    `/search?${SEARCH_PARAM_QUERY}=${encodeURIComponent(query.trim())}`
+                  )
                 }
               }}
             >
@@ -245,7 +247,7 @@ export function SearchPopup({ open, onOpenChange }: SearchPopupProps) {
                     className='border-rose-700 text-gray-950 hover:text-gray-950'
                   >
                     <Link
-                      href={`/search?q=${encodeURIComponent(query)}`}
+                      href={`/search?${SEARCH_PARAM_QUERY}=${encodeURIComponent(query)}`}
                       onClick={() => onOpenChange(false)}
                     >
                       {t('showAllResults')}

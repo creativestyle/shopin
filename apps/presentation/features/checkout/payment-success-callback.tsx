@@ -8,7 +8,6 @@ import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { useTranslations } from 'next-intl'
 import { Toast } from '@/components/ui/toast'
 import { Button } from '@/components/ui/button'
-import { getErrorMessage } from '@/lib/error-utils'
 
 export function PaymentSuccessCallback() {
   const router = useRouter()
@@ -42,12 +41,7 @@ export function PaymentSuccessCallback() {
           withCloseButton={false}
           className='w-full max-w-2xl'
         >
-          <div className='flex flex-col gap-2'>
-            <p className='font-semibold'>{t('orderCreationError')}</p>
-            <p className='text-sm'>
-              {getErrorMessage(error, t('orderCreationError'))}
-            </p>
-          </div>
+          <p className='font-semibold'>{t('orderCreationError')}</p>
         </Toast>
         <div className='flex gap-4'>
           <Button
