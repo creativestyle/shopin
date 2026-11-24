@@ -81,7 +81,7 @@ Filenames: **`GG-SS-NN-name.ts`** (source; built to `.js`). Dirs follow **`GG-SS
 
 **New teaser:** Add `01-02-teasers/01-02-NN-name.ts` (NN 01–13), export the migration function (`export = run`).
 
-**Preview in Contentful:** Settings → Content preview → Page → Preview URL e.g. `https://your-app.com/{locale}/{entry.fields.slug}?preview=true`
+**Preview in Contentful:** Settings → Content preview → Page → Preview URL e.g. `https://your-app.com/api/draft?secret=<NEXT_DRAFT_MODE_SECRET>&slug={entry.fields.slug}&locale={locale}`. Editors leave preview via the "Exit preview" banner (`/api/draft/exit`). See [Draft session behaviour](../../apps/presentation/README.md#draft-session-behaviour) for what a draft session covers.
 
 **German (de-DE) content:** En-US and de-DE texts are defined **side by side** in the same demo migrations (02-01-01 … 02-01-05); entries are created with both locales in one go. Ensure the Contentful space has the **de-DE** locale (Settings → Locales) before running demo migrations.
 

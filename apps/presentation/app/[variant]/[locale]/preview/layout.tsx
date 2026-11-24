@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { initRouteContext } from '@/lib/request-context/route-context'
+import { DraftModeBanner } from '@/components/layout/draft-mode-banner'
 import { Header } from '@/components/layout/header'
 import { Footer } from '@/components/layout/footer'
 import { SiteTopBar } from '@/components/layout/site-top-bar'
@@ -20,6 +21,7 @@ export default async function PreviewLayout({
     <PageShell>
       <StripPreviewToken />
       <SiteTopBar isDraft />
+      <DraftModeBanner />
       <Header isDraft />
       <PageContent>{children}</PageContent>
       <Footer isDraft />

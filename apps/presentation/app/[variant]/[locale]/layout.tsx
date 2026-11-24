@@ -21,6 +21,7 @@ import {
 } from '@config/constants'
 import { initRouteContext } from '@/lib/request-context/route-context'
 import { isVariantSegment } from '@/lib/variant/variant-key'
+import { DRAFT_SESSION_SCRIPT } from '@/lib/draft-session-marker'
 
 const dmSans = DM_Sans({
   subsets: ['latin'],
@@ -59,8 +60,11 @@ export default async function LocaleLayout({
     <html
       lang={urlPrefixToRfc(locale)}
       className={dmSans.variable}
+      // The draft-session script sets an attribute here before hydration
+      suppressHydrationWarning
     >
       <head>
+        <script dangerouslySetInnerHTML={{ __html: DRAFT_SESSION_SCRIPT }} />
         {PRECONNECT_HOSTS.map((host) => (
           <link
             key={host}

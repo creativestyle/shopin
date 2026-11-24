@@ -2,10 +2,10 @@ import { notFound, redirect } from 'next/navigation'
 import { cookies } from 'next/headers'
 import { initRouteContext } from '@/lib/request-context/route-context'
 import {
-  isPreviewTokenValid,
   PREVIEW_TOKEN_COOKIE,
   PREVIEW_TOKEN_INTERNAL_PARAM,
-} from '@/lib/draft-mode'
+} from '@config/constants'
+import { isPreviewTokenValid } from '@/lib/draft-mode'
 import { HttpError } from '@/lib/error-utils'
 import { getHomepageSlugForLocale } from '@/features/content/homepage-slug'
 import { parsePlpSearchParams } from '@/features/productCollection/parse-search-params'
@@ -94,10 +94,9 @@ export default async function PreviewPage({
     )
   }
 
-  // Any other path is a content slug. Functional routes (cart, account, …) get funneled here
-  // under an active draft cookie but have no CMS entry, so resolve them to the 404 page rather
-  // than rendering a soft "no content" message in the site chrome. getContentPage is
-  // request-cached, so ContentPage's own fetch reuses this result (or this rejection).
+  // Any other path is a content slug. Unknown slugs resolve to the 404 page rather than a soft
+  // "no content" message (app routes like cart/account bypass preview in the proxy).
+  // getContentPage is request-cached, so ContentPage's own fetch reuses this result.
   const slug = path.join('/')
   try {
     await getContentPage(slug, true)

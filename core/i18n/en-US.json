@@ -103,6 +103,10 @@
     "description": "The page you are looking for doesn't exist or has been moved.",
     "backHome": "Back to home"
   },
+  "draftMode": {
+    "label": "Preview mode: you are viewing unpublished content",
+    "exit": "Exit preview"
+  },
   "topBar": {
     "ariaLabel": "Site announcement"
   },

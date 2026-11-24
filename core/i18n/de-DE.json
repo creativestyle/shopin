@@ -102,6 +102,10 @@
     "description": "Die gesuchte Seite existiert nicht oder wurde verschoben.",
     "backHome": "Zurück zur Startseite"
   },
+  "draftMode": {
+    "label": "Vorschaumodus: Sie sehen unveröffentlichte Inhalte",
+    "exit": "Vorschau beenden"
+  },
   "topBar": {
     "ariaLabel": "Siteweite Ankündigung"
   },
