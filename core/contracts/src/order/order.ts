@@ -4,6 +4,7 @@ import {
   LineItemResponseSchema,
   ShippingInfoResponseSchema,
   PaymentInfoResponseSchema,
+  DiscountCodeResponseSchema,
 } from '../cart/cart'
 import { AddressBaseSchema } from '../address/address-base'
 
@@ -43,6 +44,7 @@ export const OrderResponseSchema = z.object({
   subtotal: BasicPriceResponseSchema,
   tax: BasicPriceResponseSchema.optional(),
   discountAmount: BasicPriceResponseSchema.optional(),
+  discountCodes: z.array(DiscountCodeResponseSchema).optional(),
   grandTotal: BasicPriceResponseSchema,
   currency: z.string(),
   itemCount: z.number().int().nonnegative(),

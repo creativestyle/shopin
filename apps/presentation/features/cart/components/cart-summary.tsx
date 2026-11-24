@@ -34,7 +34,10 @@ export function CartSummary({
     <>
       {showPromoCode && (
         <>
-          <PromoCodeSection label={t('summary.promoCode')} />
+          <PromoCodeSection
+            label={t('summary.promoCode')}
+            appliedCodes={cart.discountCodes}
+          />
           <Divider />
         </>
       )}
