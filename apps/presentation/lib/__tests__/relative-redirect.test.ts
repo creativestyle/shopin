@@ -1,11 +1,7 @@
 /**
  * @jest-environment node
  */
-import {
-  encodePathSegments,
-  isSafeRelativeLocation,
-  relativeRedirect,
-} from '../relative-redirect'
+import { encodePathSegments, relativeRedirect } from '../relative-redirect'
 
 const ORIGIN = 'https://shop.example.com'
 
@@ -18,6 +14,11 @@ describe('relativeRedirect', () => {
     const res = relativeRedirect('/de/about?page=2')
     expect(res.status).toBe(307)
     expect(res.headers.get('location')).toBe('/de/about?page=2')
+  })
+
+  it('keeps a percent-encoded path with a query', () => {
+    const res = relativeRedirect('/de/%C3%BCber-uns?x=a+b')
+    expect(res.headers.get('location')).toBe('/de/%C3%BCber-uns?x=a+b')
   })
 
   it.each([
@@ -34,12 +35,6 @@ describe('relativeRedirect', () => {
     const res = relativeRedirect(location)
     expect(res.headers.get('location')).toBe('/')
     expect(resolvedOrigin(res)).toBe(ORIGIN)
-  })
-})
-
-describe('isSafeRelativeLocation', () => {
-  it('accepts percent-encoded paths with a query', () => {
-    expect(isSafeRelativeLocation('/de/%C3%BCber-uns?x=a+b')).toBe(true)
   })
 })
 

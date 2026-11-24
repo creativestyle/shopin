@@ -52,6 +52,8 @@ export function DraftModeBanner() {
         {!framed && (
           <a
             href={buildExitHref(pathname, new URLSearchParams())}
+            // In every cached page's HTML; keep crawlers off the exit route
+            rel='nofollow'
             onClick={refreshHref}
             onAuxClick={refreshHref}
             onContextMenu={refreshHref}

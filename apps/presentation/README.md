@@ -19,7 +19,7 @@ The `bffFetch` utility uses the internal URL on the server and the public URL in
 
 `/api/draft` starts a draft session that lasts up to an hour. While it is active:
 
-- **Content, product and category URLs** render draft content. The address bar keeps clean URLs; the proxy routes them into the internal `/preview` subtree.
+- **Content, product and category URLs** render draft CMS content (product and category data stay published). The address bar keeps clean URLs; the proxy routes them into the internal `/preview` subtree.
 - **App routes** (cart, checkout, account, search, sign-in and the other auth pages) render live data as usual.
 - **The draft banner** shows on every storefront page. A non-HttpOnly `preview_active` cookie drives it; that cookie is only a UI hint, never a credential. Inside the CMS live-preview iframe the banner hides its exit link.
 - **Editors leave** through the banner's "Exit preview" link (`/api/draft/exit`), which clears both cookies and returns to the published version of the current page.

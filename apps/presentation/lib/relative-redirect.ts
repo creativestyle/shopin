@@ -4,7 +4,7 @@ import { NextResponse } from 'next/server'
 const SAFE_RELATIVE_LOCATION = /^\/(?![/\\])[!-[\]-~]*$/
 
 /** True when a browser resolves the location against the requested host. */
-export function isSafeRelativeLocation(location: string): boolean {
+function isSafeRelativeLocation(location: string): boolean {
   return SAFE_RELATIVE_LOCATION.test(location)
 }
 
