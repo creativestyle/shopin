@@ -141,6 +141,13 @@ export interface GetCartOptions {
   withInventory?: boolean
 }
 
+export interface AddDiscountCodeOptions {
+  // Removed in the same update, so a stale code cannot reapply alongside the new one
+  replaceDiscountCodeIds?: string[]
+  // Cart version the caller checked; a newer cart rejects with CartVersionConflictError
+  expectedVersion?: number
+}
+
 export interface CartService {
   getCart(cartId: string, options?: GetCartOptions): Promise<CartResponse>
   createCart(): Promise<CartResponse>
@@ -168,6 +175,15 @@ export interface CartService {
   setShippingMethod(
     cartId: string,
     request: SetShippingMethodRequest
+  ): Promise<CartResponse>
+  addDiscountCode(
+    cartId: string,
+    code: string,
+    options?: AddDiscountCodeOptions
+  ): Promise<CartResponse>
+  removeDiscountCode(
+    cartId: string,
+    discountCodeId: string
   ): Promise<CartResponse>
   getActiveCart(): Promise<CartResponse | null>
 }

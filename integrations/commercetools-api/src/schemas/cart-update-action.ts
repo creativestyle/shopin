@@ -90,6 +90,19 @@ export const RemovePaymentActionSchema = z.object({
   }),
 })
 
+export const AddDiscountCodeActionSchema = z.object({
+  action: z.literal('addDiscountCode'),
+  code: z.string(),
+})
+
+export const RemoveDiscountCodeActionSchema = z.object({
+  action: z.literal('removeDiscountCode'),
+  discountCode: z.object({
+    typeId: z.literal('discount-code'),
+    id: z.string(),
+  }),
+})
+
 export const CartUpdateActionSchema = z.discriminatedUnion('action', [
   AddLineItemActionSchema,
   ChangeLineItemQuantityActionSchema,
@@ -101,6 +114,8 @@ export const CartUpdateActionSchema = z.discriminatedUnion('action', [
   SetCustomFieldActionSchema,
   AddPaymentActionSchema,
   RemovePaymentActionSchema,
+  AddDiscountCodeActionSchema,
+  RemoveDiscountCodeActionSchema,
 ])
 
 export type CartUpdateAction = z.infer<typeof CartUpdateActionSchema>
