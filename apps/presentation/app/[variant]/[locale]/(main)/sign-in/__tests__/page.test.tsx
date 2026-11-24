@@ -20,6 +20,12 @@ jest.mock('next/navigation', () => ({
   useSearchParams: () => mockSearchParams,
 }))
 
+jest.mock('@/lib/navigation', () => ({
+  Link: ({ href, children }: { href: string; children: React.ReactNode }) => (
+    <a href={href}>{children}</a>
+  ),
+}))
+
 jest.mock('../../auth-page-guard', () => ({
   AuthPageGuard: ({ children }: { children: React.ReactNode }) => children,
 }))
@@ -66,5 +72,23 @@ describe('Sign-in page', () => {
 
     expect(screen.getByRole('status').textContent).toBe('')
     expect(screen.getByRole('heading', { name: `${NS}.title` })).toBeVisible()
+  })
+
+  it('links to sign-up without a query by default', async () => {
+    await renderPage('')
+
+    expect(screen.getByRole('link', { name: `${NS}.signUp` })).toHaveAttribute(
+      'href',
+      '/sign-up'
+    )
+  })
+
+  it('keeps returnTo on the sign-up link', async () => {
+    await renderPage('?returnTo=%2Fcheckout&verified=true')
+
+    expect(screen.getByRole('link', { name: `${NS}.signUp` })).toHaveAttribute(
+      'href',
+      '/sign-up?returnTo=%2Fcheckout'
+    )
   })
 })
