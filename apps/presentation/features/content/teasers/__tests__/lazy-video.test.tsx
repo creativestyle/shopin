@@ -1,6 +1,6 @@
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { hydrateRoot } from 'react-dom/client'
+import { hydrateRoot, type Root } from 'react-dom/client'
 import { renderToString } from 'react-dom/server'
 import { LazyVideo } from '../lazy-video'
 
@@ -199,15 +199,20 @@ describe('LazyVideo', () => {
       document.body.appendChild(container)
       mockReducedMotion(true)
 
-      await act(async () => {
-        hydrateRoot(container, video)
-      })
+      let root: Root | undefined
+      try {
+        await act(async () => {
+          root = hydrateRoot(container, video)
+        })
 
-      expect(play).not.toHaveBeenCalled()
-      expect(
-        screen.getByRole('button', { name: 'teaser.video.play' })
-      ).toHaveClass('inset-0')
-      container.remove()
+        expect(play).not.toHaveBeenCalled()
+        expect(
+          screen.getByRole('button', { name: 'teaser.video.play' })
+        ).toHaveClass('inset-0')
+      } finally {
+        act(() => root?.unmount())
+        container.remove()
+      }
     })
 
     it('leaves pausing to the native controls when the CMS enables them', async () => {
