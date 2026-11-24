@@ -71,6 +71,19 @@ export const CartLineItemApiResponseSchema = z.object({
   product: CartLineItemProductApiResponseSchema.optional(),
   variant: CartLineItemVariantApiResponseSchema.optional(),
   totalPrice: TypedMoneyApiResponseSchema.optional(),
+  // Cart discounts applied to this line item; totalPrice already has them deducted.
+  discountedPricePerQuantity: z
+    .array(
+      z.object({
+        quantity: z.number(),
+        discountedPrice: z.object({
+          includedDiscounts: z.array(
+            z.object({ discountedAmount: TypedMoneyApiResponseSchema })
+          ),
+        }),
+      })
+    )
+    .optional(),
   price: z
     .object({
       value: z.object({
@@ -105,6 +118,10 @@ const ShippingInfoApiResponseSchema = z
   .object({
     shippingMethodName: z.string(),
     price: TypedMoneyApiResponseSchema,
+    // Set only when a cart discount reduces shipping; `price` stays undiscounted.
+    discountedPrice: z
+      .object({ value: TypedMoneyApiResponseSchema })
+      .optional(),
     shippingMethod: z
       .object({
         typeId: z.literal('shipping-method'),
@@ -179,6 +196,24 @@ const PaymentInfoApiResponseSchema = z
   })
   .optional()
 
+/** `code` is only present when `discountCodes[*].discountCode` is expanded. */
+export const DiscountCodeInfoApiResponseSchema = z.object({
+  discountCode: z.object({
+    typeId: z.literal('discount-code'),
+    id: z.string(),
+    obj: z
+      .object({
+        code: z.string(),
+      })
+      .optional(),
+  }),
+  state: z.string(),
+})
+
+export type DiscountCodeInfoApiResponse = z.infer<
+  typeof DiscountCodeInfoApiResponseSchema
+>
+
 export const CartApiResponseSchema = z.object({
   id: z.string(),
   version: z.number(),
@@ -197,6 +232,7 @@ export const CartApiResponseSchema = z.object({
       discountedAmount: TypedMoneyApiResponseSchema,
     })
     .optional(),
+  discountCodes: z.array(DiscountCodeInfoApiResponseSchema).optional(),
   billingAddress: AddressApiResponseSchema.optional(),
   shippingAddress: AddressApiResponseSchema.optional(),
   shippingInfo: ShippingInfoApiResponseSchema,
