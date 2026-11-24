@@ -2,7 +2,10 @@
  * @jest-environment node
  */
 import type { ProductPageResponse } from '@core/contracts/product/product-page'
-import { buildProductPageMetadata } from '../build-product-page-metadata'
+import {
+  buildProductPageMetadata,
+  resolveProductCanonicalUrl,
+} from '../build-product-page-metadata'
 import { DEFAULT_OG_IMAGE } from '@/features/seo/site-metadata'
 
 const BASE = 'https://shop.example'
@@ -110,5 +113,29 @@ describe('buildProductPageMetadata', () => {
     })
     expect(metadata.alternates).toEqual({})
     expect(metadata.title).toBe('Red Shoes')
+  })
+})
+
+describe('resolveProductCanonicalUrl', () => {
+  it('returns the slug URL without variantId', () => {
+    expect(resolveProductCanonicalUrl(pageData, 'de', BASE)).toBe(
+      `${BASE}/de/p/red-shoes`
+    )
+  })
+
+  it('returns the seo override, even without a site origin', () => {
+    const withOverride = {
+      ...pageData,
+      seo: { canonicalUrl: 'https://shop.example/p/red-shoes-classic' },
+    }
+    expect(resolveProductCanonicalUrl(withOverride, 'en', undefined)).toBe(
+      'https://shop.example/p/red-shoes-classic'
+    )
+  })
+
+  it('returns undefined without a site origin or override', () => {
+    expect(
+      resolveProductCanonicalUrl(pageData, 'en', undefined)
+    ).toBeUndefined()
   })
 })

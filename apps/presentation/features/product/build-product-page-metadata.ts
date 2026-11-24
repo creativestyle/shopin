@@ -11,6 +11,25 @@ export interface BuildProductPageMetadataParams {
   baseUrl: string | undefined
 }
 
+/** PDP canonical URL: the `seo.canonicalUrl` override, else the slug URL without `variantId`. */
+export function resolveProductCanonicalUrl(
+  pageData: ProductPageResponse,
+  localePrefix: string,
+  baseUrl: string | undefined
+): string | undefined {
+  if (pageData.seo?.canonicalUrl) {
+    return pageData.seo.canonicalUrl
+  }
+  return baseUrl
+    ? buildCanonicalUrl(
+        baseUrl,
+        localePrefix,
+        PRODUCT_PATH_PREFIX,
+        pageData.product.slug
+      )
+    : undefined
+}
+
 /**
  * Build Next.js metadata for the PDP: product-specific title/description,
  * canonical, hreflang and social tags.
@@ -29,15 +48,7 @@ export function buildProductPageMetadata({
 }: BuildProductPageMetadataParams): Metadata {
   const { product, seo } = pageData
 
-  const derivedCanonical = baseUrl
-    ? buildCanonicalUrl(
-        baseUrl,
-        localePrefix,
-        PRODUCT_PATH_PREFIX,
-        product.slug
-      )
-    : undefined
-  const canonical = seo?.canonicalUrl ?? derivedCanonical
+  const canonical = resolveProductCanonicalUrl(pageData, localePrefix, baseUrl)
   const languages = baseUrl
     ? buildHreflangLanguages(
         baseUrl,

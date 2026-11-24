@@ -20,8 +20,8 @@ import { HttpError } from '@/lib/error-utils'
 import { JsonLd } from '@/features/seo/json-ld'
 import { buildProductJsonLd } from '@/features/seo/build-product-json-ld'
 import { buildBreadcrumbJsonLd } from '@/features/seo/build-breadcrumb-json-ld'
-import { PRODUCT_PATH_PREFIX } from '@config/constants'
-import { buildCanonicalUrl, tryGetSiteBaseUrl } from '@/lib/site-url'
+import { tryGetSiteBaseUrl } from '@/lib/site-url'
+import { resolveProductCanonicalUrl } from './build-product-page-metadata'
 
 interface ProductPageProps {
   slug: string
@@ -68,14 +68,7 @@ export async function ProductPage({
   }
 
   const baseUrl = tryGetSiteBaseUrl()
-  const canonicalUrl = baseUrl
-    ? buildCanonicalUrl(
-        baseUrl,
-        locale,
-        PRODUCT_PATH_PREFIX,
-        productData.product.slug
-      )
-    : undefined
+  const canonicalUrl = resolveProductCanonicalUrl(productData, locale, baseUrl)
   const tCommon = await getTranslations('common')
   const breadcrumbJsonLd = buildBreadcrumbJsonLd({
     crumbs: productData.breadcrumb,
