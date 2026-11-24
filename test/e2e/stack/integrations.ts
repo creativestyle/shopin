@@ -53,6 +53,10 @@ const SETS: IntegrationSet[] = [
 
 const envName = (category: Category) => `E2E_${category.toUpperCase()}`
 
+/** The env choice for a category, lowercased like the command-line choices. */
+const envChoice = (env: NodeJS.ProcessEnv, category: Category) =>
+  env[envName(category)]?.toLowerCase()
+
 /** Reads `category=integration` pairs; anything else is left for Playwright. */
 export function splitIntegrationArgs(args: string[]) {
   const choices: Partial<Record<Category, string>> = {}
@@ -87,12 +91,14 @@ function describeSet(set: IntegrationSet) {
 export function resolveIntegrations(
   env: NodeJS.ProcessEnv = process.env
 ): IntegrationSet {
-  const chosen = CATEGORIES.filter((category) => env[envName(category)])
+  const chosen = CATEGORIES.filter((category) => envChoice(env, category))
   const match = SETS.find((set) =>
-    chosen.every((category) => set.serves[category] === env[envName(category)])
+    chosen.every(
+      (category) => set.serves[category] === envChoice(env, category)
+    )
   )
   if (!match) {
-    const asked = chosen.map((c) => `${c}=${env[envName(c)]}`).join(' ')
+    const asked = chosen.map((c) => `${c}=${envChoice(env, c)}`).join(' ')
     throw new Error(
       `[e2e] No data source serves "${asked}". Supported:\n` +
         SETS.map((set) => `  ${describeSet(set)}`).join('\n')

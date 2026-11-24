@@ -161,7 +161,7 @@ export function createFaultProxy(
     }
 
     const failOrForward = () =>
-      rule.status === undefined && rule.delayMs
+      rule.status === undefined && rule.delayMs !== undefined
         ? forward(req, res)
         : fail(req, res, rule)
     if (rule.delayMs) setTimeout(failOrForward, rule.delayMs)

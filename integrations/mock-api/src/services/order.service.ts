@@ -27,6 +27,18 @@ export const orderOwnerStore = new Map<string, string>()
 // Cart id -> order id, so a repeated order answers 409 like commercetools
 export const orderedCartStore = new Map<string, string>()
 
+/** At sign-in, the guest's orders join the customer's history, as in commercetools. */
+export function moveGuestOrdersToCustomer(
+  guestSessionId: string,
+  customerSessionId: string
+) {
+  for (const [orderId, sessionId] of orderOwnerStore) {
+    if (sessionId === guestSessionId) {
+      orderOwnerStore.set(orderId, customerSessionId)
+    }
+  }
+}
+
 function toOrderSummary(order: OrderResponse): OrderSummaryResponse {
   return {
     id: order.id,

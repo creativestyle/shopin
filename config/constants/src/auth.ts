@@ -1,9 +1,50 @@
+import type { DataSource } from './data-source'
+
 /**
  * Authentication cookie name constants
  */
 export const ACCESS_TOKEN_COOKIE_NAME = 'access_token'
 export const REFRESH_TOKEN_COOKIE_NAME = 'refresh_token'
 export const CSRF_TOKEN_COOKIE_NAME = 'csrf_token'
+
+// Mock sessions live in BFF memory, so their tokens must not overwrite commercetools tokens.
+const TOKEN_COOKIE_SUFFIX_BY_DATA_SOURCE: Partial<Record<DataSource, string>> =
+  {
+    'mock-set': 'mock',
+  }
+
+/**
+ * Token cookie names for a data source: `access_token` / `refresh_token`, with
+ * a suffix for data sources whose auth keeps its own sessions (e.g.
+ * `access_token-mock`). Switching data source then keeps each session intact.
+ */
+export function getTokenCookieNames(dataSource?: DataSource) {
+  const suffix = dataSource && TOKEN_COOKIE_SUFFIX_BY_DATA_SOURCE[dataSource]
+  return {
+    accessToken: suffix
+      ? `${ACCESS_TOKEN_COOKIE_NAME}-${suffix}`
+      : ACCESS_TOKEN_COOKIE_NAME,
+    refreshToken: suffix
+      ? `${REFRESH_TOKEN_COOKIE_NAME}-${suffix}`
+      : REFRESH_TOKEN_COOKIE_NAME,
+  }
+}
+
+/** Every access token cookie name, whatever the data source. */
+export const ACCESS_TOKEN_COOKIE_NAMES = [
+  ACCESS_TOKEN_COOKIE_NAME,
+  ...Object.values(TOKEN_COOKIE_SUFFIX_BY_DATA_SOURCE).map(
+    (suffix) => `${ACCESS_TOKEN_COOKIE_NAME}-${suffix}`
+  ),
+]
+
+/** Every refresh token cookie name, whatever the data source. */
+export const REFRESH_TOKEN_COOKIE_NAMES = [
+  REFRESH_TOKEN_COOKIE_NAME,
+  ...Object.values(TOKEN_COOKIE_SUFFIX_BY_DATA_SOURCE).map(
+    (suffix) => `${REFRESH_TOKEN_COOKIE_NAME}-${suffix}`
+  ),
+]
 
 /**
  * CSRF token header name

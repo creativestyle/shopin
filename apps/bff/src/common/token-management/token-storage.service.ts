@@ -1,11 +1,9 @@
-import { Injectable, Scope } from '@nestjs/common'
+import { Inject, Injectable, Scope } from '@nestjs/common'
 import { z } from 'zod'
 import type { TokenFields } from '@core/contracts/auth/login'
-import {
-  ACCESS_TOKEN_COOKIE_NAME,
-  REFRESH_TOKEN_COOKIE_NAME,
-  REFRESH_TOKEN_MAX_AGE,
-} from '@config/constants'
+import { getTokenCookieNames, REFRESH_TOKEN_MAX_AGE } from '@config/constants'
+import type { DataSource } from '@config/constants'
+import { DATA_SOURCE } from '../../data-source/tokens'
 import { TokenEncryptionService } from './token-encryption.service'
 import { CookieService } from '../storage/cookie.service'
 
@@ -22,10 +20,16 @@ type AccessTokenPayload = z.infer<typeof AccessTokenPayloadSchema>
   scope: Scope.REQUEST,
 })
 export class TokenStorageService {
+  // Per data source, so switching data source keeps each auth provider's session
+  private readonly cookieNames: ReturnType<typeof getTokenCookieNames>
+
   constructor(
     private readonly cookieService: CookieService,
-    private readonly tokenEncryptionService: TokenEncryptionService
-  ) {}
+    private readonly tokenEncryptionService: TokenEncryptionService,
+    @Inject(DATA_SOURCE) dataSource: DataSource
+  ) {
+    this.cookieNames = getTokenCookieNames(dataSource)
+  }
 
   async setAccessToken(
     accessToken: string,
@@ -47,7 +51,7 @@ export class TokenStorageService {
     )
     const options = this.cookieService.createCookieOptions(accessTokenMaxAge)
     this.cookieService.setCookie(
-      ACCESS_TOKEN_COOKIE_NAME,
+      this.cookieNames.accessToken,
       encryptedToken,
       options
     )
@@ -63,7 +67,7 @@ export class TokenStorageService {
       REFRESH_TOKEN_MAX_AGE
     )
     this.cookieService.setCookie(
-      REFRESH_TOKEN_COOKIE_NAME,
+      this.cookieNames.refreshToken,
       encryptedToken,
       options
     )
@@ -89,8 +93,8 @@ export class TokenStorageService {
   }
 
   clearTokens(): void {
-    this.cookieService.clearCookie(ACCESS_TOKEN_COOKIE_NAME)
-    this.cookieService.clearCookie(REFRESH_TOKEN_COOKIE_NAME)
+    this.cookieService.clearCookie(this.cookieNames.accessToken)
+    this.cookieService.clearCookie(this.cookieNames.refreshToken)
   }
 
   /**
@@ -98,7 +102,7 @@ export class TokenStorageService {
    * @returns true if access token cookie exists, false otherwise
    */
   hasAccessToken(): boolean {
-    return this.cookieService.hasCookie(ACCESS_TOKEN_COOKIE_NAME)
+    return this.cookieService.hasCookie(this.cookieNames.accessToken)
   }
 
   async getAccessToken(): Promise<string | undefined> {
@@ -123,7 +127,7 @@ export class TokenStorageService {
     AccessTokenPayload | undefined
   > {
     const encryptedToken = this.cookieService.getCookie(
-      ACCESS_TOKEN_COOKIE_NAME
+      this.cookieNames.accessToken
     )
     if (!encryptedToken) {
       return undefined
@@ -141,14 +145,14 @@ export class TokenStorageService {
 
       return result.data
     } catch {
-      this.cookieService.clearCookie(ACCESS_TOKEN_COOKIE_NAME)
+      this.cookieService.clearCookie(this.cookieNames.accessToken)
       return undefined
     }
   }
 
   async getRefreshToken(): Promise<string | undefined> {
     const encryptedToken = this.cookieService.getCookie(
-      REFRESH_TOKEN_COOKIE_NAME
+      this.cookieNames.refreshToken
     )
     if (!encryptedToken) {
       return undefined
@@ -157,7 +161,7 @@ export class TokenStorageService {
     try {
       return await this.tokenEncryptionService.decryptAndVerify(encryptedToken)
     } catch {
-      this.cookieService.clearCookie(REFRESH_TOKEN_COOKIE_NAME)
+      this.cookieService.clearCookie(this.cookieNames.refreshToken)
       return undefined
     }
   }

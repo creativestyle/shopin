@@ -2,12 +2,12 @@ import { redirect } from '@/lib/navigation'
 import { getLocale } from 'next-intl/server'
 import { cookies } from 'next/headers'
 import {
-  ACCESS_TOKEN_COOKIE_NAME,
+  ACCESS_TOKEN_COOKIE_NAMES,
   CART_ID_COOKIE_PREFIX_GUEST,
   CART_ID_COOKIE_PREFIX_LOGGED,
   CORRELATION_ID_HEADER,
   INTERNAL_SECRET_HEADER,
-  REFRESH_TOKEN_COOKIE_NAME,
+  REFRESH_TOKEN_COOKIE_NAMES,
   WISHLIST_ID_COOKIE_PREFIX_GUEST,
   WISHLIST_ID_COOKIE_PREFIX_LOGGED,
 } from '@config/constants'
@@ -37,13 +37,17 @@ function canResolveCartOnServer(requestCookies: RequestCookie[]): boolean {
       name.startsWith(CART_ID_COOKIE_PREFIX_GUEST) ||
       name.startsWith(CART_ID_COOKIE_PREFIX_LOGGED)
   )
-  const hasAccessToken = requestCookies.some(
-    ({ name }) => name === ACCESS_TOKEN_COOKIE_NAME
+  // Any data source's token: the BFF picks the one for the request's data source
+  const hasAccessToken = requestCookies.some(({ name }) =>
+    ACCESS_TOKEN_COOKIE_NAMES.includes(name)
   )
   return hasCartId && hasAccessToken
 }
 
-const BFF_COOKIE_NAMES = [ACCESS_TOKEN_COOKIE_NAME, REFRESH_TOKEN_COOKIE_NAME]
+const BFF_COOKIE_NAMES = [
+  ...ACCESS_TOKEN_COOKIE_NAMES,
+  ...REFRESH_TOKEN_COOKIE_NAMES,
+]
 const BFF_COOKIE_PREFIXES = [
   CART_ID_COOKIE_PREFIX_GUEST,
   CART_ID_COOKIE_PREFIX_LOGGED,

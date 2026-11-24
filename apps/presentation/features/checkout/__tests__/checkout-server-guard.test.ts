@@ -146,6 +146,22 @@ describe('ensureCheckoutStep', () => {
     expect(headers.get('x-correlation-id')).toBe('corr-1')
   })
 
+  it('resolves the cart with mock-set token cookies and forwards them', async () => {
+    setCookies([
+      { name: 'cart-guest-USD-mock', value: 'c1' },
+      { name: 'access_token-mock', value: 't1' },
+      { name: 'refresh_token-mock', value: 'r1' },
+    ])
+    respondWithCart({ ...BASE_CART, billingAddress: ADDRESS })
+
+    await expect(ensureCheckoutStep('shipping')).resolves.not.toBeNull()
+
+    const headers = new Headers(baseFetch.mock.calls[0][1].headers)
+    expect(headers.get('Cookie')).toBe(
+      'cart-guest-USD-mock=c1; access_token-mock=t1; refresh_token-mock=r1'
+    )
+  })
+
   describe('internal secret', () => {
     const originalSecret = process.env.BFF_INTERNAL_SECRET
 

@@ -38,12 +38,14 @@ Playwright starts everything it needs (recording mock BFF, both storefronts, the
 
 ### Projects
 
-| Project                            | Specs                 | Notes                                                                  |
-| ---------------------------------- | --------------------- | ---------------------------------------------------------------------- |
-| `platform`, `platform-crossorigin` | `specs/`              | One worker: the mock BFF has a single shared request log               |
-| `desktop`                          | `journeys/`, `smoke/` | Desktop Chrome; runs tests tagged `@desktop`                           |
-| `phone`                            | `journeys/`, `smoke/` | Pixel 7 on Chromium; runs tests tagged `@mobile`                       |
-| `faults`                           | `**/*.fault.spec.ts`  | One worker, after `desktop` and `phone`: fault rules apply to everyone |
+| Project                            | Specs                 | Notes                                                                                  |
+| ---------------------------------- | --------------------- | -------------------------------------------------------------------------------------- |
+| `platform`, `platform-crossorigin` | `specs/`              | One worker: the mock BFF has a single shared request log                               |
+| `desktop`                          | `journeys/`, `smoke/` | Desktop Chrome; runs tests tagged `@desktop`                                           |
+| `phone`                            | `journeys/`, `smoke/` | Pixel 7 on Chromium; runs tests tagged `@mobile`                                       |
+| `faults`                           | `**/*.fault.spec.ts`  | One worker, after every other project: fault rules and cache expiry reach every server |
+
+Both storefronts run from the same `build:e2e` output and share its on-disk cache. The browser's BFF URL is baked into that build and points at the journey fault proxy, so browser-side BFF calls from the platform storefront (`:3100`) never reach the recording mock BFF (the real BFF also refuses them by CORS). Platform specs therefore assert only the BFF calls the storefront server makes.
 
 ### Integrations
 

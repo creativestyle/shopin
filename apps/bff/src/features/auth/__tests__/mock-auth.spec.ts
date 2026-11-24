@@ -175,6 +175,55 @@ describe('mock customer, cart and order ownership', () => {
     })
   })
 
+  it('merges the guest cart into the customer cart at sign-in', async () => {
+    const services = createServices()
+    const email = uniqueEmail()
+    await registerVerified(services, email)
+    const first = await services.login.login({ email, password: PASSWORD })
+    services.useToken(first.accessToken)
+    const customerCart = await services.cart.createCart()
+    await services.cart.addToCart(customerCart.id, 'p-1', 'v-1')
+
+    const guest = await services.anonymous.createAnonymousSession()
+    services.useToken(guest.accessToken)
+    const guestCart = await services.cart.createCart()
+    await services.cart.addToCart(guestCart.id, 'p-1', 'v-1')
+    await services.cart.addToCart(guestCart.id, 'p-2', 'v-2')
+
+    const second = await services.login.login({ email, password: PASSWORD })
+    services.useToken(second.accessToken)
+
+    const active = await services.cart.getActiveCart()
+    expect(active?.id).toBe(customerCart.id)
+    expect(
+      active?.lineItems.map(({ productId, quantity }) => [productId, quantity])
+    ).toEqual([
+      ['p-1', 2],
+      ['p-2', 1],
+    ])
+    expect(active?.itemCount).toBe(3)
+    await expect(services.cart.getCart(guestCart.id)).rejects.toMatchObject({
+      status: 404,
+    })
+  })
+
+  it('stops the guest token from working after sign-in', async () => {
+    const services = createServices()
+    const email = uniqueEmail()
+    await registerVerified(services, email)
+    const guest = await services.anonymous.createAnonymousSession()
+    services.useToken(guest.accessToken)
+
+    await services.login.login({ email, password: PASSWORD })
+
+    await expect(services.customer.getCurrentCustomer()).rejects.toMatchObject({
+      status: 401,
+    })
+    await expect(
+      services.refresh.refreshToken({ refreshToken: guest.refreshToken })
+    ).rejects.toMatchObject({ status: 401 })
+  })
+
   it('stores the billing email on the order and lists it for the customer', async () => {
     const services = createServices()
     const email = uniqueEmail()

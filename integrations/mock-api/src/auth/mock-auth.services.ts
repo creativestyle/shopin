@@ -44,9 +44,11 @@ import type {
   ResetPasswordResponse,
 } from '@core/contracts/auth/reset-password'
 import { MockSessionService } from '../session/mock-session.service'
+import { moveGuestCartsToCustomer } from '../services/cart.service'
+import { moveGuestOrdersToCustomer } from '../services/order.service'
 import {
-  assignSessionToCustomer,
-  createSession,
+  endSession,
+  openSession,
   findCustomerByEmail,
   getCustomer,
   hashPassword,
@@ -64,7 +66,7 @@ export class MockAnonymousSessionService {
   async createAnonymousSession(): Promise<
     AnonymousSessionResponse & AnonymousSessionTokenFields
   > {
-    return { success: true, ...createSession() }
+    return { success: true, ...openSession().tokens }
   }
 }
 
@@ -88,13 +90,16 @@ export class MockLoginService {
       )
     }
 
-    // Like commercetools' me().login(): the guest session's cart moves to the customer
+    // A fresh session: the guest's tokens must not become customer credentials
+    const { sessionId, tokens } = openSession(customer.id)
     const guestSessionId = await this.sessionService.getSessionId()
     if (guestSessionId) {
-      assignSessionToCustomer(guestSessionId, customer.id)
+      moveGuestCartsToCustomer(guestSessionId, sessionId, customer.id)
+      moveGuestOrdersToCustomer(guestSessionId, sessionId)
+      endSession(guestSessionId)
     }
 
-    return { success: true, ...createSession(customer.id) }
+    return { success: true, ...tokens }
   }
 }
 

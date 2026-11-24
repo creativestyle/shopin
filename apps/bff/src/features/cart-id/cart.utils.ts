@@ -40,3 +40,17 @@ export function getCartKey(
   const suffix = dataSource && CART_KEY_SUFFIX_BY_DATA_SOURCE[dataSource]
   return suffix ? `${prefix}-${currency}-${suffix}` : `${prefix}-${currency}`
 }
+
+/** Whether a cart cookie key belongs to the data source (its suffix, or none). */
+export function isCartKeyOfDataSource(
+  key: string,
+  dataSource?: DataSource
+): boolean {
+  const suffix = dataSource && CART_KEY_SUFFIX_BY_DATA_SOURCE[dataSource]
+  if (suffix) {
+    return key.endsWith(`-${suffix}`)
+  }
+  return !Object.values(CART_KEY_SUFFIX_BY_DATA_SOURCE).some((other) =>
+    key.endsWith(`-${other}`)
+  )
+}

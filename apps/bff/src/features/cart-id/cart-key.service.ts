@@ -4,7 +4,7 @@ import { resolveCurrencyFromLanguage } from '@core/i18n/currency-utils'
 import type { DataSource } from '@config/constants'
 import type { LanguageProvider } from '../../common/language/language.provider'
 import { DATA_SOURCE } from '../../data-source/tokens'
-import { getCartKey } from './cart.utils'
+import { getCartKey, isCartKeyOfDataSource } from './cart.utils'
 
 /**
  * Service for generating cart keys based on currency, user type and data source.
@@ -43,5 +43,10 @@ export class CartKeyService {
 
   getCartKey(isGuest: boolean): string {
     return getCartKey(this.getCurrentCurrency(), isGuest, this.dataSource)
+  }
+
+  /** Whether a cart cookie belongs to this request's data source. */
+  isOwnCartKey(key: string): boolean {
+    return isCartKeyOfDataSource(key, this.dataSource)
   }
 }

@@ -57,6 +57,66 @@ export const MOCK_DISCOUNT_CODES: Record<
   NOTYET: { reason: 'notApplicable' },
 }
 
+const ownCartIds = (owns: (sessionId: string) => boolean) =>
+  [...cartOwnerStore]
+    .filter(([cartId, sessionId]) => cartStore.has(cartId) && owns(sessionId))
+    .map(([cartId]) => cartId)
+
+function mergeLineItems(target: CartResponse, source: CartResponse) {
+  let merged = target
+  for (const item of source.lineItems) {
+    const index = merged.lineItems.findIndex(
+      (existing) =>
+        existing.productId === item.productId &&
+        existing.variantId === item.variantId
+    )
+    const lineItems = [...merged.lineItems]
+    if (index === -1) {
+      lineItems.push(item)
+    } else {
+      lineItems[index] = {
+        ...lineItems[index],
+        quantity: lineItems[index].quantity + item.quantity,
+      }
+    }
+    merged = {
+      ...merged,
+      lineItems,
+      ...recalculateCartTotals(
+        merged,
+        item.price.regularPriceInCents * item.quantity,
+        item.quantity
+      ),
+    }
+  }
+  return merged
+}
+
+/**
+ * At sign-in, like commercetools' merge mode: the guest's line items join the
+ * customer's active cart, or the guest cart becomes theirs when they have none.
+ */
+export function moveGuestCartsToCustomer(
+  guestSessionId: string,
+  customerSessionId: string,
+  customerId: string
+) {
+  const customerCartId = ownCartIds(
+    (sessionId) => getSessionCustomerId(sessionId) === customerId
+  ).at(-1)
+  for (const guestCartId of ownCartIds((id) => id === guestSessionId)) {
+    const guestCart = cartStore.get(guestCartId)!
+    const customerCart = customerCartId && cartStore.get(customerCartId)
+    if (!customerCart || customerCart.currency !== guestCart.currency) {
+      cartOwnerStore.set(guestCartId, customerSessionId)
+      continue
+    }
+    cartStore.set(customerCartId, mergeLineItems(customerCart, guestCart))
+    cartStore.delete(guestCartId)
+    cartOwnerStore.delete(guestCartId)
+  }
+}
+
 @Injectable()
 export class CartService {
   constructor(
@@ -239,14 +299,9 @@ export class CartService {
       return null
     }
     // Newest cart of any session the customer owns, as commercetools' activeCart
-    const ownCartIds = [...cartOwnerStore]
-      .filter(
-        ([cartId, sessionId]) =>
-          cartStore.has(cartId) &&
-          getSessionCustomerId(sessionId) === customerId
-      )
-      .map(([cartId]) => cartId)
-    const activeCartId = ownCartIds.at(-1)
+    const activeCartId = ownCartIds(
+      (sessionId) => getSessionCustomerId(sessionId) === customerId
+    ).at(-1)
     return activeCartId ? this.getCart(activeCartId) : null
   }
 

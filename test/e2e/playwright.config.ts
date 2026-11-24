@@ -51,13 +51,14 @@ const journeyProjects: Project[] = [
     use: { ...devices['Pixel 7'], ...journeyUse },
   },
   {
-    // Fault rules are global to the proxy: run alone, after everything else
+    // Run alone, after everything else
     name: 'faults',
     testDir: '.',
     grep: /@desktop/,
     testMatch: faultFiles,
     workers: 1,
-    dependencies: ['desktop', 'phone'],
+    // Fault rules and cache expiry reach every server sharing the build
+    dependencies: ['desktop', 'phone', 'platform', 'platform-crossorigin'],
     use: { ...devices['Desktop Chrome'], ...journeyUse },
   },
 ]

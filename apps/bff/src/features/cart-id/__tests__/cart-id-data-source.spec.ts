@@ -76,17 +76,23 @@ describe('CartIdService across data sources', () => {
     ).toBe('ct-cart-1')
   })
 
-  it('clears mock cart cookies together with commercetools ones', async () => {
-    const cookies = createCookieJar()
-    await createCartIdService(cookies, 'commercetools-set').setGuestCartId(
-      'ct-cart-1'
-    )
-    await createCartIdService(cookies, 'mock-set').setLoggedInCartId(
-      'mock-cart-1'
-    )
+  it.each([
+    ['mock-set', 'cart-guest-USD'],
+    ['commercetools-set', 'cart-logged-USD-mock'],
+  ] as const)(
+    'clears only the cart cookies of %s, keeping %s',
+    async (dataSource, keptKey) => {
+      const cookies = createCookieJar()
+      await createCartIdService(cookies, 'commercetools-set').setGuestCartId(
+        'ct-cart-1'
+      )
+      await createCartIdService(cookies, 'mock-set').setLoggedInCartId(
+        'mock-cart-1'
+      )
 
-    await createCartIdService(cookies, 'mock-set').deleteAllCartIds()
+      await createCartIdService(cookies, dataSource).deleteAllCartIds()
 
-    expect(cookies.jar.size).toBe(0)
-  })
+      expect([...cookies.jar.keys()]).toEqual([keptKey])
+    }
+  )
 })

@@ -38,7 +38,8 @@ export async function findProductUrl(page: Page): Promise<string> {
   await openRoute(page, ROUTES.category)
   const tiles = productList.tiles(page)
   await expect(tiles).not.toHaveCount(0)
-  // Any listed product will do; read the links rather than point at one tile
+  // Test data, not a locator: any product the category lists will do, so read
+  // every tile's link and take one instead of pointing at a tile by position
   const [href] = await tiles.evaluateAll((links) =>
     links.map((link) => link.getAttribute('href') ?? '')
   )
