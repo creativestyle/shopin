@@ -3,7 +3,11 @@ import { AppModule } from './app.module'
 import { Logger } from 'nestjs-pino'
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger'
 import { HttpErrorFilter } from './common/filters/http-exception.filter'
-import { DEFAULT_CORS_METHODS, DEFAULT_CORS_HEADERS } from '@config/constants'
+import {
+  CORRELATION_ID_HEADER,
+  DEFAULT_CORS_METHODS,
+  DEFAULT_CORS_HEADERS,
+} from '@config/constants'
 import cookieParser from 'cookie-parser'
 
 async function bootstrap() {
@@ -22,6 +26,7 @@ async function bootstrap() {
     credentials: true,
     methods: DEFAULT_CORS_METHODS,
     allowedHeaders: DEFAULT_CORS_HEADERS,
+    exposedHeaders: [CORRELATION_ID_HEADER],
   })
   const config = new DocumentBuilder()
     .setTitle('Shopin BFF')

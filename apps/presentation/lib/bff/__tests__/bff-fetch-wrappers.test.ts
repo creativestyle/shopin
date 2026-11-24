@@ -73,6 +73,8 @@ describe('bff fetch wrappers', () => {
     expect(logger.error).toHaveBeenCalledWith(
       {
         path: 'navigation/getNavigation',
+        bffUrl: 'http://server-bff',
+        code: undefined,
         error: 'Connection refused',
       },
       'BFF request failed'

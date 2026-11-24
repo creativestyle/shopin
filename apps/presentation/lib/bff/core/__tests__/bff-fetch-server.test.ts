@@ -16,6 +16,7 @@ jest.mock('@/lib/variant/variant-key', () => ({ variantHeaders: jest.fn() }))
 
 import { createBffFetchServer } from '../bff-fetch-server'
 import type { BffFetchOptions } from '../bff-fetch'
+import { BffUnreachableError } from '../../utils/bff-unreachable-error'
 
 const BASE_URL = 'http://bff-internal'
 const VARIANT_RESOLVED = { dataSource: 'commercetools-set' }
@@ -159,6 +160,51 @@ describe('createBffFetchServer', () => {
       await expect(client.fetch('/nav')).rejects.toThrow('network failure')
       expect(m.loggerError).toHaveBeenCalledWith(
         expect.objectContaining({ path: '/nav', error: 'network failure' }),
+        'BFF request failed'
+      )
+    })
+
+    it('throws BffUnreachableError with the cause kept when the BFF refuses the connection', async () => {
+      const m = mocks()
+      const err = new TypeError('fetch failed', {
+        cause: { code: 'ECONNREFUSED' },
+      })
+      m.bffFetch.mockRejectedValue(err)
+      const client = await createBffFetchServer()
+
+      const thrown = await client.fetch('/nav').catch((e: unknown) => e)
+
+      expect(thrown).toBeInstanceOf(BffUnreachableError)
+      expect((thrown as BffUnreachableError).cause).toBe(err)
+      expect((thrown as BffUnreachableError).bffUrl).toBe(BASE_URL)
+      expect((thrown as BffUnreachableError).code).toBe('ECONNREFUSED')
+      expect(m.loggerError).toHaveBeenCalledWith(
+        {
+          path: '/nav',
+          bffUrl: BASE_URL,
+          code: 'ECONNREFUSED',
+          error: 'fetch failed',
+        },
+        'BFF unreachable'
+      )
+    })
+
+    it('rethrows the original error for a mid-request reset', async () => {
+      const m = mocks()
+      const err = new TypeError('fetch failed', {
+        cause: { code: 'ECONNRESET' },
+      })
+      m.bffFetch.mockRejectedValue(err)
+      const client = await createBffFetchServer()
+
+      await expect(client.fetch('/nav')).rejects.toBe(err)
+      expect(m.loggerError).toHaveBeenCalledWith(
+        {
+          path: '/nav',
+          bffUrl: BASE_URL,
+          code: 'ECONNRESET',
+          error: 'fetch failed',
+        },
         'BFF request failed'
       )
     })

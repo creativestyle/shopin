@@ -6,6 +6,11 @@ import { getLocale } from 'next-intl/server'
 import { logger } from '@/lib/logger'
 import { getRequestVariant } from '@/lib/request-context/variant'
 import { variantHeaders } from '@/lib/variant/variant-key'
+import {
+  BffUnreachableError,
+  getNetworkErrorCode,
+  isBffUnreachableCode,
+} from '../utils/bff-unreachable-error'
 
 /**
  * Server-side BFF client
@@ -14,7 +19,8 @@ import { variantHeaders } from '@/lib/variant/variant-key'
  * - Uses the internal BFF URL (NEXT_BFF_INTERNAL_URL)
  * - Automatically gets the current locale from next-intl server context
  * - Reads variant from request context (set by initRouteContext in the [variant]/[locale] layout)
- * - Logs network errors only (BFF never sees these: connection refused, timeout, etc.).
+ * - Logs network errors only (BFF never sees these: connection refused, timeout, etc.)
+ *   and rethrows connection failures as BffUnreachableError.
  *   For 4xx/5xx the BFF already logs; callers can throw or handle as needed.
  *
  * Correlation ID is NOT forwarded here — by design.
@@ -64,13 +70,20 @@ export async function createBffFetchServer(opts?: {
           effectiveLocale
         )
       } catch (error) {
+        const code = getNetworkErrorCode(error)
+        const unreachable = isBffUnreachableCode(code)
         logger.error(
           {
             path,
+            bffUrl: baseUrl,
+            code,
             error: error instanceof Error ? error.message : String(error),
           },
-          'BFF request failed'
+          unreachable ? 'BFF unreachable' : 'BFF request failed'
         )
+        if (unreachable) {
+          throw new BffUnreachableError(baseUrl, code, { cause: error })
+        }
         throw error
       }
     },
