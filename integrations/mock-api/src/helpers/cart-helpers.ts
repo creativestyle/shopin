@@ -8,17 +8,32 @@ export function recalculateCartTotals(
   priceDiff: number,
   quantityDiff: number
 ): Pick<CartResponse, 'subtotal' | 'grandTotal' | 'itemCount'> {
+  const subtotal = createShopinPrice(
+    cart.subtotal.regularPriceInCents + priceDiff,
+    cart.currency
+  )
+
   return {
-    subtotal: createShopinPrice(
-      cart.subtotal.regularPriceInCents + priceDiff,
-      cart.currency
-    ),
-    grandTotal: createShopinPrice(
-      cart.grandTotal.regularPriceInCents + priceDiff,
-      cart.currency
-    ),
+    subtotal,
+    grandTotal: computeGrandTotal({ ...cart, subtotal }),
     itemCount: cart.itemCount + quantityDiff,
   }
+}
+
+/** Subtotal minus discount (never below zero), plus shipping. */
+export function computeGrandTotal(
+  cart: Pick<
+    CartResponse,
+    'subtotal' | 'discountAmount' | 'shippingInfo' | 'currency'
+  >
+): CartResponse['grandTotal'] {
+  const discountedSubtotal = Math.max(
+    0,
+    cart.subtotal.regularPriceInCents -
+      (cart.discountAmount?.regularPriceInCents ?? 0)
+  )
+  const shipping = cart.shippingInfo?.price.regularPriceInCents ?? 0
+  return createShopinPrice(discountedSubtotal + shipping, cart.currency)
 }
 
 export function findLineItem(
