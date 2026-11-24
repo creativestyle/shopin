@@ -1,3 +1,4 @@
+export const SEARCH_PARAM_QUERY = 'q' as const
 export const SEARCH_PARAM_PAGE = 'page' as const
 export const SEARCH_PARAM_SORT = 'sort' as const
 export const SEARCH_PARAM_FILTERS = 'filters' as const

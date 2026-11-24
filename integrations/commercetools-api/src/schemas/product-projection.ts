@@ -11,6 +11,7 @@ export const ProductProjectionApiResponseSchema = z.object({
   name: LocalizedStringApiResponseSchema,
   slug: LocalizedStringApiResponseSchema,
   description: LocalizedStringApiResponseSchema.optional(),
+  metaTitle: LocalizedStringApiResponseSchema.optional(),
   metaDescription: LocalizedStringApiResponseSchema.optional(),
   masterVariant: ProductVariantApiResponseSchema,
   variants: z.array(ProductVariantApiResponseSchema).optional(),

@@ -204,7 +204,8 @@
       "sizeShowLess": "Show less",
       "resetAll": "Reset all",
       "applyFilters": "Apply filters"
-    }
+    },
+    "metaDescription": "Shop {categoryName} at {siteName} and browse the full range online."
   },
   "cart": {
     "title": "Cart",

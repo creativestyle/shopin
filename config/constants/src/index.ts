@@ -49,5 +49,11 @@ export * from './product-image'
 // Re-export search constants
 export * from './search'
 
+// Re-export seo constants
+export * from './seo'
+
+// Re-export catalog route constants
+export * from './routes'
+
 // Re-export internal request constants
 export * from './internal-request'
