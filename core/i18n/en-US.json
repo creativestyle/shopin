@@ -773,7 +773,10 @@
     },
     "video": {
       "unavailable": "Video unavailable",
-      "play": "Play video"
+      "play": "Play video",
+      "pause": "Pause video",
+      "playTitled": "Play video: {title}",
+      "captions": "Captions"
     }
   },
   "searchResults": {

@@ -772,7 +772,10 @@
     },
     "video": {
       "unavailable": "Video nicht verfügbar",
-      "play": "Video abspielen"
+      "play": "Video abspielen",
+      "pause": "Video pausieren",
+      "playTitled": "Video abspielen: {title}",
+      "captions": "Untertitel"
     }
   },
   "searchResults": {

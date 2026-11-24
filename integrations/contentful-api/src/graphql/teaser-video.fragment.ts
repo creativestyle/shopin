@@ -10,6 +10,9 @@ export const TeaserVideoFragment = gql`
     thumbnail {
       ...AssetFragment
     }
+    captions {
+      ...AssetFragment
+    }
     autoplay
     controls
     caption
