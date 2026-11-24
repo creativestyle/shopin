@@ -26,6 +26,7 @@ import {
   isPreviewTokenValid,
 } from '@/lib/draft-mode'
 import { isAppRouteSegment } from '@/lib/app-route-segments'
+import { REQUEST_PATH_HEADER } from '@/lib/request-context/request-path'
 
 const intlMiddleware = createMiddleware(routing)
 
@@ -164,6 +165,14 @@ function rewrite(
   const requestHeaders = new Headers(request.headers)
   requestHeaders.set(CORRELATION_ID_HEADER, ctx.correlationId)
   requestHeaders.set('x-next-intl-locale', ctx.locale)
+  // Always overwritten, so a client-sent value never reaches the layouts
+  const publicSegments = ctx.firstIsLocale
+    ? ctx.segments.slice(1)
+    : ctx.segments
+  requestHeaders.set(
+    REQUEST_PATH_HEADER,
+    `/${publicSegments.join('/')}${request.nextUrl.search}`
+  )
 
   return NextResponse.rewrite(url, {
     headers: intlResponse.headers,
@@ -233,6 +242,7 @@ function handlePreviewPath(
   const requestHeaders = new Headers(request.headers)
   requestHeaders.set(CORRELATION_ID_HEADER, ctx.correlationId)
   requestHeaders.set('x-next-intl-locale', ctx.locale)
+  requestHeaders.delete(REQUEST_PATH_HEADER)
 
   // Preview ignores intl's locale redirect; drop its Location or the browser follows it
   const responseHeaders = new Headers(intlResponse.headers)

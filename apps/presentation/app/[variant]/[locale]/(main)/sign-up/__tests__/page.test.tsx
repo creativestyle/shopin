@@ -2,6 +2,11 @@ import { render, screen } from '@testing-library/react'
 import type { ReactNode } from 'react'
 import Page from '../page'
 
+const mockRedirect = jest.fn(({ href }: { href: string }) => {
+  throw new Error(`NEXT_REDIRECT:${href}`)
+})
+let mockSession = 'signed-out'
+
 jest.mock('next-intl/server', () => ({
   getTranslations: jest.fn((ns: string) =>
     Promise.resolve((key: string) => `${ns}.${key}`)
@@ -16,6 +21,11 @@ jest.mock('@/lib/navigation', () => ({
   Link: ({ href, children }: { href: string; children: ReactNode }) => (
     <a href={href}>{children}</a>
   ),
+  redirect: (args: { href: string }) => mockRedirect(args),
+}))
+
+jest.mock('@/features/customer/customer-server-session', () => ({
+  getServerSession: async () => mockSession,
 }))
 
 jest.mock('../../auth-page-guard', () => ({
@@ -28,18 +38,27 @@ jest.mock('../sign-up-form-with-redirect', () => ({
 
 const NS = 'account.signUp'
 
+function renderServerPage(
+  searchParams: Record<string, string | string[] | undefined>
+) {
+  return Page({
+    params: Promise.resolve({ variant: '~d', locale: 'en' }),
+    searchParams: Promise.resolve(searchParams),
+  })
+}
+
 async function renderPage(
   searchParams: Record<string, string | string[] | undefined>
 ) {
-  render(
-    await Page({
-      params: Promise.resolve({ variant: '~d', locale: 'en' }),
-      searchParams: Promise.resolve(searchParams),
-    })
-  )
+  render(await renderServerPage(searchParams))
 }
 
 describe('Sign-up page', () => {
+  beforeEach(() => {
+    jest.clearAllMocks()
+    mockSession = 'signed-out'
+  })
+
   it('links back to sign-in without returnTo', async () => {
     await renderPage({})
 
@@ -70,5 +89,39 @@ describe('Sign-up page', () => {
     expect(
       screen.getByRole('link', { name: `${NS}.backToSignIn` })
     ).toHaveAttribute('href', '/sign-in')
+  })
+
+  it('links back to sign-in for a page that only starts with checkout', async () => {
+    await renderPage({ returnTo: '/checkout-help' })
+
+    expect(
+      screen.getByRole('link', { name: `${NS}.backToSignIn` })
+    ).toHaveAttribute('href', '/sign-in?returnTo=%2Fcheckout-help')
+  })
+
+  it('links back to a checkout step', async () => {
+    await renderPage({ returnTo: '/checkout/billing' })
+
+    expect(
+      screen.getByRole('link', { name: `${NS}.backToCheckout` })
+    ).toHaveAttribute('href', '/checkout/billing')
+  })
+
+  it('redirects a signed-in customer to returnTo on the server', async () => {
+    mockSession = 'signed-in'
+
+    await expect(renderServerPage({ returnTo: '/checkout' })).rejects.toThrow(
+      'NEXT_REDIRECT:/checkout'
+    )
+    expect(mockRedirect).toHaveBeenCalledWith({
+      href: '/checkout',
+      locale: 'en',
+    })
+  })
+
+  it('redirects a signed-in customer to the account overview by default', async () => {
+    mockSession = 'signed-in'
+
+    await expect(renderServerPage({})).rejects.toThrow('NEXT_REDIRECT:/account')
   })
 })

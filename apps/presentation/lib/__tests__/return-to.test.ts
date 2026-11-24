@@ -20,6 +20,9 @@ describe('getReturnTo', () => {
     ['protocol-relative', 'returnTo=%2F%2Fevil.com'],
     ['backslash trick', 'returnTo=%2F%5Cevil.com'],
     ['javascript scheme', 'returnTo=javascript%3Aalert(1)'],
+    ['tab after the slash', 'returnTo=%2F%09%2Fevil.com'],
+    ['newline after the slash', 'returnTo=%2F%0A%2Fevil.com'],
+    ['carriage return after the slash', 'returnTo=%2F%0D%5Cevil.com'],
   ])('returns null for a %s value', (_, query) => {
     expect(getReturnTo(new URLSearchParams(query))).toBeNull()
   })

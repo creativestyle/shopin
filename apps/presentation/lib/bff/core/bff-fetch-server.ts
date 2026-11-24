@@ -30,8 +30,8 @@ import {
  * generates its own ID for those. Reading headers()/cookies() to extract a client ID
  * would also opt every caller into dynamic rendering, defeating revalidate = 3600.
  * User-scoped correlation IDs live in useBffFetchClient (client side).
- * Exception: the checkout server guard (features/checkout/checkout-server-guard.ts) is a
- * per-user call on a dynamic route; it forwards cookies and the correlation ID itself.
+ * Exception: per-user calls on dynamic routes (checkout guard, auth session) use
+ * createBffFetchWithCookies, which forwards cookies and the correlation ID.
  *
  * @param opts.locale - Locale override when not using next-intl context (e.g. i18n/request.ts).
  * @param opts.isDraft - Controls draft header:

@@ -5,15 +5,12 @@ import {
   ACCESS_TOKEN_COOKIE_NAME,
   CART_ID_COOKIE_PREFIX_GUEST,
   CART_ID_COOKIE_PREFIX_LOGGED,
-  CORRELATION_ID_HEADER,
-  INTERNAL_SECRET_HEADER,
-  REFRESH_TOKEN_COOKIE_NAME,
-  WISHLIST_ID_COOKIE_PREFIX_GUEST,
-  WISHLIST_ID_COOKIE_PREFIX_LOGGED,
 } from '@config/constants'
-import { createBffFetchServer } from '@/lib/bff/core/bff-fetch-server'
+import {
+  createBffFetchWithCookies,
+  type RequestCookie,
+} from '@/lib/bff/core/bff-fetch-server-with-cookies'
 import { logger } from '@/lib/logger'
-import { getCorrelationId } from '@/lib/logger/logger-context'
 import { CartService } from '@/features/cart/cart-service'
 import type { CartResponse } from '@core/contracts/cart/cart'
 import {
@@ -24,11 +21,8 @@ import {
   CHECKOUT_STEPS,
   type CheckoutStepId,
 } from './components/checkout-steps-frame/checkout-steps-config'
-import type { BffFetchClient } from '@/lib/bff/types'
 
 export type { CheckoutStepId } from './components/checkout-steps-frame/checkout-steps-config'
-
-type RequestCookie = { name: string; value: string }
 
 /** Read-only guard: without these cookies the BFF would refresh tokens via Set-Cookie the browser never gets. */
 function canResolveCartOnServer(requestCookies: RequestCookie[]): boolean {
@@ -41,52 +35,6 @@ function canResolveCartOnServer(requestCookies: RequestCookie[]): boolean {
     ({ name }) => name === ACCESS_TOKEN_COOKIE_NAME
   )
   return hasCartId && hasAccessToken
-}
-
-const BFF_COOKIE_NAMES = [ACCESS_TOKEN_COOKIE_NAME, REFRESH_TOKEN_COOKIE_NAME]
-const BFF_COOKIE_PREFIXES = [
-  CART_ID_COOKIE_PREFIX_GUEST,
-  CART_ID_COOKIE_PREFIX_LOGGED,
-  WISHLIST_ID_COOKIE_PREFIX_GUEST,
-  WISHLIST_ID_COOKIE_PREFIX_LOGGED,
-]
-
-function isBffCookie({ name }: RequestCookie): boolean {
-  return (
-    BFF_COOKIE_NAMES.includes(name) ||
-    BFF_COOKIE_PREFIXES.some((prefix) => name.startsWith(prefix))
-  )
-}
-
-/** BFF fetch client that forwards the BFF's own cookies and the correlation id so the BFF can resolve the cart. */
-async function createBffFetchWithCookies(
-  requestCookies: RequestCookie[]
-): Promise<BffFetchClient> {
-  const cookieHeader = requestCookies
-    .filter(isBffCookie)
-    .map(({ name, value }) => `${name}=${value}`)
-    .join('; ')
-
-  const [baseClient, correlationId] = await Promise.all([
-    createBffFetchServer(),
-    getCorrelationId(),
-  ])
-
-  const internalSecret = process.env.BFF_INTERNAL_SECRET?.trim()
-
-  return {
-    fetch: (path, options) => {
-      const bffHeaders = new Headers(options?.headers)
-      bffHeaders.set('Cookie', cookieHeader)
-      bffHeaders.set(CORRELATION_ID_HEADER, correlationId)
-      // Exempts the call from the BFF rate limit, which would key it on the Next server's IP
-      if (internalSecret) {
-        bffHeaders.set(INTERNAL_SECRET_HEADER, internalSecret)
-      }
-
-      return baseClient.fetch(path, { ...options, headers: bffHeaders })
-    },
-  }
 }
 
 /** Returns the cart, or null when the server cannot resolve it and the client guard decides. */

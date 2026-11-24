@@ -3,7 +3,13 @@ import { ProtectedPageGuard } from '../protected-page-guard'
 
 const mockPush = jest.fn()
 let mockPathname = '/account'
+let mockSearchParams = new URLSearchParams()
 let mockCustomer = { isLoggedIn: true, isLoading: false }
+
+jest.mock('next/navigation', () => ({
+  ...jest.requireActual('next/navigation'),
+  useSearchParams: () => mockSearchParams,
+}))
 
 jest.mock('@/lib/navigation', () => ({
   useRouter: () => ({ push: mockPush }),
@@ -14,9 +20,12 @@ jest.mock('@/features/customer/customer-use-customer', () => ({
   useCustomer: () => mockCustomer,
 }))
 
-function renderGuard() {
+function renderGuard(isVerifiedOnServer?: boolean) {
   render(
-    <ProtectedPageGuard redirectTo='/sign-in'>
+    <ProtectedPageGuard
+      redirectTo='/sign-in'
+      isVerifiedOnServer={isVerifiedOnServer}
+    >
       <p>account content</p>
     </ProtectedPageGuard>
   )
@@ -26,6 +35,7 @@ describe('ProtectedPageGuard', () => {
   beforeEach(() => {
     jest.clearAllMocks()
     mockPathname = '/account'
+    mockSearchParams = new URLSearchParams()
     mockCustomer = { isLoggedIn: true, isLoading: false }
   })
 
@@ -52,5 +62,31 @@ describe('ProtectedPageGuard', () => {
     expect(mockPush).toHaveBeenCalledWith(
       '/sign-in?returnTo=%2Faccount%2Forders'
     )
+  })
+
+  it('keeps the query string in returnTo', () => {
+    mockCustomer = { isLoggedIn: false, isLoading: false }
+    mockPathname = '/account/orders'
+    mockSearchParams = new URLSearchParams('page=3')
+    renderGuard()
+
+    expect(mockPush).toHaveBeenCalledWith(
+      '/sign-in?returnTo=%2Faccount%2Forders%3Fpage%3D3'
+    )
+  })
+
+  it('renders children while loading when the server confirmed the customer', () => {
+    mockCustomer = { isLoggedIn: false, isLoading: true }
+    renderGuard(true)
+
+    expect(screen.getByText('account content')).toBeInTheDocument()
+    expect(mockPush).not.toHaveBeenCalled()
+  })
+
+  it('still redirects once the client sees no customer', () => {
+    mockCustomer = { isLoggedIn: false, isLoading: false }
+    renderGuard(true)
+
+    expect(mockPush).toHaveBeenCalledWith('/sign-in?returnTo=%2Faccount')
   })
 })

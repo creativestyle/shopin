@@ -18,9 +18,9 @@ jest.mock('@/features/customer/customer-use-customer', () => ({
   useCustomer: () => mockCustomer,
 }))
 
-function renderGuard() {
+function renderGuard(isVerifiedOnServer?: boolean) {
   render(
-    <AuthPageGuard>
+    <AuthPageGuard isVerifiedOnServer={isVerifiedOnServer}>
       <p>auth content</p>
     </AuthPageGuard>
   )
@@ -69,5 +69,21 @@ describe('AuthPageGuard', () => {
     renderGuard()
 
     expect(mockPush).toHaveBeenCalledWith('/account')
+  })
+
+  it('falls back to the account overview for a returnTo with a control character', () => {
+    mockCustomer = { isLoggedIn: true, isLoading: false }
+    mockSearchParams = new URLSearchParams('returnTo=%2F%09%2Fevil.com')
+    renderGuard()
+
+    expect(mockPush).toHaveBeenCalledWith('/account')
+  })
+
+  it('renders children while loading when the server saw a guest', () => {
+    mockCustomer = { isLoggedIn: false, isLoading: true }
+    renderGuard(true)
+
+    expect(screen.getByText('auth content')).toBeInTheDocument()
+    expect(mockPush).not.toHaveBeenCalled()
   })
 })

@@ -7,13 +7,18 @@ import { getReturnTo } from '@/lib/return-to'
 
 interface AuthPageGuardProps {
   children: React.ReactNode
+  /** Server already confirmed a guest: render children while the client check loads. */
+  isVerifiedOnServer?: boolean
 }
 
 /**
  * For auth pages (sign-in, sign-up): redirect when already logged in.
  * Destination comes from the returnTo param, falling back to the account overview.
  */
-export function AuthPageGuard({ children }: AuthPageGuardProps) {
+export function AuthPageGuard({
+  children,
+  isVerifiedOnServer = false,
+}: AuthPageGuardProps) {
   const searchParams = useSearchParams()
   const { isLoggedIn, isLoading } = useCustomer()
   const redirectTo = getReturnTo(searchParams) ?? '/account'
@@ -22,7 +27,7 @@ export function AuthPageGuard({ children }: AuthPageGuardProps) {
     <RedirectWhen
       when={isLoggedIn}
       redirectTo={redirectTo}
-      isLoading={isLoading}
+      isLoading={isLoading && !isVerifiedOnServer}
     >
       {children}
     </RedirectWhen>
