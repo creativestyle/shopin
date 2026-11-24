@@ -17,6 +17,11 @@ import { getTranslations } from 'next-intl/server'
 import { getCommonErrorMessage } from '@/lib/error-translation-keys'
 import { ErrorDisplay } from '@/components/ui/error-display'
 import { HttpError } from '@/lib/error-utils'
+import { JsonLd } from '@/features/seo/json-ld'
+import { buildProductJsonLd } from '@/features/seo/build-product-json-ld'
+import { buildBreadcrumbJsonLd } from '@/features/seo/build-breadcrumb-json-ld'
+import { tryGetSiteBaseUrl } from '@/lib/site-url'
+import { resolveProductCanonicalUrl } from './build-product-page-metadata'
 
 interface ProductPageProps {
   slug: string
@@ -62,8 +67,28 @@ export async function ProductPage({
     notFound()
   }
 
+  const baseUrl = tryGetSiteBaseUrl()
+  const canonicalUrl = resolveProductCanonicalUrl(productData, locale, baseUrl)
+  const tCommon = await getTranslations('common')
+  const breadcrumbJsonLd = buildBreadcrumbJsonLd({
+    crumbs: productData.breadcrumb,
+    baseUrl,
+    localePrefix: locale,
+    homeLabel: tCommon('homepage'),
+  })
+
   return (
     <div className='py-4'>
+      <JsonLd
+        data={[
+          buildProductJsonLd({
+            product: productData.product,
+            url: canonicalUrl,
+            baseUrl,
+          }),
+          ...(breadcrumbJsonLd ? [breadcrumbJsonLd] : []),
+        ]}
+      />
       <StandardContainer className='pb-4'>
         <Breadcrumbs crumbs={productData.breadcrumb} />
       </StandardContainer>

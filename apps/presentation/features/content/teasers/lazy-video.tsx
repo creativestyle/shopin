@@ -1,28 +1,53 @@
 'use client'
 
-import { useRef, useState, useEffect } from 'react'
+import { useRef, useState, useEffect, useSyncExternalStore } from 'react'
 import Image from 'next/image'
 import { contentImageLoader } from '../lib/content-image-loader'
 import PlayIcon from '@/public/icons/play.svg'
+import PauseIcon from '@/public/icons/pause.svg'
 import { cn } from '@/lib/utils'
-import { useTranslations } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 
 interface LazyVideoProps {
-  src?: string
+  src: string
   poster?: string
+  captionsUrl?: string
+  title?: string
   autoPlay?: boolean
-  muted?: boolean
   controls?: boolean
   eager?: boolean
   className?: string
   aspectRatio?: string
 }
 
+type PlaybackStatus = 'idle' | 'loading' | 'playing' | 'paused'
+
+const REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)'
+
+function subscribeReducedMotion(onChange: () => void) {
+  const query = window.matchMedia?.(REDUCED_MOTION_QUERY)
+  query?.addEventListener('change', onChange)
+  return () => query?.removeEventListener('change', onChange)
+}
+
+function matchesReducedMotion() {
+  return window.matchMedia?.(REDUCED_MOTION_QUERY).matches ?? false
+}
+
+function usePrefersReducedMotion() {
+  return useSyncExternalStore(
+    subscribeReducedMotion,
+    matchesReducedMotion,
+    () => false
+  )
+}
+
 export function LazyVideo({
   src,
   poster,
-  autoPlay,
-  muted,
+  captionsUrl,
+  title,
+  autoPlay = false,
   controls = false,
   eager = false,
   className,
@@ -30,14 +55,32 @@ export function LazyVideo({
 }: LazyVideoProps) {
   const ref = useRef<HTMLVideoElement>(null)
   const [inView, setInView] = useState(eager)
-  const [loaded, setLoaded] = useState(false)
+  const [frameReady, setFrameReady] = useState(false)
   const [error, setError] = useState(false)
-  const [playing, setPlaying] = useState(false)
+  const [status, setStatus] = useState<PlaybackStatus>('idle')
+  const [autoplayBlocked, setAutoplayBlocked] = useState(false)
+  const reducedMotion = usePrefersReducedMotion()
   const t = useTranslations('teaser')
+  const locale = useLocale()
 
-  const handlePosterClick = () => {
+  // Ambient mode: muted loop that starts on its own; otherwise click-to-play
+  const ambient = autoPlay && !reducedMotion && !autoplayBlocked
+
+  const handlePlayClick = () => {
     setInView(true)
-    setPlaying(true)
+    setStatus('loading')
+  }
+
+  const handleToggleClick = () => {
+    const el = ref.current
+    if (!el) {
+      return
+    }
+    if (el.paused) {
+      el.play().catch(() => setStatus('paused'))
+    } else {
+      el.pause()
+    }
   }
 
   useEffect(() => {
@@ -62,17 +105,38 @@ export function LazyVideo({
   }, [inView])
 
   useEffect(() => {
-    if (playing && inView) {
-      ref.current?.play().catch(() => {})
+    const el = ref.current
+    if (!inView || !el) {
+      return
     }
-  }, [playing, inView])
+    // Hydration still sees the server snapshot, so read the media query directly
+    const autoplayNow = ambient && status === 'idle' && !matchesReducedMotion()
+    if (status === 'loading' || autoplayNow) {
+      el.play().catch(() => {
+        setStatus('idle')
+        if (ambient) {
+          setAutoplayBlocked(true)
+        }
+      })
+    }
+  }, [status, inView, ambient])
+
+  const showPlayButton = !ambient && status === 'idle'
+  const showToggle = ambient && !controls
+  const showPoster = !!poster && (status === 'idle' || status === 'loading')
+  const showSkeleton = !poster && !frameReady && !error
+  const isPlaying = status === 'playing'
 
   return (
     <div
-      className='relative w-full overflow-hidden rounded-lg'
+      // Above a sibling overlay link once the shopper has to click to play
+      className={cn(
+        'relative w-full overflow-hidden rounded-lg',
+        !ambient && 'z-20'
+      )}
       style={{ aspectRatio }}
     >
-      {!loaded && !error && (
+      {showSkeleton && (
         <div className='absolute inset-0 animate-pulse bg-gray-200' />
       )}
       {error && (
@@ -85,44 +149,82 @@ export function LazyVideo({
           <video
             ref={ref}
             src={inView ? src : undefined}
-            autoPlay={autoPlay}
-            muted={muted}
+            muted={autoPlay}
             loop={autoPlay}
-            controls={controls}
-            preload='none'
-            playsInline={autoPlay && muted}
-            onCanPlay={() => setLoaded(true)}
+            controls={controls || (!ambient && status !== 'idle')}
+            preload={ambient || !poster ? 'metadata' : 'none'}
+            playsInline
+            // Captions track needs CORS, so video and .vtt hosts must send Access-Control-Allow-Origin
+            crossOrigin={captionsUrl ? 'anonymous' : undefined}
+            onLoadedData={() => setFrameReady(true)}
+            onPlaying={() => setStatus('playing')}
+            onPause={() =>
+              setStatus((current) =>
+                current === 'playing' ? 'paused' : current
+              )
+            }
             onError={() => setError(true)}
             className={cn(
               'absolute inset-0 h-full w-full object-cover',
               className
             )}
-          />
-          {poster && !autoPlay && !playing && (
+          >
+            {captionsUrl && (
+              <track
+                kind='captions'
+                src={captionsUrl}
+                srcLang={locale}
+                label={t('video.captions')}
+              />
+            )}
+          </video>
+          {showPoster && (
+            <Image
+              loader={contentImageLoader}
+              src={poster}
+              alt=''
+              fill
+              className='pointer-events-none object-cover'
+              sizes='(min-width: 1920px) 1920px, 100vw'
+              preload={eager}
+              fetchPriority={eager ? 'high' : 'low'}
+            />
+          )}
+          {showPlayButton && (
             <button
               type='button'
-              className='absolute inset-0 cursor-pointer'
-              onClick={handlePosterClick}
-              aria-label={t('video.play')}
+              className='absolute inset-0 flex cursor-pointer items-center justify-center'
+              onClick={handlePlayClick}
+              aria-label={
+                title ? t('video.playTitled', { title }) : t('video.play')
+              }
             >
-              <Image
-                loader={contentImageLoader}
-                src={poster}
-                alt=''
-                fill
-                className='object-cover'
-                sizes='(min-width: 1920px) 1920px, 100vw'
-                preload={eager}
-                fetchPriority={eager ? 'high' : 'low'}
-              />
-              <span className='absolute inset-0 flex items-center justify-center'>
-                <span className='flex h-16 w-16 items-center justify-center rounded-full bg-black/50 text-white backdrop-blur-sm'>
-                  <PlayIcon
-                    className='h-7 w-7'
-                    aria-hidden='true'
-                  />
-                </span>
+              <span className='flex h-16 w-16 items-center justify-center rounded-full bg-black/50 text-white backdrop-blur-sm'>
+                <PlayIcon
+                  className='h-7 w-7'
+                  aria-hidden='true'
+                />
               </span>
+            </button>
+          )}
+          {showToggle && (
+            <button
+              type='button'
+              className='absolute right-3 bottom-3 z-20 flex h-10 w-10 cursor-pointer items-center justify-center rounded-full bg-black/50 text-white backdrop-blur-sm'
+              onClick={handleToggleClick}
+              aria-label={isPlaying ? t('video.pause') : t('video.play')}
+            >
+              {isPlaying ? (
+                <PauseIcon
+                  className='h-5 w-5'
+                  aria-hidden='true'
+                />
+              ) : (
+                <PlayIcon
+                  className='h-5 w-5'
+                  aria-hidden='true'
+                />
+              )}
             </button>
           )}
         </>

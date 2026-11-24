@@ -2,8 +2,12 @@
 
 import { cookies } from 'next/headers'
 import {
-  listLocales,
+  buildCategoryPath,
+  buildProductPath,
+  getCategorySlugFromPath,
+  getProductSlugFromPath,
   PREVIEW_TOKEN_COOKIE,
+  stripLocalePrefix,
   urlPrefixToRfc,
 } from '@config/constants'
 import { isPreviewTokenValid } from '@/lib/draft-mode'
@@ -14,18 +18,6 @@ import { getContentPage } from '@/features/content/get-content-page'
 import { isHomepageSlug } from '@/features/content/homepage-slug'
 import { runWithRequestVariantFromSegment } from '@/lib/request-context/variant'
 import { isVariantSegment } from '@/lib/variant/variant-key'
-
-function stripLocalePrefix(path: string): string {
-  for (const { urlPrefix } of listLocales()) {
-    if (path === `/${urlPrefix}`) {
-      return ''
-    }
-    if (path.startsWith(`/${urlPrefix}/`)) {
-      return path.slice(urlPrefix.length + 1)
-    }
-  }
-  return path
-}
 
 const PREVIEW_PREFIX = '/preview'
 
@@ -49,16 +41,18 @@ async function resolveTargetPath(
     return ''
   }
 
-  if (rest.startsWith('/p/')) {
-    const data = await getProductPage(rest.slice('/p/'.length))
+  const productSlug = getProductSlugFromPath(rest)
+  if (productSlug !== null) {
+    const data = await getProductPage(productSlug)
     const slug = data.product.slugByLocale?.[targetRfc]
-    return slug ? `/p/${slug}` : null
+    return slug ? buildProductPath(slug) : null
   }
 
-  if (rest.startsWith('/c/')) {
-    const data = await getProductCollectionPage(rest.slice('/c/'.length))
+  const categorySlug = getCategorySlugFromPath(rest)
+  if (categorySlug !== null) {
+    const data = await getProductCollectionPage(categorySlug)
     const slug = data.slugByLocale?.[targetRfc]
-    return slug ? `/c/${slug}` : null
+    return slug ? buildCategoryPath(slug) : null
   }
 
   const data = await getContentPage(rest.slice(1), isDraft)

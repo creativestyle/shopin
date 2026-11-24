@@ -16,6 +16,7 @@ export class ProductService {
     return {
       breadcrumb: response.breadcrumb,
       product: response.product,
+      seo: response.seo,
     }
   }
 }

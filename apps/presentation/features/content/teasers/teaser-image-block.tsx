@@ -21,7 +21,7 @@ export function TeaserImageBlock({
             fill
             className='object-cover'
             preload={imagePreload}
-            sizes='(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 400px'
+            sizes='(min-width: 1920px) 1920px, 100vw'
           />
         </div>
       )}

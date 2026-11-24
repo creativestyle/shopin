@@ -207,7 +207,8 @@
       "sizeShowLess": "Weniger anzeigen",
       "resetAll": "Alle löschen",
       "applyFilters": "Filter anwenden"
-    }
+    },
+    "metaDescription": "{categoryName} bei {siteName} kaufen und das gesamte Sortiment online entdecken."
   },
   "cart": {
     "title": "Warenkorb",
@@ -775,7 +776,10 @@
     },
     "video": {
       "unavailable": "Video nicht verfügbar",
-      "play": "Video abspielen"
+      "play": "Video abspielen",
+      "pause": "Video pausieren",
+      "playTitled": "Video abspielen: {title}",
+      "captions": "Untertitel"
     }
   },
   "searchResults": {

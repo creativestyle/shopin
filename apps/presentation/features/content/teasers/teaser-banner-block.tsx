@@ -11,7 +11,8 @@ export function TeaserBannerBlock({
   imagePreload?: boolean
 }) {
   const { backgroundImage, headline, body, cta } = teaser
-  const hasContent = headline || body || cta?.link?.url
+  const linkedCta = cta?.link?.url ? cta : undefined
+  const hasContent = headline || body || linkedCta
   if (!hasContent && !backgroundImage?.url) {
     return null
   }
@@ -39,28 +40,43 @@ export function TeaserBannerBlock({
       >
         <div
           className={cn({
-            '-mb-4 glass-filter px-6 py-4 text-center text-white max-sm:mx-4 max-sm:-mt-12 max-sm:mb-0 max-sm:self-stretch max-sm:!shadow-none sm:w-auto sm:px-12 sm:py-6':
+            '-mb-4 grid text-center text-white max-sm:mx-4 max-sm:-mt-12 max-sm:mb-0 max-sm:self-stretch sm:w-auto':
               hasOverlay,
           })}
         >
-          {headline && (
-            <h2 className='text-2xl font-bold md:text-3xl'>{headline}</h2>
-          )}
-          {body && (
-            <p
-              className={cn('mx-auto mt-2 max-w-xl', {
-                'text-gray-700': !hasOverlay,
-              })}
-            >
-              {body}
-            </p>
-          )}
-          {cta?.link?.url && (
-            <CmsButton
-              cta={cta}
-              className='mt-4'
+          {hasOverlay && (
+            // Blur on a sibling layer: backdrop-filter would confine the stretched CTA
+            <div
+              aria-hidden
+              className='col-start-1 row-start-1 glass-filter max-sm:!shadow-none'
             />
           )}
+          <div
+            className={cn({
+              'z-1 col-start-1 row-start-1 px-6 py-4 sm:px-12 sm:py-6':
+                hasOverlay,
+            })}
+          >
+            {headline && (
+              <h2 className='text-2xl font-bold md:text-3xl'>{headline}</h2>
+            )}
+            {body && (
+              <p
+                className={cn('mx-auto mt-2 max-w-xl', {
+                  'text-gray-700': !hasOverlay,
+                })}
+              >
+                {body}
+              </p>
+            )}
+            {linkedCta && (
+              <CmsButton
+                cta={linkedCta}
+                // Stretched link: the CTA's ::after covers the whole banner
+                className='mt-4 after:absolute after:inset-0 after:rounded-lg'
+              />
+            )}
+          </div>
         </div>
       </div>
     </div>

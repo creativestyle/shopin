@@ -1,5 +1,6 @@
 import type { CategoryApiResponse } from '../schemas/category'
 import type { LinkResponse, SubcategoryLink } from '@core/contracts/core/link'
+import { buildCategoryPath } from '@config/constants'
 
 export interface CategoryNode {
   id: string
@@ -70,17 +71,17 @@ export function mapCategoryToLink(category: CategoryNode): LinkResponse {
     category.children.length > 0
       ? category.children.map((child) => ({
           text: child.name,
-          href: `/c/${child.slug}`,
+          href: buildCategoryPath(child.slug),
           children:
             child.children.length > 0
               ? child.children.map((grandchild) => ({
                   text: grandchild.name,
-                  href: `/c/${grandchild.slug}`,
+                  href: buildCategoryPath(grandchild.slug),
                   children:
                     grandchild.children.length > 0
                       ? grandchild.children.map((greatGrandchild) => ({
                           text: greatGrandchild.name,
-                          href: `/c/${greatGrandchild.slug}`,
+                          href: buildCategoryPath(greatGrandchild.slug),
                         }))
                       : undefined,
                 }))
@@ -90,7 +91,7 @@ export function mapCategoryToLink(category: CategoryNode): LinkResponse {
 
   return {
     text: category.name,
-    href: `/c/${category.slug}`,
+    href: buildCategoryPath(category.slug),
     children,
   }
 }

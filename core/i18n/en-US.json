@@ -208,7 +208,8 @@
       "sizeShowLess": "Show less",
       "resetAll": "Reset all",
       "applyFilters": "Apply filters"
-    }
+    },
+    "metaDescription": "Shop {categoryName} at {siteName} and browse the full range online."
   },
   "cart": {
     "title": "Cart",
@@ -776,7 +777,10 @@
     },
     "video": {
       "unavailable": "Video unavailable",
-      "play": "Play video"
+      "play": "Play video",
+      "pause": "Pause video",
+      "playTitled": "Play video: {title}",
+      "captions": "Captions"
     }
   },
   "searchResults": {

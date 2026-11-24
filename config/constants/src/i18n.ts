@@ -59,6 +59,20 @@ export function getDefaultLocale(): Locale {
   return LOCALE_CONFIG[I18N_CONFIG.defaultLocale]
 }
 
+/** Removes a leading locale prefix ("/de/foo" → "/foo", "/de" → ""); other paths keep a leading slash. */
+export function stripLocalePrefix(path: string): string {
+  const normalized = path.startsWith('/') ? path : `/${path}`
+  for (const { urlPrefix } of listLocales()) {
+    if (normalized === `/${urlPrefix}`) {
+      return ''
+    }
+    if (normalized.startsWith(`/${urlPrefix}/`)) {
+      return normalized.slice(urlPrefix.length + 1)
+    }
+  }
+  return normalized
+}
+
 /** Converts a URL prefix to an RFC 5646 language tag (e.g. "en" → "en-US"). */
 export function urlPrefixToRfc(prefix: string): SupportedLocale {
   const entry = Object.values(LOCALE_CONFIG).find((l) => l.urlPrefix === prefix)

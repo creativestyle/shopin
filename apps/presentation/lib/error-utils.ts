@@ -1,20 +1,7 @@
 /**
- * Returns a safe display message from an unknown error.
- * Use for showing error messages in the UI (toast, inline error blocks).
- */
-export function getErrorMessage(error: unknown, fallback: string): string {
-  if (error instanceof Error && error.message) {
-    return error.message
-  }
-  if (typeof error === 'string') {
-    return error
-  }
-  return fallback
-}
-
-/**
  * Utilities for **inspecting** HTTP errors (client or server).
- * BFF client throws errors with message "STATUS_CODE STATUS_TEXT" (e.g. "409 Conflict");
+ * BFF client throws errors whose message starts with "STATUS_CODE STATUS_TEXT"
+ * (e.g. "409 Conflict (BFF POST /cart, correlationId: …)");
  * 429 is thrown as RateLimitError with the same message format.
  */
 export class HttpError {
@@ -28,8 +15,7 @@ export class HttpError {
       return null
     }
 
-    // Error messages from BaseService are formatted as "STATUS_CODE STATUS_TEXT"
-    // e.g., "409 Conflict", "404 Not Found", "500 Internal Server Error"
+    // BaseService error messages start with the status code, e.g. "409 Conflict (BFF …)"
     const match = error.message.match(/^(\d{3})/)
     if (match) {
       return parseInt(match[1], 10)
