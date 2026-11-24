@@ -13,7 +13,7 @@ export const defaultBasePage: Pick<
     metaDescription:
       'Shop the best selection. Free returns, secure payment, sustainable choices.',
     ogImage: {
-      url: 'https://placehold.co/1200x630/f3f4f6/6b7280?text=Mock+Store',
+      url: '/og-image.png',
       alt: '',
       width: 1200,
       height: 630,
@@ -27,7 +27,7 @@ export function placeholderImage(
   title?: string
 ): { url: string; alt: string; width: number; height: number; title?: string } {
   return {
-    url: `https://placehold.co/${width}x${height}/f3f4f6/6b7280?text=Image`,
+    url: '/images/placeholder.svg',
     alt: title ?? '',
     width,
     height,

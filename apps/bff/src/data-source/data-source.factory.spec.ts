@@ -20,17 +20,24 @@ function createStubProviders() {
     paymentService: { name: 'mock-payment' },
     pageService: { name: 'mock-page' },
     layoutService: { name: 'mock-layout' },
+    customerService: { name: 'mock-customer' },
+    customerAddressService: { name: 'mock-customer-address' },
   }
+  const ctAuthServices = { loginService: { name: 'ct-login' } }
+  const mockAuthServices = { loginService: { name: 'mock-login' } }
   const algoliaSearchService = { name: 'algolia-search' }
 
   return {
     commercetools: { getServices: () => ctServices },
     mock: { getServices: () => mockServices },
     algolia: { getServices: () => ({ searchService: algoliaSearchService }) },
-    auth: { getAuthServices: jest.fn() },
+    auth: { getAuthServices: () => ctAuthServices },
+    mockAuth: { getAuthServices: () => mockAuthServices },
     ctServices,
     mockServices,
     algoliaSearchService,
+    ctAuthServices,
+    mockAuthServices,
   }
 }
 
@@ -42,7 +49,8 @@ function createFactory(dataSource: DataSource) {
     stubs.mock as never,
     stubs.auth as never,
     stubs.algolia as never,
-    dataSource
+    dataSource,
+    stubs.mockAuth as never
   )
   return { factory, stubs }
 }
@@ -58,18 +66,32 @@ describe('DataSourceFactory', () => {
       expect(services.cartService).toBe(stubs.mockServices.cartService)
     })
 
-    it('still uses commercetools customer services', () => {
+    it('uses the mock customer services', () => {
       const { factory, stubs } = createFactory('mock-set')
       const services = factory.getServices()
 
-      expect(services.customerService).toBe(stubs.ctServices.customerService)
+      expect(services.customerService).toBe(stubs.mockServices.customerService)
       expect(services.customerAddressService).toBe(
-        stubs.ctServices.customerAddressService
+        stubs.mockServices.customerAddressService
       )
+    })
+
+    it('uses the mock auth services', () => {
+      const { factory, stubs } = createFactory('mock-set')
+
+      expect(factory.getAuthServices()).toBe(stubs.mockAuthServices)
     })
   })
 
   describe('commercetools-set', () => {
+    it('uses commercetools customer and auth services', () => {
+      const { factory, stubs } = createFactory('commercetools-set')
+      const services = factory.getServices()
+
+      expect(services.customerService).toBe(stubs.ctServices.customerService)
+      expect(factory.getAuthServices()).toBe(stubs.ctAuthServices)
+    })
+
     it('wraps commercetools product search in CtSearchProvider', () => {
       const { factory } = createFactory('commercetools-set')
 

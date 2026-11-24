@@ -15,6 +15,7 @@
     "check-types": "tsc --noEmit"
   },
   "dependencies": {
+    "@config/constants": "*",
     "@core/contracts": "*",
     "@core/i18n": "*",
     "@faker-js/faker": "^10.5.0"

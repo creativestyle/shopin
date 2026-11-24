@@ -9,7 +9,10 @@ import type {
 } from '@core/contracts/core/data-source-interfaces'
 import type { CommercetoolsServiceProvider } from '@integrations/commercetools-api'
 import type { ContentfulServiceProvider } from '@integrations/contentful-api'
-import type { MockServiceProvider } from '@integrations/mock-api'
+import type {
+  MockAuthServiceProvider,
+  MockServiceProvider,
+} from '@integrations/mock-api'
 import type { CommercetoolsAuthServiceProvider } from '@integrations/commercetools-auth'
 import type { AlgoliaServiceProvider } from '@integrations/algolia-api'
 import { CtSearchProvider } from '@integrations/commercetools-api'
@@ -53,7 +56,9 @@ export class DataSourceFactory {
     @Optional()
     @Inject('ALGOLIA_SERVICE_PROVIDER')
     private readonly algoliaServiceProvider: AlgoliaServiceProvider | null,
-    @Inject(DATA_SOURCE) private readonly dataSource: DataSource
+    @Inject(DATA_SOURCE) private readonly dataSource: DataSource,
+    @Inject('MOCK_AUTH_SERVICE_PROVIDER')
+    private readonly mockAuthServiceProvider: MockAuthServiceProvider
   ) {
     const commercetoolsWithCMS: MergedCommercetoolsCMSProvider = {
       getServices: (): CommercetoolsWithCMSServices => {
@@ -106,9 +111,11 @@ export class DataSourceFactory {
 
     const baseServices = serviceProvider.getServices()
 
-    // Always use commercetools customerService regardless of data source
+    // Customers live in commercetools, except on the self-contained mock set
     const { customerService, customerAddressService } =
-      this.commercetoolsServiceProvider.getServices()
+      this.dataSource === 'mock-set'
+        ? this.mockServiceProvider.getServices()
+        : this.commercetoolsServiceProvider.getServices()
 
     // Always use mock paymentService regardless of data source
     const { paymentService } = this.mockServiceProvider.getServices()
@@ -122,6 +129,8 @@ export class DataSourceFactory {
   }
 
   getAuthServices(): AllAuthServices {
-    return this.commercetoolsAuthServiceProvider.getAuthServices()
+    return this.dataSource === 'mock-set'
+      ? this.mockAuthServiceProvider.getAuthServices()
+      : this.commercetoolsAuthServiceProvider.getAuthServices()
   }
 }

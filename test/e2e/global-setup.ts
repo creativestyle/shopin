@@ -8,8 +8,12 @@
 
 import { getFakeCmsServer } from './fake-cms/server'
 import { FAKE_CMS_PORT, APP_PORT } from './config'
+import { formatIntegrationReport, resolveIntegrations } from './stack/integrations'
 
 export default async function globalSetup() {
+  // Which integration serves each category in this run
+  console.log(formatIntegrationReport(resolveIntegrations()))
+
   // Flush both the in-memory Data Cache and on-disk fetch-cache entries.
   // revalidateTag('*', { expire: 0 }) sets expired = Date.now() on every entry
   // (Next.js file-system-cache.js), so the next request treats them as cold —

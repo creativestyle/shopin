@@ -14,6 +14,8 @@ import {
   PageService,
   LayoutService,
   WishlistService,
+  CustomerService,
+  CustomerAddressService,
 } from './services'
 
 @Injectable()
@@ -31,7 +33,9 @@ export class MockServiceProviderImpl implements MockServiceProvider {
     private readonly paymentService: PaymentService,
     private readonly pageService: PageService,
     private readonly layoutService: LayoutService,
-    private readonly wishlistService: WishlistService
+    private readonly wishlistService: WishlistService,
+    private readonly customerService: CustomerService,
+    private readonly customerAddressService: CustomerAddressService
   ) {}
 
   getServices() {
@@ -49,6 +53,8 @@ export class MockServiceProviderImpl implements MockServiceProvider {
       pageService: this.pageService,
       wishlistService: this.wishlistService,
       layoutService: this.layoutService,
+      customerService: this.customerService,
+      customerAddressService: this.customerAddressService,
     }
   }
 }

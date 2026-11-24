@@ -15,7 +15,7 @@
  */
 
 import { createHmac } from 'node:crypto'
-import type { BrowserContext, Page } from '@playwright/test'
+import { expect, type BrowserContext, type Page } from '@playwright/test'
 import { APP_BASE, APP_PORT, MOCK_BFF_BASE, E2E_DRAFT_SECRET } from '../config'
 import type { RecordedRequest } from '../mock-bff/server'
 
@@ -80,20 +80,21 @@ export async function requestsFor(pathPrefix: string): Promise<RecordedRequest[]
 
 /**
  * Waits until at least one BFF request matching the path prefix has been
- * recorded.  Poll up to timeoutMs; resolves with the matching requests.
+ * recorded, then resolves with the matching requests.
  */
 export async function waitForBffRequest(
-  page: Page,
+  _page: Page,
   pathPrefix: string,
   timeoutMs = 5000
 ): Promise<RecordedRequest[]> {
-  const deadline = Date.now() + timeoutMs
-  while (Date.now() < deadline) {
-    const hits = await requestsFor(pathPrefix)
-    if (hits.length > 0) return hits
-    await page.waitForTimeout(100)
-  }
-  throw new Error(`waitForBffRequest: no request for "${pathPrefix}" within ${timeoutMs}ms`)
+  let hits: RecordedRequest[] = []
+  await expect
+    .poll(async () => (hits = await requestsFor(pathPrefix)).length, {
+      message: `waitForBffRequest: no request for "${pathPrefix}"`,
+      timeout: timeoutMs,
+    })
+    .toBeGreaterThan(0)
+  return hits
 }
 
 // ─── ISR cache helpers ────────────────────────────────────────────────────────

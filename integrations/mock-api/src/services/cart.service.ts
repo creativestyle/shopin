@@ -31,6 +31,8 @@ import {
   createShopinPrice,
   createShopinLineItem,
 } from '../generators/shopin-cart'
+import { MockSessionService } from '../session/mock-session.service'
+import { getSessionCustomerId } from '../session/mock-session-store'
 
 // Mirrors the commercetools `deliveryTime` custom field; pickup methods have none
 const MOCK_DELIVERY_TIMES: Record<string, Record<string, string>> = {
@@ -41,6 +43,8 @@ const MOCK_DELIVERY_TIMES: Record<string, Record<string, string>> = {
 // Simple in-memory store for mock carts
 // Cart IDs are stored in cookies, so we just need to persist cart data by ID
 export const cartStore = new Map<string, CartResponse>()
+// Cart id -> mock session that created it; a signed-in session's carts belong to its customer
+export const cartOwnerStore = new Map<string, string>()
 
 /** Fixture codes covering each outcome. Anything unlisted is treated as invalid. */
 export const MOCK_DISCOUNT_CODES: Record<
@@ -57,7 +61,8 @@ export const MOCK_DISCOUNT_CODES: Record<
 export class CartService {
   constructor(
     @Inject(LANGUAGE_TOKEN) private readonly languageProvider: LanguageProvider,
-    private readonly logger: PinoLogger
+    private readonly logger: PinoLogger,
+    private readonly sessionService: MockSessionService
   ) {
     this.logger.setContext(CartService.name)
   }
@@ -85,6 +90,10 @@ export class CartService {
       itemCount: 0,
     }
     cartStore.set(cartId, cart)
+    const sessionId = await this.sessionService.getSessionId()
+    if (sessionId) {
+      cartOwnerStore.set(cartId, sessionId)
+    }
     return CartResponseSchema.parse(cart)
   }
 
@@ -225,8 +234,20 @@ export class CartService {
   }
 
   async getActiveCart(): Promise<CartResponse | null> {
-    // Mock carts have no owner, so never hand a shopper someone else's cart
-    return null
+    const customerId = await this.sessionService.getCustomerId()
+    if (!customerId) {
+      return null
+    }
+    // Newest cart of any session the customer owns, as commercetools' activeCart
+    const ownCartIds = [...cartOwnerStore]
+      .filter(
+        ([cartId, sessionId]) =>
+          cartStore.has(cartId) &&
+          getSessionCustomerId(sessionId) === customerId
+      )
+      .map(([cartId]) => cartId)
+    const activeCartId = ownCartIds.at(-1)
+    return activeCartId ? this.getCart(activeCartId) : null
   }
 
   async setBillingAddress(

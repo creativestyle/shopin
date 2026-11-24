@@ -39,6 +39,8 @@ integrations/
   contentful-api/       # CMS content (pages, layout) via GraphQL
   contentful-migration/ # CMS-as-code content model migrations
   mock-api/             # Mock implementations for local dev
+test/
+  e2e/              # Playwright: platform specs, journey stack, smoke specs
 demo/               # Optional demo packages (removable for production)
   data-source-selector/
   data-source-header-reader/
@@ -60,6 +62,7 @@ demo/               # Optional demo packages (removable for production)
 | `npm run check-types`        | TypeScript type checking                    |
 | `npm run check-dependencies` | `npm audit --audit-level=critical`          |
 | `npm run start:local`        | Run production builds locally (build first) |
+| `npm run e2e`                | Playwright E2E suite (see test/e2e/README)  |
 
 Dev server ports: presentation :3000, BFF :4000 (Swagger at /bff/api), Storybook :6006, Typedoc :5000.
 
