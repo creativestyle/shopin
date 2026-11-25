@@ -1,6 +1,10 @@
-import { UnauthorizedException } from '@nestjs/common'
+import {
+  HttpException,
+  HttpStatus,
+  UnauthorizedException,
+} from '@nestjs/common'
 import type { CallHandler, ExecutionContext } from '@nestjs/common'
-import { InvalidCurrentPasswordException } from '@integrations/commercetools-api'
+import { INVALID_CURRENT_PASSWORD_CODE } from '@core/contracts/customer/customer'
 import { firstValueFrom, throwError } from 'rxjs'
 import { TokenRefreshInterceptor } from '../token-refresh.interceptor'
 
@@ -57,7 +61,14 @@ describe('TokenRefreshInterceptor.intercept', () => {
   it('passes a wrong current password through without refresh, replay or logout', async () => {
     const { interceptor, context, refreshTokenService, tokenStorageService } =
       setup()
-    const error = new InvalidCurrentPasswordException()
+    // what any integration throws for a wrong current password: a 400 with the contract's code
+    const error = new HttpException(
+      {
+        statusCode: HttpStatus.BAD_REQUEST,
+        code: INVALID_CURRENT_PASSWORD_CODE,
+      },
+      HttpStatus.BAD_REQUEST
+    )
     const next = failingHandler(error)
 
     await expect(

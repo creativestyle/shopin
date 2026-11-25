@@ -5,7 +5,8 @@
   "private": true,
   "type": "module",
   "exports": {
-    "./base": "./base.js"
+    "./base": "./base.js",
+    "./boundaries": "./rules/boundaries.js"
   },
   "devDependencies": {
     "@core/prettier-config": "*",
@@ -22,5 +23,8 @@
     "globals": "^15.15.0",
     "typescript": "^5.7.3",
     "typescript-eslint": "^8.25.0"
+  },
+  "scripts": {
+    "test": "node --test 'test/*.test.js'"
   }
 }

@@ -3,11 +3,12 @@ import { REQUEST } from '@nestjs/core'
 import type { SupportedLocale } from '@config/constants'
 import { I18N_CONFIG } from '@config/constants'
 import type { LanguageRequest } from '@core/i18n'
+import type { LanguageProvider as LanguageProviderContract } from '@core/contracts/core/request-providers'
 
 @Injectable({
   scope: Scope.REQUEST,
 })
-export class LanguageProvider {
+export class LanguageProvider implements LanguageProviderContract {
   constructor(@Inject(REQUEST) private readonly request: LanguageRequest) {}
 
   getCurrentLanguage(): SupportedLocale {
