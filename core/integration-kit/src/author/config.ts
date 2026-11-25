@@ -31,14 +31,14 @@ type Categories = {
 interface ShopConfig extends Categories {
   commerce: ServesCategory<'commerce'>
   /**
-   * The shop's own fields on a contract (docs/extending.md): e.g.
+   * The shop's own fields on a contract (see the kit's README): e.g.
    * `{ cart: CartResponseSchema.extend({ giftMessage: z.string().optional() }) }`. The BFF parses that contract
    * with the extension; the base contract still validates and wins for its own fields. An integration's mapper
    * hook (its factory option `mappers`) fills the field.
    */
   contracts?: Partial<ContractExtensions>
   /**
-   * The shop's own BFF feature modules (Nest modules with a controller and its service, docs/extending.md):
+   * The shop's own BFF feature modules (Nest modules with a controller and its service, see the kit's README):
    * `features: [CompanyRegisterModule]`. Mounted when the categories their controllers read (`@Reads`) are
    * served.
    */

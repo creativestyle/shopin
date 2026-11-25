@@ -4,6 +4,7 @@
  */
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
+import kit from '../dist/index.js'
 import testing from '../dist/testing.js'
 
 const { commerceContract, recordedFetch } = testing
@@ -331,4 +332,48 @@ test('recordedFetch answers recorded requests (a list in order) and refuses any 
     'POST https://api.example.test/carts',
     'GET https://api.example.test/products/2',
   ])
+})
+
+test('buildPort: the port gets its options, the guest or signed-in customer, the request context and its own vault', async () => {
+  await import('reflect-metadata')
+  const { buildPort } = testing
+  const { port, PortOptions, CustomerContext, RequestContext, TokenVault } = kit
+  const definition = port('cms', {
+    inject: [PortOptions, CustomerContext, RequestContext, TokenVault],
+    useFactory: (options, customer, context, vault) => ({
+      options,
+      customer,
+      context,
+      vault,
+    }),
+  })
+  const storefrontUrl = 'https://shop.test'
+  const guest = await buildPort(definition, {
+    storefrontUrl,
+    options: { KEY: 'k' },
+  })
+  assert.deepEqual({ ...guest.options }, { KEY: 'k' })
+  assert.ok(Object.isFrozen(guest.options))
+  assert.equal(await guest.customer.customerId(), undefined)
+  assert.equal(guest.context.storefrontUrl, storefrontUrl)
+  assert.equal(guest.context.language, 'en-US')
+  assert.equal(guest.context.currency, 'USD')
+  assert.deepEqual(guest.context.locales, ['en-US'])
+
+  assert.equal(await guest.vault.get(), undefined)
+  const tokens = { accessToken: 'a', refreshToken: 'r', expiresIn: 60 }
+  await guest.vault.set(tokens, true)
+  assert.deepEqual(await guest.vault.get(), { ...tokens, customer: true })
+  guest.vault.clear()
+  assert.equal(await guest.vault.get(), undefined)
+
+  const signedIn = await buildPort(definition, {
+    storefrontUrl,
+    customerId: 'c-1',
+    locales: ['de-DE', 'en-US'],
+  })
+  assert.equal(await signedIn.customer.customerId(), 'c-1')
+  assert.deepEqual(signedIn.context.locales, ['de-DE', 'en-US'])
+  // each port gets its own vault: nothing from the first one leaks in
+  assert.equal(await signedIn.vault.get(), undefined)
 })

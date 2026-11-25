@@ -14,8 +14,14 @@ const load = (config, get, locales = [], present = [], bffUrl = BFF) =>
   core.loadPorts(config, { get, bffUrl, locales, present })
 
 const { defineConfig, Reads } = kit
-const { configErrors, requiredEnv, resolveConfig, storefrontData, readsOf } =
-  core
+const {
+  configErrors,
+  requiredEnv,
+  resolveConfig,
+  storefrontData,
+  readsOf,
+  validateConfig,
+} = core
 
 const port = (category) => () => ({ category, useFactory: () => ({}) })
 const integ = (id, provides, extra = {}) => ({
@@ -126,6 +132,26 @@ test('rule: one integration with different options under two categories is refus
   const hooks = { cart: card }
   assert.doesNotThrow(() =>
     defineConfig({ commerce: make(hooks), search: make(hooks) })
+  )
+})
+
+test("rule: different options are refused at any delegate depth (a nested instance would replace the shop's own)", () => {
+  const inner = (label) => integ('inner', ['commerce', 'search'], { label })
+  const nest = (delegate) =>
+    integ('top', ['commerce'], {
+      delegates: [integ('mid', ['commerce'], { delegates: [delegate] })],
+    })
+  assert.throws(
+    () =>
+      defineConfig({ commerce: nest(inner('nested')), search: inner('own') }),
+    /"inner" is given different options under commerce and search/
+  )
+  const one = inner('one')
+  assert.equal(
+    validateConfig({ commerce: nest(one), search: one }).errors.some((e) =>
+      e.includes('different options')
+    ),
+    false
   )
 })
 
@@ -287,6 +313,11 @@ test("features: the shop's own BFF modules are module classes, kept for the BFF"
   assert.throws(
     () => defineConfig({ commerce: shop, features: [{}] }),
     /features\[0\]: not a Nest module class/
+  )
+  // the index is the entry's place in the shop's list, not among the bad ones
+  assert.throws(
+    () => defineConfig({ commerce: shop, features: [feature, {}] }),
+    /features\[1\]: not a Nest module class/
   )
 })
 
@@ -746,4 +777,64 @@ test('port() tags a definition with its category; defineIntegration returns the 
   const descriptor = { id: 'acme', ports: { cms: () => definition } }
   assert.equal(kit.defineIntegration(descriptor), descriptor)
   assert.equal(descriptor.ports.cms().category, 'cms')
+})
+
+test('loadPorts: a port whose package is not installed says to run setup; any other error passes through unchanged', () => {
+  const failing = (id, error) => {
+    const i = integ(id, ['cms'])
+    i.ports.cms = () => {
+      throw error
+    }
+    return { integrations: [shop, i], providers: { commerce: 'shop', cms: id } }
+  }
+  const missing = Object.assign(
+    new Error("Cannot find module '@x/cms'\nRequire stack:\n- /app/x.js"),
+    { code: 'MODULE_NOT_FOUND' }
+  )
+  assert.throws(() => load(failing('absent', missing), () => 'v'), {
+    message:
+      'shopin.config: "absent" (cms) cannot load: Cannot find module \'@x/cms\'. Its packages are not installed for this config: run npm run setup',
+  })
+  const boom = new Error('boom')
+  assert.throws(
+    () => load(failing('broken', boom), () => 'v'),
+    (e) => e === boom
+  )
+})
+
+test('requiredEnv: a variable with a default is listed under defaults, not required; its form reaches forms', () => {
+  const hooked = integ('hooked', ['commerce'], {
+    env: {
+      commerce: {
+        url: {
+          env: 'HOOKED_URL',
+          default: '{BFF_URL}/hook',
+          form: '<BFF URL>/hook',
+        },
+        key: { env: 'HOOKED_KEY' },
+      },
+    },
+  })
+  const listed = requiredEnv(resolveConfig({ commerce: hooked }))
+  assert.deepEqual(listed.required, { hooked: ['HOOKED_KEY'] })
+  assert.deepEqual(listed.defaults, {
+    hooked: { HOOKED_URL: '{BFF_URL}/hook' },
+  })
+  assert.deepEqual(listed.forms, { hooked: { HOOKED_URL: '<BFF URL>/hook' } })
+})
+
+test('storefrontData: image hosts come only from integrations that serve a category', () => {
+  const pictured = (id) =>
+    integ(id, ['commerce', 'cms'], {
+      storefront: {
+        productImages: { hosts: [`${id}.test`] },
+        contentImages: { hosts: [`cdn.${id}.test`] },
+      },
+    })
+  const data = storefrontData({
+    integrations: [pictured('used'), pictured('listed')],
+    providers: { commerce: 'used', cms: 'used' },
+  })
+  assert.deepEqual(data.productImages, [{ hosts: ['used.test'] }])
+  assert.deepEqual(data.contentImages, [{ hosts: ['cdn.used.test'] }])
 })

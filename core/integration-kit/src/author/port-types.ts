@@ -146,7 +146,7 @@ export type Port<C extends Category> = C extends ShopinCategory
  * request, not while the BFF starts).
  *
  * A package that serves a kind of its own adds it once, in its descriptor, which also makes it a config key
- * (docs/extending.md):
+ * (see the kit's README):
  * `declare module '@core/integration-kit' { interface ServingPorts { orderRules?: OrderRules } }`.
  */
 export abstract class ServingPorts {

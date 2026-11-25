@@ -38,8 +38,12 @@
     "@core/eslint-config": "*",
     "@core/prettier-config": "*",
     "@core/typescript-config": "*",
+    "@nestjs/common": "^11.2.7",
+    "@nestjs/core": "^11.2.7",
+    "@nestjs/testing": "^11.2.7",
     "@types/node": "^24.0.0",
     "eslint": "^9.20.1",
+    "reflect-metadata": "^0.2.2",
     "typescript": "^5.7.3"
   },
   "peerDependencies": {

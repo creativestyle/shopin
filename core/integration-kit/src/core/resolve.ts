@@ -54,14 +54,10 @@ function differentOptions(config: ConfigInput): string[] {
     if (SETTINGS.includes(category)) {
       continue
     }
-    const top = isIntegration(value) ? [value] : []
-    for (const integration of [
-      ...top,
-      ...top.flatMap((i) => i.delegates ?? []),
-    ]) {
-      if (!isIntegration(integration)) {
-        continue
-      }
+    if (!isIntegration(value)) {
+      continue
+    }
+    for (const integration of withDelegates(value)) {
       const seen = first.get(integration.id)
       if (!seen) {
         first.set(integration.id, { integration, category })
@@ -73,6 +69,23 @@ function differentOptions(config: ConfigInput): string[] {
     }
   }
   return errors
+}
+
+/** An integration and its delegates at every depth, as `resolveConfig` registers them. */
+function withDelegates(
+  integration: Integration,
+  seen = new Set<Integration>()
+): Integration[] {
+  if (seen.has(integration)) {
+    return []
+  }
+  seen.add(integration)
+  return [
+    integration,
+    ...(integration.delegates ?? [])
+      .filter(isIntegration)
+      .flatMap((d) => withDelegates(d, seen)),
+  ]
 }
 
 /** Same options: equal descriptors (values compared deeply, functions by identity), ports by category. */
@@ -155,9 +168,9 @@ export function validateConfig(config: ConfigInput): {
         ([k]) =>
           `${k} lists several integrations: one serves a category (an integration that serves through others names them in its delegates)`
       ),
-    ...(config.features ?? [])
-      .filter((f) => typeof f !== 'function')
-      .map((_, i) => `features[${i}]: not a Nest module class`),
+    ...(config.features ?? []).flatMap((f, i) =>
+      typeof f === 'function' ? [] : [`features[${i}]: not a Nest module class`]
+    ),
     ...differentOptions(config),
     ...configErrors(resolved),
   ]

@@ -37,12 +37,12 @@ The following describes the **current state of possibilities**; it will grow as 
 
 Controllers inject feature services (e.g. `ProductCollectionService`, `ContentService`, `NavigationService`); those services inject `DataSourceFactory`. The factory resolves the current data source (from request header or default) and returns the right set of services.
 
-- **`commercetools-set`**: Catalog from Commercetools; content (page/layout) from **Contentful when `ContentfulApiModule` is imported** in `DataSourceModule`, otherwise from **mock** (see below). Customer, address, order from Commercetools; payment from mock.
-- **`mock-set`**: Catalog, content, and navigation from the mock provider. Customer, address, order from Commercetools; payment from mock.
+- **`commercetools-set`**: Catalog from Commercetools; content (page/layout) from **Contentful when `ContentfulApiModule` is imported** in `DataSourceModule`, otherwise from the **mock CMS** (`@integrations/cms-mock`, see below). Search through the commerce platform's own product search (`@integrations/search-commerce`). Customer and address from Commercetools; payment from the mock PSP (`@integrations/psp-mock`).
+- **`mock-set`**: Catalog, navigation, cart and orders from the mock commerce platform (`@integrations/commerce-mock`); content from the mock CMS; search through the mock's product search (`@integrations/search-commerce`). Customer and address from Commercetools; payment from the mock PSP.
 
 There is **no runtime or env switch** to turn Contentful on or off. The factory injects `CONTENTFUL_SERVICE_PROVIDER` with `@Optional()`. That injection is only `null` when `ContentfulApiModule` is **not** registered (i.e. not imported in the data-source module). If the module is imported, the provider is always present and Contentful is always used for `commercetools-set` content; the mock fallback is **not** reachable in that case.
 
-**Using mock content for `commercetools-set` (Contentful “disabled”):** To use mock page/layout instead of Contentful for `commercetools-set`, **do not import `ContentfulApiModule`** in the BFF. In **`apps/bff/src/data-source/data-source.module.ts`**: (1) remove the line `import { ContentfulApiModule } from '@integrations/cms-contentful'`; (2) remove `ContentfulApiModule` from the `imports` array in the `@Module()` decorator. With the module removed, `CONTENTFUL_SERVICE_PROVIDER` is not registered, the optional injection in `DataSourceFactory` is `null`, and the factory uses the mock provider’s `pageService` and `layoutService` for that data source.
+**Using mock content for `commercetools-set` (Contentful “disabled”):** To use mock page/layout instead of Contentful for `commercetools-set`, **do not import `ContentfulApiModule`** in the BFF. In **`apps/bff/src/data-source/data-source.module.ts`**: (1) remove the line `import { ContentfulApiModule } from '@integrations/cms-contentful'`; (2) remove `ContentfulApiModule` from the `imports` array in the `@Module()` decorator. With the module removed, `CONTENTFUL_SERVICE_PROVIDER` is not registered, the optional injection in `DataSourceFactory` is `null`, and the factory uses the mock CMS's `pageService` and `layoutService` for that data source.
 
 **Example – controllers (real routes):**
 
@@ -78,14 +78,25 @@ export class NavigationController {
 
 **Example – DataSourceFactory (simplified):**
 
-The factory builds a map from data source name to a service provider and selects the provider using the current `DATA_SOURCE` (from request header or default). Then it merges in fixed sources (customer/order from Commercetools, payment from mock):
+The factory builds a map from data source name to a service provider and selects the provider using the current `DATA_SOURCE` (from request header or default). Then it merges in fixed sources (customer/address from Commercetools, payment from the mock PSP):
 
 ```typescript
 // In constructor: map each data source to its provider
-// commercetools-set: Commercetools catalog + Contentful page/layout when ContentfulApiModule is imported; otherwise mock page/layout
+// commercetools-set: Commercetools catalog + Contentful page/layout when ContentfulApiModule is imported; otherwise mock CMS page/layout
+const mockSet: DataSourceServiceProvider = {
+  getServices: () => {
+    const mock = this.mockServiceProvider.getServices()
+    return {
+      ...mock,
+      ...this.mockCmsServiceProvider.getServices(),
+      searchService: new CommerceSearchProvider(mock.productSearchService),
+    }
+  },
+}
 this.serviceProviderMap = new Map<DataSource, DataSourceServiceProvider>([
   ['commercetools-set', commercetoolsWithCMS],
-  ['mock-set', this.mockServiceProvider],
+  ['commercetools-algolia-set', commercetoolsWithCMSWithAlgolia],
+  ['mock-set', mockSet],
 ])
 
 // getServices(): resolve provider by current data source, then merge fixed services
@@ -95,16 +106,14 @@ getServices(): AllServices {
     throw new Error(`Unknown data source: ${this.dataSource}. Allowed values: ${ALLOWED_DATA_SOURCES.join(', ')}`)
   }
   const baseServices = serviceProvider.getServices()
-  const { customerService, customerAddressService, orderService } =
+  const { customerService, customerAddressService } =
     this.commercetoolsServiceProvider.getServices()
-  const { paymentService } = this.mockServiceProvider.getServices()
+  const { paymentService } = this.mockPspServiceProvider.getServices()
   return {
     ...baseServices,
     customerService,
     customerAddressService,
-    cartPaymentService: baseServices.cartPaymentService,
     paymentService,
-    orderService,
   }
 }
 ```
