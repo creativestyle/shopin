@@ -19,7 +19,7 @@
     "dev": "turbo run dev",
     "start:local": "turbo run start:local",
     "lint": "turbo run lint && npm run lint:boundaries",
-    "lint:boundaries": "eslint --config eslint.boundaries.config.mjs --no-inline-config --max-warnings=13 .",
+    "lint:boundaries": "eslint --config eslint.boundaries.config.mjs --no-inline-config .",
     "format": "turbo run format",
     "format:check": "turbo run format:check",
     "check-types": "turbo run check-types",

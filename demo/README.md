@@ -2,7 +2,7 @@
 
 ⚠️ **DEMO ONLY** — This workspace contains optional demo packages for the SHOPin storefront accelerator. None of these packages are required for production.
 
-Demo functionality showcases multi–data-source switching (the demo payment page lives in `integrations/psp/mock-payment-page`); you can remove this entire workspace when building a production storefront.
+Demo functionality showcases multi–data-source switching (the demo payment page lives in `integrations/mock/psp`); you can remove this entire workspace, and that package, when building a production storefront.
 
 ## Packages
 
@@ -19,25 +19,25 @@ Demo functionality showcases multi–data-source switching (the demo payment pag
 
 ## Usage
 
-- **Presentation** depends on `@demo/data-source-selector`, `@demo/demo-disclaimer`, `@demo/mock-tracking-tags`, and `@integrations/psp-mock-payment-page`.
-- **Storybook** depends on `@demo/data-source-selector` and `@integrations/psp-mock-payment-page`.
+- **Presentation** depends on `@demo/data-source-selector`, `@demo/demo-disclaimer`, `@demo/mock-tracking-tags`, and `@integrations/mock-psp`.
+- **Storybook** depends on `@demo/data-source-selector`.
 - **BFF** depends on `@demo/data-source-header-reader` so that the data-source selector can switch backends.
 
 ## Removing Demo Functionality
 
-If you don't need the demo functionality, you can remove this entire workspace:
+If you don't need the demo functionality, you can remove this entire workspace and the demo payment page package:
 
 1. **Remove dependencies**
-   - From `apps/presentation/package.json`: remove `@demo/data-source-selector`, `@demo/demo-disclaimer`, `@demo/mock-tracking-tags`, and `@integrations/psp-mock-payment-page`
+   - From `apps/presentation/package.json`: remove `@demo/data-source-selector`, `@demo/demo-disclaimer`, `@demo/mock-tracking-tags`, and `@integrations/mock-psp`
    - From `apps/bff/package.json`: remove `@demo/data-source-header-reader`
-   - From `apps/storybook/package.json` (if you use it): remove `@demo/data-source-selector` and `@integrations/psp-mock-payment-page`
+   - From `apps/storybook/package.json` (if you use it): remove `@demo/data-source-selector`
 
 2. **Remove usage in presentation**
    - `DataSourceIndicator` — `apps/presentation/components/layout/top-bar.tsx`
    - `DemoDisclaimerModal` — remove from `apps/presentation/app/[locale]/layout.tsx` and remove `@source '../../../demo/demo-disclaimer/'` from `apps/presentation/app/globals.css`
    - `MockTrackingTags` — remove `<DemoTrackingTagsWrapper />` from `apps/presentation/app/[variant]/[locale]/layout.tsx` and delete `demo-tracking-tags-wrapper.tsx` next to it
    - `getDataSourceHeader` — `apps/presentation/lib/bff/core/bff-fetch.ts`
-   - **Demo payment**: Remove `PaymentDemo` from `apps/presentation/app/[variant]/[locale]/demo/mocked-payment-step/[paymentId]/page.tsx`, or delete the whole `app/[variant]/[locale]/demo/` route. Then update **`integrations/commerce/mock`**: the mock payment service (`integrations/commerce/mock/src/services/payment.service.ts`) currently returns a payment link to `/demo/mocked-payment-step/${cartId}`. Change `getPaymentLink()` to return your real payment provider URL (or a placeholder), otherwise checkout with the mock data source will redirect to a broken link.
+   - **Demo payment**: Remove `PaymentDemo` from `apps/presentation/app/[variant]/[locale]/demo/mocked-payment-step/[paymentId]/page.tsx`, or delete the whole `app/[variant]/[locale]/demo/` route. Then update **`integrations/mock/commerce`**: the mock payment service (`integrations/mock/commerce/src/services/payment.service.ts`) currently returns a payment link to `/demo/mocked-payment-step/${cartId}`. Change `getPaymentLink()` to return your real payment provider URL (or a placeholder), otherwise checkout with the mock data source will redirect to a broken link.
    - In `apps/presentation/app/globals.css`, remove the line: `@source '../../../demo/data-source-selector/';`
    - **Data-source selector page**: delete the `/setup` route (`apps/presentation/app/[variant]/[locale]/(main)/setup/`), which renders `DataSourceSelector`.
    - **Mock data source**: remove `'mock-set'` from `ALLOWED_DATA_SOURCES` in `config/constants/src/data-source/index.ts`, so a leftover `data-source=mock-set` cookie can't select the mock variant.
@@ -45,13 +45,16 @@ If you don't need the demo functionality, you can remove this entire workspace:
 3. **Remove usage in BFF**
    - In `apps/bff/src/data-source/data-source.module.ts`: remove the `@demo/data-source-header-reader` import (`dataSourceHeaderMiddleware`, `DataSourceRequest`), remove the `configure()` implementation (or the whole `implements NestModule`), and change the `DATA_SOURCE` provider to use `DEFAULT_DATA_SOURCE` only (no request-based switching).
 
-4. **Delete the demo workspace**
+4. **Remove the boundary exception**
+   - In `eslint.boundaries.config.mjs`: remove the `@apps/presentation` entry from `ALLOW` and lower `ALLOW_ENTRIES` by one.
+
+5. **Delete the demo workspace and the demo payment page package**
 
    ```bash
-   rm -rf demo
+   rm -rf demo integrations/mock/psp
    ```
 
-5. **Reinstall dependencies**
+6. **Reinstall dependencies**
 
    ```bash
    npm install
