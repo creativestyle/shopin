@@ -5,7 +5,7 @@
 
 import { expect, type APIRequestContext, type Page } from '@playwright/test'
 import { STOREFRONT_URL } from '../../config'
-import { escapeRegExp, tPattern } from './i18n'
+import { escapeRegExp, t, tPattern } from './i18n'
 import { ROUTES } from './test-data'
 
 export const layout = {
@@ -20,6 +20,70 @@ export const productList = {
     layout
       .main(page)
       .getByRole('link', { name: tPattern('productCard.linkAriaLabel') }),
+}
+
+const startsWith = (text: string) => new RegExp(`^${escapeRegExp(text)}`)
+const h1 = (page: Page, name: string | RegExp) =>
+  page.getByRole('heading', { level: 1, name })
+
+// What only each route renders: the CMS catch-all would answer a removed route
+// with a generic page, so a route check looks for these, not just any page
+
+export const categoryPage = {
+  sortBy: (page: Page) =>
+    page.getByRole('combobox', { name: t('productCollection.topbar.sortBy') }),
+}
+
+export const productPage = {
+  buyBox: (page: Page) =>
+    page.getByRole('complementary').filter({
+      has: page.getByRole('button', { name: t('product.buyBox.addToBasket') }),
+    }),
+}
+
+export const searchPage = {
+  heading: (page: Page) => h1(page, startsWith(t('searchResults.titlePrefix'))),
+}
+
+export const cartPage = {
+  heading: (page: Page, count: number) =>
+    h1(page, t('cart.titleWithCount', { count })),
+}
+
+export const wishlistPage = {
+  heading: (page: Page) => h1(page, startsWith(t('wishlist.title'))),
+}
+
+export const authPages = {
+  signInButton: (page: Page) =>
+    page.getByRole('button', {
+      name: t('account.signIn.signInButton'),
+      exact: true,
+    }),
+  signUpButton: (page: Page) =>
+    page.getByRole('button', { name: t('account.signUp.submitButton') }),
+  sendResetLinkButton: (page: Page) =>
+    page.getByRole('button', {
+      name: t('account.forgotPassword.submitButton'),
+    }),
+}
+
+export const accountPages = {
+  overviewHeading: (page: Page) =>
+    h1(page, tPattern('account.myAccount.overviewWelcomeMessage')),
+  ordersHeading: (page: Page) => h1(page, t('account.myAccount.ordersLabel')),
+  myDataHeading: (page: Page) => h1(page, t('account.myAccount.myDataLabel')),
+  /** The selected tab of My Data: personalDataLabel, addressesLabel or changePasswordLabel. */
+  myDataTab: (page: Page, labelKey: string) =>
+    page.getByRole('tab', {
+      name: t(`account.myAccount.${labelKey}`),
+      selected: true,
+    }),
+}
+
+// The demo payment provider page is not translated
+export const mockedPaymentPage = {
+  payNow: (page: Page) => page.getByRole('button', { name: 'Pay Now' }),
 }
 
 /** Matches the page URL once it is at this storefront path (query string allowed). */

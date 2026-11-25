@@ -70,11 +70,13 @@ function bffFallbackEnv(rootEnv: NodeJS.Dict<string>) {
 
 function start(
   name: string,
+  command: string,
   args: string[],
   env: NodeJS.ProcessEnv,
   cwd = rootDir
 ) {
-  const child = spawn(process.execPath, args, {
+  // Same process group: Playwright's teardown and Ctrl+C also end what npm scripts start
+  const child = spawn(command, args, {
     cwd,
     env: { ...process.env, ...env },
     stdio: ['ignore', 'inherit', 'inherit'],
@@ -123,7 +125,7 @@ async function main() {
     }
   }
 
-  start('BFF', [bffEntry], {
+  start('BFF', process.execPath, [bffEntry], {
     PORT: String(BFF_PORT),
     FRONTEND_URL: STOREFRONT_ORIGIN,
     // Journeys exceed the 5 req/min limit on auth, payment and order routes
@@ -138,17 +140,18 @@ async function main() {
   )
   await new Promise<void>((resolve) => proxy.listen(FAULT_PROXY_PORT, resolve))
 
+  // The same start:e2e as the platform storefront; these values win over .env.e2e
   start(
     'storefront',
-    [appEntry],
+    'npm',
+    ['run', 'start:e2e'],
     {
       PORT: String(JOURNEY_APP_PORT),
       NEXT_BFF_INTERNAL_URL: PROXY_BFF_URL,
       FRONTEND_URL: STOREFRONT_ORIGIN,
-      E2E_TEST: 'true',
       LOG_LEVEL: process.env.LOG_LEVEL ?? 'warn',
     },
-    path.dirname(appEntry)
+    appDir
   )
 
   await waitFor('BFF', `http://127.0.0.1:${FAULT_PROXY_PORT}/bff/csrf/token`)
