@@ -1,0 +1,17 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "extends": ["//"],
+  "tasks": {
+    "setup": {
+      "dependsOn": ["^setup"]
+    },
+    "build": {
+      "dependsOn": ["setup", "^build"]
+    },
+    "dev": {
+      "dependsOn": ["setup", "^build"],
+      "cache": false,
+      "persistent": true
+    }
+  }
+}

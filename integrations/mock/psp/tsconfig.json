@@ -1,0 +1,11 @@
+{
+  "extends": "@core/typescript-config/nestjs.json",
+  "compilerOptions": {
+    "outDir": "dist/server",
+    "rootDir": "src/server",
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true
+  },
+  "include": ["src/server"],
+  "exclude": ["dist", "node_modules"]
+}

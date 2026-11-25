@@ -1,0 +1,12 @@
+{
+  "extends": "@core/typescript-config/base.json",
+  "compilerOptions": {
+    "outDir": "./dist/page",
+    "rootDir": "./src/page",
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx"
+  },
+  "include": ["src/page/**/*"],
+  "exclude": ["node_modules", "dist"]
+}

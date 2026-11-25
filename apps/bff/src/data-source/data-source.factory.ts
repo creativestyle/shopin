@@ -7,14 +7,14 @@ import type {
   LayoutService,
   PageService,
 } from '@core/contracts/core/data-source-interfaces'
-import type { CommercetoolsServiceProvider } from '@integrations/commerce-commercetools'
-import type { CommercetoolsAuthServiceProvider } from '@integrations/auth-commercetools'
-import type { ContentfulServiceProvider } from '@integrations/cms-contentful'
-import type { MockServiceProvider } from '@integrations/commerce-mock'
-import type { MockCmsServiceProvider } from '@integrations/cms-mock'
-import type { MockPspServiceProvider } from '@integrations/psp-mock'
-import { CommerceSearchProvider } from '@integrations/search-commerce'
-import type { AlgoliaServiceProvider } from '@integrations/search-algolia'
+import type { CommercetoolsServiceProvider } from '@integrations/commercetools-commerce'
+import type { CommercetoolsAuthServiceProvider } from '@integrations/commercetools-auth'
+import type { ContentfulServiceProvider } from '@integrations/contentful-cms'
+import type { MockServiceProvider } from '@integrations/mock-commerce'
+import type { MockCmsServiceProvider } from '@integrations/mock-cms'
+import type { MockPspServiceProvider } from '@integrations/mock-psp'
+import { CommerceSearchProvider } from './commerce-search.provider'
+import type { AlgoliaServiceProvider } from '@integrations/algolia-search'
 import type { SearchProvider } from '@core/contracts/product-search/search-provider'
 import { DATA_SOURCE } from './tokens'
 

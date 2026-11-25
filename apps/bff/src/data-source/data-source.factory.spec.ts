@@ -5,14 +5,18 @@ const SEARCH_RESULT = { products: [], facets: [], total: 0 }
 
 function createStubProviders() {
   const ctServices = {
-    productSearchService: { searchProducts: jest.fn().mockResolvedValue(SEARCH_RESULT) },
+    productSearchService: {
+      searchProducts: jest.fn().mockResolvedValue(SEARCH_RESULT),
+    },
     orderService: { name: 'ct-order' },
     customerService: { name: 'ct-customer' },
     customerAddressService: { name: 'ct-customer-address' },
     cartService: { name: 'ct-cart' },
   }
   const mockServices = {
-    productSearchService: { searchProducts: jest.fn().mockResolvedValue(SEARCH_RESULT) },
+    productSearchService: {
+      searchProducts: jest.fn().mockResolvedValue(SEARCH_RESULT),
+    },
     orderService: { name: 'mock-order' },
     cartService: { name: 'mock-cart' },
   }

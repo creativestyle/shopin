@@ -2,12 +2,13 @@
   "exec": "PORT=4000 nest start --watch",
   "ext": "js,ts",
   "watch": [
-    "../../integrations/commerce/mock/dist",
-    "../../integrations/commerce/commercetools/dist",
-    "../../integrations/auth/commercetools/dist",
-    "../../integrations/cms/contentful/dist",
-    "../../integrations/cms/mock/dist",
-    "../../integrations/psp/mock/dist",
-    "../../integrations/search/commerce/dist"
+    "../../integrations/mock/commerce/dist",
+    "../../integrations/commercetools/commerce/dist",
+    "../../integrations/commercetools/auth/dist",
+    "../../integrations/contentful/cms/dist",
+    "../../integrations/mock/cms/dist",
+    "../../integrations/mock/psp/dist",
+    "../../integrations/commercetools/core/dist",
+    "../../integrations/algolia/search/dist"
   ]
 }

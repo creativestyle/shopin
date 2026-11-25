@@ -1,0 +1,65 @@
+{
+  "name": "@integrations/mock-psp",
+  "description": "Mock payment provider: sample payment methods and a demo payment link for the BFF, and the demo payment page the shopper lands on (./page). No account needed; demo only.",
+  "author": "creativestyle GmbH",
+  "private": true,
+  "exports": {
+    ".": "./dist/server/index.js",
+    "./page": "./dist/page/index.js"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json && tsc -p tsconfig.page.json",
+    "dev": "tsc -p tsconfig.page.json && tsc -p tsconfig.build.json --watch",
+    "lint": "eslint --fix ./src --max-warnings=0",
+    "format": "prettier --write ./src",
+    "format:check": "prettier --check --ignore-unknown ./src",
+    "check-types": "tsc --noEmit && tsc --noEmit -p tsconfig.page.json",
+    "test": "jest"
+  },
+  "dependencies": {
+    "@core/contracts": "*",
+    "@core/i18n": "*",
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
+    "next": "16.4.6",
+    "next-intl": "^4.9.2"
+  },
+  "devDependencies": {
+    "@core/eslint-config": "*",
+    "@core/prettier-config": "*",
+    "@core/typescript-config": "*",
+    "@types/jest": "^30.0.0",
+    "@types/react": "19.2.7",
+    "@types/react-dom": "19.2.3",
+    "eslint": "^9.20.1",
+    "jest": "^30.0.5",
+    "ts-jest": "^29.4.9",
+    "typescript": "^5.7.3"
+  },
+  "peerDependencies": {
+    "@nestjs/common": "^11.1.14",
+    "@nestjs/config": "^4.0.2"
+  },
+  "jest": {
+    "moduleFileExtensions": [
+      "js",
+      "json",
+      "ts"
+    ],
+    "rootDir": "src/server",
+    "testRegex": ".*\\.spec\\.ts$",
+    "transform": {
+      "^.+\\.ts$": [
+        "ts-jest",
+        {
+          "diagnostics": {
+            "ignoreCodes": [
+              151002
+            ]
+          }
+        }
+      ]
+    },
+    "testEnvironment": "node"
+  }
+}
