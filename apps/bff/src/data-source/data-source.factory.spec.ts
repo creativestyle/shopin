@@ -1,4 +1,4 @@
-import { CtSearchProvider } from '@integrations/commercetools-api'
+import { CtSearchProvider } from '@integrations/commerce-commercetools'
 import type { DataSource } from '@config/constants'
 import { DataSourceFactory } from './data-source.factory'
 

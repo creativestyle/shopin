@@ -2,7 +2,7 @@
  * Shared mock data for all teaser stories.
  *
  * Shapes match @core/contracts/content (TeaserResponse and per-type schemas) and the
- * output of integrations/contentful-api mappers (mapTeaserEntryToResponse). Each mock
+ * output of integrations/cms/contentful mappers (mapTeaserEntryToResponse). Each mock
  * includes the `type` discriminator so it is a valid TeaserResponse for that teaser type.
  */
 

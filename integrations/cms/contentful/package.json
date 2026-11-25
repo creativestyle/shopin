@@ -1,0 +1,61 @@
+{
+  "name": "@integrations/cms-contentful",
+  "description": "NestJS module for Contentful CMS: pages, layout (header/footer), and GraphQL delivery/preview API",
+  "author": "creativestyle GmbH",
+  "private": true,
+  "exports": {
+    ".": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc --build tsconfig.build.json",
+    "dev": "tsc --build tsconfig.build.json --watch",
+    "lint": "eslint --fix ./src --max-warnings=0",
+    "format": "prettier --write ./src",
+    "format:check": "prettier --check --ignore-unknown ./src",
+    "check-types": "tsc --noEmit",
+    "test": "jest"
+  },
+  "dependencies": {
+    "@config/constants": "*",
+    "@contentful/rich-text-types": "^16.6.1",
+    "@core/contracts": "*",
+    "graphql": "^16.12.0",
+    "graphql-request": "^6.1.0",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@core/eslint-config": "*",
+    "@core/prettier-config": "*",
+    "@core/typescript-config": "*",
+    "@types/jest": "^30.0.0",
+    "jest": "^30.0.5",
+    "ts-jest": "^29.4.9"
+  },
+  "peerDependencies": {
+    "@nestjs/common": "^11.1.3",
+    "@nestjs/config": "^4.0.2",
+    "nestjs-pino": "^4.5.0"
+  },
+  "jest": {
+    "moduleFileExtensions": [
+      "js",
+      "json",
+      "ts"
+    ],
+    "rootDir": "src",
+    "testRegex": ".*\\.spec\\.ts$",
+    "transform": {
+      "^.+\\.ts$": [
+        "ts-jest",
+        {
+          "diagnostics": {
+            "ignoreCodes": [
+              151002
+            ]
+          }
+        }
+      ]
+    },
+    "testEnvironment": "node"
+  }
+}
