@@ -1,6 +1,6 @@
 {
   "name": "@integrations/commerce-mock",
-  "description": "NestJS module providing mock implementations of catalog, cart, content, auth, and navigation for development and demos",
+  "description": "Mock commerce platform: catalog, product search, navigation, cart, checkout and orders for development and demos",
   "author": "creativestyle GmbH",
   "private": true,
   "exports": {
@@ -13,7 +13,7 @@
     "format": "prettier --write ./src",
     "format:check": "prettier --check --ignore-unknown ./src",
     "check-types": "tsc --noEmit",
-    "test": "jest"
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest"
   },
   "dependencies": {
     "@config/constants": "*",

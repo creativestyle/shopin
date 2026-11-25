@@ -5,6 +5,9 @@
     "../../integrations/commerce/mock/dist",
     "../../integrations/commerce/commercetools/dist",
     "../../integrations/auth/commercetools/dist",
-    "../../integrations/cms/contentful/dist"
+    "../../integrations/cms/contentful/dist",
+    "../../integrations/cms/mock/dist",
+    "../../integrations/psp/mock/dist",
+    "../../integrations/search/commerce/dist"
   ]
 }

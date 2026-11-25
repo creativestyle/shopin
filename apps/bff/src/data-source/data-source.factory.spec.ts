@@ -1,35 +1,39 @@
-import { CtSearchProvider } from '@integrations/commerce-commercetools'
 import type { DataSource } from '@config/constants'
 import { DataSourceFactory } from './data-source.factory'
 
+const SEARCH_RESULT = { products: [], facets: [], total: 0 }
+
 function createStubProviders() {
-  const ctOrderService = { name: 'ct-order' }
   const ctServices = {
-    productSearchService: { name: 'ct-product-search' },
-    orderService: ctOrderService,
+    productSearchService: { searchProducts: jest.fn().mockResolvedValue(SEARCH_RESULT) },
+    orderService: { name: 'ct-order' },
     customerService: { name: 'ct-customer' },
     customerAddressService: { name: 'ct-customer-address' },
     cartService: { name: 'ct-cart' },
   }
-  const mockSearchService = { name: 'mock-search' }
-  const mockOrderService = { name: 'mock-order' }
   const mockServices = {
-    searchService: mockSearchService,
-    orderService: mockOrderService,
+    productSearchService: { searchProducts: jest.fn().mockResolvedValue(SEARCH_RESULT) },
+    orderService: { name: 'mock-order' },
     cartService: { name: 'mock-cart' },
-    paymentService: { name: 'mock-payment' },
+  }
+  const cmsServices = {
     pageService: { name: 'mock-page' },
     layoutService: { name: 'mock-layout' },
   }
+  const pspServices = { paymentService: { name: 'mock-payment' } }
   const algoliaSearchService = { name: 'algolia-search' }
 
   return {
     commercetools: { getServices: () => ctServices },
     mock: { getServices: () => mockServices },
+    cms: { getServices: () => cmsServices },
+    psp: { getServices: () => pspServices },
     algolia: { getServices: () => ({ searchService: algoliaSearchService }) },
     auth: { getAuthServices: jest.fn() },
     ctServices,
     mockServices,
+    cmsServices,
+    pspServices,
     algoliaSearchService,
   }
 }
@@ -40,6 +44,8 @@ function createFactory(dataSource: DataSource) {
     stubs.commercetools as never,
     null,
     stubs.mock as never,
+    stubs.cms as never,
+    stubs.psp as never,
     stubs.auth as never,
     stubs.algolia as never,
     dataSource
@@ -47,15 +53,35 @@ function createFactory(dataSource: DataSource) {
   return { factory, stubs }
 }
 
+const search = (factory: DataSourceFactory) =>
+  factory.getServices().searchService.searchProducts({
+    query: 'shirt',
+    language: 'en-US',
+  })
+
 describe('DataSourceFactory', () => {
   describe('mock-set', () => {
-    it('uses the mock search, order and cart services', () => {
+    it('searches through the mock commerce product search', async () => {
+      const { factory, stubs } = createFactory('mock-set')
+      await search(factory)
+
+      expect(
+        stubs.mockServices.productSearchService.searchProducts
+      ).toHaveBeenCalledWith(expect.objectContaining({ query: 'shirt' }))
+      expect(
+        stubs.ctServices.productSearchService.searchProducts
+      ).not.toHaveBeenCalled()
+    })
+
+    it('uses the mock order and cart services, the mock CMS and the mock payment', () => {
       const { factory, stubs } = createFactory('mock-set')
       const services = factory.getServices()
 
-      expect(services.searchService).toBe(stubs.mockServices.searchService)
       expect(services.orderService).toBe(stubs.mockServices.orderService)
       expect(services.cartService).toBe(stubs.mockServices.cartService)
+      expect(services.pageService).toBe(stubs.cmsServices.pageService)
+      expect(services.layoutService).toBe(stubs.cmsServices.layoutService)
+      expect(services.paymentService).toBe(stubs.pspServices.paymentService)
     })
 
     it('still uses commercetools customer services', () => {
@@ -70,21 +96,26 @@ describe('DataSourceFactory', () => {
   })
 
   describe('commercetools-set', () => {
-    it('wraps commercetools product search in CtSearchProvider', () => {
-      const { factory } = createFactory('commercetools-set')
+    it('searches through the commercetools product search', async () => {
+      const { factory, stubs } = createFactory('commercetools-set')
+      await search(factory)
 
-      expect(factory.getServices().searchService).toBeInstanceOf(
-        CtSearchProvider
-      )
+      expect(
+        stubs.ctServices.productSearchService.searchProducts
+      ).toHaveBeenCalledWith(expect.objectContaining({ query: 'shirt' }))
+      expect(
+        stubs.mockServices.productSearchService.searchProducts
+      ).not.toHaveBeenCalled()
     })
 
-    it('uses the commercetools order service and mock page/layout fallback', () => {
+    it('uses the commercetools order service, the mock CMS fallback and the mock payment', () => {
       const { factory, stubs } = createFactory('commercetools-set')
       const services = factory.getServices()
 
       expect(services.orderService).toBe(stubs.ctServices.orderService)
-      expect(services.pageService).toBe(stubs.mockServices.pageService)
-      expect(services.paymentService).toBe(stubs.mockServices.paymentService)
+      expect(services.pageService).toBe(stubs.cmsServices.pageService)
+      expect(services.layoutService).toBe(stubs.cmsServices.layoutService)
+      expect(services.paymentService).toBe(stubs.pspServices.paymentService)
     })
   })
 

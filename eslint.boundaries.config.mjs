@@ -19,8 +19,11 @@ const BFF_WIRING = [
   "@integrations/commerce-commercetools",
   "@integrations/auth-commercetools",
   "@integrations/commerce-mock",
+  "@integrations/cms-mock",
+  "@integrations/psp-mock",
   "@integrations/cms-contentful",
   "@integrations/search-algolia",
+  "@integrations/search-commerce",
 ];
 
 /**
@@ -31,9 +34,6 @@ const ALLOW = {
   "@apps/bff": {
     "src/data-source/data-source.module.ts": BFF_WIRING,
     "src/data-source/data-source.factory.ts": BFF_WIRING,
-    "src/data-source/data-source.factory.spec.ts": [
-      "@integrations/commerce-commercetools",
-    ],
   },
   "@apps/presentation": {
     "app/[variant]/[locale]/demo/mocked-payment-step/[paymentId]/page.tsx": [

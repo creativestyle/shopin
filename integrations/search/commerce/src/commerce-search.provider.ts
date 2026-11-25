@@ -6,9 +6,13 @@ import {
   type SearchProductsResult,
 } from '@core/contracts/product-search/search-provider'
 import { extractQuerySuggestions } from '@core/contracts/product-search/suggestion-utils'
-import type { ProductSearchService } from './product-search.service'
+import type { ProductSearchService } from '@core/contracts/core/data-source-interfaces'
 
-export class CtSearchProvider implements SearchProvider {
+/**
+ * Search served by the commerce platform itself: adapts the commerce integration's product search (the
+ * `productSearchService` every commerce port with search provides) to the search contract. No index, no vendor code.
+ */
+export class CommerceSearchProvider implements SearchProvider {
   constructor(private readonly productSearchService: ProductSearchService) {}
 
   async searchProducts(

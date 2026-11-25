@@ -7,6 +7,8 @@ import {
 } from '@nestjs/common'
 import { REQUEST } from '@nestjs/core'
 import { MockApiModule } from '@integrations/commerce-mock'
+import { MockCmsModule } from '@integrations/cms-mock'
+import { MockPspModule } from '@integrations/psp-mock'
 import { CommercetoolsApiModule } from '@integrations/commerce-commercetools'
 import { CommercetoolsAuthModule } from '@integrations/auth-commercetools'
 import { ContentfulApiModule } from '@integrations/cms-contentful'
@@ -24,6 +26,8 @@ import {
 @Module({
   imports: [
     MockApiModule,
+    MockCmsModule,
+    MockPspModule,
     CommercetoolsApiModule,
     CommercetoolsAuthModule,
     ContentfulApiModule,

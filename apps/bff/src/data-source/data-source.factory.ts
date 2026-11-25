@@ -11,8 +11,10 @@ import type { CommercetoolsServiceProvider } from '@integrations/commerce-commer
 import type { CommercetoolsAuthServiceProvider } from '@integrations/auth-commercetools'
 import type { ContentfulServiceProvider } from '@integrations/cms-contentful'
 import type { MockServiceProvider } from '@integrations/commerce-mock'
+import type { MockCmsServiceProvider } from '@integrations/cms-mock'
+import type { MockPspServiceProvider } from '@integrations/psp-mock'
+import { CommerceSearchProvider } from '@integrations/search-commerce'
 import type { AlgoliaServiceProvider } from '@integrations/search-algolia'
-import { CtSearchProvider } from '@integrations/commerce-commercetools'
 import type { SearchProvider } from '@core/contracts/product-search/search-provider'
 import { DATA_SOURCE } from './tokens'
 
@@ -28,10 +30,13 @@ type MergedCommercetoolsCMSProvider = {
   getServices: () => CommercetoolsWithCMSServices
 }
 
-/** Only providers that include pageService + layoutService are stored in the map. */
-type DataSourceServiceProvider =
-  | MockServiceProvider
-  | MergedCommercetoolsCMSProvider
+/** Every set in the map serves commerce, CMS and search; customer services and payment are added for all sets. */
+type DataSourceServiceProvider = {
+  getServices: () => Omit<
+    AllServices,
+    'customerService' | 'customerAddressService' | 'paymentService'
+  >
+}
 
 @Injectable()
 export class DataSourceFactory {
@@ -48,6 +53,10 @@ export class DataSourceFactory {
     private readonly contentfulServiceProvider: ContentfulServiceProvider | null,
     @Inject('MOCK_SERVICE_PROVIDER')
     private readonly mockServiceProvider: MockServiceProvider,
+    @Inject('MOCK_CMS_SERVICE_PROVIDER')
+    private readonly mockCmsServiceProvider: MockCmsServiceProvider,
+    @Inject('MOCK_PSP_SERVICE_PROVIDER')
+    private readonly mockPspServiceProvider: MockPspServiceProvider,
     @Inject('COMMERCETOOLS_AUTH_SERVICE_PROVIDER')
     private readonly commercetoolsAuthServiceProvider: CommercetoolsAuthServiceProvider,
     @Optional()
@@ -58,7 +67,7 @@ export class DataSourceFactory {
     const commercetoolsWithCMS: MergedCommercetoolsCMSProvider = {
       getServices: (): CommercetoolsWithCMSServices => {
         const commercetools = this.commercetoolsServiceProvider.getServices()
-        const ctSearchService = new CtSearchProvider(
+        const ctSearchService = new CommerceSearchProvider(
           commercetools.productSearchService
         )
         if (this.contentfulServiceProvider) {
@@ -68,11 +77,9 @@ export class DataSourceFactory {
             searchService: ctSearchService,
           }
         }
-        const mock = this.mockServiceProvider.getServices()
         return {
           ...commercetools,
-          pageService: mock.pageService,
-          layoutService: mock.layoutService,
+          ...this.mockCmsServiceProvider.getServices(),
           searchService: ctSearchService,
         }
       },
@@ -89,10 +96,21 @@ export class DataSourceFactory {
       },
     }
 
+    const mockSet: DataSourceServiceProvider = {
+      getServices: () => {
+        const mock = this.mockServiceProvider.getServices()
+        return {
+          ...mock,
+          ...this.mockCmsServiceProvider.getServices(),
+          searchService: new CommerceSearchProvider(mock.productSearchService),
+        }
+      },
+    }
+
     this.serviceProviderMap = new Map<DataSource, DataSourceServiceProvider>([
       ['commercetools-set', commercetoolsWithCMS],
       ['commercetools-algolia-set', commercetoolsWithCMSWithAlgolia],
-      ['mock-set', this.mockServiceProvider],
+      ['mock-set', mockSet],
     ])
   }
 
@@ -110,8 +128,8 @@ export class DataSourceFactory {
     const { customerService, customerAddressService } =
       this.commercetoolsServiceProvider.getServices()
 
-    // Always use mock paymentService regardless of data source
-    const { paymentService } = this.mockServiceProvider.getServices()
+    // Always use the mock payment provider regardless of data source
+    const { paymentService } = this.mockPspServiceProvider.getServices()
 
     return {
       ...baseServices,

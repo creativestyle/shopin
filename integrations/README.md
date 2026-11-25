@@ -7,11 +7,14 @@ Integration packages, grouped by category (`integrations/<category>/<package>`),
 | Category | Package                                                | Role                                                                                                                      |
 | -------- | ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------- |
 | commerce | [**commercetools**](./commerce/commercetools)          | Product catalog, cart, checkout, navigation, customer, and order services via [Commercetools](https://commercetools.com/) |
-| commerce | [**mock**](./commerce/mock)                            | Mock implementations of catalog, content, and navigation for local development and demos                                  |
+| commerce | [**mock**](./commerce/mock)                            | Mock catalog, product search, cart, checkout and orders for local development and demos                                   |
 | auth     | [**commercetools**](./auth/commercetools)              | Customer auth (login, registration, password reset, sessions) via Commercetools                                           |
+| search   | [**commerce**](./search/commerce)                      | Search served by the commerce platform's own product search (any commerce integration)                                    |
 | search   | [**algolia**](./search/algolia)                        | Product search via [Algolia](https://www.algolia.com/)                                                                    |
+| cms      | [**mock**](./cms/mock)                                 | Mock content pages, header and footer                                                                                     |
 | cms      | [**contentful**](./cms/contentful)                     | CMS content: pages and layout (header/footer) via [Contentful](https://www.contentful.com/) GraphQL API                   |
 | cms      | [**contentful-migration**](./cms/contentful-migration) | Content model and demo content for Contentful (migrations / CMS-as-code)                                                  |
+| psp      | [**mock**](./psp/mock)                                 | Mock payment methods and the demo payment link                                                                            |
 | psp      | [**mock-payment-page**](./psp/mock-payment-page)       | The demo payment page the mock payment redirects to                                                                       |
 
 Each package is named `@integrations/<category>-<name>` after its folder (for example `@integrations/auth-commercetools`).
@@ -28,8 +31,8 @@ Each integration stands alone, so it can be installed, swapped or removed withou
 
 ## How the BFF uses them
 
-- **Data source `commercetools-set`**: Catalog and navigation from Commercetools; pages/layout from Contentful (or mock if Contentful is disabled). Customer, address, and order from Commercetools; payment from mock.
-- **Data source `mock-set`**: Catalog, content, and navigation from the mock API; customer/order still from Commercetools; payment from mock.
+- **Data source `commercetools-set`**: Catalog, navigation and search from Commercetools (search through `search/commerce`); pages/layout from Contentful (or the CMS mock if Contentful is disabled). Customer, address, and order from Commercetools; payment from the payment mock.
+- **Data source `mock-set`**: Catalog, search, navigation and orders from the commerce mock, content from the CMS mock, payment from the payment mock; customer services still from Commercetools.
 
 All integration modules are imported in the BFF’s [DataSourceModule](../apps/bff/src/data-source/data-source.module.ts). For routing details and a code example, see the [BFF README – How it works](../apps/bff/README.md#how-it-works).
 
@@ -37,6 +40,9 @@ All integration modules are imported in the BFF’s [DataSourceModule](../apps/b
 
 - [@integrations/commerce-commercetools](./commerce/commercetools/README.md)
 - [@integrations/commerce-mock](./commerce/mock/README.md)
+- [@integrations/cms-mock](./cms/mock/README.md)
+- [@integrations/psp-mock](./psp/mock/README.md)
+- [@integrations/search-commerce](./search/commerce/README.md)
 - [@integrations/auth-commercetools](./auth/commercetools/README.md)
 - [@integrations/cms-contentful](./cms/contentful/README.md)
 - [@integrations/cms-contentful-migration](./cms/contentful-migration/README.md)

@@ -9,7 +9,10 @@
         "@integrations/commerce-mock#build",
         "@integrations/commerce-commercetools#build",
         "@integrations/auth-commercetools#build",
-        "@integrations/cms-contentful#build"
+        "@integrations/cms-contentful#build",
+        "@integrations/cms-mock#build",
+        "@integrations/psp-mock#build",
+        "@integrations/search-commerce#build"
       ]
     },
     "dev": {
@@ -19,7 +22,10 @@
         "@integrations/commerce-mock#dev",
         "@integrations/commerce-commercetools#dev",
         "@integrations/auth-commercetools#dev",
-        "@integrations/cms-contentful#dev"
+        "@integrations/cms-contentful#dev",
+        "@integrations/cms-mock#dev",
+        "@integrations/psp-mock#dev",
+        "@integrations/search-commerce#dev"
       ]
     }
   }

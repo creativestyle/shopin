@@ -4,15 +4,11 @@ import {
   ProductService,
   ProductCollectionService,
   ProductSearchService,
-  SearchService,
   NavigationService,
   CartService,
   CartPaymentService,
   OrderService,
   StoreConfigService,
-  PaymentService,
-  PageService,
-  LayoutService,
   WishlistService,
 } from './services'
 
@@ -22,15 +18,11 @@ export class MockServiceProviderImpl implements MockServiceProvider {
     private readonly productService: ProductService,
     private readonly productCollectionService: ProductCollectionService,
     private readonly productSearchService: ProductSearchService,
-    private readonly searchService: SearchService,
     private readonly navigationService: NavigationService,
     private readonly cartService: CartService,
     private readonly cartPaymentService: CartPaymentService,
     private readonly orderService: OrderService,
     private readonly storeConfigService: StoreConfigService,
-    private readonly paymentService: PaymentService,
-    private readonly pageService: PageService,
-    private readonly layoutService: LayoutService,
     private readonly wishlistService: WishlistService
   ) {}
 
@@ -39,16 +31,12 @@ export class MockServiceProviderImpl implements MockServiceProvider {
       productService: this.productService,
       productCollectionService: this.productCollectionService,
       productSearchService: this.productSearchService,
-      searchService: this.searchService,
       navigationService: this.navigationService,
       cartService: this.cartService,
       cartPaymentService: this.cartPaymentService,
       orderService: this.orderService,
       storeConfigService: this.storeConfigService,
-      paymentService: this.paymentService,
-      pageService: this.pageService,
       wishlistService: this.wishlistService,
-      layoutService: this.layoutService,
     }
   }
 }
