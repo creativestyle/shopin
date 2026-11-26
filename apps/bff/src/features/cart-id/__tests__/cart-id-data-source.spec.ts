@@ -95,4 +95,21 @@ describe('CartIdService across data sources', () => {
       expect([...cookies.jar.keys()]).toEqual([keptKey])
     }
   )
+
+  it('clears the cart cookies of every data source on sign-out', async () => {
+    const cookies = createCookieJar()
+    await createCartIdService(cookies, 'commercetools-set').setGuestCartId(
+      'ct-cart-1'
+    )
+    await createCartIdService(cookies, 'mock-set').setLoggedInCartId(
+      'mock-cart-1'
+    )
+
+    await createCartIdService(
+      cookies,
+      'mock-set'
+    ).deleteCartIdsOfAllDataSources()
+
+    expect(cookies.jar.size).toBe(0)
+  })
 })

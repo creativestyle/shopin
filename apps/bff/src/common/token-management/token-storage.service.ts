@@ -1,7 +1,12 @@
 import { Inject, Injectable, Scope } from '@nestjs/common'
 import { z } from 'zod'
 import type { TokenFields } from '@core/contracts/auth/login'
-import { getTokenCookieNames, REFRESH_TOKEN_MAX_AGE } from '@config/constants'
+import {
+  ACCESS_TOKEN_COOKIE_NAMES,
+  getTokenCookieNames,
+  REFRESH_TOKEN_COOKIE_NAMES,
+  REFRESH_TOKEN_MAX_AGE,
+} from '@config/constants'
 import type { DataSource } from '@config/constants'
 import { DATA_SOURCE } from '../../data-source/tokens'
 import { TokenEncryptionService } from './token-encryption.service'
@@ -95,6 +100,16 @@ export class TokenStorageService {
   clearTokens(): void {
     this.cookieService.clearCookie(this.cookieNames.accessToken)
     this.cookieService.clearCookie(this.cookieNames.refreshToken)
+  }
+
+  /** Sign-out: ends the session of every data source, not just this one. */
+  clearAllTokens(): void {
+    for (const name of [
+      ...ACCESS_TOKEN_COOKIE_NAMES,
+      ...REFRESH_TOKEN_COOKIE_NAMES,
+    ]) {
+      this.cookieService.clearCookie(name)
+    }
   }
 
   /**

@@ -12,6 +12,7 @@
     "check-types": "tsc --noEmit"
   },
   "devDependencies": {
+    "@config/constants": "*",
     "@playwright/test": "^1.51.0",
     "@types/node": "^22.0.0"
   }

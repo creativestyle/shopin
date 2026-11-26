@@ -46,16 +46,33 @@ export function bffApi(request: APIRequestContext, dataSource?: string) {
   return {
     get,
     post: <T>(path: string, data: unknown) => send<T>('POST', path, data),
+    put: <T>(path: string, data: unknown) => send<T>('PUT', path, data),
     delete: <T>(path: string, data?: unknown) => send<T>('DELETE', path, data),
   }
 }
 
-/** Removes every line of the signed-in customer's cart. */
+/** Removes every line of the session's cart; returns its id, if it has one. */
 export async function emptyCart(api: ReturnType<typeof bffApi>) {
-  const cart = await api.get<{ lineItems: { id: string }[] } | null>('cart')
+  const cart = await api.get<{
+    id: string
+    lineItems: { id: string }[]
+  } | null>('cart')
   for (const { id } of cart?.lineItems ?? []) {
     await api.delete('cart/items', { lineItemId: id })
   }
+  return cart?.id
+}
+
+/** Removes every item of the session's wishlist; returns its id, if it has one. */
+export async function emptyWishlist(api: ReturnType<typeof bffApi>) {
+  const wishlist = await api.get<{
+    id: string
+    items: { id: string }[]
+  } | null>('wishlist')
+  for (const { id } of wishlist?.items ?? []) {
+    await api.delete('wishlist/items', { lineItemId: id })
+  }
+  return wishlist?.id
 }
 
 /** Status of a plain GET to a BFF route, e.g. bffStatus(request, 'csrf/token'). */

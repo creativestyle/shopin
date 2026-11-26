@@ -14,6 +14,7 @@ import { MockSessionService } from '../session/mock-session.service'
 import {
   findCustomerByEmail,
   hashPassword,
+  verifyPassword,
   saveCustomer,
   toCustomerResponse,
   type MockCustomer,
@@ -23,8 +24,8 @@ import {
 const customerError = (status: HttpStatus, message: string, code: string) =>
   new HttpException({ statusCode: status, message, code }, status)
 
-function verifyPassword(customer: MockCustomer, password: string) {
-  if (customer.passwordHash !== hashPassword(password)) {
+function checkCurrentPassword(customer: MockCustomer, password: string) {
+  if (!verifyPassword(customer.passwordHash, password)) {
     throw customerError(
       HttpStatus.BAD_REQUEST,
       'Invalid current password',
@@ -61,7 +62,7 @@ export class CustomerService {
     request: ChangeCustomerPasswordRequest
   ): Promise<void> {
     const customer = await this.sessionService.requireCustomer()
-    verifyPassword(customer, request.currentPassword)
+    checkCurrentPassword(customer, request.currentPassword)
     saveCustomer({
       ...customer,
       passwordHash: hashPassword(request.newPassword),
@@ -73,7 +74,7 @@ export class CustomerService {
     request: ChangeCustomerEmailRequest
   ): Promise<CustomerResponse> {
     const customer = await this.sessionService.requireCustomer()
-    verifyPassword(customer, request.currentPassword)
+    checkCurrentPassword(customer, request.currentPassword)
 
     if (request.email.toLowerCase() === customer.email.toLowerCase()) {
       throw customerError(

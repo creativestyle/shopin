@@ -1,5 +1,6 @@
 /**
- * Playwright globalSetup: flushes the Next.js Data Cache and starts the fake-CMS server.
+ * Playwright globalSetup: resets the mock, reports the integrations from the
+ * BFF, flushes the Next.js Data Cache and starts the fake-CMS server.
  *
  * The recording mock BFF is managed as a Playwright webServer entry
  * (playwright.config.ts) so it is guaranteed to be running before the
@@ -7,15 +8,39 @@
  */
 
 import { getFakeCmsServer } from './fake-cms/server'
-import { FAKE_CMS_PORT, APP_PORT } from './config'
+import { FAKE_CMS_PORT, APP_PORT, BFF_URL, USES_EXTERNAL_STACK } from './config'
+import { RESET_MOCK_PATH } from './fault-proxy/server'
+import { RUN_ID } from './journeys/support/run'
 import {
-  formatIntegrationReport,
+  fetchCapabilities,
+  formatCapabilitiesReport,
+  isMockRun,
   resolveIntegrations,
 } from './stack/integration-choice'
 
 export default async function globalSetup() {
-  // Which integration serves each category in this run
-  console.log(formatIntegrationReport(resolveIntegrations()))
+  const integrations = resolveIntegrations()
+  console.log(`[e2e] Run id: ${RUN_ID}`)
+
+  // Each run starts the mock over, also on a stack reused from an earlier run
+  if (!USES_EXTERNAL_STACK && isMockRun(integrations)) {
+    const reset = await fetch(`${new URL(BFF_URL).origin}${RESET_MOCK_PATH}`, {
+      method: 'POST',
+    })
+    if (!reset.ok) {
+      throw new Error(
+        `[e2e] Mock reset failed: ${reset.status} ${await reset.text()}`
+      )
+    }
+    console.log('[e2e] Mock stores reset')
+  }
+
+  // Which integration served each category, as the BFF reports it
+  console.log(
+    formatCapabilitiesReport(
+      await fetchCapabilities(BFF_URL, integrations.dataSource)
+    )
+  )
 
   // Flush both the in-memory Data Cache and on-disk fetch-cache entries.
   // revalidateTag('*', { expire: 0 }) sets expired = Date.now() on every entry

@@ -1,14 +1,17 @@
-import { createHash, randomBytes, randomUUID } from 'crypto'
-import { REFRESH_TOKEN_MAX_AGE } from '@config/constants'
+import { randomBytes, randomUUID, scryptSync, timingSafeEqual } from 'crypto'
 import type { AddressResponse } from '@core/contracts/customer/address'
 import type { CustomerResponse } from '@core/contracts/customer/customer'
 
 /** Seconds a mock access token lives, matching the commercetools default. */
-export const MOCK_ACCESS_TOKEN_TTL_SECONDS = 172800
+const ACCESS_TOKEN_TTL_SECONDS = 172800
 
-const ACCESS_TOKEN_TTL_MS = MOCK_ACCESS_TOKEN_TTL_SECONDS * 1000
+const ACCESS_TOKEN_TTL_MS = ACCESS_TOKEN_TTL_SECONDS * 1000
+// Shorter than commercetools' 200 days: the mock keeps everything in BFF memory
+const REFRESH_TOKEN_TTL_MS = 7 * 24 * 60 * 60 * 1000
 const ONE_TIME_TOKEN_TTL_MS = 60 * 60 * 1000
 const SWEEP_INTERVAL_MS = 60 * 1000
+// Any caller can pick the mock, so no store may grow without limit
+const MAX_ENTRIES_PER_STORE = 10_000
 
 export type MockAddress = Omit<
   AddressResponse,
@@ -48,8 +51,36 @@ let lastSweep = 0
 
 const newToken = () => randomBytes(24).toString('base64url')
 
-export const hashPassword = (password: string) =>
-  createHash('sha256').update(password).digest('hex')
+/** Salted scrypt hash, stored as `salt:hash`. */
+export function hashPassword(password: string): string {
+  const salt = randomBytes(16).toString('hex')
+  return `${salt}:${scryptSync(password, salt, 32).toString('hex')}`
+}
+
+export function verifyPassword(stored: string, password: string): boolean {
+  const [salt, hash] = stored.split(':')
+  if (!salt || !hash) {
+    return false
+  }
+  const expected = Buffer.from(hash, 'hex')
+  const actual = scryptSync(password, salt, expected.length)
+  return timingSafeEqual(expected, actual)
+}
+
+/** Owner of carts and orders: the customer once known, the guest session before. */
+export const customerOwner = (customerId: string) => `customer:${customerId}`
+export const guestOwner = (sessionId: string) => `session:${sessionId}`
+
+/** Sets an entry, evicting the oldest one when the store is full. */
+function setCapped<V>(store: Map<string, V>, key: string, value: V) {
+  if (!store.has(key) && store.size >= MAX_ENTRIES_PER_STORE) {
+    const oldest = store.keys().next().value
+    if (oldest !== undefined) {
+      store.delete(oldest)
+    }
+  }
+  store.set(key, value)
+}
 
 function readLive<T>(store: Map<string, ExpiringEntry<T>>, key: string) {
   const entry = store.get(key)
@@ -60,7 +91,7 @@ function readLive<T>(store: Map<string, ExpiringEntry<T>>, key: string) {
   return entry?.value
 }
 
-/** Drops expired tokens, and guest sessions no token points to any more. */
+/** Drops expired tokens, and sessions no live token points to any more. */
 function sweepExpired() {
   const now = Date.now()
   if (now - lastSweep < SWEEP_INTERVAL_MS) {
@@ -84,8 +115,8 @@ function sweepExpired() {
       }
     }
   }
-  for (const [id, session] of sessions) {
-    if (!session.customerId && !live.has(id)) {
+  for (const id of sessions.keys()) {
+    if (!live.has(id)) {
       sessions.delete(id)
     }
   }
@@ -95,18 +126,18 @@ function issueTokens(sessionId: string) {
   const accessToken = newToken()
   const refreshToken = newToken()
   const now = Date.now()
-  accessTokens.set(accessToken, {
+  setCapped(accessTokens, accessToken, {
     value: sessionId,
     expiresAt: now + ACCESS_TOKEN_TTL_MS,
   })
-  refreshTokens.set(refreshToken, {
+  setCapped(refreshTokens, refreshToken, {
     value: sessionId,
-    expiresAt: now + REFRESH_TOKEN_MAX_AGE,
+    expiresAt: now + REFRESH_TOKEN_TTL_MS,
   })
   return {
     accessToken,
     refreshToken,
-    expiresIn: MOCK_ACCESS_TOKEN_TTL_SECONDS,
+    expiresIn: ACCESS_TOKEN_TTL_SECONDS,
   }
 }
 
@@ -114,7 +145,7 @@ function issueTokens(sessionId: string) {
 export function openSession(customerId?: string) {
   sweepExpired()
   const session: MockSession = { id: randomUUID(), customerId }
-  sessions.set(session.id, session)
+  setCapped(sessions, session.id, session)
   return { sessionId: session.id, tokens: issueTokens(session.id) }
 }
 
@@ -174,7 +205,7 @@ export function getCustomer(customerId?: string): MockCustomer | undefined {
 }
 
 export function saveCustomer(customer: MockCustomer) {
-  customers.set(customer.id, customer)
+  setCapped(customers, customer.id, customer)
 }
 
 function issueOneTimeToken(
@@ -182,7 +213,7 @@ function issueOneTimeToken(
   customerId: string
 ) {
   const token = newToken()
-  store.set(token, {
+  setCapped(store, token, {
     value: customerId,
     expiresAt: Date.now() + ONE_TIME_TOKEN_TTL_MS,
   })

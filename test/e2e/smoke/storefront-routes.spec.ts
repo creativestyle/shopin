@@ -8,6 +8,7 @@ import { expect, test } from '../journeys/support/fixtures'
 import {
   atPath,
   authPages,
+  authSubpages,
   cartPage,
   categoryPage,
   findProductUrl,
@@ -18,7 +19,11 @@ import {
   searchPage,
   wishlistPage,
 } from '../journeys/support/pages'
-import { ROUTES, TEST_DATA } from '../journeys/support/test-data'
+import {
+  PLACEHOLDER_IDS,
+  ROUTES,
+  TEST_DATA,
+} from '../journeys/support/test-data'
 
 const TAGS = ['@desktop', '@mobile', '@priority-high', '@unverified']
 
@@ -96,8 +101,36 @@ test.describe('Storefront routes', { tag: '@smoke' }, () => {
   })
 
   test('demo payment provider page', { tag: TAGS }, async ({ page }) => {
-    await openRoute(page, ROUTES.mockedPaymentStep('e2e-smoke'))
+    await openRoute(page, ROUTES.mockedPaymentStep(PLACEHOLDER_IDS.payment))
 
     await expect(mockedPaymentPage.payNow(page)).toBeVisible()
+  })
+
+  test('reset password asks for its token', { tag: TAGS }, async ({ page }) => {
+    await openRoute(page, ROUTES.resetPassword)
+
+    await expect(authSubpages.resetPasswordTokenRequired(page)).toBeVisible()
+  })
+
+  test('forgot password success', { tag: TAGS }, async ({ page }) => {
+    await openRoute(page, ROUTES.forgotPasswordSuccess, { heading: false })
+
+    await expect(authSubpages.forgotPasswordSuccess(page)).toBeVisible()
+  })
+
+  test(
+    'sign-up success sends a visitor who did not register home',
+    { tag: TAGS },
+    async ({ page }) => {
+      await page.goto(ROUTES.signUpSuccess(PLACEHOLDER_IDS.token))
+
+      await expect(page).toHaveURL(atPath(ROUTES.home))
+    }
+  )
+
+  test('verify e-mail asks for its token', { tag: TAGS }, async ({ page }) => {
+    await page.goto(ROUTES.verifyEmail)
+
+    await expect(authSubpages.verifyEmailTokenRequired(page)).toBeVisible()
   })
 })

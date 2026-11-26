@@ -7,9 +7,11 @@ import {
 import { ACCESS_TOKEN_TOKEN } from '@config/constants'
 import type { TokenProvider } from '@core/contracts/core/request-providers'
 import {
+  customerOwner,
   getCustomer,
   getSessionCustomerId,
   getSessionId,
+  guestOwner,
   type MockCustomer,
 } from './mock-session-store'
 
@@ -28,6 +30,16 @@ export class MockSessionService {
 
   async getCustomerId(): Promise<string | undefined> {
     return getSessionCustomerId(await this.getSessionId())
+  }
+
+  /** Owner key for what this caller creates: the customer, or the guest session. */
+  async getOwner(): Promise<string | undefined> {
+    const sessionId = await this.getSessionId()
+    const customerId = getSessionCustomerId(sessionId)
+    if (customerId) {
+      return customerOwner(customerId)
+    }
+    return sessionId && guestOwner(sessionId)
   }
 
   async requireCustomer(): Promise<MockCustomer> {

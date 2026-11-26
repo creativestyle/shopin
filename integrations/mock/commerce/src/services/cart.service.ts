@@ -32,7 +32,7 @@ import {
   createShopinLineItem,
 } from '../generators/shopin-cart'
 import { MockSessionService } from '../session/mock-session.service'
-import { getSessionCustomerId } from '../session/mock-session-store'
+import { customerOwner, guestOwner } from '../session/mock-session-store'
 
 // Mirrors the commercetools `deliveryTime` custom field; pickup methods have none
 const MOCK_DELIVERY_TIMES: Record<string, Record<string, string>> = {
@@ -43,7 +43,7 @@ const MOCK_DELIVERY_TIMES: Record<string, Record<string, string>> = {
 // Simple in-memory store for mock carts
 // Cart IDs are stored in cookies, so we just need to persist cart data by ID
 export const cartStore = new Map<string, CartResponse>()
-// Cart id -> mock session that created it; a signed-in session's carts belong to its customer
+// Cart id -> owner: the customer once known, the guest session before
 export const cartOwnerStore = new Map<string, string>()
 
 /** Fixture codes covering each outcome. Anything unlisted is treated as invalid. */
@@ -57,9 +57,11 @@ export const MOCK_DISCOUNT_CODES: Record<
   NOTYET: { reason: 'notApplicable' },
 }
 
-const ownCartIds = (owns: (sessionId: string) => boolean) =>
+const ownCartIds = (owner: string) =>
   [...cartOwnerStore]
-    .filter(([cartId, sessionId]) => cartStore.has(cartId) && owns(sessionId))
+    .filter(
+      ([cartId, cartOwner]) => cartStore.has(cartId) && cartOwner === owner
+    )
     .map(([cartId]) => cartId)
 
 function mergeLineItems(target: CartResponse, source: CartResponse) {
@@ -98,17 +100,14 @@ function mergeLineItems(target: CartResponse, source: CartResponse) {
  */
 export function moveGuestCartsToCustomer(
   guestSessionId: string,
-  customerSessionId: string,
   customerId: string
 ) {
-  const customerCartId = ownCartIds(
-    (sessionId) => getSessionCustomerId(sessionId) === customerId
-  ).at(-1)
-  for (const guestCartId of ownCartIds((id) => id === guestSessionId)) {
+  const customerCartId = ownCartIds(customerOwner(customerId)).at(-1)
+  for (const guestCartId of ownCartIds(guestOwner(guestSessionId))) {
     const guestCart = cartStore.get(guestCartId)!
     const customerCart = customerCartId && cartStore.get(customerCartId)
     if (!customerCart || customerCart.currency !== guestCart.currency) {
-      cartOwnerStore.set(guestCartId, customerSessionId)
+      cartOwnerStore.set(guestCartId, customerOwner(customerId))
       continue
     }
     cartStore.set(customerCartId, mergeLineItems(customerCart, guestCart))
@@ -150,9 +149,9 @@ export class CartService {
       itemCount: 0,
     }
     cartStore.set(cartId, cart)
-    const sessionId = await this.sessionService.getSessionId()
-    if (sessionId) {
-      cartOwnerStore.set(cartId, sessionId)
+    const owner = await this.sessionService.getOwner()
+    if (owner) {
+      cartOwnerStore.set(cartId, owner)
     }
     return CartResponseSchema.parse(cart)
   }
@@ -298,10 +297,8 @@ export class CartService {
     if (!customerId) {
       return null
     }
-    // Newest cart of any session the customer owns, as commercetools' activeCart
-    const activeCartId = ownCartIds(
-      (sessionId) => getSessionCustomerId(sessionId) === customerId
-    ).at(-1)
+    // Newest cart the customer owns, as commercetools' activeCart
+    const activeCartId = ownCartIds(customerOwner(customerId)).at(-1)
     return activeCartId ? this.getCart(activeCartId) : null
   }
 

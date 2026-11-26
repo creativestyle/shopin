@@ -3,17 +3,13 @@ import { ConfigModule } from '@nestjs/config'
 import { MockClientModule } from './client/client.module'
 import * as services from './services'
 import { MockServiceProviderImpl } from './mock-service-provider'
-import {
-  MOCK_AUTH_SERVICES,
-  MockAuthServiceProviderImpl,
-} from './auth/mock-auth.services'
+import { MockAuthServiceProviderImpl } from './mock-auth-service-provider'
 import { MockSessionService } from './session/mock-session.service'
 
 @Module({
   imports: [ConfigModule, MockClientModule],
   providers: [
     ...Object.values(services),
-    ...MOCK_AUTH_SERVICES,
     MockSessionService,
     {
       provide: 'MOCK_SERVICE_PROVIDER',

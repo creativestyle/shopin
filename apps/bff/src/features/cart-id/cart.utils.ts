@@ -1,13 +1,9 @@
 import {
   CART_ID_COOKIE_PREFIX_GUEST,
   CART_ID_COOKIE_PREFIX_LOGGED,
+  DATA_SOURCE_COOKIE_SUFFIX,
 } from '@config/constants'
 import type { DataSource } from '@config/constants'
-
-// Mock carts live in BFF memory, so they need a cookie separate from commercetools carts.
-const CART_KEY_SUFFIX_BY_DATA_SOURCE: Partial<Record<DataSource, string>> = {
-  'mock-set': 'mock',
-}
 
 /**
  * Generate a cart cookie key based on currency and user type.
@@ -37,7 +33,7 @@ export function getCartKey(
   const prefix = isGuest
     ? CART_ID_COOKIE_PREFIX_GUEST
     : CART_ID_COOKIE_PREFIX_LOGGED
-  const suffix = dataSource && CART_KEY_SUFFIX_BY_DATA_SOURCE[dataSource]
+  const suffix = dataSource && DATA_SOURCE_COOKIE_SUFFIX[dataSource]
   return suffix ? `${prefix}-${currency}-${suffix}` : `${prefix}-${currency}`
 }
 
@@ -46,11 +42,11 @@ export function isCartKeyOfDataSource(
   key: string,
   dataSource?: DataSource
 ): boolean {
-  const suffix = dataSource && CART_KEY_SUFFIX_BY_DATA_SOURCE[dataSource]
+  const suffix = dataSource && DATA_SOURCE_COOKIE_SUFFIX[dataSource]
   if (suffix) {
     return key.endsWith(`-${suffix}`)
   }
-  return !Object.values(CART_KEY_SUFFIX_BY_DATA_SOURCE).some((other) =>
+  return !Object.values(DATA_SOURCE_COOKIE_SUFFIX).some((other) =>
     key.endsWith(`-${other}`)
   )
 }

@@ -4,8 +4,13 @@
  */
 
 import { expect, signedInTest as test } from '../journeys/support/fixtures'
-import { accountPages, atPath, openRoute } from '../journeys/support/pages'
-import { ROUTES } from '../journeys/support/test-data'
+import {
+  accountPages,
+  atPath,
+  openRoute,
+  orderDetailPage,
+} from '../journeys/support/pages'
+import { PLACEHOLDER_IDS, ROUTES } from '../journeys/support/test-data'
 
 const TAGS = ['@desktop', '@mobile', '@priority-high', '@unverified']
 
@@ -50,5 +55,11 @@ test.describe('Account routes', { tag: '@smoke' }, () => {
     await expect(
       accountPages.myDataTab(page, 'changePasswordLabel')
     ).toBeVisible()
+  })
+
+  test('order detail', { tag: TAGS }, async ({ page }) => {
+    await openRoute(page, ROUTES.accountOrder(PLACEHOLDER_IDS.order))
+
+    await expect(orderDetailPage.heading(page)).toBeAttached()
   })
 })

@@ -128,6 +128,37 @@ describe('DataSourceFactory', () => {
     })
   })
 
+  describe('getCapabilities', () => {
+    it('reports every category from the mock on mock-set', () => {
+      const { factory } = createFactory('mock-set')
+
+      expect(factory.getCapabilities()).toEqual({
+        dataSource: 'mock-set',
+        integrations: {
+          commerce: 'mock',
+          search: 'mock',
+          cms: 'mock',
+          customer: 'mock',
+          auth: 'mock',
+          payment: 'mock',
+        },
+      })
+    })
+
+    it('reports Algolia search and the mock CMS fallback on commercetools-algolia-set', () => {
+      const { factory } = createFactory('commercetools-algolia-set')
+
+      expect(factory.getCapabilities().integrations).toEqual({
+        commerce: 'commercetools',
+        search: 'algolia',
+        cms: 'mock',
+        customer: 'commercetools',
+        auth: 'commercetools',
+        payment: 'mock',
+      })
+    })
+  })
+
   it('throws for an unknown data source', () => {
     const { factory } = createFactory('unknown-set' as DataSource)
 

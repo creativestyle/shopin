@@ -7,6 +7,8 @@
  *   POST   /__e2e/faults  add a rule (FaultRule)
  *   DELETE /__e2e/faults  remove all rules and release held requests
  *   GET    /__e2e/ready   200 once the whole stack is up, 503 before
+ *   POST   /__e2e/reset-mock  starts the mock over with empty stores (the
+ *                             start script restarts the BFF)
  */
 
 import http from 'node:http'
@@ -28,6 +30,14 @@ export interface FaultRule {
 
 export const FAULTS_PATH = '/__e2e/faults'
 export const READY_PATH = '/__e2e/ready'
+export const RESET_MOCK_PATH = '/__e2e/reset-mock'
+
+export interface FaultProxyOptions {
+  /** Whether the whole stack is up, for READY_PATH. */
+  isReady?: () => boolean
+  /** Empties the mock's stores, for RESET_MOCK_PATH. */
+  resetMock?: () => Promise<void>
+}
 
 interface ActiveRule extends FaultRule {
   pattern: RegExp
@@ -50,7 +60,7 @@ function sendJson(res: http.ServerResponse, status: number, body: unknown) {
 
 export function createFaultProxy(
   target: { host: string; port: number },
-  isReady: () => boolean = () => true
+  { isReady = () => true, resetMock }: FaultProxyOptions = {}
 ) {
   let rules: ActiveRule[] = []
   const held = new Set<http.ServerResponse>()
@@ -142,6 +152,20 @@ export function createFaultProxy(
     if (req.url === READY_PATH) {
       res.writeHead(isReady() ? 200 : 503)
       res.end()
+      return
+    }
+    if (req.url === RESET_MOCK_PATH && req.method === 'POST') {
+      if (!resetMock) {
+        sendJson(res, 501, { error: 'no mock reset in this stack' })
+        return
+      }
+      resetMock().then(
+        () => {
+          res.writeHead(204)
+          res.end()
+        },
+        (error) => sendJson(res, 500, { error: String(error) })
+      )
       return
     }
     if (req.url?.startsWith(FAULTS_PATH)) {

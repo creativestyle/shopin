@@ -41,7 +41,7 @@ export default class CiSummaryReporter implements Reporter {
       test.annotations.find((a) => a.type === 'skip')?.description
 
     const lines = [
-      `## E2E: ${result.status}`,
+      `## E2E${process.env.E2E_FAULT_RUN === '1' ? ' (fault specs)' : ''}: ${result.status}`,
       '',
       ...(['expected', 'flaky', 'unexpected', 'skipped'] as Outcome[]).map(
         (outcome) =>

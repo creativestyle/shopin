@@ -8,14 +8,23 @@ import {
   STOREFRONT_URL,
   USES_EXTERNAL_STACK,
 } from './config'
+import { READY_PATH } from './fault-proxy/server'
 import { journeyStorageState } from './journeys/support/cookies'
 import { resolveIntegrations } from './stack/integration-choice'
+
+// One id per run, inherited by the workers: data a test creates carries it
+process.env.E2E_RUN_ID ??= `${new Date()
+  .toISOString()
+  .replace(/\D/g, '')
+  .slice(0, 12)}-${Math.random().toString(36).slice(2, 6)}`
 
 const appDir = path.resolve(__dirname, '../../apps/presentation')
 const e2eDir = path.resolve(__dirname)
 // ts-node from the root workspace (hoisted by npm workspaces).
 const tsNode = path.resolve(__dirname, '../../node_modules/.bin/ts-node')
 const isCI = !!process.env.CI
+// Fault specs run in a second pass of scripts/e2e.ts, alone, after everything else
+const isFaultRun = process.env.E2E_FAULT_RUN === '1'
 
 const integrations = resolveIntegrations()
 
@@ -51,14 +60,14 @@ const journeyProjects: Project[] = [
     use: { ...devices['Pixel 7'], ...journeyUse },
   },
   {
-    // Run alone, after everything else
+    // Fault rules and cache expiry reach every server sharing the build, so
+    // these run alone: only in the fault pass (E2E_FAULT_RUN=1, see scripts/e2e.ts)
     name: 'faults',
     testDir: '.',
     grep: /@desktop/,
     testMatch: faultFiles,
+    testIgnore: isFaultRun ? [] : '**/*',
     workers: 1,
-    // Fault rules and cache expiry reach every server sharing the build
-    dependencies: ['desktop', 'phone', 'platform', 'platform-crossorigin'],
     use: { ...devices['Desktop Chrome'], ...journeyUse },
   },
 ]
@@ -69,8 +78,22 @@ export default defineConfig({
   retries: isCI ? 1 : 0,
   // A test that passes only on retry is flaky, not green
   failOnFlakyTests: isCI,
+  // The fault pass keeps its own results, so it does not wipe the first pass's traces
+  outputDir: isFaultRun ? 'test-results/faults' : 'test-results',
   reporter: isCI
-    ? [['github'], ['html', { open: 'never' }], ['./reporters/ci-summary.ts']]
+    ? [
+        ['github'],
+        [
+          'html',
+          {
+            open: 'never',
+            outputFolder: isFaultRun
+              ? 'playwright-report/faults'
+              : 'playwright-report',
+          },
+        ],
+        ['./reporters/ci-summary.ts'],
+      ]
     : 'list',
   timeout: 30_000,
 
@@ -144,7 +167,7 @@ export default defineConfig({
       : [
           {
             command: `cd ${e2eDir} && ${tsNode} --project tsconfig.json stack/start-stack.ts`,
-            url: `http://127.0.0.1:${FAULT_PROXY_PORT}/__e2e/ready`,
+            url: `http://127.0.0.1:${FAULT_PROXY_PORT}${READY_PATH}`,
             timeout: 120_000,
             reuseExistingServer: !isCI,
             stdout: 'pipe' as const,

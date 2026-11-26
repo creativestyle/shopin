@@ -8,8 +8,9 @@
  *
  * Commerce, search and CMS integrations are picked per request through the
  * data-source cookie the specs set, so one BFF serves every choice. Credentials
- * missing from the root .env get dummy values pointing at a dead local port,
- * so any call to an outside service fails loudly instead of leaving the machine.
+ * missing from the root .env get dummy values: commercetools then points at a
+ * dead local port and fails loudly, while Contentful's URL is fixed, so its calls
+ * still leave the machine and fail with 401. The mock data source calls neither.
  */
 
 import { spawn, type ChildProcess } from 'node:child_process'
@@ -20,7 +21,8 @@ import { parseEnv } from 'node:util'
 import { BFF_PORT, FAULT_PROXY_PORT, JOURNEY_APP_PORT } from '../config'
 import { createFaultProxy } from '../fault-proxy/server'
 import {
-  formatIntegrationReport,
+  fetchCapabilities,
+  formatCapabilitiesReport,
   resolveIntegrations,
 } from './integration-choice'
 
@@ -36,7 +38,9 @@ const STOREFRONT_ORIGIN = `http://localhost:${JOURNEY_APP_PORT}`
 const PROXY_BFF_URL = `http://localhost:${FAULT_PROXY_PORT}/bff`
 const DEAD_URL = 'http://127.0.0.1:9'
 
-const children: ChildProcess[] = []
+const children = new Set<ChildProcess>()
+// A child stopped on purpose (the BFF on a mock reset) does not stop the stack
+const restarting = new Set<ChildProcess>()
 let stopping = false
 let ready = false
 
@@ -85,6 +89,10 @@ function start(
     stdio: ['ignore', 'inherit', 'inherit'],
   })
   child.on('exit', (code, signal) => {
+    children.delete(child)
+    if (restarting.delete(child)) {
+      return
+    }
     if (!stopping) {
       console.error(
         `[e2e] ${name} exited (${signal ?? code}); stopping the stack`
@@ -92,7 +100,8 @@ function start(
       stop(1)
     }
   })
-  children.push(child)
+  children.add(child)
+  return child
 }
 
 async function waitFor(name: string, url: string, init?: RequestInit) {
@@ -128,20 +137,37 @@ async function main() {
     }
   }
 
-  start('BFF', process.execPath, [bffEntry], {
+  const bffEnv = {
     PORT: String(BFF_PORT),
     FRONTEND_URL: STOREFRONT_ORIGIN,
     // Journeys exceed the 5 req/min limit on auth, payment and order routes
     BFF_RATE_LIMIT_ENABLED: 'false',
     LOG_LEVEL: process.env.LOG_LEVEL ?? 'warn',
     ...bffFallbackEnv(readRootEnv()),
-  })
+  }
+  const startBff = () => start('BFF', process.execPath, [bffEntry], bffEnv)
+  let bff = startBff()
+
+  // The mock keeps its stores in BFF memory: a new BFF process starts it empty
+  const resetMock = async () => {
+    const old = bff
+    restarting.add(old)
+    const exited = new Promise((resolve) => old.once('exit', resolve))
+    old.kill('SIGTERM')
+    await exited
+    bff = startBff()
+    await waitFor('BFF', `http://127.0.0.1:${BFF_PORT}/bff/csrf/token`)
+  }
 
   const proxy = createFaultProxy(
     { host: '127.0.0.1', port: BFF_PORT },
-    () => ready
+    { isReady: () => ready, resetMock }
   )
-  await new Promise<void>((resolve) => proxy.listen(FAULT_PROXY_PORT, resolve))
+  // A taken port rejects into main().catch, which stops the BFF again
+  await new Promise<void>((resolve, reject) => {
+    proxy.once('error', reject)
+    proxy.listen(FAULT_PROXY_PORT, resolve)
+  })
 
   // The same start:e2e as the platform storefront; these values win over .env.e2e
   start(
@@ -163,7 +189,11 @@ async function main() {
   })
 
   ready = true
-  console.log(formatIntegrationReport(integrations))
+  console.log(
+    formatCapabilitiesReport(
+      await fetchCapabilities(PROXY_BFF_URL, integrations.dataSource)
+    )
+  )
   console.log(
     `[e2e] Stack ready: storefront ${STOREFRONT_ORIGIN}, BFF ${PROXY_BFF_URL}`
   )

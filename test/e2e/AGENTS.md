@@ -159,15 +159,17 @@ Two suites live here:
 
 Journey shared code lives in `journeys/support/`. Specs import from it and define nothing of their own.
 
-| File          | Holds                                                                                                           |
-| ------------- | --------------------------------------------------------------------------------------------------------------- |
-| `fixtures.ts` | `test`, `signedInTest`, `expect`; the `faults` and `account` fixtures; the mock-only and outside-request guards |
-| `pages.ts`    | Named locators grouped by page area (`layout`, `productList`, …) and page steps such as `openRoute()`           |
-| `i18n.ts`     | `t()` / `tPattern()` over `core/i18n`, `LOCALE` (from `E2E_LOCALE`), `localePath()`                             |
-| `test-data/`  | One file per integration (`mock.ts`, `commercetools.ts`), plus `ROUTES` and `uniqueEmail()`                     |
-| `bff-api.ts`  | BFF calls for setting up state a test does not walk through itself (CSRF, data source, language)                |
-| `faults.ts`   | The fault proxy's control: `fail()`, `hang()`, `delay()`, `list()`, `reset()`                                   |
-| `cookies.ts`  | The cookies every context starts with (consent, demo notice, data source)                                       |
+| File          | Holds                                                                                                                                  |
+| ------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `fixtures.ts` | `test`, `signedInTest`, `freshAccountTest`, `expect`; the `faults` and `account` fixtures; the tag, outside-request and cleanup guards |
+| `pages.ts`    | Named locators grouped by page area (`layout`, `productList`, …) and page steps such as `openRoute()`                                  |
+| `i18n.ts`     | `t()` / `tPattern()` over `core/i18n`, `LOCALE` (from `E2E_LOCALE`), `localePath()`                                                    |
+| `test-data/`  | One file per integration (`mock.ts`, `commercetools.ts`), plus `ROUTES` and `uniqueEmail()`                                            |
+| `checkout.ts` | `prepareCheckout()`: a cart with a product and every checkout step filled through the BFF                                              |
+| `run.ts`      | The run id and the log of what the run created, for its cleanup report                                                                 |
+| `bff-api.ts`  | BFF calls for setting up state a test does not walk through itself (CSRF, data source, language)                                       |
+| `faults.ts`   | The fault proxy's control: `fail()`, `hang()`, `delay()`, `list()`, `reset()`                                                          |
+| `cookies.ts`  | The cookies every context starts with (consent, demo notice, data source)                                                              |
 
 Platform shared code is `helpers/`, `fixtures.ts` and `mock-bff/fixtures.ts`.
 
@@ -194,9 +196,11 @@ The storefront runs in English and German, so a selector never contains English 
 - Every test runs in a fresh browser context: a new guest session with an empty cart and wishlist.
 - The consent banner and the demo notice are answered through the context's cookies, and the
   data-source cookie selects the run's integration; no test opens or closes them.
-- `signedInTest` starts signed in as an account only its worker uses (registered and confirmed through
-  the BFF once per worker, then reused as a saved `storageState`), with the customer's cart emptied
-  before each test.
+- `signedInTest` signs in per test as an account only its worker uses (registered and confirmed
+  through the BFF once per worker), with the customer's cart emptied before each test. A test that
+  signs out ends only its own session.
+- A test that changes the password or e-mail, or otherwise ends the account's access, uses
+  `freshAccountTest`: an account of its own, so the worker's later tests can still sign in.
 - A test builds any other state itself, through page steps or `bff-api.ts`.
 
 ### Test data
@@ -204,11 +208,13 @@ The storefront runs in English and German, so a selector never contains English 
 - `journeys/support/test-data/` is the one place for routes, categories, search terms, CMS pages and
   addresses, one file per integration. Specs find products and orders through the storefront, never
   through ids only the mock knows.
-- Credentials come only from the root `.env` or CI variables. Worker accounts and shopper e-mail
-  addresses are created fresh per run with `uniqueEmail()`.
-- On the mock, everything a test creates lives in the BFF's memory and is gone with the stack. On
-  another integration, accounts and orders are created in that project; never point a run that
-  submits orders at production.
+- Credentials come only from the root `.env` or CI variables.
+- Everything a test creates carries the run id and worker: e-mail addresses come from
+  `uniqueEmail()` (`e2e+<run id>-w<worker>-<label>-<n>@example.com`), never written by hand.
+- On the mock, global setup resets the stores before every run. On another integration, the
+  `runDataCleanup` fixture empties each test's cart and wishlist, and global teardown lists what it
+  could not delete (accounts: the BFF cannot delete a customer). Never point a run that submits
+  orders at production.
 
 ### Tags, projects and waits
 
@@ -217,8 +223,10 @@ The storefront runs in English and German, so a selector never contains English 
 - **Areas:** `@smoke`, and per journey area (`@cart`, `@checkout`, …) on the describe.
 - **`@mock-only`:** a step only the mock can serve (a reset-token inbox, a declined payment). On
   another integration the test is skipped with the reason, so the report lists it as not run.
+- **`@local-only`:** a step that needs an outside test system (Mollie test mode, a commercetools
+  project with standalone variants). CI skips it with the reason, so the report lists it as not run.
 - **Fault cases** live in `*.fault.spec.ts` and use the `faults` fixture; they run in the `faults`
-  project, alone, after the others.
+  project, in the second pass of `npm run e2e`, alone.
 - **Timeouts** come from `playwright.config.ts`. **Fixed waits:** none in the journey suite.
 - **Known defects:** `test.fail(true, '<reason>')` plus an `issue` annotation once the defect has a URL.
 

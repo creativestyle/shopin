@@ -10,15 +10,16 @@ export { MockSessionService } from './session/mock-session.service'
 export {
   MockAnonymousSessionService,
   MockLoginService,
+  MockLogoutService,
   MockRegisterService,
   MockRefreshTokenService,
   MockGenerateEmailTokenService,
   MockConfirmEmailService,
   MockForgotPasswordService,
   MockResetPasswordService,
-} from './auth/mock-auth.services'
+} from './services/auth'
 export { PageService } from './services/page.service'
 export { LayoutService } from './services/layout.service'
 export * from './generators'
 export * from './interfaces'
-export type { MockAuthServiceProvider } from './auth/mock-auth.services'
+export type { MockAuthServiceProvider } from './mock-auth-service-provider'

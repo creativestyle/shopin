@@ -39,6 +39,10 @@ export const productPage = {
     page.getByRole('complementary').filter({
       has: page.getByRole('button', { name: t('product.buyBox.addToBasket') }),
     }),
+  addToBasket: (page: Page) =>
+    productPage
+      .buyBox(page)
+      .getByRole('button', { name: t('product.buyBox.addToBasket') }),
 }
 
 export const searchPage = {
@@ -81,6 +85,27 @@ export const accountPages = {
     }),
 }
 
+export const checkoutPages = {
+  /** The active step, a region named after the step. */
+  activeStep: (page: Page, step: string) =>
+    page.getByRole('region', { name: t(`checkout.steps.${step}.title`) }),
+  paymentCallbackHeading: (page: Page) =>
+    h1(page, t('checkout.paymentProcessing')),
+}
+
+export const orderDetailPage = {
+  heading: (page: Page) => h1(page, t('account.myAccount.orderDetailLabel')),
+}
+
+export const authSubpages = {
+  resetPasswordTokenRequired: (page: Page) =>
+    page.getByText(t('account.resetPassword.errors.tokenRequired')),
+  forgotPasswordSuccess: (page: Page) =>
+    page.getByText(t('account.forgotPassword.successTitle')),
+  verifyEmailTokenRequired: (page: Page) =>
+    page.getByText(t('account.registrationSuccess.errors.tokenRequired')),
+}
+
 // The demo payment provider page is not translated
 export const mockedPaymentPage = {
   payNow: (page: Page) => page.getByRole('button', { name: 'Pay Now' }),
@@ -90,11 +115,20 @@ export const mockedPaymentPage = {
 export const atPath = (path: string) =>
   new RegExp(`${escapeRegExp(path)}(\\?.*)?$`)
 
-/** Opens a route and checks the storefront answered it, rather than a 404 or an error page. */
-export async function openRoute(page: Page, path: string) {
+/**
+ * Opens a route and checks the storefront answered it, rather than a 404 or an
+ * error page. A page without a level-1 heading passes `{ heading: false }`.
+ */
+export async function openRoute(
+  page: Page,
+  path: string,
+  { heading = true }: { heading?: boolean } = {}
+) {
   const response = await page.goto(path)
   expect(response?.status(), `status of ${path}`).toBeLessThan(400)
-  await expect(layout.pageHeadings(page)).not.toHaveCount(0)
+  if (heading) {
+    await expect(layout.pageHeadings(page)).not.toHaveCount(0)
+  }
 }
 
 /** Opens the test-data category and returns the URL of a product it lists. */

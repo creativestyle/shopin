@@ -18,7 +18,7 @@ import type {
 } from '@core/contracts/order/order'
 import { cartOwnerStore, cartStore } from './cart.service'
 import { MockSessionService } from '../session/mock-session.service'
-import { getSessionCustomerId } from '../session/mock-session-store'
+import { customerOwner, guestOwner } from '../session/mock-session-store'
 
 // Orders are looked up by their unguessable id
 export const orderStore = new Map<string, OrderResponse>()
@@ -30,11 +30,11 @@ export const orderedCartStore = new Map<string, string>()
 /** At sign-in, the guest's orders join the customer's history, as in commercetools. */
 export function moveGuestOrdersToCustomer(
   guestSessionId: string,
-  customerSessionId: string
+  customerId: string
 ) {
-  for (const [orderId, sessionId] of orderOwnerStore) {
-    if (sessionId === guestSessionId) {
-      orderOwnerStore.set(orderId, customerSessionId)
+  for (const [orderId, owner] of orderOwnerStore) {
+    if (owner === guestOwner(guestSessionId)) {
+      orderOwnerStore.set(orderId, customerOwner(customerId))
     }
   }
 }
@@ -85,9 +85,9 @@ export class OrderService {
       email: cart.billingAddress?.email || cart.shippingAddress?.email,
     })
 
-    const ownerSessionId = cartOwnerStore.get(request.cartId)
-    if (ownerSessionId) {
-      orderOwnerStore.set(order.id, ownerSessionId)
+    const owner = cartOwnerStore.get(request.cartId)
+    if (owner) {
+      orderOwnerStore.set(order.id, owner)
     }
     cartOwnerStore.delete(request.cartId)
     cartStore.delete(request.cartId)
@@ -114,7 +114,7 @@ export class OrderService {
       ? [...orderStore.values()]
           .filter(
             (order) =>
-              getSessionCustomerId(orderOwnerStore.get(order.id)) === customerId
+              orderOwnerStore.get(order.id) === customerOwner(customerId)
           )
           .reverse()
       : []

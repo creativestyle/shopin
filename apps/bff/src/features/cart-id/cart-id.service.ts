@@ -139,15 +139,24 @@ export class CartIdService {
    * Used when user logs out or session expires
    */
   async deleteAllCartIds(): Promise<void> {
-    const allCookieNames = this.cookieService.getAllCookieNames()
     // Only this data source's carts: each data source keeps its own session
-    const cartKeys = allCookieNames.filter(
-      (key) =>
-        (key.startsWith(CART_ID_COOKIE_PREFIX_GUEST) ||
-          key.startsWith(CART_ID_COOKIE_PREFIX_LOGGED)) &&
-        this.cartKeyService.isOwnCartKey(key)
-    )
+    this.clearCartCookies((key) => this.cartKeyService.isOwnCartKey(key))
+  }
 
+  /** Sign-out: drops the cart cookies of every data source. */
+  async deleteCartIdsOfAllDataSources(): Promise<void> {
+    this.clearCartCookies(() => true)
+  }
+
+  private clearCartCookies(include: (key: string) => boolean): void {
+    const cartKeys = this.cookieService
+      .getAllCookieNames()
+      .filter(
+        (key) =>
+          (key.startsWith(CART_ID_COOKIE_PREFIX_GUEST) ||
+            key.startsWith(CART_ID_COOKIE_PREFIX_LOGGED)) &&
+          include(key)
+      )
     for (const key of cartKeys) {
       this.cookieService.clearCookie(key)
     }

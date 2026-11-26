@@ -6,12 +6,14 @@ import {
   MockForgotPasswordService,
   MockGenerateEmailTokenService,
   MockLoginService,
+  MockLogoutService,
   MockRefreshTokenService,
   MockRegisterService,
   MockResetPasswordService,
   MockSessionService,
   OrderService,
 } from '..'
+import { hashPassword, verifyPassword } from '../session/mock-session-store'
 
 const PASSWORD = 'Secret123!'
 
@@ -32,6 +34,7 @@ function createServices() {
     emailToken: new MockGenerateEmailTokenService(),
     confirm: new MockConfirmEmailService(),
     login: new MockLoginService(sessions),
+    logout: new MockLogoutService(),
     refresh: new MockRefreshTokenService(),
     forgot: new MockForgotPasswordService(),
     reset: new MockResetPasswordService(),
@@ -299,5 +302,49 @@ describe('mock customer, cart and order ownership', () => {
     await expect(services.customer.getCurrentCustomer()).rejects.toMatchObject({
       status: 401,
     })
+  })
+
+  it('ends the whole session at sign-out', async () => {
+    const services = createServices()
+    const email = uniqueEmail()
+    await registerVerified(services, email)
+    const signedIn = await services.login.login({ email, password: PASSWORD })
+    services.useToken(signedIn.accessToken)
+
+    await services.logout.logout(signedIn)
+
+    await expect(services.customer.getCurrentCustomer()).rejects.toMatchObject({
+      status: 401,
+    })
+    await expect(
+      services.refresh.refreshToken({ refreshToken: signedIn.refreshToken })
+    ).rejects.toMatchObject({ status: 401 })
+  })
+
+  it('keeps the order history after the session that placed it ends', async () => {
+    const services = createServices()
+    const email = uniqueEmail()
+    await registerVerified(services, email)
+    const first = await services.login.login({ email, password: PASSWORD })
+    services.useToken(first.accessToken)
+    const cart = await services.cart.createCart()
+    const order = await services.order.createOrder({ cartId: cart.id })
+    await services.logout.logout(first)
+
+    const second = await services.login.login({ email, password: PASSWORD })
+    services.useToken(second.accessToken)
+
+    const history = await services.order.getOrders()
+    expect(history.orders.map(({ id }) => id)).toEqual([order.id])
+  })
+})
+
+describe('mock password hashing', () => {
+  it('salts every hash and verifies only the right password', () => {
+    const first = hashPassword(PASSWORD)
+
+    expect(hashPassword(PASSWORD)).not.toBe(first)
+    expect(verifyPassword(first, PASSWORD)).toBe(true)
+    expect(verifyPassword(first, 'wrong')).toBe(false)
   })
 })

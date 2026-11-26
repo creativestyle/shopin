@@ -78,34 +78,32 @@ export class NavigationController {
 
 **Example – DataSourceFactory (simplified):**
 
-The factory builds a map from data source name to a service provider and selects the provider using the current `DATA_SOURCE` (from request header or default). Then it merges in fixed sources (customer/order from Commercetools, payment from mock):
+The factory maps each data source to an entry that says where its services, customers and auth come from, and which integration serves each category. It picks the entry for the current `DATA_SOURCE` (from request header or default); payment always comes from the mock. `GET /bff/capabilities` returns the entry's integrations.
 
 ```typescript
-// In constructor: map each data source to its provider
-// commercetools-set: Commercetools catalog + Contentful page/layout when ContentfulApiModule is imported; otherwise mock page/layout
-this.serviceProviderMap = new Map<DataSource, DataSourceServiceProvider>([
-  ['commercetools-set', commercetoolsWithCMS],
-  ['mock-set', this.mockServiceProvider],
+// In constructor: one entry per data source; no data source name is checked outside the map
+this.dataSourceMap = new Map<DataSource, DataSourceEntry>([
+  ['commercetools-set', commercetoolsEntry(commercetoolsWithCMS, 'commercetools')],
+  [
+    'mock-set',
+    {
+      services: this.mockServiceProvider,
+      customers: this.mockServiceProvider,
+      auth: this.mockAuthServiceProvider,
+      integrations: () => ({ commerce: 'mock', search: 'mock', cms: 'mock', customer: 'mock', auth: 'mock', payment: 'mock' }),
+    },
+  ],
 ])
 
-// getServices(): resolve provider by current data source, then merge fixed services
 getServices(): AllServices {
-  const serviceProvider = this.serviceProviderMap.get(this.dataSource)
-  if (!serviceProvider) {
-    throw new Error(`Unknown data source: ${this.dataSource}. Allowed values: ${ALLOWED_DATA_SOURCES.join(', ')}`)
-  }
-  const baseServices = serviceProvider.getServices()
-  const { customerService, customerAddressService, orderService } =
-    this.commercetoolsServiceProvider.getServices()
+  const entry = this.getEntry() // throws for an unknown data source
+  const { customerService, customerAddressService } = entry.customers.getServices()
   const { paymentService } = this.mockServiceProvider.getServices()
-  return {
-    ...baseServices,
-    customerService,
-    customerAddressService,
-    cartPaymentService: baseServices.cartPaymentService,
-    paymentService,
-    orderService,
-  }
+  return { ...entry.services.getServices(), customerService, customerAddressService, paymentService }
+}
+
+getAuthServices(): AllAuthServices {
+  return this.getEntry().auth.getAuthServices()
 }
 ```
 

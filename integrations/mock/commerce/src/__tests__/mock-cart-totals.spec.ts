@@ -4,7 +4,7 @@ function createService() {
   return new CartService(
     { getCurrentLanguage: () => 'en-US' } as never,
     { setContext: jest.fn(), warn: jest.fn() } as never,
-    { getSessionId: async () => undefined } as never
+    { getOwner: async () => undefined } as never
   )
 }
 

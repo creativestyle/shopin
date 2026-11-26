@@ -51,4 +51,17 @@ describe('TokenStorageService cookie names', () => {
       ).toEqual(['access_token', 'refresh_token'])
     }
   )
+
+  it('clears the token cookies of every data source on sign-out', () => {
+    const { service, cookieService } = createService('mock-set')
+
+    service.clearAllTokens()
+
+    expect(cookieService.clearCookie.mock.calls.map(([name]) => name)).toEqual([
+      'access_token',
+      'access_token-mock',
+      'refresh_token',
+      'refresh_token-mock',
+    ])
+  })
 })

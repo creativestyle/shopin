@@ -3,53 +3,38 @@
  *
  * Chosen with `npm run e2e -- commerce=commercetools search=algolia` (or the
  * E2E_COMMERCE / E2E_SEARCH / E2E_CMS env vars); every category is mock by default.
- * Today the BFF offers fixed data sources, so a choice maps to one of them.
+ * Today the BFF offers fixed data sources, so a choice maps to one of them. What
+ * actually served each category comes from the BFF: `GET /bff/capabilities`.
  */
+
+import type { DataSource } from '@config/constants'
 
 export const CATEGORIES = ['commerce', 'search', 'cms'] as const
 export type Category = (typeof CATEGORIES)[number]
 
-export type DataSource =
-  | 'mock-set'
-  | 'commercetools-set'
-  | 'commercetools-algolia-set'
-
-interface IntegrationSet {
-  dataSource: DataSource
-  serves: Record<Category, string>
-  /** Categories always served the same way, whatever the set. */
-  fixed: Record<string, string>
+// A Record, so a data source added to or removed from @config/constants fails check-types
+const SERVES: Record<DataSource, Record<Category, string>> = {
+  'mock-set': { commerce: 'mock', search: 'mock', cms: 'mock' },
+  'commercetools-set': {
+    commerce: 'commercetools',
+    search: 'commercetools',
+    cms: 'contentful',
+  },
+  'commercetools-algolia-set': {
+    commerce: 'commercetools',
+    search: 'algolia',
+    cms: 'contentful',
+  },
 }
 
-const SETS: IntegrationSet[] = [
-  {
-    dataSource: 'mock-set',
-    serves: { commerce: 'mock', search: 'mock', cms: 'mock' },
-    fixed: { auth: 'mock', customer: 'mock', payment: 'mock' },
-  },
-  {
-    dataSource: 'commercetools-set',
-    serves: {
-      commerce: 'commercetools',
-      search: 'commercetools',
-      cms: 'contentful',
-    },
-    fixed: {
-      auth: 'commercetools',
-      customer: 'commercetools',
-      payment: 'mock',
-    },
-  },
-  {
-    dataSource: 'commercetools-algolia-set',
-    serves: { commerce: 'commercetools', search: 'algolia', cms: 'contentful' },
-    fixed: {
-      auth: 'commercetools',
-      customer: 'commercetools',
-      payment: 'mock',
-    },
-  },
-]
+export interface IntegrationSet {
+  dataSource: DataSource
+  serves: Record<Category, string>
+}
+
+const SETS: IntegrationSet[] = Object.entries(SERVES).map(
+  ([dataSource, serves]) => ({ dataSource: dataSource as DataSource, serves })
+)
 
 const envName = (category: Category) => `E2E_${category.toUpperCase()}`
 
@@ -109,11 +94,29 @@ export function resolveIntegrations(
 
 export const isMockRun = (set: IntegrationSet) => set.dataSource === 'mock-set'
 
-export function formatIntegrationReport(set: IntegrationSet) {
-  const rows = { ...set.serves, ...set.fixed }
+interface Capabilities {
+  dataSource: string
+  integrations: Record<string, string>
+}
+
+/** What the BFF reports serving each category for the data source. */
+export async function fetchCapabilities(
+  bffUrl: string,
+  dataSource: DataSource
+): Promise<Capabilities> {
+  const res = await fetch(`${bffUrl}/capabilities`, {
+    headers: { 'x-data-source': dataSource },
+  })
+  if (!res.ok) {
+    throw new Error(`[e2e] GET ${bffUrl}/capabilities: ${res.status}`)
+  }
+  return (await res.json()) as Capabilities
+}
+
+export function formatCapabilitiesReport(capabilities: Capabilities) {
   return [
-    `[e2e] Data source: ${set.dataSource}`,
-    ...Object.entries(rows).map(
+    `[e2e] Data source: ${capabilities.dataSource} (from /bff/capabilities)`,
+    ...Object.entries(capabilities.integrations).map(
       ([category, integration]) =>
         `[e2e]   ${category.padEnd(9)} ${integration}`
     ),
