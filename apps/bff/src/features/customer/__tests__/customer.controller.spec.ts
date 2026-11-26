@@ -1,14 +1,20 @@
+import { HttpException, HttpStatus } from '@nestjs/common'
 import {
-  EmailInUseException,
-  EmailUnchangedException,
-  InvalidCurrentPasswordException,
-} from '@integrations/commercetools-api'
+  EMAIL_IN_USE_CODE,
+  EMAIL_UNCHANGED_CODE,
+  INVALID_CURRENT_PASSWORD_CODE,
+} from '@core/contracts/customer/customer'
 import { GUARDS_METADATA } from '@nestjs/common/constants'
 import { CsrfGuard } from '../../csrf/csrf.guard'
 import type { Request } from 'express'
 import { CustomerController } from '../customer.controller'
 
 const REQUEST = { currentPassword: 'old-password', newPassword: 'newpass123' }
+
+/** What any integration throws for a customer failure: an HttpException carrying the contract's code. */
+function contractError(status: HttpStatus, code: string): HttpException {
+  return new HttpException({ statusCode: status, code }, status)
+}
 
 function createController(
   changeCustomerPassword: jest.Mock,
@@ -46,7 +52,7 @@ describe('CustomerController.changeCustomerPassword', () => {
   it.each([
     [
       'a wrong current password',
-      new InvalidCurrentPasswordException(),
+      contractError(HttpStatus.BAD_REQUEST, INVALID_CURRENT_PASSWORD_CODE),
       'invalid_credentials',
     ],
     ['any other failure', new Error('boom'), 'error'],
@@ -107,11 +113,19 @@ describe('CustomerController.changeCustomerEmail', () => {
   it.each([
     [
       'a wrong current password',
-      new InvalidCurrentPasswordException(),
+      contractError(HttpStatus.BAD_REQUEST, INVALID_CURRENT_PASSWORD_CODE),
       'invalid_credentials',
     ],
-    ['a taken email', new EmailInUseException(), 'user_exists'],
-    ['an unchanged email', new EmailUnchangedException(), 'validation_failed'],
+    [
+      'a taken email',
+      contractError(HttpStatus.CONFLICT, EMAIL_IN_USE_CODE),
+      'user_exists',
+    ],
+    [
+      'an unchanged email',
+      contractError(HttpStatus.BAD_REQUEST, EMAIL_UNCHANGED_CODE),
+      'validation_failed',
+    ],
     ['any other failure', new Error('boom'), 'error'],
   ])('logs %s with reason %s', async (_, error, reason) => {
     const { controller, authLogger } = createController(

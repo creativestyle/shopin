@@ -19,7 +19,10 @@ import path from 'node:path'
 import { parseEnv } from 'node:util'
 import { BFF_PORT, FAULT_PROXY_PORT, JOURNEY_APP_PORT } from '../config'
 import { createFaultProxy } from '../fault-proxy/server'
-import { formatIntegrationReport, resolveIntegrations } from './integrations'
+import {
+  formatIntegrationReport,
+  resolveIntegrations,
+} from './integration-choice'
 
 const rootDir = path.resolve(__dirname, '../../..')
 const bffEntry = path.join(rootDir, 'apps/bff/dist/main.js')

@@ -13,7 +13,7 @@
 
 import { test as base, expect, type Browser } from '@playwright/test'
 import { BFF_URL, STOREFRONT_URL, USES_EXTERNAL_STACK } from '../../config'
-import { isMockRun, resolveIntegrations } from '../../stack/integrations'
+import { isMockRun, resolveIntegrations } from '../../stack/integration-choice'
 import { bffApi, emptyCart } from './bff-api'
 import { journeyStorageState } from './cookies'
 import { faultProxy, type FaultProxy } from './faults'

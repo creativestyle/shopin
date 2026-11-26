@@ -8,7 +8,10 @@
 
 import { getFakeCmsServer } from './fake-cms/server'
 import { FAKE_CMS_PORT, APP_PORT } from './config'
-import { formatIntegrationReport, resolveIntegrations } from './stack/integrations'
+import {
+  formatIntegrationReport,
+  resolveIntegrations,
+} from './stack/integration-choice'
 
 export default async function globalSetup() {
   // Which integration serves each category in this run
@@ -21,7 +24,9 @@ export default async function globalSetup() {
   const revalidateUrl = `http://127.0.0.1:${APP_PORT}/api/e2e/revalidate`
   const res = await fetch(revalidateUrl)
   if (!res.ok) {
-    throw new Error(`[e2e] Cache revalidation failed: ${res.status} ${await res.text()}`)
+    throw new Error(
+      `[e2e] Cache revalidation failed: ${res.status} ${await res.text()}`
+    )
   }
   console.log('[e2e] In-memory BFF Data Cache revalidated')
 

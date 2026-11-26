@@ -80,7 +80,7 @@ Fault specs need the local proxy and are skipped there.
 | Test data per integration                              | `journeys/support/test-data/` (`mock.ts`, `commercetools.ts`), plus `ROUTES` and `uniqueEmail()`     |
 | BFF calls for test setup                               | `journeys/support/bff-api.ts`                                                                        |
 | Fault proxy and its control                            | `fault-proxy/server.ts`, `journeys/support/faults.ts`                                                |
-| Stack and integration choice                           | `stack/start-stack.ts`, `stack/integrations.ts`                                                      |
+| Stack and integration choice                           | `stack/start-stack.ts`, `stack/integration-choice.ts`                                                |
 | Platform helpers and mock BFF fixtures                 | `helpers/`, `fixtures.ts`, `mock-bff/`                                                               |
 | CI job summary reporter                                | `reporters/ci-summary.ts`                                                                            |
 

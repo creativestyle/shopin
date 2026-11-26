@@ -4,7 +4,7 @@
  * (a category with products, a search term, a CMS page, an address).
  */
 
-import { resolveIntegrations } from '../../../stack/integrations'
+import { resolveIntegrations } from '../../../stack/integration-choice'
 import { LOCALE, localePath } from '../i18n'
 import { MOCK_DATA } from './mock'
 import { COMMERCETOOLS_DATA } from './commercetools'

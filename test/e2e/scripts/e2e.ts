@@ -11,7 +11,7 @@ import {
   integrationEnv,
   resolveIntegrations,
   splitIntegrationArgs,
-} from '../stack/integrations'
+} from '../stack/integration-choice'
 
 const { choices, rest } = splitIntegrationArgs(process.argv.slice(2))
 const env = { ...process.env, ...integrationEnv(choices) }

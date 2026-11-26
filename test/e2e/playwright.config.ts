@@ -9,7 +9,7 @@ import {
   USES_EXTERNAL_STACK,
 } from './config'
 import { journeyStorageState } from './journeys/support/cookies'
-import { resolveIntegrations } from './stack/integrations'
+import { resolveIntegrations } from './stack/integration-choice'
 
 const appDir = path.resolve(__dirname, '../../apps/presentation')
 const e2eDir = path.resolve(__dirname)
