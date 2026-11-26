@@ -81,7 +81,7 @@ function createMainNavigation(
                   .slugify(faker.commerce.productName())
                   .toLocaleLowerCase()}-${globalCounter++}`,
                 image: {
-                  src: 'https://placehold.co/400x400/f3f4f6/6b7280?text=Image',
+                  src: '/images/product-image.png',
                   alt: faker.commerce.productName(),
                 },
                 price: {

@@ -21,6 +21,7 @@ import { OrderModule } from './features/order/order.module'
 import { StorageModule } from './common/storage/storage.module'
 import { TokenManagementModule } from './common/token-management/token-management.module'
 import { StoreConfigModule } from './features/store-config/store-config.module'
+import { CapabilitiesModule } from './features/capabilities/capabilities.module'
 import { WishlistModule } from './features/wishlist/wishlist.module'
 import { createThrottlerOptions } from './common/throttler/throttler.config'
 import { OptionalThrottlerGuard } from './common/throttler/throttler'
@@ -57,6 +58,7 @@ import { ContentModule } from './features/content/content.module'
     PaymentModule,
     OrderModule,
     StoreConfigModule,
+    CapabilitiesModule,
     WishlistModule,
     ContentModule,
   ],

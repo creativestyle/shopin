@@ -14,17 +14,53 @@ import type {
   GetOrdersRequest,
   OrderResponse,
   OrdersResponse,
+  OrderSummaryResponse,
 } from '@core/contracts/order/order'
-import { cartStore } from './cart.service'
+import { cartOwnerStore, cartStore } from './cart.service'
+import { MockSessionService } from '../session/mock-session.service'
+import { customerOwner, guestOwner } from '../session/mock-session-store'
 
-// Orders are looked up by their unguessable id; mock has no customer-bound history
+// Orders are looked up by their unguessable id
 export const orderStore = new Map<string, OrderResponse>()
+// Order id -> mock session that placed it, for the customer's order history
+export const orderOwnerStore = new Map<string, string>()
 // Cart id -> order id, so a repeated order answers 409 like commercetools
 export const orderedCartStore = new Map<string, string>()
 
+/** At sign-in, the guest's orders join the customer's history, as in commercetools. */
+export function moveGuestOrdersToCustomer(
+  guestSessionId: string,
+  customerId: string
+) {
+  for (const [orderId, owner] of orderOwnerStore) {
+    if (owner === guestOwner(guestSessionId)) {
+      orderOwnerStore.set(orderId, customerOwner(customerId))
+    }
+  }
+}
+
+function toOrderSummary(order: OrderResponse): OrderSummaryResponse {
+  return {
+    id: order.id,
+    orderNumber: order.orderNumber,
+    createdAt: order.createdAt,
+    orderState: order.orderState,
+    grandTotal: order.grandTotal,
+    currency: order.currency,
+    itemCount: order.itemCount,
+    deliveryTime: order.shippingInfo?.deliveryTime,
+    lineItemImages: order.lineItems.flatMap((item) =>
+      item.imageUrl ? [{ url: item.imageUrl, alt: item.name }] : []
+    ),
+  }
+}
+
 @Injectable()
 export class OrderService {
-  constructor(private readonly logger: PinoLogger) {
+  constructor(
+    private readonly logger: PinoLogger,
+    private readonly sessionService: MockSessionService
+  ) {
     this.logger.setContext(OrderService.name)
   }
 
@@ -45,8 +81,15 @@ export class OrderService {
       orderNumber: String(Date.now()),
       createdAt: new Date().toISOString(),
       orderState: 'Open',
+      // Same source as the commercetools order mapper
+      email: cart.billingAddress?.email || cart.shippingAddress?.email,
     })
 
+    const owner = cartOwnerStore.get(request.cartId)
+    if (owner) {
+      orderOwnerStore.set(order.id, owner)
+    }
+    cartOwnerStore.delete(request.cartId)
     cartStore.delete(request.cartId)
     orderStore.set(order.id, order)
     orderedCartStore.set(request.cartId, order.id)
@@ -64,11 +107,23 @@ export class OrderService {
   }
 
   async getOrders(request?: GetOrdersRequest): Promise<OrdersResponse> {
+    const offset = request?.offset ?? 0
+    const limit = request?.limit ?? DEFAULT_ORDER_PAGE_SIZE
+    const customerId = await this.sessionService.getCustomerId()
+    const orders = customerId
+      ? [...orderStore.values()]
+          .filter(
+            (order) =>
+              orderOwnerStore.get(order.id) === customerOwner(customerId)
+          )
+          .reverse()
+      : []
+
     return {
-      orders: [],
-      total: 0,
-      offset: request?.offset ?? 0,
-      limit: request?.limit ?? DEFAULT_ORDER_PAGE_SIZE,
+      orders: orders.slice(offset, offset + limit).map(toOrderSummary),
+      total: orders.length,
+      offset,
+      limit,
     }
   }
 }

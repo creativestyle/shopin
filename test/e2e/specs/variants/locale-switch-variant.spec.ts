@@ -94,7 +94,7 @@ test.describe('Locale switch on alt-data-source page resolves correct catalog', 
       // what the data-source cookie selects).
       expect(page.url()).toMatch(/\/de\/p\/de-probe-locale-switch/)
       await expect(page.locator('html')).toHaveAttribute('lang', /^de/)
-      await expect(page.getByText(/de-probe-locale-switch/)).toBeVisible()
+      await expect(page.getByRole('main').getByText(/de-probe-locale-switch/)).toBeVisible()
     })
   }
 )

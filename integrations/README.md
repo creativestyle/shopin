@@ -4,16 +4,16 @@ Integration packages, one per vendor and category (`integrations/<vendor>/<categ
 
 ## Overview
 
-| Vendor        | Category | Package                                                | Role                                                                                                                                                                                       |
-| ------------- | -------- | ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| commercetools | commerce | [**commercetools/commerce**](./commercetools/commerce) | Product catalog, cart, checkout, navigation, customer, and order services via [Commercetools](https://commercetools.com/)                                                                  |
-| commercetools | auth     | [**commercetools/auth**](./commercetools/auth)         | Customer auth (login, registration, password reset, sessions) via Commercetools                                                                                                            |
-| commercetools | —        | [**commercetools/core**](./commercetools/core)         | What the commercetools parts share: the server-side client and error helpers                                                                                                               |
-| algolia       | search   | [**algolia/search**](./algolia/search)                 | Product search via [Algolia](https://www.algolia.com/)                                                                                                                                     |
-| contentful    | cms      | [**contentful/cms**](./contentful/cms)                 | CMS content: pages and layout (header/footer) via [Contentful](https://www.contentful.com/) GraphQL API                                                                                    |
-| contentful    | —        | [**contentful/migration**](./contentful/migration)     | Content model and demo content for Contentful (migrations / CMS-as-code)                                                                                                                   |
-| mock          | commerce | [**mock/commerce**](./mock/commerce)                   | Mock catalog, cart and navigation, and for now also the mock CMS pages and layout, mock search and the payment service every data source uses (split by category in the next pull request) |
-| mock          | psp      | [**mock/psp**](./mock/psp)                             | The demo payment page the mock payment redirects to                                                                                                                                        |
+| Vendor        | Category | Package                                                | Role                                                                                                                                                                                                                         |
+| ------------- | -------- | ------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| commercetools | commerce | [**commercetools/commerce**](./commercetools/commerce) | Product catalog, cart, checkout, navigation, customer, and order services via [Commercetools](https://commercetools.com/)                                                                                                    |
+| commercetools | auth     | [**commercetools/auth**](./commercetools/auth)         | Customer auth (login, registration, password reset, sessions) via Commercetools                                                                                                                                              |
+| commercetools | —        | [**commercetools/core**](./commercetools/core)         | What the commercetools parts share: the server-side client and error helpers                                                                                                                                                 |
+| algolia       | search   | [**algolia/search**](./algolia/search)                 | Product search via [Algolia](https://www.algolia.com/)                                                                                                                                                                       |
+| contentful    | cms      | [**contentful/cms**](./contentful/cms)                 | CMS content: pages and layout (header/footer) via [Contentful](https://www.contentful.com/) GraphQL API                                                                                                                      |
+| contentful    | —        | [**contentful/migration**](./contentful/migration)     | Content model and demo content for Contentful (migrations / CMS-as-code)                                                                                                                                                     |
+| mock          | commerce | [**mock/commerce**](./mock/commerce)                   | Mock catalog, cart, navigation, customers and orders, and for now also the mock auth, the mock CMS pages and layout, mock search and the payment service every data source uses (split by category in the next pull request) |
+| mock          | psp      | [**mock/psp**](./mock/psp)                             | The demo payment page the mock payment redirects to                                                                                                                                                                          |
 
 Each package is named `@integrations/<vendor>-<category>` after its folders (for example `@integrations/commercetools-auth`). The integrations of one category: `ls -d integrations/*/search`.
 
@@ -34,7 +34,7 @@ One package can't be removed on its own yet: `mock/psp`. The storefront imports 
 ## How the BFF uses them
 
 - **Data source `commercetools-set`**: Catalog and navigation from Commercetools; pages/layout from Contentful (or mock if Contentful is disabled). Customer, address, and order from Commercetools; payment from mock.
-- **Data source `mock-set`**: Catalog, content, and navigation from the mock API; customer/order still from Commercetools; payment from mock.
+- **Data source `mock-set`**: Everything from the mock API, including auth, customer, address and order, so it needs no outside service; payment from mock.
 
 All integration modules are imported in the BFF’s [DataSourceModule](../apps/bff/src/data-source/data-source.module.ts). For routing details and a code example, see the [BFF README – How it works](../apps/bff/README.md#how-it-works).
 

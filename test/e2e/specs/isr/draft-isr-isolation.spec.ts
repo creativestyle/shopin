@@ -143,7 +143,7 @@ test.describe('Live BFF calls carry the correct variant header, not the draft he
       ).toBeUndefined()
     }
 
-    await expect(page.getByText(new RegExp(PROBE.liveProductHeader))).toBeVisible()
+    await expect(page.getByRole('main').getByText(new RegExp(PROBE.liveProductHeader))).toBeVisible()
   })
 })
 

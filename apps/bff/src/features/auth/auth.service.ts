@@ -83,11 +83,9 @@ export class AuthService {
     }
     await logoutService.logout(logoutRequest)
 
-    // Clear commercetools access and refresh token cookies
-    this.tokenStorageService.clearTokens()
-
-    // Delete all cart ID cookies
-    await this.cartIdService.deleteAllCartIds()
+    // Sign-out ends the session of every data source, not only the current one
+    this.tokenStorageService.clearAllTokens()
+    await this.cartIdService.deleteCartIdsOfAllDataSources()
 
     // Delete all wishlist ID cookies
     await this.wishlistIdService.deleteAllWishlistIds()

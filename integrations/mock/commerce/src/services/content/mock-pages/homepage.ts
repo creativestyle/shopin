@@ -101,7 +101,7 @@ function getHomepageComponents(
       type: 'image',
       title: 'New in',
       image: {
-        url: 'https://d187yychpee5t0.cloudfront.net/wysiwyg/teasers_2023/hero_1_1.png',
+        url: '/images/placeholder.svg',
         alt: 'New in',
         title: 'New in',
       },

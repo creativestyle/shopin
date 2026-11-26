@@ -31,6 +31,8 @@ import {
   createShopinPrice,
   createShopinLineItem,
 } from '../generators/shopin-cart'
+import { MockSessionService } from '../session/mock-session.service'
+import { customerOwner, guestOwner } from '../session/mock-session-store'
 
 // Mirrors the commercetools `deliveryTime` custom field; pickup methods have none
 const MOCK_DELIVERY_TIMES: Record<string, Record<string, string>> = {
@@ -41,6 +43,8 @@ const MOCK_DELIVERY_TIMES: Record<string, Record<string, string>> = {
 // Simple in-memory store for mock carts
 // Cart IDs are stored in cookies, so we just need to persist cart data by ID
 export const cartStore = new Map<string, CartResponse>()
+// Cart id -> owner: the customer once known, the guest session before
+export const cartOwnerStore = new Map<string, string>()
 
 /** Fixture codes covering each outcome. Anything unlisted is treated as invalid. */
 export const MOCK_DISCOUNT_CODES: Record<
@@ -53,11 +57,71 @@ export const MOCK_DISCOUNT_CODES: Record<
   NOTYET: { reason: 'notApplicable' },
 }
 
+const ownCartIds = (owner: string) =>
+  [...cartOwnerStore]
+    .filter(
+      ([cartId, cartOwner]) => cartStore.has(cartId) && cartOwner === owner
+    )
+    .map(([cartId]) => cartId)
+
+function mergeLineItems(target: CartResponse, source: CartResponse) {
+  let merged = target
+  for (const item of source.lineItems) {
+    const index = merged.lineItems.findIndex(
+      (existing) =>
+        existing.productId === item.productId &&
+        existing.variantId === item.variantId
+    )
+    const lineItems = [...merged.lineItems]
+    if (index === -1) {
+      lineItems.push(item)
+    } else {
+      lineItems[index] = {
+        ...lineItems[index],
+        quantity: lineItems[index].quantity + item.quantity,
+      }
+    }
+    merged = {
+      ...merged,
+      lineItems,
+      ...recalculateCartTotals(
+        merged,
+        item.price.regularPriceInCents * item.quantity,
+        item.quantity
+      ),
+    }
+  }
+  return merged
+}
+
+/**
+ * At sign-in, like commercetools' merge mode: the guest's line items join the
+ * customer's active cart, or the guest cart becomes theirs when they have none.
+ */
+export function moveGuestCartsToCustomer(
+  guestSessionId: string,
+  customerId: string
+) {
+  const customerCartId = ownCartIds(customerOwner(customerId)).at(-1)
+  for (const guestCartId of ownCartIds(guestOwner(guestSessionId))) {
+    const guestCart = cartStore.get(guestCartId)!
+    const customerCart = customerCartId && cartStore.get(customerCartId)
+    if (!customerCart || customerCart.currency !== guestCart.currency) {
+      cartOwnerStore.set(guestCartId, customerOwner(customerId))
+      continue
+    }
+    cartStore.set(customerCartId, mergeLineItems(customerCart, guestCart))
+    cartStore.delete(guestCartId)
+    cartOwnerStore.delete(guestCartId)
+  }
+}
+
 @Injectable()
 export class CartService {
   constructor(
     @Inject(LANGUAGE_TOKEN) private readonly languageProvider: LanguageProvider,
-    private readonly logger: PinoLogger
+    private readonly logger: PinoLogger,
+    private readonly sessionService: MockSessionService
   ) {
     this.logger.setContext(CartService.name)
   }
@@ -85,6 +149,10 @@ export class CartService {
       itemCount: 0,
     }
     cartStore.set(cartId, cart)
+    const owner = await this.sessionService.getOwner()
+    if (owner) {
+      cartOwnerStore.set(cartId, owner)
+    }
     return CartResponseSchema.parse(cart)
   }
 
@@ -225,8 +293,13 @@ export class CartService {
   }
 
   async getActiveCart(): Promise<CartResponse | null> {
-    // Mock carts have no owner, so never hand a shopper someone else's cart
-    return null
+    const customerId = await this.sessionService.getCustomerId()
+    if (!customerId) {
+      return null
+    }
+    // Newest cart the customer owns, as commercetools' activeCart
+    const activeCartId = ownCartIds(customerOwner(customerId)).at(-1)
+    return activeCartId ? this.getCart(activeCartId) : null
   }
 
   async setBillingAddress(

@@ -51,7 +51,18 @@
       "env": ["COMMERCETOOLS_*", "CONTENTFUL_*", "NEXT_*"]
     },
     "e2e": {
-      "cache": false
+      "cache": false,
+      "passThroughEnv": [
+        "CI",
+        "GITHUB_*",
+        "E2E_*",
+        "PLAYWRIGHT_*",
+        "DEBUG",
+        "LOG_LEVEL",
+        "COMMERCETOOLS_*",
+        "CONTENTFUL_*",
+        "ALGOLIA_*"
+      ]
     }
   },
   "concurrency": "20"

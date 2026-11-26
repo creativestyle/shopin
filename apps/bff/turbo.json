@@ -4,6 +4,7 @@
   "tasks": {
     "build": {
       "dependsOn": [
+        "^build",
         "@config/constants#build",
         "@core/i18n#build",
         "@integrations/mock-commerce#build",

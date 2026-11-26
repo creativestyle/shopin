@@ -1,12 +1,20 @@
 import type { ReactNode } from 'react'
+import { DM_Sans } from 'next/font/google'
+
+// Self-hosted at build time, like the main layout: no request to Google Fonts
+const dmSans = DM_Sans({
+  subsets: ['latin'],
+  variable: '--font-dm-sans',
+  display: 'swap',
+})
 
 /**
  * Minimal HTML shell used by root-level error boundaries (global-error.tsx,
  * not-found.tsx) that must render their own <html>/<body> because the root
  * layout.tsx is intentionally a bare fragment (<>{children}</>).
  *
- * Embeds DM Sans and brand styles directly — globals.css is not guaranteed to
- * be loaded when global-error.tsx replaces the entire layout tree.
+ * Embeds brand styles directly — globals.css is not guaranteed to be loaded
+ * when global-error.tsx replaces the entire layout tree.
  *
  * Accepts an optional `lang` prop (defaults to 'en') for callers that have
  * locale context available.
@@ -19,26 +27,15 @@ export function RootFallbackShell({
   lang?: string
 }) {
   return (
-    <html lang={lang}>
+    <html
+      lang={lang}
+      className={dmSans.variable}
+    >
       <head>
         <meta charSet='utf-8' />
         <meta
           name='viewport'
           content='width=device-width, initial-scale=1'
-        />
-        <link
-          rel='preconnect'
-          href='https://fonts.googleapis.com'
-        />
-        <link
-          rel='preconnect'
-          href='https://fonts.gstatic.com'
-          crossOrigin='anonymous'
-        />
-        {/* eslint-disable-next-line @next/next/no-page-custom-font */}
-        <link
-          href='https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&display=swap'
-          rel='stylesheet'
         />
         <style>{FALLBACK_STYLES}</style>
       </head>
@@ -61,7 +58,7 @@ const FALLBACK_STYLES = `
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   html { line-height: 1.5; }
   body {
-    font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-family: var(--font-dm-sans), -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     background: #ffffff;
     color: #030712;
     min-height: 100svh;

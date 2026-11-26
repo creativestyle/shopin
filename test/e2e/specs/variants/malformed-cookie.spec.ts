@@ -84,12 +84,10 @@ test('malformed cookie does not prevent subsequent valid cookie from working', a
   const res1 = await page.goto('/en/about-us')
   expect(res1?.status()).toBeLessThan(500)
 
-  // Now clear and set a valid alt cookie.
-  // Re-add demo-disclaimer-acknowledged so the modal doesn't interfere.
-  await context.clearCookies()
+  // Now replace it with a valid alt cookie; consent and demo cookies stay
+  await context.clearCookies({ name: 'data-source' })
   await context.addCookies([
     { name: 'data-source', value: 'commercetools-algolia-set', domain: 'localhost', path: '/', sameSite: 'Lax', httpOnly: false },
-    { name: 'demo-disclaimer-acknowledged', value: 'true', domain: 'localhost', path: '/', sameSite: 'Lax', httpOnly: false },
   ])
 
   await resetRequests()
@@ -105,5 +103,5 @@ test('malformed cookie does not prevent subsequent valid cookie from working', a
     expect(call.headers['x-data-source']).toBe('commercetools-algolia-set')
   }
 
-  await expect(page.getByText('commercetools-algolia-set — probe-malformed-alt-valid')).toBeVisible()
+  await expect(page.getByRole('main').getByText('commercetools-algolia-set — probe-malformed-alt-valid')).toBeVisible()
 })

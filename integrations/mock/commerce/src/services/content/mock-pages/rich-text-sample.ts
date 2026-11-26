@@ -309,7 +309,7 @@ export const whyShopWithUsRichText: RichTextDocumentResponse = {
           nodeType: 'hyperlink',
           data: {
             label: 'image',
-            url: 'https://placehold.co/600x400/f3f4f6/6b7280?text=Image',
+            url: '/images/placeholder.svg',
           },
           content: [
             {
@@ -326,7 +326,7 @@ export const whyShopWithUsRichText: RichTextDocumentResponse = {
     {
       nodeType: 'embedded-asset-block',
       data: {
-        url: 'https://placehold.co/600x400/f3f4f6/6b7280?text=Image',
+        url: '/images/placeholder.svg',
         alt: 'Example asset image',
       },
       content: [],

@@ -62,7 +62,7 @@ test.describe('Variant header on initial page load', () => {
       expect(call.headers['x-data-source']).toBe('commercetools-algolia-set')
     }
 
-    await expect(page.getByText(`commercetools-algolia-set — ${PROBE_INIT_ALT}`)).toBeVisible()
+    await expect(page.getByRole('main').getByText(`commercetools-algolia-set — ${PROBE_INIT_ALT}`)).toBeVisible()
   })
 
   test('default cookie → cold product page BFF call carries commercetools-set', async ({
@@ -81,7 +81,7 @@ test.describe('Variant header on initial page load', () => {
       expect(ds).toBe('commercetools-set')
     }
 
-    await expect(page.getByText(`commercetools-set — ${PROBE_INIT_DEFAULT}`)).toBeVisible()
+    await expect(page.getByRole('main').getByText(`commercetools-set — ${PROBE_INIT_DEFAULT}`)).toBeVisible()
   })
 
   test('no cookie → cold product page BFF call falls back to default commercetools-set', async ({
@@ -98,7 +98,7 @@ test.describe('Variant header on initial page load', () => {
       expect(ds).toBe('commercetools-set')
     }
 
-    await expect(page.getByText(`commercetools-set — ${PROBE_INIT_ALT}`)).toBeVisible()
+    await expect(page.getByRole('main').getByText(`commercetools-set — ${PROBE_INIT_ALT}`)).toBeVisible()
   })
 })
 
@@ -111,11 +111,14 @@ test.describe('Variant survives SPA navigation', () => {
   test('BFF request for nav destination carries alt X-Data-Source after <Link> click', async ({
     page,
   }) => {
+    // Cold destination: every header on earlier pages prefetches this nav link.
+    // Reset first: the prefetch while the start page loads is already the BFF call.
+    await revalidateBffCache()
+    await resetRequests()
+
     // Start on a live page (any renders fine)
     await page.goto('/en/about-us')
     await page.waitForLoadState('networkidle')
-
-    await resetRequests()
 
     // Click the "Shop" nav link (→ /en/c/probe-var-nav-dest).
     // Scoped to the page header to avoid footer nav.
@@ -140,10 +143,10 @@ test.describe('Variant survives SPA navigation', () => {
       ).toBe('commercetools-algolia-set')
     }
 
-    expect(page.url()).toContain('/c/probe-var-nav-dest')
+    await expect(page).toHaveURL(/\/c\/probe-var-nav-dest/)
     // exact: true matches only the sr-only category heading, not the product item names that
     // also contain this string as a prefix (e.g. "… probe-var-nav-dest item 1").
-    await expect(page.getByText('commercetools-algolia-set — probe-var-nav-dest', { exact: true })).toBeVisible()
+    await expect(page.getByRole('main').getByText('commercetools-algolia-set — probe-var-nav-dest', { exact: true })).toBeVisible()
   })
 })
 
@@ -169,7 +172,7 @@ test.describe('Variant context survives on non-default locale', () => {
     }
 
     await expect(page.locator('html')).toHaveAttribute('lang', /^de/)
-    await expect(page.getByText(`commercetools-algolia-set — de-${PROBE_DE_PAGE}`)).toBeVisible()
+    await expect(page.getByRole('main').getByText(`commercetools-algolia-set — de-${PROBE_DE_PAGE}`)).toBeVisible()
   })
 
   test('default cookie on German product page BFF call carries correct X-Data-Source', async ({
@@ -190,7 +193,7 @@ test.describe('Variant context survives on non-default locale', () => {
     }
 
     await expect(page.locator('html')).toHaveAttribute('lang', /^de/)
-    await expect(page.getByText(`commercetools-set — de-${PROBE_DE_PAGE}`)).toBeVisible()
+    await expect(page.getByRole('main').getByText(`commercetools-set — de-${PROBE_DE_PAGE}`)).toBeVisible()
   })
 })
 
@@ -211,11 +214,11 @@ test.describe('Per-variant ISR isolation', () => {
       const ds = call.headers['x-data-source'] ?? 'commercetools-set'
       expect(ds).toBe('commercetools-set')
     }
-    await expect(page.getByText(`commercetools-set — ${PROBE_ISO}`)).toBeVisible()
+    await expect(page.getByRole('main').getByText(`commercetools-set — ${PROBE_ISO}`)).toBeVisible()
 
     // Load under alt variant — different cache entry, should also call BFF (cold for alt)
     await resetRequests()
-    await context.clearCookies()
+    await context.clearCookies({ name: 'data-source' })
     await setDataSourceCookie(context, 'commercetools-algolia-set')
     await page.goto(`/en/p/${PROBE_ISO}`)
     await page.waitForLoadState('networkidle')
@@ -225,7 +228,7 @@ test.describe('Per-variant ISR isolation', () => {
     for (const call of altCalls) {
       expect(call.headers['x-data-source']).toBe('commercetools-algolia-set')
     }
-    await expect(page.getByText(`commercetools-algolia-set — ${PROBE_ISO}`)).toBeVisible()
+    await expect(page.getByRole('main').getByText(`commercetools-algolia-set — ${PROBE_ISO}`)).toBeVisible()
   })
 
   test('changing the data-source cookie between loads flips the BFF header', async ({
@@ -243,11 +246,11 @@ test.describe('Per-variant ISR isolation', () => {
     for (const call of altCalls) {
       expect(call.headers['x-data-source']).toBe('commercetools-algolia-set')
     }
-    await expect(page.getByText(`commercetools-algolia-set — ${PROBE_FLIP}`)).toBeVisible()
+    await expect(page.getByRole('main').getByText(`commercetools-algolia-set — ${PROBE_FLIP}`)).toBeVisible()
 
     // Second load: switch to default cookie → different cache entry, fresh BFF call
     await resetRequests()
-    await context.clearCookies()
+    await context.clearCookies({ name: 'data-source' })
     await setDataSourceCookie(context, 'commercetools-set')
     await page.goto(`/en/p/${PROBE_FLIP}`)
     await page.waitForLoadState('networkidle')
@@ -258,6 +261,6 @@ test.describe('Per-variant ISR isolation', () => {
       const ds = call.headers['x-data-source'] ?? 'commercetools-set'
       expect(ds).toBe('commercetools-set')
     }
-    await expect(page.getByText(`commercetools-set — ${PROBE_FLIP}`)).toBeVisible()
+    await expect(page.getByRole('main').getByText(`commercetools-set — ${PROBE_FLIP}`)).toBeVisible()
   })
 })
