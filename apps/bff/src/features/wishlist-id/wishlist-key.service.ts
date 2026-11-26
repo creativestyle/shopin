@@ -1,4 +1,6 @@
-import { Injectable, Scope } from '@nestjs/common'
+import { Inject, Injectable, Scope } from '@nestjs/common'
+import type { DataSource } from '@config/constants'
+import { DATA_SOURCE } from '../../data-source/tokens'
 import { getWishlistKey } from './wishlist.utils'
 
 /**
@@ -13,12 +15,14 @@ import { getWishlistKey } from './wishlist.utils'
   scope: Scope.REQUEST,
 })
 export class WishlistKeyService {
+  constructor(@Inject(DATA_SOURCE) private readonly dataSource: DataSource) {}
+
   /**
    * Gets wishlist key for logged-in user
    * @returns Wishlist key for logged-in user
    */
   getLoggedInWishlistKey(): string {
-    return getWishlistKey(false)
+    return getWishlistKey(false, this.dataSource)
   }
 
   /**
@@ -26,6 +30,6 @@ export class WishlistKeyService {
    * @returns Wishlist key for guest user
    */
   getGuestWishlistKey(): string {
-    return getWishlistKey(true)
+    return getWishlistKey(true, this.dataSource)
   }
 }

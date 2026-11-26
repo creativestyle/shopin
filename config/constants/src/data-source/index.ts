@@ -18,9 +18,9 @@ export const DATA_SOURCE_COOKIE = 'data-source' as const
 export const DATA_SOURCE_HEADER = 'X-Data-Source' as const
 
 /**
- * Data sources whose backend keeps its own sessions and carts (mock: in BFF
- * memory) get this suffix on their token and cart cookies, so switching data
- * source never hands one backend another's ids.
+ * Data sources whose backend keeps its own sessions, carts and wishlists (mock:
+ * in BFF memory) get this suffix on their token, cart and wishlist cookies, so
+ * switching data source never hands one backend another's ids.
  */
 export const DATA_SOURCE_COOKIE_SUFFIX: Partial<Record<DataSource, string>> = {
   'mock-set': 'mock',

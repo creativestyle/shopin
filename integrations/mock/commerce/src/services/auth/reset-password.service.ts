@@ -24,7 +24,7 @@ export class MockResetPasswordService {
     }
     saveCustomer({
       ...customer,
-      passwordHash: hashPassword(request.newPassword),
+      passwordHash: await hashPassword(request.newPassword),
       version: customer.version + 1,
     })
     return { success: true }

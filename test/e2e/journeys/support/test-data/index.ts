@@ -78,5 +78,7 @@ let counter = 0
 
 /** Unique to the run and worker, so reruns and parallel workers never collide. */
 export function uniqueEmail(label = 'shopper') {
-  return `e2e+${RUN_ID}-${workerLabel()}-${label}-${++counter}@example.com`
+  // Both passes of npm run e2e share the run id but restart worker indexes
+  const pass = process.env.E2E_FAULT_RUN === '1' ? 'faults-' : ''
+  return `e2e+${RUN_ID}-${pass}${workerLabel()}-${label}-${++counter}@example.com`
 }

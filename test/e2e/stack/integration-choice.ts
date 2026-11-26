@@ -8,8 +8,12 @@
  */
 
 import type { DataSource } from '@config/constants'
+import {
+  CapabilitiesResponseSchema,
+  type CapabilitiesResponse,
+} from '@core/contracts/capabilities/capabilities'
 
-export const CATEGORIES = ['commerce', 'search', 'cms'] as const
+const CATEGORIES = ['commerce', 'search', 'cms'] as const
 export type Category = (typeof CATEGORIES)[number]
 
 // A Record, so a data source added to or removed from @config/constants fails check-types
@@ -94,26 +98,22 @@ export function resolveIntegrations(
 
 export const isMockRun = (set: IntegrationSet) => set.dataSource === 'mock-set'
 
-interface Capabilities {
-  dataSource: string
-  integrations: Record<string, string>
-}
-
 /** What the BFF reports serving each category for the data source. */
 export async function fetchCapabilities(
   bffUrl: string,
   dataSource: DataSource
-): Promise<Capabilities> {
+): Promise<CapabilitiesResponse> {
   const res = await fetch(`${bffUrl}/capabilities`, {
     headers: { 'x-data-source': dataSource },
   })
   if (!res.ok) {
     throw new Error(`[e2e] GET ${bffUrl}/capabilities: ${res.status}`)
   }
-  return (await res.json()) as Capabilities
+  // The contract the endpoint answers with: a changed shape fails the run
+  return CapabilitiesResponseSchema.parse(await res.json())
 }
 
-export function formatCapabilitiesReport(capabilities: Capabilities) {
+export function formatCapabilitiesReport(capabilities: CapabilitiesResponse) {
   return [
     `[e2e] Data source: ${capabilities.dataSource} (from /bff/capabilities)`,
     ...Object.entries(capabilities.integrations).map(

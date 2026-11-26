@@ -13,6 +13,7 @@
   },
   "devDependencies": {
     "@config/constants": "*",
+    "@core/contracts": "*",
     "@playwright/test": "^1.51.0",
     "@types/node": "^22.0.0"
   }

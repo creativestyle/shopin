@@ -9,7 +9,7 @@ import { FAULTS_PATH, type FaultRule } from '../../fault-proxy/server'
 const controlUrl = `${new URL(BFF_URL).origin}${FAULTS_PATH}`
 
 /** Path pattern for a BFF route, e.g. bffRoute('cart/items') → ^/bff/cart/items */
-export const bffRoute = (route: string) =>
+const bffRoute = (route: string) =>
   `^${new URL(BFF_URL).pathname.replace(/\/$/, '')}/${route.replace(/^\//, '')}`
 
 export type ActiveFault = FaultRule & { hits: number }

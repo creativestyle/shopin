@@ -24,8 +24,8 @@ import {
 const customerError = (status: HttpStatus, message: string, code: string) =>
   new HttpException({ statusCode: status, message, code }, status)
 
-function checkCurrentPassword(customer: MockCustomer, password: string) {
-  if (!verifyPassword(customer.passwordHash, password)) {
+async function checkCurrentPassword(customer: MockCustomer, password: string) {
+  if (!(await verifyPassword(customer.passwordHash, password))) {
     throw customerError(
       HttpStatus.BAD_REQUEST,
       'Invalid current password',
@@ -62,10 +62,10 @@ export class CustomerService {
     request: ChangeCustomerPasswordRequest
   ): Promise<void> {
     const customer = await this.sessionService.requireCustomer()
-    checkCurrentPassword(customer, request.currentPassword)
+    await checkCurrentPassword(customer, request.currentPassword)
     saveCustomer({
       ...customer,
-      passwordHash: hashPassword(request.newPassword),
+      passwordHash: await hashPassword(request.newPassword),
       version: customer.version + 1,
     })
   }
@@ -74,7 +74,7 @@ export class CustomerService {
     request: ChangeCustomerEmailRequest
   ): Promise<CustomerResponse> {
     const customer = await this.sessionService.requireCustomer()
-    checkCurrentPassword(customer, request.currentPassword)
+    await checkCurrentPassword(customer, request.currentPassword)
 
     if (request.email.toLowerCase() === customer.email.toLowerCase()) {
       throw customerError(

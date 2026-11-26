@@ -29,7 +29,7 @@ import { faultProxy, type FaultProxy } from './faults'
 import { logCreated } from './run'
 import { uniqueEmail } from './test-data'
 
-export const INTEGRATIONS = resolveIntegrations()
+const INTEGRATIONS = resolveIntegrations()
 export const DATA_SOURCE = INTEGRATIONS.dataSource
 
 export const MOCK_ONLY_TAG = '@mock-only'

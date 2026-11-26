@@ -28,7 +28,7 @@ export class MockLoginService {
     const customer = findCustomerByEmail(loginRequest.email)
     if (
       !customer ||
-      !verifyPassword(customer.passwordHash, loginRequest.password)
+      !(await verifyPassword(customer.passwordHash, loginRequest.password))
     ) {
       throw new UnauthorizedException('Invalid email or password')
     }

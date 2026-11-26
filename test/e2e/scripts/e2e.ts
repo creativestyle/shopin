@@ -68,16 +68,59 @@ const mainProjects = projects.filter((name) => name !== FAULTS_PROJECT)
 const runsMain = projects.length === 0 || mainProjects.length > 0
 const runsFaults = projects.length === 0 || projects.includes(FAULTS_PROJECT)
 
+// One token each: `--project` takes several values, so `--project x file` would read file as a project
 const projectArgs = (names: string[]) =>
-  names.flatMap((name) => ['--project', name])
+  names.map((name) => `--project=${name}`)
+
+// Flags whose next argument is their value, not a file filter
+const FLAGS_WITH_VALUE = new Set([
+  '-c',
+  '--config',
+  '-g',
+  '--grep',
+  '--grep-invert',
+  '-j',
+  '--workers',
+  '--reporter',
+  '--retries',
+  '--repeat-each',
+  '--max-failures',
+  '--timeout',
+  '--output',
+  '--shard',
+  '--trace',
+  '--tsconfig',
+])
+const FILTER_FLAGS = [
+  '-g',
+  '--grep',
+  '--grep-invert',
+  '--last-failed',
+  '--only-changed',
+]
+
+/** A file, line or grep filter, which may leave one of the passes without tests. */
+function isFiltered(args: string[]) {
+  return args.some((arg, i) => {
+    const flag = arg.split('=')[0]
+    if (FILTER_FLAGS.includes(flag)) return true
+    const isValue = i > 0 && FLAGS_WITH_VALUE.has(args[i - 1])
+    return !arg.startsWith('-') && !isValue
+  })
+}
+
+// A plain run stays strict about finding tests; a filtered one may match only one pass
+const passArgs = isFiltered(others)
+  ? [...others, '--pass-with-no-tests']
+  : others
 
 let status = 0
 if (runsMain) {
-  status = playwright([...projectArgs(mainProjects), ...others])
+  status = playwright([...projectArgs(mainProjects), ...passArgs])
 }
 if (runsFaults) {
   const faultStatus = playwright(
-    [...projectArgs([FAULTS_PROJECT]), ...others],
+    [...projectArgs([FAULTS_PROJECT]), ...passArgs],
     { E2E_FAULT_RUN: '1' }
   )
   status ||= faultStatus

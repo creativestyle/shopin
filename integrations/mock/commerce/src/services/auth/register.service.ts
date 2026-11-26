@@ -24,7 +24,7 @@ export class MockRegisterService {
       salutation: registerRequest.salutation || undefined,
       dateOfBirth: registerRequest.dateOfBirth || undefined,
       version: 1,
-      passwordHash: hashPassword(registerRequest.password),
+      passwordHash: await hashPassword(registerRequest.password),
       isEmailVerified: false,
       addresses: [],
     })

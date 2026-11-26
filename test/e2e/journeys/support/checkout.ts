@@ -10,7 +10,7 @@ import { findProductUrl, openRoute, productPage } from './pages'
 import { TEST_DATA, uniqueEmail } from './test-data'
 
 /** Adds a product of the test-data category from its product page. */
-export async function addProductToCart(page: Page) {
+async function addProductToCart(page: Page) {
   await openRoute(page, await findProductUrl(page))
   const added = page.waitForResponse(
     (res) =>

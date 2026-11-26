@@ -22,6 +22,8 @@ test.describe('Checkout routes', { tag: '@smoke' }, () => {
 
       await openRoute(page, ROUTES.checkoutStep(step))
 
+      // Completed steps are regions too: the URL proves the step page answered
+      await expect(page).toHaveURL(atPath(ROUTES.checkoutStep(step)))
       await expect(checkoutPages.activeStep(page, step)).toBeVisible()
     })
   }

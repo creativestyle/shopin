@@ -1,4 +1,5 @@
-import { randomBytes, randomUUID, scryptSync, timingSafeEqual } from 'crypto'
+import { randomBytes, randomUUID, scrypt, timingSafeEqual } from 'crypto'
+import { promisify } from 'util'
 import type { AddressResponse } from '@core/contracts/customer/address'
 import type { CustomerResponse } from '@core/contracts/customer/customer'
 
@@ -52,18 +53,28 @@ let lastSweep = 0
 const newToken = () => randomBytes(24).toString('base64url')
 
 /** Salted scrypt hash, stored as `salt:hash`. */
-export function hashPassword(password: string): string {
+// Async: scrypt is slow on purpose, and must not block the BFF's event loop
+const scryptAsync = promisify(scrypt) as (
+  password: string,
+  salt: string,
+  keyLength: number
+) => Promise<Buffer>
+
+export async function hashPassword(password: string): Promise<string> {
   const salt = randomBytes(16).toString('hex')
-  return `${salt}:${scryptSync(password, salt, 32).toString('hex')}`
+  return `${salt}:${(await scryptAsync(password, salt, 32)).toString('hex')}`
 }
 
-export function verifyPassword(stored: string, password: string): boolean {
+export async function verifyPassword(
+  stored: string,
+  password: string
+): Promise<boolean> {
   const [salt, hash] = stored.split(':')
   if (!salt || !hash) {
     return false
   }
   const expected = Buffer.from(hash, 'hex')
-  const actual = scryptSync(password, salt, expected.length)
+  const actual = await scryptAsync(password, salt, expected.length)
   return timingSafeEqual(expected, actual)
 }
 

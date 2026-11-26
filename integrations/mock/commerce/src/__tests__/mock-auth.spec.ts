@@ -340,11 +340,11 @@ describe('mock customer, cart and order ownership', () => {
 })
 
 describe('mock password hashing', () => {
-  it('salts every hash and verifies only the right password', () => {
-    const first = hashPassword(PASSWORD)
+  it('salts every hash and verifies only the right password', async () => {
+    const first = await hashPassword(PASSWORD)
 
-    expect(hashPassword(PASSWORD)).not.toBe(first)
-    expect(verifyPassword(first, PASSWORD)).toBe(true)
-    expect(verifyPassword(first, 'wrong')).toBe(false)
+    expect(await hashPassword(PASSWORD)).not.toBe(first)
+    await expect(verifyPassword(first, PASSWORD)).resolves.toBe(true)
+    await expect(verifyPassword(first, 'wrong')).resolves.toBe(false)
   })
 })
