@@ -10,7 +10,7 @@ import type {
 import { LANGUAGE_TOKEN } from '@core/i18n'
 import { PRODUCT_CAROUSEL_PAGE_SIZE } from '@config/constants'
 import type { LanguageProvider } from '../../common/language/language.provider'
-import { DataSourceFactory } from '../../data-source/data-source.factory'
+import { Services } from '../../data-source/ports.module'
 import { ProductCollectionService } from '../product-collection/product-collection.service'
 
 @Injectable({ scope: Scope.REQUEST })
@@ -18,7 +18,7 @@ export class ContentService {
   private readonly logger = new Logger(ContentService.name)
 
   constructor(
-    private readonly dataSourceFactory: DataSourceFactory,
+    private readonly services: Services,
     private readonly productCollectionService: ProductCollectionService,
     @Inject(LANGUAGE_TOKEN) private readonly languageProvider: LanguageProvider
   ) {}
@@ -27,7 +27,7 @@ export class ContentService {
     slug: string,
     preview: boolean
   ): Promise<ContentPageResponse> {
-    const { pageService } = this.dataSourceFactory.getServices()
+    const { pageService } = this.services
     const locale = this.languageProvider.getCurrentLanguage()
     const page = await pageService.getPage(slug, locale, preview)
     const enrichedComponents = await this.enrichProductCarouselTeasers(
@@ -82,7 +82,7 @@ export class ContentService {
   }
 
   private getLayoutContext() {
-    const { layoutService } = this.dataSourceFactory.getServices()
+    const { layoutService } = this.services
     const locale = this.languageProvider.getCurrentLanguage()
     return { layoutService, locale }
   }

@@ -1,0 +1,8 @@
+{
+  "name": "@shopin/tools",
+  "version": "0.0.0",
+  "description": "Command-line tools of the configured integrations (e.g. Contentful migrations, the Algolia index sync). No app depends on this package, so no deployed app installs them. Dependencies are written by `npm run setup`.",
+  "private": true,
+  "dependencies": {},
+  "exports": {}
+}

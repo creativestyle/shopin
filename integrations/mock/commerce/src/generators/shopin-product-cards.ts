@@ -39,6 +39,14 @@ export interface ProductCardWithAttributes extends ProductCardResponse {
   attributes: MockProductAttributes
 }
 
+/** A product's catalog attributes (the mock catalog's stand-in for a platform's product attributes). */
+export const createMockAttributes = (faker: Faker): MockProductAttributes => ({
+  color: faker.helpers.arrayElement(COLORS),
+  size: faker.helpers.arrayElement(SIZES),
+  material: faker.helpers.arrayElement(MATERIALS),
+  brand: faker.helpers.arrayElement(BRANDS),
+})
+
 export function createShopinProductCardList(
   faker: Faker,
   count: number = 16
@@ -54,12 +62,7 @@ export function createShopinProductCardList(
         name,
         price,
         image: { src: '/images/product-image.png', alt: name },
-        attributes: {
-          color: faker.helpers.arrayElement(COLORS),
-          size: faker.helpers.arrayElement(SIZES),
-          material: faker.helpers.arrayElement(MATERIALS),
-          brand: faker.helpers.arrayElement(BRANDS),
-        },
+        attributes: createMockAttributes(faker),
       }
     },
     { count }

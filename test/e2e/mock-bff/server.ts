@@ -28,8 +28,8 @@
  */
 
 import http from 'node:http'
-import enUS from '../../../core/i18n/en-US.json'
-import deDE from '../../../core/i18n/de-DE.json'
+import enUS from '@core/i18n/en-US.json'
+import deDE from '@core/i18n/de-DE.json'
 import {
   DEFAULT_SOURCE,
   ALT_SOURCE,

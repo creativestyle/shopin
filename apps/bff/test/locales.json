@@ -1,0 +1,5 @@
+{
+  "en-US": { "urlPrefix": "en", "nativeName": "English", "currency": "USD" },
+  "de-DE": { "urlPrefix": "de", "nativeName": "Deutsch", "currency": "EUR" },
+  "fr-FR": { "urlPrefix": "fr", "nativeName": "Français", "currency": "EUR" }
+}

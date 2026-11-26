@@ -1,0 +1,43 @@
+{
+  "name": "@integrations/mock-auth",
+  "version": "0.0.0",
+  "description": "Mock identity provider (stand-in for an external IdP such as Auth0): sign-in against fixture users, sign-up, sign-out, refresh. Provides auth only.",
+  "author": "creativestyle GmbH",
+  "private": true,
+  "exports": {
+    ".": {
+      "shopin-shop": {
+        "types": "./dist/types/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "default": "./dist/index.js"
+    },
+    "./shopin": {
+      "shopin-shop": {
+        "types": "./dist/types/shopin.d.ts",
+        "default": "./dist/shopin.js"
+      },
+      "default": "./dist/shopin.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc --build",
+    "check-types": "tsc --noEmit",
+    "setup": "tsc --build",
+    "lint": "eslint --fix ./src ./test --max-warnings=0",
+    "format": "prettier --write ./src ./test",
+    "format:check": "prettier --check --ignore-unknown ./src ./test",
+    "test": "tsc --build && node --test \"test/*.test.mjs\""
+  },
+  "dependencies": {
+    "@core/integration-kit": "*"
+  },
+  "devDependencies": {
+    "@core/eslint-config": "*",
+    "@core/prettier-config": "*",
+    "@core/typescript-config": "*"
+  },
+  "peerDependencies": {
+    "@nestjs/common": "^11.1.3"
+  }
+}

@@ -1,5 +1,5 @@
 import { UnauthorizedException } from '@nestjs/common'
-import { ConfigService } from '@nestjs/config'
+import { coreSecret } from '../env/env-file'
 import { PinoLogger } from 'nestjs-pino'
 // This is ESM only package, and we have commonjs
 import type * as Jose from 'jose' with { 'resolution-mode': 'import' }
@@ -19,7 +19,6 @@ export abstract class BaseTokenEncryptionService {
   protected readonly config: TokenEncryptionConfig
 
   constructor(
-    protected readonly configService: ConfigService,
     config: TokenEncryptionConfig,
     encryptionKeyEnv: string,
     signingKeyEnv: string,
@@ -39,7 +38,11 @@ export abstract class BaseTokenEncryptionService {
   }
 
   private loadKey(configKey: string, algorithm: string): Uint8Array {
-    const keyBase64 = this.configService.getOrThrow<string>(configKey)
+    // core secrets are imported, never injected: no module can resolve them through DI
+    const keyBase64 = coreSecret(configKey)
+    if (!keyBase64) {
+      throw new Error(`${configKey} is not set`)
+    }
     const key = this.base64ToUint8Array(keyBase64)
 
     if (key.length !== this.config.KEY_SIZE_BYTES) {
@@ -61,7 +64,8 @@ export abstract class BaseTokenEncryptionService {
    */
   async encryptAndSign(
     token: string,
-    expirationTimeMs?: number
+    expirationTimeMs?: number,
+    audience?: string
   ): Promise<string> {
     try {
       const { SignJWT, EncryptJWT } = await this.joseModule
@@ -70,6 +74,11 @@ export abstract class BaseTokenEncryptionService {
       const signJWT = new SignJWT({ token })
         .setProtectedHeader({ alg: this.config.SIGNING_ALGORITHM })
         .setIssuedAt()
+
+      // Per commerce provider: bind the token to the provider that issued it
+      if (audience !== undefined) {
+        signJWT.setAudience(audience)
+      }
 
       // Set expiration on JWS if provided
       if (expirationTimeMs !== undefined) {
@@ -108,7 +117,10 @@ export abstract class BaseTokenEncryptionService {
    * @returns The original plain token
    * @throws UnauthorizedException if decryption or signature verification fails
    */
-  async decryptAndVerify(encryptedToken: string): Promise<string> {
+  async decryptAndVerify(
+    encryptedToken: string,
+    audience?: string
+  ): Promise<string> {
     try {
       const { jwtDecrypt, jwtVerify } = await this.joseModule
 
@@ -131,6 +143,8 @@ export abstract class BaseTokenEncryptionService {
         this.signingKey,
         {
           algorithms: [this.config.SIGNING_ALGORITHM],
+          // Per commerce provider: a token issued for another provider fails here
+          ...(audience !== undefined ? { audience } : {}),
         }
       )
 

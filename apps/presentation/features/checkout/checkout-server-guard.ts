@@ -2,12 +2,12 @@ import { redirect } from '@/lib/navigation'
 import { getLocale } from 'next-intl/server'
 import { cookies } from 'next/headers'
 import {
-  ACCESS_TOKEN_COOKIE_NAME,
   CART_ID_COOKIE_PREFIX_GUEST,
   CART_ID_COOKIE_PREFIX_LOGGED,
   CORRELATION_ID_HEADER,
   INTERNAL_SECRET_HEADER,
-  REFRESH_TOKEN_COOKIE_NAME,
+  SESSION_COOKIE_NAME,
+  VAULT_COOKIE_PREFIX,
   WISHLIST_ID_COOKIE_PREFIX_GUEST,
   WISHLIST_ID_COOKIE_PREFIX_LOGGED,
 } from '@config/constants'
@@ -30,21 +30,23 @@ export type { CheckoutStepId } from './components/checkout-steps-frame/checkout-
 
 type RequestCookie = { name: string; value: string }
 
-/** Read-only guard: without these cookies the BFF would refresh tokens via Set-Cookie the browser never gets. */
+/**
+ * Read-only guard: the server resolves the cart only when the browser has a cart id. Every provider has one (the
+ * mock keeps no token at all); without the tokens it needs, the BFF answers no cart and the client guard takes over.
+ * A refresh during this call cannot reach the browser, which is harmless for a provider that does not rotate refresh
+ * tokens (the next browser request refreshes again).
+ */
 function canResolveCartOnServer(requestCookies: RequestCookie[]): boolean {
-  const hasCartId = requestCookies.some(
+  return requestCookies.some(
     ({ name }) =>
       name.startsWith(CART_ID_COOKIE_PREFIX_GUEST) ||
       name.startsWith(CART_ID_COOKIE_PREFIX_LOGGED)
   )
-  const hasAccessToken = requestCookies.some(
-    ({ name }) => name === ACCESS_TOKEN_COOKIE_NAME
-  )
-  return hasCartId && hasAccessToken
 }
 
-const BFF_COOKIE_NAMES = [ACCESS_TOKEN_COOKIE_NAME, REFRESH_TOKEN_COOKIE_NAME]
+const BFF_COOKIE_NAMES = [SESSION_COOKIE_NAME]
 const BFF_COOKIE_PREFIXES = [
+  VAULT_COOKIE_PREFIX,
   CART_ID_COOKIE_PREFIX_GUEST,
   CART_ID_COOKIE_PREFIX_LOGGED,
   WISHLIST_ID_COOKIE_PREFIX_GUEST,

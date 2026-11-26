@@ -5,5 +5,9 @@
   "private": true,
   "devDependencies": {
     "@tsconfig/node22": "22.0.5"
+  },
+  "exports": {
+    "./base.json": "./base.json",
+    "./nestjs.json": "./nestjs.json"
   }
 }

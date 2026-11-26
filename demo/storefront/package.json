@@ -1,0 +1,55 @@
+{
+  "name": "@demo/storefront",
+  "version": "0.0.0",
+  "description": "The SHOPin demo's storefront slots and pages (as config/storefront): the /setup data-source selector page, the demo notice, sample tracking tags. `npm run use demo` points config/storefront at it.",
+  "author": "creativestyle GmbH",
+  "private": true,
+  "exports": {
+    "./storefront": {
+      "shopin-shop": {
+        "types": "./dist/types/storefront.d.mts",
+        "default": "./dist/storefront.mjs"
+      },
+      "shopin-demo": {
+        "types": "./dist/types/storefront.d.mts",
+        "default": "./dist/storefront.mjs"
+      },
+      "default": "./dist/storefront.mjs"
+    },
+    "./sources.css": "./sources.css"
+  },
+  "scripts": {
+    "build": "tsc --build",
+    "setup": "tsc --build",
+    "check-types": "tsc --noEmit",
+    "lint": "eslint --fix ./src --max-warnings=0 --no-error-on-unmatched-pattern",
+    "format": "prettier --write ./src",
+    "format:check": "prettier --check --ignore-unknown ./src"
+  },
+  "dependencies": {
+    "@core/integration-kit": "*",
+    "@demo/data-source-selector": "*",
+    "@demo/demo-disclaimer": "*",
+    "@demo/mock-tracking-tags": "*"
+  },
+  "peerDependencies": {
+    "next-intl": "^4.9.2",
+    "react": "19.2.4"
+  },
+  "peerDependenciesMeta": {
+    "next-intl": {
+      "optional": true
+    },
+    "react": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@core/eslint-config": "*",
+    "@core/prettier-config": "*",
+    "@core/typescript-config": "*",
+    "@types/react": "19.2.7",
+    "@types/react-dom": "19.2.3",
+    "typescript": "^5.7.3"
+  }
+}

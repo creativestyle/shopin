@@ -1,18 +1,17 @@
-import { Injectable, Inject, Scope } from '@nestjs/common'
-import type { Client } from '@integrations/commercetools-core'
-import { COMMERCETOOLS_CLIENT } from '../client/client.module'
-import { LANGUAGE_TOKEN, LanguageTagUtils } from '@core/i18n'
-import type { LanguageProvider } from '@core/contracts/core/request-providers'
+import { RequestContext } from '@core/integration-kit'
+import { Injectable, Inject } from '@nestjs/common'
+import { COMMERCETOOLS_CLIENT, Client } from '@integrations/commercetools-core'
+import { LanguageTagUtils } from '@core/i18n'
 import type { MainNavigationResponse } from '@core/contracts/navigation/main-navigation'
 import { I18N_CONFIG } from '@config/constants'
 import { CategoryPagedQueryApiResponseSchema } from '../schemas/category'
 import { buildCategoryTree, mapCategoryToLink } from '../mappers/navigation'
 
-@Injectable({ scope: Scope.REQUEST })
+@Injectable()
 export class NavigationService {
   constructor(
     @Inject(COMMERCETOOLS_CLIENT) private readonly client: Client,
-    @Inject(LANGUAGE_TOKEN) private readonly languageProvider: LanguageProvider
+    private readonly languageProvider: RequestContext
   ) {}
 
   async getNavigation(): Promise<MainNavigationResponse> {

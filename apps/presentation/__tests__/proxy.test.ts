@@ -47,10 +47,22 @@ jest.mock('@core/logger-config', () => ({
 // Import AFTER mocks so the module picks up our mock for createMiddleware.
 import proxy from '../proxy'
 import { APP_ROUTE_SEGMENTS } from '@/lib/app-route-segments'
+import {
+  ALT,
+  ALT_COOKIE,
+  DEFAULT,
+  DEFAULT_RESOLVED,
+  DIMS,
+  RULED_OUT,
+  HAS_REQUIREMENTS,
+  segmentOf,
+} from '@/lib/variant/__fixtures__/variants'
 
-// ─── Constants (real values from @config/constants) ──────────────────────────
-const DEFAULT_VARIANT = '~commercetools-set'
-const ALT_VARIANT = '~commercetools-algolia-set'
+// ─── Variants derived from the project config (no provider named here) ───────
+const DEFAULT_VARIANT = DEFAULT
+const ALT_VARIANT = ALT
+const ALT_COOKIE_HEADER = `${ALT_COOKIE.name}=${ALT_COOKIE.value}`
+const DEFAULT_COOKIE_HEADER = `${ALT_COOKIE.name}=${DEFAULT_RESOLVED[DIMS[0]!.name]}`
 const BASE = 'http://localhost'
 
 // Preview tokens used across preview tests, minted with the real signer so they pass
@@ -217,10 +229,10 @@ describe('preview path routing — default locale', () => {
     expect(rewritePath(res)).toBe(`/${DEFAULT_VARIANT}/en/preview/slug`)
   })
 
-  it('uses default variant even when a data-source cookie is present', () => {
+  it('uses default variant even when a provider cookie is present', () => {
     const res = proxy(
       makeRequest('/preview/slug', {
-        cookie: 'data-source=commercetools-algolia-set',
+        cookie: ALT_COOKIE_HEADER,
       })
     )
     expect(rewritePath(res)).toBe(`/${DEFAULT_VARIANT}/en/preview/slug`)
@@ -586,7 +598,7 @@ describe('correlation ID', () => {
 // ─────────────────────────────────────────────────────────────────────────────
 // 6. Cookie-based variant — internal rewrite, clean public URL
 // ─────────────────────────────────────────────────────────────────────────────
-// The data-source cookie (written by /setup) drives variant selection.
+// The provider cookies (one per variant dimension) drive variant selection.
 // The proxy rewrites internally to the variant route but keeps the browser URL
 // clean — no redirect, just an internal Next.js rewrite that partitions the ISR cache.
 
@@ -594,41 +606,42 @@ describe('cookie-based variant (internal rewrite, clean URL)', () => {
   it('rewrites to alt-variant internally when the non-default cookie is present', () => {
     const res = proxy(
       makeRequest('/en/product', {
-        cookie: 'data-source=commercetools-algolia-set',
+        cookie: ALT_COOKIE_HEADER,
       })
     )
     expect(res.status).not.toBe(302)
     expect(rewritePath(res)).toBe(`/${ALT_VARIANT}/en/product`)
   })
 
-  it('rewrites to the mock-set variant when the mock data-source cookie is present', () => {
+  it('rewrites to default-variant when the default provider cookie is present', () => {
     const res = proxy(
-      makeRequest('/en/product', { cookie: 'data-source=mock-set' })
-    )
-    expect(res.status).not.toBe(302)
-    expect(rewritePath(res)).toBe('/~mock-set/en/product')
-  })
-
-  it('rewrites to default-variant when the default data-source cookie is present', () => {
-    const res = proxy(
-      makeRequest('/en/product', { cookie: 'data-source=commercetools-set' })
+      makeRequest('/en/product', { cookie: DEFAULT_COOKIE_HEADER })
     )
     expect(res.status).not.toBe(302)
     expect(rewritePath(res)).toBe(`/${DEFAULT_VARIANT}/en/product`)
   })
 
-  it('rewrites to default-variant when no data-source cookie is present', () => {
+  it('rewrites to default-variant when no provider cookie is present', () => {
     const res = proxy(makeRequest('/en/product'))
     expect(res.status).not.toBe(302)
     expect(rewritePath(res)).toBe(`/${DEFAULT_VARIANT}/en/product`)
   })
 
   it('rewrites a default-locale unprefixed path to the alt-variant internal route', () => {
-    const res = proxy(
-      makeRequest('/setup', { cookie: 'data-source=commercetools-algolia-set' })
-    )
+    const res = proxy(makeRequest('/cart', { cookie: ALT_COOKIE_HEADER }))
     expect(res.status).not.toBe(302)
-    expect(rewritePath(res)).toBe(`/${ALT_VARIANT}/en/setup`)
+    expect(rewritePath(res)).toBe(`/${ALT_VARIANT}/en/cart`)
+  })
+
+  it('combines one cookie per category, and rewrites a ruled-out choice to the variant it falls back to', () => {
+    expect(RULED_OUT !== undefined).toBe(HAS_REQUIREMENTS)
+    const cookie = DIMS.map(
+      (d) => `${d.cookie}=${RULED_OUT!.raw[d.name]}`
+    ).join('; ')
+    const res = proxy(makeRequest('/en/c/shoes', { cookie }))
+    expect(rewritePath(res)).toBe(
+      `/${segmentOf(RULED_OUT!.resolved)}/en/c/shoes`
+    )
   })
 })
 

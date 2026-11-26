@@ -73,6 +73,8 @@ export interface ShopinConfig {
   /** SHOPin's categories first (CATEGORIES order), then the shop's own kinds in config order. */
   providers: Partial<Record<Category, ProviderId>>
   contracts?: Partial<ContractExtensions>
+  /** The `contracts.cart` fields a shopper may set (`PUT /bff/cart/fields`). */
+  cartFields?: readonly string[]
   features?: readonly FeatureModule[]
 }
 

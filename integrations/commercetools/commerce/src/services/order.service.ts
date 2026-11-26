@@ -1,12 +1,9 @@
+import { RequestContext } from '@core/integration-kit'
 import {
   Injectable,
-  Inject,
   NotFoundException,
   ConflictException,
-  Scope,
 } from '@nestjs/common'
-import { LANGUAGE_TOKEN } from '@core/i18n'
-import type { LanguageProvider } from '@core/contracts/core/request-providers'
 import type {
   CreateOrderRequest,
   GetOrdersRequest,
@@ -18,7 +15,7 @@ import {
   OrderResponseSchema,
   OrdersResponseSchema,
 } from '@core/contracts/order/order'
-import { UserClientService } from '../client/user-client.service'
+import { CustomerScope } from '../shared/customer-scope.service'
 import { mapOrderToResponse, mapOrdersToResponse } from '../mappers/order'
 import {
   OrderApiResponseSchema,
@@ -26,7 +23,7 @@ import {
 } from '../schemas/order'
 import { isNotFoundError, isConflictError } from '../helpers/is-not-found-error'
 
-@Injectable({ scope: Scope.REQUEST })
+@Injectable()
 export class OrderService {
   private static readonly ORDER_EXPAND = [
     'lineItems[*].product',
@@ -51,16 +48,12 @@ export class OrderService {
   private static readonly ORDER_LIST_DEFAULT_LIMIT = DEFAULT_ORDER_PAGE_SIZE
 
   constructor(
-    private readonly userClientService: UserClientService,
-    @Inject(LANGUAGE_TOKEN) private readonly languageProvider: LanguageProvider
+    private readonly scope: CustomerScope,
+    private readonly languageProvider: RequestContext
   ) {}
 
   private getCurrentLanguage(): string {
     return this.languageProvider.getCurrentLanguage()
-  }
-
-  private async getClient() {
-    return this.userClientService.getClient()
   }
 
   private processOrderResponse(
@@ -73,40 +66,21 @@ export class OrderService {
   }
 
   async createOrder(request: CreateOrderRequest): Promise<OrderResponse> {
-    const client = await this.getClient()
+    const api = await this.scope.api()
 
-    // Get cart directly from Commercetools to verify it exists and get its version
-    const cartResponse = await client
-      .me()
-      .carts()
-      .withId({ ID: request.cartId })
-      .get({
-        queryArgs: {
-          expand: OrderService.ORDER_EXPAND,
-        },
-      })
-      .execute()
-
-    const cartVersion = cartResponse.body.version
+    // The shopper's cart (404 for anyone else's), for its version
+    const cart = await api.carts.get(request.cartId, [])
 
     // Create order from cart with expansions
     try {
-      const orderResponse = await client
-        .me()
-        .orders()
-        .post({
-          body: {
-            id: request.cartId,
-            version: cartVersion,
-          },
-          queryArgs: {
-            expand: OrderService.ORDER_EXPAND,
-          },
-        })
-        .execute()
+      const order = await api.orders.createFromCart(
+        request.cartId,
+        cart.version,
+        OrderService.ORDER_EXPAND
+      )
 
       const currentLanguage = this.getCurrentLanguage()
-      return this.processOrderResponse(orderResponse.body, currentLanguage)
+      return this.processOrderResponse(order, currentLanguage)
     } catch (error) {
       // If order creation fails with conflict error, order already exists
       if (isConflictError(error)) {
@@ -118,21 +92,12 @@ export class OrderService {
 
   async getOrder(orderId: string): Promise<OrderResponse> {
     const currentLanguage = this.getCurrentLanguage()
-    const client = await this.getClient()
-
     try {
-      const orderResponse = await client
-        .me()
-        .orders()
-        .withId({ ID: orderId })
-        .get({
-          queryArgs: {
-            expand: OrderService.ORDER_DETAIL_EXPAND,
-          },
-        })
-        .execute()
+      const order = await (
+        await this.scope.api()
+      ).orders.get(orderId, OrderService.ORDER_DETAIL_EXPAND)
 
-      return this.processOrderResponse(orderResponse.body, currentLanguage)
+      return this.processOrderResponse(order, currentLanguage)
     } catch (error) {
       if (isNotFoundError(error)) {
         throw new NotFoundException(`Order not found: ${orderId}`)
@@ -143,27 +108,19 @@ export class OrderService {
 
   async getOrders(request?: GetOrdersRequest): Promise<OrdersResponse> {
     const currentLanguage = this.getCurrentLanguage()
-    const client = await this.getClient()
-
     const limit = request?.limit ?? OrderService.ORDER_LIST_DEFAULT_LIMIT
     const offset = request?.offset ?? 0
 
-    const ordersResponse = await client
-      .me()
-      .orders()
-      .get({
-        queryArgs: {
-          expand: OrderService.ORDER_LIST_EXPAND,
-          sort: ['createdAt desc'],
-          limit,
-          offset,
-        },
-      })
-      .execute()
+    const orders = await (
+      await this.scope.api()
+    ).orders.query({
+      expand: OrderService.ORDER_LIST_EXPAND,
+      sort: ['createdAt desc'],
+      limit,
+      offset,
+    })
 
-    const validatedResponse = OrdersListApiResponseSchema.parse(
-      ordersResponse.body
-    )
+    const validatedResponse = OrdersListApiResponseSchema.parse(orders)
     const mappedOrders = mapOrdersToResponse(
       validatedResponse,
       currentLanguage,

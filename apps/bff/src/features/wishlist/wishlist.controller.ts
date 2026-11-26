@@ -7,6 +7,7 @@ import {
   HttpStatus,
   Query,
   ParseIntPipe,
+  UseInterceptors,
 } from '@nestjs/common'
 import {
   ApiTags,
@@ -19,7 +20,6 @@ import { WishlistService } from './wishlist.service'
 import {
   AddToWishlistRequestSchema,
   RemoveFromWishlistRequestSchema,
-  WishlistResponseSchema,
 } from '@core/contracts/wishlist/wishlist'
 import type {
   WishlistResponse,
@@ -27,10 +27,16 @@ import type {
   RemoveFromWishlistRequest,
 } from '@core/contracts/wishlist/wishlist'
 import { ZodBody } from '../../common/validation'
+import { TokenRefreshInterceptor } from '../../common/token-management/token-refresh.interceptor'
 import { UseCsrfGuard } from '../csrf/csrf.decorator'
+import { Reads } from '@core/integration-kit'
+import { Contracts } from '../../data-source/contracts'
 
+@Reads('commerce')
 @Controller('wishlist')
 @ApiTags('wishlist')
+// an expired token is renewed here too, as on cart, order and customer (a 401 otherwise ends the wishlist call)
+@UseInterceptors(TokenRefreshInterceptor)
 export class WishlistController {
   constructor(private readonly wishlistService: WishlistService) {}
 
@@ -51,7 +57,7 @@ export class WishlistController {
     if (!wishlist) {
       return null
     }
-    return WishlistResponseSchema.strip().parse(wishlist)
+    return Contracts.wishlist.parse(wishlist)
   }
 
   @Post('items')
@@ -69,7 +75,7 @@ export class WishlistController {
   async addToWishlist(
     @ZodBody(AddToWishlistRequestSchema) request: AddToWishlistRequest
   ): Promise<WishlistResponse> {
-    return WishlistResponseSchema.strip().parse(
+    return Contracts.wishlist.parse(
       await this.wishlistService.addToWishlist(request)
     )
   }
@@ -89,7 +95,7 @@ export class WishlistController {
   async removeFromWishlist(
     @ZodBody(RemoveFromWishlistRequestSchema) request: RemoveFromWishlistRequest
   ): Promise<WishlistResponse> {
-    return WishlistResponseSchema.strip().parse(
+    return Contracts.wishlist.parse(
       await this.wishlistService.removeFromWishlist(request)
     )
   }

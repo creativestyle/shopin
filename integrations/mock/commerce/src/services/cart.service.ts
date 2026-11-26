@@ -1,8 +1,9 @@
-import { Injectable, Inject, NotFoundException } from '@nestjs/common'
+import { RequestContext } from '@core/integration-kit'
+import { Injectable, NotFoundException, Optional } from '@nestjs/common'
+import { CustomerContext } from '@core/integration-kit'
 import { PinoLogger } from 'nestjs-pino'
-import { LANGUAGE_TOKEN, getLocalizedString } from '@core/i18n'
+import { getLocalizedString } from '@core/i18n'
 import { resolveCurrencyFromLanguage } from '@core/i18n/currency-utils'
-import type { LanguageProvider } from '@core/contracts/core/request-providers'
 import {
   CartResponseSchema,
   DiscountCodeError,
@@ -41,6 +42,18 @@ const MOCK_DELIVERY_TIMES: Record<string, Record<string, string>> = {
 // Simple in-memory store for mock carts
 // Cart IDs are stored in cookies, so we just need to persist cart data by ID
 export const cartStore = new Map<string, CartResponse>()
+/** The active cart of each signed-in customer (customer id from the SHOPin session). */
+export const customerCarts = new Map<string, string>()
+/**
+ * Custom fields per cart id: the mock platform's equivalent of a commercetools Custom Type on the cart. Not part
+ * of the cart contract; a shop's mapper hook (`mock({ mappers: { cart } })`) reads them.
+ */
+export const cartFields = new Map<string, Record<string, unknown>>()
+/**
+ * The customer each cart belongs to (cart id → customer id). A guest's cart has none until a customer uses it
+ * (the BFF keeps a guest cart for the customer who signs in with it); a cart with an owner is that customer's only.
+ */
+export const cartOwners = new Map<string, string>()
 
 /** Fixture codes covering each outcome. Anything unlisted is treated as invalid. */
 export const MOCK_DISCOUNT_CODES: Record<
@@ -56,19 +69,46 @@ export const MOCK_DISCOUNT_CODES: Record<
 @Injectable()
 export class CartService {
   constructor(
-    @Inject(LANGUAGE_TOKEN) private readonly languageProvider: LanguageProvider,
-    private readonly logger: PinoLogger
+    private readonly languageProvider: RequestContext,
+    private readonly logger: PinoLogger,
+    @Optional() private readonly customer?: CustomerContext
   ) {
     this.logger.setContext(CartService.name)
   }
 
   async getCart(cartId: string): Promise<CartResponse> {
     const cart = cartStore.get(cartId)
-    if (!cart) {
+    const customerId = await this.customer?.customerId()
+    const owner = cartOwners.get(cartId)
+    // another shopper's cart is not found: a customer's cart is that customer's only
+    if (!cart || (owner !== undefined && owner !== customerId)) {
       this.logger.warn({ cartId }, 'Cart not found')
       throw new NotFoundException(`Cart not found: ${cartId}`)
     }
+    if (customerId && owner === undefined) {
+      // a guest cart the customer signed in with becomes theirs
+      cartOwners.set(cartId, customerId)
+      customerCarts.set(customerId, cartId)
+    }
     return CartResponseSchema.parse(cart)
+  }
+
+  /** The shop's own fields of the cart (`setCartFields` of the port): kept beside it, `null` removes one. */
+  async setFields(
+    cartId: string,
+    fields: Record<string, unknown>
+  ): Promise<CartResponse> {
+    const cart = await this.getCart(cartId)
+    const kept = { ...cartFields.get(cartId) }
+    for (const [name, value] of Object.entries(fields)) {
+      if (value === null || value === undefined) {
+        delete kept[name]
+      } else {
+        kept[name] = value
+      }
+    }
+    cartFields.set(cartId, kept)
+    return cart
   }
 
   async createCart(): Promise<CartResponse> {
@@ -85,6 +125,11 @@ export class CartService {
       itemCount: 0,
     }
     cartStore.set(cartId, cart)
+    const customerId = await this.customer?.customerId()
+    if (customerId) {
+      customerCarts.set(customerId, cartId)
+      cartOwners.set(cartId, customerId)
+    }
     return CartResponseSchema.parse(cart)
   }
 
@@ -225,8 +270,11 @@ export class CartService {
   }
 
   async getActiveCart(): Promise<CartResponse | null> {
-    // Mock carts have no owner, so never hand a shopper someone else's cart
-    return null
+    // The signed-in customer's cart; a guest has no active cart outside the cart cookie
+    const customerId = await this.customer?.customerId()
+    const cartId = customerId ? customerCarts.get(customerId) : undefined
+    const cart = cartId ? cartStore.get(cartId) : undefined
+    return cart ? CartResponseSchema.parse(cart) : null
   }
 
   async setBillingAddress(

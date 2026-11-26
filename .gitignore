@@ -56,5 +56,4 @@ CLAUDE.md
 skills-lock.json
 
 # TypeScript
-tsconfig.tsbuildinfo
-**/tsconfig.tsbuildinfo
+*.tsbuildinfo

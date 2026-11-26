@@ -75,6 +75,8 @@ export const OrderSummaryResponseSchema = z.object({
       alt: z.string().optional(),
     })
   ),
+  /** The commerce provider that holds the order (several during a platform migration). */
+  source: z.string().optional(),
 })
 
 export type OrderSummaryResponse = z.infer<typeof OrderSummaryResponseSchema>

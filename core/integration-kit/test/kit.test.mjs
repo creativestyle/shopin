@@ -135,6 +135,47 @@ test('rule: one integration with different options under two categories is refus
   )
 })
 
+test("a vendor's parts (one package per category, one id) are merged into one provider", () => {
+  const card = (_raw, mapped) => mapped
+  const commerce = integ('acme', ['commerce'], {
+    mappers: { cart: card },
+    env: { commerce: { key: { env: 'ACME_KEY' } } },
+    storefront: { productImages: ['img.acme.test'] },
+  })
+  const auth = integ('acme', ['auth'], {
+    label: 'acme sign-in',
+    env: { auth: { key: { env: 'ACME_KEY' } } },
+    requires: {
+      auth: { needs: { commerce: 'acme' }, reason: 'acme customers' },
+    },
+  })
+  const config = defineConfig({ commerce, auth, cms: other })
+  const acme = config.integrations.filter((i) => i.id === 'acme')
+  assert.equal(acme.length, 1)
+  assert.deepEqual(Object.keys(acme[0].ports).sort(), ['auth', 'commerce'])
+  assert.deepEqual(Object.keys(acme[0].env).sort(), ['auth', 'commerce'])
+  assert.equal(acme[0].mappers.cart, card)
+  assert.equal(acme[0].label, 'acme')
+  assert.deepEqual(acme[0].storefront.productImages, ['img.acme.test'])
+  assert.deepEqual(config.providers, {
+    commerce: 'acme',
+    cms: 'other',
+    auth: 'acme',
+  })
+  assert.deepEqual(errorsOf(config), [])
+  // the same part twice with different options is still refused
+  assert.throws(
+    () =>
+      defineConfig({
+        commerce,
+        search: integ('acme', ['commerce', 'search'], {
+          mappers: { productCard: card },
+        }),
+      }),
+    /"acme" is given different options under commerce and search/
+  )
+})
+
 test("rule: different options are refused at any delegate depth (a nested instance would replace the shop's own)", () => {
   const inner = (label) => integ('inner', ['commerce', 'search'], { label })
   const nest = (delegate) =>
@@ -236,6 +277,47 @@ test('contracts: an extension of an extendable contract is kept for the BFF', ()
       contracts: { cart },
     }).contracts.cart,
     cart
+  )
+})
+
+test('cartFields: the writable cart fields are kept for the BFF; a name the cart contract lacks is refused', () => {
+  const cart = { parse: (x) => x, shape: { giftMessage: {}, loyaltyTier: {} } }
+  const commerce = hooked(shop, { cart: hook })
+  assert.deepEqual(
+    defineConfig({ commerce, contracts: { cart }, cartFields: ['giftMessage'] })
+      .cartFields,
+    ['giftMessage']
+  )
+  assert.throws(
+    () =>
+      defineConfig({
+        commerce,
+        contracts: { cart },
+        cartFields: ['giftMesage'],
+      }),
+    /cartFields: "giftMesage" is not a field of contracts\.cart/
+  )
+  // SHOPin's own cart fields are never the shop's to open, even when the extension redeclares them
+  assert.throws(
+    () =>
+      defineConfig({
+        commerce,
+        contracts: {
+          cart: { ...cart, shape: { ...cart.shape, shippingAddress: {} } },
+        },
+        cartFields: ['shippingAddress'],
+      }),
+    /cartFields: "shippingAddress" is SHOPin's own cart field/
+  )
+  assert.throws(
+    () =>
+      defineConfig({ commerce, contracts: { cart }, cartFields: ['toString'] }),
+    /cartFields: "toString" is not a field of contracts\.cart/
+  )
+  // not set: nothing is writable (the BFF opens no field)
+  assert.equal(
+    defineConfig({ commerce, contracts: { cart } }).cartFields,
+    undefined
   )
 })
 

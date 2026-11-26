@@ -25,6 +25,7 @@ export interface VaultEntry extends SessionTokens {
 
 /** This port's own token store for the current shopper (encrypted HttpOnly cookie). A port sees only its entry. */
 export abstract class TokenVault {
+  /** The entry, also when its access token has expired (`expiresIn` 0: a call with it answers 401 and the BFF refreshes). */
   abstract get(): Promise<VaultEntry | undefined>
   abstract set(tokens: SessionTokens, customer: boolean): Promise<void>
   abstract clear(): void

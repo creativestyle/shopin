@@ -1,11 +1,20 @@
 {
   "extends": "@core/typescript-config/nestjs.json",
   "compilerOptions": {
-    "outDir": "dist/server",
-    "rootDir": "src/server",
+    "outDir": "dist",
     "emitDecoratorMetadata": true,
-    "experimentalDecorators": true
+    "experimentalDecorators": true,
+    "composite": true,
+    "rootDir": "src",
+    "declarationDir": "dist/types",
+    "tsBuildInfoFile": "dist/tsconfig.tsbuildinfo"
   },
-  "include": ["src/server"],
-  "exclude": ["dist", "node_modules"]
+  "include": ["src/shopin.ts", "src/server"],
+  "exclude": [
+    "dist",
+    "node_modules",
+    "**/__tests__/**",
+    "**/*.spec.ts",
+    "**/*.test.ts"
+  ]
 }

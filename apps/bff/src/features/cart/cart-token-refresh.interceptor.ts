@@ -1,8 +1,9 @@
 import { Injectable, ExecutionContext, CallHandler } from '@nestjs/common'
 import { Observable, throwError, from } from 'rxjs'
 import { switchMap } from 'rxjs/operators'
+import { VaultService } from '../../common/vault/vault.service'
 import { TokenRefreshInterceptor } from '../../common/token-management/token-refresh.interceptor'
-import { DataSourceFactory } from '../../data-source/data-source.factory'
+import { Ports } from '../../data-source/ports.module'
 import { TokenStorageService } from '../../common/token-management/token-storage.service'
 import { CartIdService } from '../cart-id/cart-id.service'
 import { TokenProvider } from '../../common/token-management/token-provider'
@@ -16,18 +17,20 @@ import { AuthLoggerService } from '../../common/auth-logging'
 @Injectable()
 export class CartTokenRefreshInterceptor extends TokenRefreshInterceptor {
   constructor(
-    dataSourceFactory: DataSourceFactory,
+    ports: Ports,
     tokenStorageService: TokenStorageService,
     cartIdService: CartIdService,
     tokenProvider: TokenProvider,
-    authLogger: AuthLoggerService
+    authLogger: AuthLoggerService,
+    vault: VaultService
   ) {
     super(
-      dataSourceFactory,
+      ports,
       tokenStorageService,
       cartIdService,
       tokenProvider,
-      authLogger
+      authLogger,
+      vault
     )
   }
 

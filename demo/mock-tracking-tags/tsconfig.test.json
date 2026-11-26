@@ -1,0 +1,14 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "rootDir": ".",
+    "noEmit": true,
+    "incremental": false,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "types": ["jest", "node"],
+    "composite": false,
+    "customConditions": ["shopin-demo"]
+  },
+  "include": ["src/**/*", "test/**/*"]
+}

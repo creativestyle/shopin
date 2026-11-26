@@ -1,0 +1,2 @@
+/* this package's payment page (Tailwind classes), for a storefront that uses it (config/storefront/sources.css) */
+@source "./src/page";

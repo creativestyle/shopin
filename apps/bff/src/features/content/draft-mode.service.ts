@@ -1,6 +1,6 @@
 import { verifyDraftToken } from '@core/draft-token'
 import { Injectable } from '@nestjs/common'
-import { ConfigService } from '@nestjs/config'
+import { coreSecret } from '../../common/env/env-file'
 import type { Request, Response } from 'express'
 import {
   DRAFT_MODE_HEADER,
@@ -14,11 +14,9 @@ const NO_CACHE_HEADERS = {
 
 @Injectable()
 export class DraftModeService {
-  constructor(private readonly config: ConfigService) {}
-
   isDraftModeRequest(req: Request): boolean {
     try {
-      const secret = this.config.get<string>('NEXT_DRAFT_MODE_SECRET')?.trim()
+      const secret = coreSecret('NEXT_DRAFT_MODE_SECRET')?.trim()
       const value = String(req.headers[DRAFT_MODE_HEADER] ?? '').trim()
       return Boolean(
         secret &&

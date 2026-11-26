@@ -8,7 +8,7 @@ import { bffFetch as baseBffFetch } from './bff-fetch'
 import { getBffClientUrl } from './bff-utils-client'
 import {
   getVariantSegmentFromPathname,
-  variantHeadersFromSegment,
+  decodeVariant,
   resolveVariant,
   variantHeaders,
 } from '@/lib/variant/variant-key'
@@ -37,7 +37,7 @@ function getOrCreateClientCorrelationId(): string {
 }
 
 /**
- * Returns the variant headers for all dimensions so the BFF serves the correct variant.
+ * Returns the active variant (provider per switchable category) so the BFF serves it.
  *
  * Two paths:
  * 1. Alt-variant URL (pathname carries a `~` segment): decode all dimensions from the URL
@@ -47,12 +47,12 @@ function getOrCreateClientCorrelationId(): string {
  * 2. Clean URL: read each dimension's cookie via resolveVariant so the set of cookies stays
  *    in sync with the registry. This is the path taken for all real browser navigations.
  */
-function getActiveVariantHeaders(
+function getActiveVariant(
   pathname: string
 ): Record<string, string> | undefined {
   const variantSegment = getVariantSegmentFromPathname(pathname)
   if (variantSegment) {
-    return variantHeadersFromSegment(variantSegment)
+    return decodeVariant(variantSegment)
   }
   if (typeof document === 'undefined') {
     return undefined
@@ -61,12 +61,10 @@ function getActiveVariantHeaders(
   // resolveVariant reads dim.cookie for each dimension and validates against dim.allowed,
   // so adding a new dimension to the registry is automatically covered here.
   const cookieString = document.cookie
-  return variantHeaders(
-    resolveVariant(
-      // /(?!)/ is a no-match fallback; see active-variant-client.ts for rationale.
-      (name) =>
-        cookieString.match(DIMENSION_COOKIE_REGEXES.get(name) ?? /(?!)/)?.[1]
-    )
+  return resolveVariant(
+    // /(?!)/ is a no-match fallback; see active-variant-client.ts for rationale.
+    (name) =>
+      cookieString.match(DIMENSION_COOKIE_REGEXES.get(name) ?? /(?!)/)?.[1]
   )
 }
 
@@ -77,7 +75,7 @@ function getActiveVariantHeaders(
  * - Uses the external BFF URL (NEXT_PUBLIC_BFF_EXTERNAL_URL)
  * - Automatically gets the current locale from next-intl client hook
  * - Sends a stable per-tab correlation ID so BFF logs can be traced per user session
- * - Forwards all active variant headers (X-Data-Source etc.) derived from the URL variant
+ * - Forwards the X-<Category>-Provider headers the endpoint depends on, derived from the URL variant
  *   segment (alt-variant) or the preference cookies (default variant / clean URL)
  */
 export function useBffFetchClient() {
@@ -85,10 +83,7 @@ export function useBffFetchClient() {
   const baseUrl = getBffClientUrl()
   const pathname = usePathname()
 
-  const activeVariantHeaders = useMemo(
-    () => getActiveVariantHeaders(pathname),
-    [pathname]
-  )
+  const activeVariant = useMemo(() => getActiveVariant(pathname), [pathname])
 
   return {
     fetch: async (path: string, options?: RequestInit) => {
@@ -98,7 +93,9 @@ export function useBffFetchClient() {
         path,
         {
           ...options,
-          ...(activeVariantHeaders && { variantHeaders: activeVariantHeaders }),
+          ...(activeVariant && {
+            variantHeaders: variantHeaders(activeVariant),
+          }),
         },
         locale,
         correlationId

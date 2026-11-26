@@ -38,6 +38,12 @@ interface ShopConfig extends Categories {
    */
   contracts?: Partial<ContractExtensions>
   /**
+   * The fields of `contracts.cart` a shopper may set through `PUT /bff/cart/fields` (a gift message, a delivery
+   * note): `cartFields: ['giftMessage']`. None by default, so a field the server decides (a loyalty tier, a
+   * discount flag) is never writable by the shopper.
+   */
+  cartFields?: readonly string[]
+  /**
    * The shop's own BFF feature modules (Nest modules with a controller and its service, see the kit's README):
    * `features: [CompanyRegisterModule]`. Mounted when the categories their controllers read (`@Reads`) are
    * served.

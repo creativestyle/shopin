@@ -62,7 +62,7 @@ const nested = tempRepo("boundaries-nested-", {
 });
 
 after(() => {
-  for (const dir of [linked, nested])
+  for (const dir of [linked, nested, spoof])
     fs.rmSync(dir, { recursive: true, force: true });
 });
 
@@ -283,8 +283,43 @@ const allowWiring = {
   },
 };
 
+// config files by their path from the fixture repo's root (its package.json has workspaces)
+const shopConfig = { config: { "apps/web/shop.config.ts": ["shopin"] } };
+// a repo with the real layout, plus a vendored folder whose package.json claims the shop config's package name
+const spoof = tempRepo("boundaries-config-", {
+  ".": { name: "shop", workspaces: ["apps/*", "config/*", "integrations/*/*"] },
+  "config/shop": { name: "@shopin/config" },
+  "config/storefront": { name: "@shopin/storefront" },
+  "apps/web": { name: "@apps/web" },
+  "apps/web/vendor/shop": { name: "@shopin/config" },
+});
+const inSpoof = (file) => path.join(spoof, file);
+const shopFiles = {
+  config: {
+    "config/shop/shopin.config.ts": ["shopin"],
+    "config/storefront/wired.mts": ["page"],
+  },
+};
+
 ruleTester.run("no-integration-imports", noIntegrationImports, {
   valid: [
+    // a shop config file names any integration by its /shopin entry
+    {
+      filename: app("shop.config.ts"),
+      code: "import { acme } from '@integrations/acme-commerce/shopin'\nimport { other } from '@integrations/other-cms/shopin'",
+      options: [shopConfig],
+    },
+    // the real config files, by their path from the repo root: shopin.config.ts the /shopin entries, wired.mts /page
+    {
+      filename: inSpoof("config/shop/shopin.config.ts"),
+      code: "import { acme } from '@integrations/acme-commerce/shopin'",
+      options: [shopFiles],
+    },
+    {
+      filename: inSpoof("config/storefront/wired.mts"),
+      code: "export { PaymentDemo as PaymentStep } from '@integrations/acme-psp/page'",
+      options: [shopFiles],
+    },
     // shared packages and the app's own files
     {
       filename: app("src/x.ts"),
@@ -301,6 +336,12 @@ ruleTester.run("no-integration-imports", noIntegrationImports, {
       code: "import { CommerceModule } from '@integrations/acme-commerce'\nimport { AuthModule } from '@integrations/acme-auth'",
       options: [allowWiring],
     },
+    // the demo reaches the storefront through the config/storefront files, which `npm run use demo` points at it
+    {
+      filename: inSpoof("config/storefront/storefront.mts"),
+      code: "export * from '@demo/storefront/storefront'",
+      options: [shopFiles],
+    },
     // the rule leaves integration packages to integration-boundaries
     {
       filename: commerce("src/x.ts"),
@@ -313,6 +354,17 @@ ruleTester.run("no-integration-imports", noIntegrationImports, {
     },
   ],
   invalid: [
+    // the demo, from an app or a core package (a shop build and a shop without demo/ must carry none of it)
+    {
+      filename: app("app/layout.tsx"),
+      code: "import { DemoDisclaimerModal } from '@demo/demo-disclaimer'",
+      errors: [{ messageId: "demo" }],
+    },
+    {
+      filename: core("src/x.ts"),
+      code: "export * from '@demo/mock-tracking-tags'",
+      errors: [{ messageId: "demo" }],
+    },
     // an integration package, in every import form
     {
       filename: app("src/x.ts"),
@@ -369,6 +421,73 @@ ruleTester.run("no-integration-imports", noIntegrationImports, {
       code: "import { CommerceModule } from '@integrations/acme-commerce'",
       options: [allowWiring],
       errors: [{ messageId: "integration" }],
+    },
+    // the config list is per file: another file of that package gets nothing
+    {
+      filename: app("src/x.ts"),
+      code: "import { acme } from '@integrations/acme-commerce/shopin'",
+      options: [shopConfig],
+      errors: [{ messageId: "integration" }],
+    },
+    // a folder whose package.json claims the config package's name gets nothing (keyed by path, not by name)
+    {
+      filename: inSpoof("apps/web/vendor/shop/shopin.config.ts"),
+      code: "import { acme } from '@integrations/acme-commerce/shopin'",
+      options: [shopFiles],
+      errors: [{ messageId: "integration" }],
+    },
+    // a config file imports only the listed entry: not a deep path, not the package root, not another entry
+    {
+      filename: inSpoof("config/shop/shopin.config.ts"),
+      code: "import { CartService } from '@integrations/acme-commerce/src/services/cart.service'",
+      options: [shopFiles],
+      errors: [{ messageId: "configEntry" }],
+    },
+    {
+      filename: inSpoof("config/shop/shopin.config.ts"),
+      code: "import { CommerceModule } from '@integrations/acme-commerce'",
+      options: [shopFiles],
+      errors: [{ messageId: "configEntry" }],
+    },
+    {
+      filename: inSpoof("config/shop/shopin.config.ts"),
+      code: "import { acme } from '@integrations/acme-commerce/shopin/deep'",
+      options: [shopFiles],
+      errors: [{ messageId: "configEntry" }],
+    },
+    // an app file next to the config files gets nothing
+    {
+      filename: inSpoof("apps/web/src/x.ts"),
+      code: "import { acme } from '@integrations/acme-commerce/shopin'",
+      options: [shopFiles],
+      errors: [{ messageId: "integration" }],
+    },
+    // the storefront wiring imports only /page entries: never a server entry
+    {
+      filename: inSpoof("config/storefront/wired.mts"),
+      code: "export { PaymentService } from '@integrations/acme-psp'",
+      options: [shopFiles],
+      errors: [{ messageId: "configEntry" }],
+    },
+    {
+      filename: inSpoof("config/storefront/wired.mts"),
+      code: "export { acmePsp } from '@integrations/acme-psp/shopin'",
+      options: [shopFiles],
+      errors: [{ messageId: "configEntry" }],
+    },
+    // the hand-written storefront.mts is no config file
+    {
+      filename: inSpoof("config/storefront/storefront.mts"),
+      code: "export { PaymentDemo as PaymentStep } from '@integrations/acme-psp/page'",
+      options: [shopFiles],
+      errors: [{ messageId: "integration" }],
+    },
+    // a shop config file imports no vendor SDK
+    {
+      filename: app("shop.config.ts"),
+      code: "import { createApiBuilderFromCtpClient } from '@commercetools/platform-sdk'",
+      options: [shopConfig],
+      errors: [{ messageId: "vendor" }],
     },
     // vendor SDKs: never, not even in an allowed file
     {

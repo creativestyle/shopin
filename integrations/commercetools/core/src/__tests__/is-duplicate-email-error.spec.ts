@@ -1,4 +1,4 @@
-import { isDuplicateEmailError } from '..'
+import { isDuplicateEmailError } from '../is-duplicate-email-error'
 
 describe('isDuplicateEmailError', () => {
   it('matches DuplicateField on email', () => {

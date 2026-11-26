@@ -248,7 +248,16 @@ function allowedFor(context) {
   const allowed = new Set(
     context.options[0]?.allow?.[own.name]?.[relativeFile] ?? [],
   );
-  return { filename, own, relativeFile, allowed };
+  // a config file is named by its path from the monorepo root, never by a package name: any folder can hold a
+  // package.json with any name
+  const repoFile = path
+    .relative(findRepoRoot(dir), filename)
+    .split(path.sep)
+    .join("/");
+  const config = Object.hasOwn(context.options[0]?.config ?? {}, repoFile)
+    ? context.options[0].config[repoFile]
+    : undefined;
+  return { filename, own, relativeFile, repoFile, allowed, config };
 }
 
 /** Vendor SDKs: they belong inside an integration package, never in framework code. */
@@ -260,7 +269,11 @@ const VENDOR_SDK =
  * package, no vendor SDK and no file inside an integration package. The only exceptions are the ones the rule's
  * `allow` option lists: per package name, per file (path relative to that package), the integration packages
  * it may import, e.g. `{ "@apps/bff": { "src/data-source/data-source.module.ts": ["@integrations/mock-commerce"] } }`.
- * A vendor SDK is never allowed.
+ * The `config` option lists the shop's config files by their path from the monorepo root (the nearest package.json
+ * with `workspaces`), each with the integration entries it may import: `{ "config/shop/shopin.config.ts": ["shopin"] }`
+ * lets that file import `@integrations/<any>/shopin` and nothing else of an integration (not its root, not a deeper
+ * path). These files name the configured integrations by design (`npm run use` and `npm run setup` write them). A
+ * vendor SDK is never allowed, not even there.
  */
 export const noIntegrationImports = {
   meta: {
@@ -283,6 +296,13 @@ export const noIntegrationImports = {
               },
             },
           },
+          config: {
+            type: "object",
+            additionalProperties: {
+              type: "array",
+              items: { type: "string", pattern: "^[a-z][a-z0-9-]*$" },
+            },
+          },
         },
         additionalProperties: false,
       },
@@ -292,14 +312,17 @@ export const noIntegrationImports = {
         "'{{source}}' is an integration package. Code outside integrations/ does not import integrations{{hint}}.",
       vendor:
         "'{{source}}' is a vendor SDK. It belongs inside an integration package under integrations/, never in {{pkg}}.",
+      configEntry:
+        "'{{source}}' is not an entry {{file}} may import. A config file imports only an integration's {{entries}} entry, never its root, a deeper path or another entry.",
       intoIntegration:
         "'{{source}}' reaches into the integration package {{target}}. Code outside integrations/ does not import integration files.",
+      demo: "'{{source}}' is demo code. An app or core package never imports the demo: the demo reaches the storefront only through the slots of config/storefront (npm run use demo), so a shop build and a shop without demo/ carry none of it.",
     },
   },
   create(context) {
     const scope = allowedFor(context);
     if (!scope) return {};
-    const { filename, own, relativeFile, allowed } = scope;
+    const { filename, own, relativeFile, repoFile, allowed, config } = scope;
 
     function check(node, source) {
       if (typeof source !== "string") return;
@@ -318,12 +341,30 @@ export const noIntegrationImports = {
         return;
       }
       const name = packageNameOf(source);
+      // apps and core never name the demo (config/ may: `npm run use demo` points its files at the demo's)
+      if (name.startsWith("@demo/") && /^(apps|core)\//.test(repoFile)) {
+        context.report({ node, messageId: "demo", data: { source } });
+        return;
+      }
       if (VENDOR_SDK.test(name)) {
         context.report({
           node,
           messageId: "vendor",
           data: { source, pkg: own.name ?? path.basename(own.dir) },
         });
+      } else if (name.startsWith("@integrations/") && config) {
+        // a config file: exactly the listed entries (`@integrations/x/shopin`), nothing else of an integration
+        if (!config.includes(source.slice(name.length + 1))) {
+          context.report({
+            node,
+            messageId: "configEntry",
+            data: {
+              source,
+              file: repoFile,
+              entries: config.map((entry) => `/${entry}`).join(" or "),
+            },
+          });
+        }
       } else if (name.startsWith("@integrations/") && !allowed.has(name)) {
         context.report({
           node,

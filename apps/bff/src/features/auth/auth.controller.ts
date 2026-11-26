@@ -68,7 +68,9 @@ import type {
   AuthAction,
   AuthFailureReason,
 } from '../../common/auth-logging/auth-logging.types'
+import { Reads } from '@core/integration-kit'
 
+@Reads('commerce', 'auth')
 @Controller('auth')
 @ApiTags('auth')
 @SecureRateLimit()
@@ -114,12 +116,11 @@ export class AuthController {
           : statusCode >= 500
             ? 'error'
             : 'unknown',
-      () =>
-        this.handleAuthWithCartSetup(
-          req,
-          'login',
-          () => this.authService.login(loginRequest),
-          LoginResponseSchema
+      async () =>
+        LoginResponseSchema.strip().parse(
+          await this.handleAuthWithCartSetup(req, 'login', () =>
+            this.authService.login(loginRequest)
+          )
         )
     )
   }
@@ -155,12 +156,11 @@ export class AuthController {
           : statusCode >= 500
             ? 'error'
             : 'unknown',
-      () =>
-        this.handleAuthWithCartSetup(
-          req,
-          'register',
-          () => this.authService.register(registerRequest),
-          RegisterResponseSchema
+      async () =>
+        RegisterResponseSchema.strip().parse(
+          await this.handleAuthWithCartSetup(req, 'register', () =>
+            this.authService.register(registerRequest)
+          )
         )
     )
   }
@@ -225,8 +225,7 @@ export class AuthController {
   private async handleAuthWithCartSetup<T extends { success: boolean }>(
     req: Request,
     action: AuthAction,
-    authOperation: () => Promise<T>,
-    responseSchema: { strip: () => { parse: (data: T) => T } }
+    authOperation: () => Promise<T>
   ): Promise<T> {
     // Get guest cart ID and wishlist ID before authentication (while we still have anonymous session)
     const guestCartId = await this.cartIdService.getGuestCartId()
@@ -262,9 +261,13 @@ export class AuthController {
         })
         // Return successful auth result so we do not misreport auth as failed
       }
+      // the guest token served the cart takeover above; a signed-in shopper does not keep it
+      if (action === 'login') {
+        await this.authService.dropGuestSession()
+      }
     }
 
-    return responseSchema.strip().parse(result)
+    return result
   }
 
   @Post('logout')

@@ -1,0 +1,3 @@
+/* Written by npm run setup (do not edit): the Tailwind sources of the shop's files and of the UI packages they use. */
+@source "./";
+@import "@integrations/mock-psp/sources.css";

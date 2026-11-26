@@ -1,35 +1,53 @@
 {
   "name": "@integrations/algolia-search",
+  "version": "0.0.0",
   "description": "Algolia search integration: mappers and utilities for product search, facets, and price range",
   "author": "creativestyle GmbH",
   "private": true,
   "exports": {
-    ".": "./dist/index.js"
+    ".": {
+      "shopin-shop": {
+        "types": "./dist/types/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "default": "./dist/index.js"
+    },
+    "./shopin": {
+      "shopin-shop": {
+        "types": "./dist/types/shopin.d.ts",
+        "default": "./dist/shopin.js"
+      },
+      "default": "./dist/shopin.js"
+    }
   },
   "scripts": {
     "build": "tsc --build",
     "dev": "tsc --build --watch",
-    "build:all": "tsc --build tsconfig.json tsconfig.scripts.json",
-    "sync": "npm run build:all && dotenv -e ../../../.env -- node dist/scripts/algolia-sync.js",
-    "lint": "eslint --fix ./src ./scripts --max-warnings=0",
-    "format": "prettier --write ./src ./scripts",
-    "format:check": "prettier --check --ignore-unknown ./src ./scripts",
-    "check-types": "tsc --noEmit"
+    "lint": "eslint --fix ./src ./test --max-warnings=0",
+    "format": "prettier --write ./src ./test",
+    "format:check": "prettier --check --ignore-unknown ./src ./test",
+    "check-types": "tsc --noEmit",
+    "setup": "tsc --build",
+    "test": "tsc --build && node --test \"test/*.test.mjs\""
   },
   "dependencies": {
     "@config/constants": "*",
     "@core/contracts": "*",
     "@core/i18n": "*",
-    "@nestjs/common": "^11.1.3",
-    "@nestjs/config": "^4.0.2",
-    "algoliasearch": "^5.25.0"
+    "@core/integration-kit": "*"
   },
   "devDependencies": {
-    "@commercetools/platform-sdk": "^8.2.0",
     "@core/eslint-config": "*",
     "@core/prettier-config": "*",
-    "@core/typescript-config": "*",
-    "commander": "14.0.3",
-    "dotenv-cli": "^8.0.0"
+    "@core/typescript-config": "*"
+  },
+  "peerDependencies": {
+    "@nestjs/common": "^11.1.3",
+    "algoliasearch": "^5.25.0"
+  },
+  "peerDependenciesMeta": {
+    "algoliasearch": {
+      "optional": true
+    }
   }
 }

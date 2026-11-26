@@ -2,22 +2,14 @@
 
 ⚠️ **DEMO ONLY** — For demonstration only; not for production.
 
-React components and utilities to switch and display the active data source (Commercetools vs mock) in the storefront UI. Used for demos and local development.
-
-## What’s included
-
-- `DataSourceSelector` - A dropdown component for switching between data sources
-- `DataSourceIndicator` - A visual indicator showing the current data source
-- Utility functions for managing data source cookies and headers
-
-## Usage
-
-The components are automatically included in the presentation app for demo purposes.
+The demo's /setup page (`SetupPage`, the storefront's `Pages` slot under `setup` in `@demo/storefront`): shopin's
+data-source selector over the demo's provider switch. Each data source (`DATA_SOURCES`) names a provider per
+category; choosing one writes the switch's cookie of each category, and the storefront proxy reads them.
 
 ## Removal
 
-See [demo/README.md](../README.md) for removal steps.
+The demo lives under `demo/`: see the root README, "Removing the demo".
 
 ## License
 
-OSL-3.0 — see [root LICENSE](../../LICENSE).
+OSL-3.0 — see [root LICENSE](../../../LICENSE).

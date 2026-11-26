@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common'
 import { PinoLogger } from 'nestjs-pino'
 import type { LogoutRequest } from '@core/contracts/auth/logout'
-import { OAuthTokenService } from './oauth-token.service'
+import { OAuthTokenService } from '@integrations/commercetools-core'
 
 @Injectable()
 export class CommercetoolsLogoutService {

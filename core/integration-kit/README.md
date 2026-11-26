@@ -19,7 +19,8 @@ serves, and how a shop chooses integrations in one config.
 - **A kind of port of your own:** add it once in your descriptor's types, which also makes it a config key:
   `declare module '@core/integration-kit' { interface ServingPorts { orderRules?: OrderRules } }`.
 - **Your own fields on a contract:** `defineConfig({ contracts: { cart: CartResponseSchema.extend({ … }) } })`. The
-  BFF parses that contract with the extension; every integration that fills it needs its mapper hook.
+  BFF parses that contract with the extension; every integration that fills it needs its mapper hook. A shopper may
+  set only the cart fields you list in `cartFields: ['giftMessage']` (`PUT /bff/cart/fields`); none by default.
 - **Your own BFF feature modules:** `defineConfig({ features: [CompanyRegisterModule] })`, mounted when the
   categories their controllers read (`@Reads`) are served.
 

@@ -1,0 +1,22 @@
+{
+  "name": "@demo/switch-scenarios",
+  "version": "0.0.0",
+  "description": "The demo switch in the real BFF, through the framework's scenario harness (@test/category-split): delegates passed over at boot, per-request services, the defaults rule. Goes with the demo.",
+  "private": true,
+  "exports": {},
+  "scripts": {
+    "test": "node --experimental-vm-modules ../../node_modules/jest/bin/jest.js -c jest.config.cjs",
+    "check-types": "tsc --noEmit",
+    "lint": "eslint --fix . --max-warnings=0",
+    "format": "prettier --write .",
+    "format:check": "prettier --check --ignore-unknown ."
+  },
+  "devDependencies": {
+    "@core/eslint-config": "*",
+    "@core/integration-kit": "*",
+    "@core/prettier-config": "*",
+    "@demo/provider-switch": "*",
+    "@nestjs/core": "^11.2.7",
+    "@test/category-split": "*"
+  }
+}

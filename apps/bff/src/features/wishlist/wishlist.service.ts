@@ -1,5 +1,11 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common'
-import { DataSourceFactory } from '../../data-source/data-source.factory'
+import {
+  Injectable,
+  Logger,
+  NotFoundException,
+  NotImplementedException,
+} from '@nestjs/common'
+import { Services, Ports } from '../../data-source/ports.module'
+import { currentProviders } from '../../data-source/providers'
 import type {
   WishlistResponse,
   AddToWishlistRequest,
@@ -15,22 +21,38 @@ export class WishlistService extends BaseAuthenticatedService {
   private readonly logger = new Logger(WishlistService.name)
 
   constructor(
-    dataSourceFactory: DataSourceFactory,
+    services: Services,
+    ports: Ports,
     private readonly wishlistIdService: WishlistIdService,
     tokenProvider: TokenProvider,
     tokenStorageService: TokenStorageService
   ) {
-    super(tokenProvider, tokenStorageService, dataSourceFactory)
+    super(tokenProvider, tokenStorageService, services, ports)
   }
 
+  /** Whether this request's commerce provider offers wishlists (a port may leave them out: `omits`). */
+  isAvailable(): boolean {
+    return (
+      currentProviders().services.wishlist &&
+      this.services.wishlistService !== undefined
+    )
+  }
+
+  /** The commerce wishlist service; 501 when this request's commerce provider has none. */
   private getWishlistService() {
-    return this.dataSourceFactory.getServices().wishlistService
+    if (!this.isAvailable()) {
+      throw new NotImplementedException(
+        `wishlist is not available: commerce provider "${currentProviders().providers.commerce}" offers none`
+      )
+    }
+    return this.services.wishlistService!
   }
 
   async getWishlist(
     page?: number,
     limit?: number
   ): Promise<WishlistResponse | null> {
+    this.getWishlistService()
     const wishlistId = await this.getWishlistId()
     if (!wishlistId) {
       return null
@@ -130,6 +152,9 @@ export class WishlistService extends BaseAuthenticatedService {
   async getGuestWishlistItemsForMerge(): Promise<
     Array<{ productId: string; variantId?: string }>
   > {
+    if (!this.isAvailable()) {
+      return []
+    }
     try {
       const guestWishlist = await this.getWishlist()
       if (!guestWishlist) {
@@ -161,6 +186,10 @@ export class WishlistService extends BaseAuthenticatedService {
     // Delete guest wishlist cookie
     if (guestWishlistId) {
       await this.wishlistIdService.deleteGuestWishlistId()
+    }
+    // a platform without wishlists: nothing to set up, sign-in goes on
+    if (!this.isAvailable()) {
+      return
     }
 
     // Get or create the logged-in user's wishlist

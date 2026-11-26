@@ -24,6 +24,8 @@ const METHODS = {
     'setShippingAddress',
     'getShippingMethods',
     'setShippingMethod',
+    'addDiscountCode',
+    'removeDiscountCode',
     'getActiveCart',
   ],
   cartPaymentService: ['setPaymentMethod', 'verifyAndUpdatePaymentAmounts'],

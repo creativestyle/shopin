@@ -1,23 +1,23 @@
-import { Injectable, Inject, Logger, Scope } from '@nestjs/common'
-import { LANGUAGE_TOKEN } from '@core/i18n'
-import type { LanguageProvider } from '@core/contracts/core/request-providers'
+import { RequestContext } from '@core/integration-kit'
+import { Injectable, Logger } from '@nestjs/common'
 import { ServerClientService } from '@integrations/commercetools-core'
 import type { StoreConfigResponse } from '@core/contracts/store-config/store-config'
 import { CommercetoolsStoreApiResponseSchema } from '../schemas/store-config'
-import { getCtStoreKeyForLanguage } from '../config/stores'
+import { StoreKeyMap } from '../config/stores'
 
-@Injectable({ scope: Scope.REQUEST })
+@Injectable()
 export class StoreConfigService {
   private readonly logger = new Logger(StoreConfigService.name)
 
   constructor(
     private readonly serverClientService: ServerClientService,
-    @Inject(LANGUAGE_TOKEN) private readonly languageProvider: LanguageProvider
+    private readonly languageProvider: RequestContext,
+    private readonly storeKeys: StoreKeyMap
   ) {}
 
   async getStoreConfig(): Promise<StoreConfigResponse> {
     const language = this.languageProvider.getCurrentLanguage()
-    const ctStoreKey = getCtStoreKeyForLanguage(language)
+    const ctStoreKey = this.storeKeys.forLanguage(language)
 
     const client = this.serverClientService.getClient()
 

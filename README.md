@@ -15,7 +15,7 @@ A modular storefront accelerator with a NestJS Backend for Frontend (BFF), Next.
 
 ## Quick start
 
-**Prerequisites:** Node.js ≥ 22.
+**Prerequisites:** Node.js 24 (`.nvmrc`). No vendor account: the default shop runs on sample data (mock).
 
 1. **Clone and install**
 
@@ -25,54 +25,79 @@ A modular storefront accelerator with a NestJS Backend for Frontend (BFF), Next.
    npm ci
    ```
 
-2. **Environment** — Copy the template and set required values (see [.env.example](.env.example) for descriptions):
+2. **Set up and run**
 
    ```bash
-   cp .env.example .env
-   ```
-
-   Minimum for local dev: BFF URLs (with `/bff`), `FRONTEND_URL`, Commercetools credentials, and the four BFF security keys (JWT/CSRF). See the table in [.env.example](.env.example).
-
-3. **Setup and run**
-
-   ```bash
-   npm run setup
+   npm run setup   # creates .env with fresh local keys, installs and builds what the shop config names
    npm run dev
    ```
 
    - **Storefront:** http://localhost:3000
-   - **BFF API:** http://localhost:4000 — Swagger: http://localhost:4000/bff/api
+   - **BFF API:** http://localhost:4000/bff — Swagger: http://localhost:4000/bff/api
    - **Storybook:** http://localhost:6006
    - **Typedoc:** http://localhost:5000
 
+3. **Choose your vendors** — `config/shop/shopin.config.ts` names one integration per category (commerce, search,
+   cms, psp, auth). Change it with `npm run use`, which rewrites the file and runs setup again:
+
+   | Command                                                 | What it does                                                                |
+   | ------------------------------------------------------- | --------------------------------------------------------------------------- |
+   | `npm run use commerce commercetools auth commercetools` | commercetools for commerce and sign-in (they pair: `use` names the pairing) |
+   | `npm run use cms contentful` / `search algolia`         | Contentful pages, Algolia search                                            |
+   | `npm run use auth off`                                  | takes a category out (every shop keeps commerce)                            |
+   | `npm run use cms`                                       | lists the integrations a category takes                                     |
+   | `npm run use demo` / `npm run use demo off`             | the SHOPin demo, with its `/setup` page that switches per visitor, and back |
+
+   Setup adds the variables an integration needs to `.env`, empty, and its last lines name the ones still to fill
+   (each integration's README says where to find them). Restart `npm run dev` after a change.
+
+4. **Commit** `config/` and `package-lock.json`: setup writes the shop's packages from the config, and CI runs
+   `npm run config:check` to keep them in step.
+
+## Removing the demo
+
+The SHOPin demo (the "Demo Store Notice", sample tracking tags, the `/setup` switcher and the demo config) lives in
+`demo/` and reaches the storefront only through the slots of `config/storefront` while `npm run use demo` is on. A
+shop's own config carries none of it, so a shop build shows no demo notice. To drop the folder from your repository:
+
+```bash
+npm run use demo off     # only if the demo is on: back to your own config
+npm run use demo remove  # deletes demo/, then setup installs without it
+```
+
+`remove` refuses while the demo is on, and while a package outside `demo/` still depends on a demo package (it names
+it). Git brings the folder back if you need it again.
+
 ## Project structure
 
-| Area                  | Description                                                                                                                                      | README                                                                                                                                                                                         |
-| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **apps/bff**          | NestJS BFF (API gateway, auth, cart, content, products).                                                                                         | [apps/bff/README.md](apps/bff/README.md)                                                                                                                                                       |
-| **apps/presentation** | Next.js storefront (App Router).                                                                                                                 | [apps/presentation/README.md](apps/presentation/README.md)                                                                                                                                     |
-| **apps/storybook**    | UI component documentation and playground.                                                                                                       | [apps/storybook/README.md](apps/storybook/README.md)                                                                                                                                           |
-| **apps/typedoc**      | Generated TypeScript API documentation.                                                                                                          | [apps/typedoc/README.md](apps/typedoc/README.md)                                                                                                                                               |
-| **core/contracts**    | **Shared interfaces, types, and Zod schemas** consumed by apps and integrations (API contracts, request/response shapes).                        | [core/contracts/README.md](core/contracts/README.md)                                                                                                                                           |
-| **core/** (other)     | i18n, logger, ESLint/Prettier/TypeScript configs.                                                                                                | See each package in `core/`                                                                                                                                                                    |
-| **config/constants**  | Shared constants and types (data source, auth, i18n).                                                                                            | [config/constants/README.md](config/constants/README.md)                                                                                                                                       |
-| **integrations/**     | Data sources per vendor and category: commercetools (core, commerce, auth), algolia (search), contentful (cms, migration), mock (commerce, psp). | [contentful](integrations/contentful/cms/README.md), [contentful-migration](integrations/contentful/migration/README.md), [commercetools](integrations/commercetools/commerce/README.md), etc. |
-| **demo/**             | Optional demo packages (data-source selector, demo notice, sample tracking tags). Can be removed for production.                                 | [demo/README.md](demo/README.md)                                                                                                                                                               |
+| Area                  | Description                                                                                                                                                 | README                                                                                                                                                                                         |
+| --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **apps/bff**          | NestJS BFF (API gateway, auth, cart, content, products).                                                                                                    | [apps/bff/README.md](apps/bff/README.md)                                                                                                                                                       |
+| **apps/presentation** | Next.js storefront (App Router).                                                                                                                            | [apps/presentation/README.md](apps/presentation/README.md)                                                                                                                                     |
+| **apps/storybook**    | UI component documentation and playground.                                                                                                                  | [apps/storybook/README.md](apps/storybook/README.md)                                                                                                                                           |
+| **apps/typedoc**      | Generated TypeScript API documentation.                                                                                                                     | [apps/typedoc/README.md](apps/typedoc/README.md)                                                                                                                                               |
+| **core/contracts**    | **Shared interfaces, types, and Zod schemas** consumed by apps and integrations (API contracts, request/response shapes).                                   | [core/contracts/README.md](core/contracts/README.md)                                                                                                                                           |
+| **core/** (other)     | i18n, logger, ESLint/Prettier/TypeScript configs.                                                                                                           | See each package in `core/`                                                                                                                                                                    |
+| **config/constants**  | Shared constants and types (data source, auth, i18n).                                                                                                       | [config/constants/README.md](config/constants/README.md)                                                                                                                                       |
+| **integrations/**     | Data sources per vendor and category: commercetools (core, commerce, auth), algolia (search), contentful (cms, migration), mock (commerce, cms, psp, auth). | [contentful](integrations/contentful/cms/README.md), [contentful-migration](integrations/contentful/migration/README.md), [commercetools](integrations/commercetools/commerce/README.md), etc. |
+| **demo/**             | Optional demo packages (data-source selector, demo notice, sample tracking tags). Can be removed for production.                                            | [demo/README.md](demo/README.md)                                                                                                                                                               |
 
 ## Scripts
 
-| Script                       | Description                                                            |
-| ---------------------------- | ---------------------------------------------------------------------- |
-| `npm run setup`              | Build core packages and prepare the monorepo.                          |
-| `npm run dev`                | Start all development servers (presentation, BFF, Storybook, Typedoc). |
-| `npm run build`              | Production build for apps.                                             |
-| `npm run test`               | Run tests.                                                             |
-| `npm run lint`               | Lint the codebase.                                                     |
-| `npm run lint:boundaries`    | Integration import boundaries across the repo (part of `npm run lint`) |
-| `npm run format`             | Format the codebase.                                                   |
-| `npm run check-types`        | Type-check TypeScript.                                                 |
-| `npm run check-dependencies` | `npm audit --audit-level=high`.                                        |
-| `npm run start:local`        | Run production builds locally (run `npm run build` first).             |
+| Script                       | Description                                                                  |
+| ---------------------------- | ---------------------------------------------------------------------------- |
+| `npm run setup`              | Create `.env`, install and build what `config/shop/shopin.config.ts` names.  |
+| `npm run use`                | Switch, add or remove (`off`) an integration in the shop config, then setup. |
+| `npm run config:check`       | Fail when the config, its packages and the lockfile disagree (CI).           |
+| `npm run dev`                | Start all development servers (presentation, BFF, Storybook, Typedoc).       |
+| `npm run build`              | Production build for apps.                                                   |
+| `npm run test`               | Run tests.                                                                   |
+| `npm run lint`               | Lint the codebase.                                                           |
+| `npm run lint:boundaries`    | Integration import boundaries across the repo (part of `npm run lint`)       |
+| `npm run format`             | Format the codebase.                                                         |
+| `npm run check-types`        | Type-check TypeScript.                                                       |
+| `npm run check-dependencies` | `npm audit --audit-level=high`.                                              |
+| `npm run start:local`        | Run production builds locally (run `npm run build` first).                   |
 
 **Contentful migrations** — Run from the package: `npm run migrate -w @integrations/contentful-migration --` (from root) or `npm run migrate --` from [integrations/contentful/migration](integrations/contentful/migration/README.md). See that README for subcommands.
 

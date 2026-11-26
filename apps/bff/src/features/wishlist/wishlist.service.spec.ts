@@ -43,14 +43,14 @@ describe('WishlistService', () => {
         wishlistIdService.getGuestWishlistId.mockResolvedValue(undefined)
       }),
     }
-    const dataSourceFactory = {
-      getServices: () => ({ wishlistService: dataSourceWishlistService }),
-    }
+    const services = { wishlistService: dataSourceWishlistService }
+    const ports = { commerce: { services, guestSession: undefined } }
     tokenProvider = { getAuthStatus: jest.fn().mockResolvedValue(false) }
     const tokenStorageService = { hasAccessToken: () => true }
 
     service = new WishlistService(
-      dataSourceFactory as never,
+      services as never,
+      ports as never,
       wishlistIdService as never,
       tokenProvider as never,
       tokenStorageService as never

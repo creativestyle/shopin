@@ -11,8 +11,10 @@ import { I18nService } from './i18n.service'
 import type { Translations } from '@core/i18n'
 import { ZodParam } from '../../common/validation'
 import { LanguageCodeSchema } from '@core/contracts/i18n/i18n'
+import { Reads } from '@core/integration-kit'
 
 @ApiTags('i18n')
+@Reads()
 @Controller('i18n')
 export class I18nController {
   constructor(private readonly i18nService: I18nService) {}

@@ -70,6 +70,29 @@ export function orderCases(ctx: CaseContext): void {
         )
       },
     })
+    add(['orderService', 'cartService', 'productService'], {
+      name: 'commerce: ordering the same cart twice is refused as a conflict (409), not as a missing cart',
+      async run() {
+        const [owner] = await customerPair()
+        const mine = await port({ customerId: owner })
+        const { product: item } = await mine.productService.getProduct(
+          product!.slug
+        )
+        const cart = await mine.cartService.createCart()
+        await mine.cartService.addToCart(
+          cart.id,
+          item.id,
+          product!.variantId,
+          1
+        )
+        await mine.orderService.createOrder({ cartId: cart.id })
+        // the BFF drops the stale cart cookie and the storefront says "order already exists" only on 409
+        await rejectsWith(
+          [409],
+          mine.orderService.createOrder({ cartId: cart.id })
+        )
+      },
+    })
   }
   if (data.orders) {
     add(

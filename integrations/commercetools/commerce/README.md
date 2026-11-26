@@ -4,25 +4,67 @@ NestJS module that integrates [Commercetools](https://commercetools.com/) with t
 
 ## Overview
 
-This module implements the data-source service interfaces used by the BFF. When the data source is `commercetools-set`, the BFF routes product, cart, order, and navigation requests through this integration.
+This module implements the data-source service interfaces used by the BFF. It provides the categories `commerce`, `search` and `auth` (commercetools customer accounts); its `commerce` part has the `customer-link` capability.
 
 ## Environment Variables
 
-Env are set in the **repo root `.env`**. See [root `.env.example`](../../../.env.example) for descriptions. This module uses: `COMMERCETOOLS_CLIENT_ID`, `COMMERCETOOLS_CLIENT_SECRET`, `COMMERCETOOLS_PROJECT_KEY`, `COMMERCETOOLS_API_URL`, `COMMERCETOOLS_AUTH_URL`, `COMMERCETOOLS_STORE_KEYS`.
+Set in the repository root `.env`; `npm run setup` adds the required ones (empty) when the config names
+commercetools. Create an API client in the project (Merchant Center → Settings → Developer settings → API clients):
+
+- `COMMERCETOOLS_CLIENT_ID`, `COMMERCETOOLS_CLIENT_SECRET`, `COMMERCETOOLS_PROJECT_KEY` — the API client
+- `COMMERCETOOLS_API_URL`, `COMMERCETOOLS_AUTH_URL` — the project's region URLs, e.g.
+  `https://api.europe-west1.gcp.commercetools.com` and `https://auth.europe-west1.gcp.commercetools.com`
+- `COMMERCETOOLS_STORE_KEYS` (optional) — the Store of a locale `commercetools({ storeKeys })` leaves out:
+  `en-US:shopin-us,de-DE:shopin-de` (the option wins for a locale it names)
+- `COMMERCETOOLS_LINK_CUSTOMERS` (optional) — `1` lets sign-in through another identity provider create or link
+  customers (below)
+
+## Sign-in through another identity provider
+
+With `auth` served by another integration (your identity provider) and `commerce: commercetools()`, the BFF links
+each signed-in identity to a commercetools customer (`externalId`), creating the customer when there is none. That
+writes customers into the project, so it needs `COMMERCETOOLS_LINK_CUSTOMERS=1`; without it the BFF does not start
+and says so.
+
+Such a customer has no commercetools token of their own, so their cart, orders, payments and shopping lists are read
+and written through the project API with the API client, always filtered by that customer. The API client then needs
+the scopes `manage_orders`, `manage_customers`, `manage_payments` and `manage_shopping_lists`. With
+`COMMERCETOOLS_LINK_CUSTOMERS=1` the BFF checks them at start and names the missing ones. Scopes of an existing API
+client cannot be changed: create a new one.
+
+A customer of commercetools' own sign-in (`auth: commercetoolsAuth()`) needs none of the order, payment and
+shopping-list scopes: the BFF acts with that customer's own token (the `me` endpoints), so commercetools itself limits
+every call to the customer, and the guest cart is merged into the customer's at sign-in. The sign-in itself needs
+`manage_customers` (sign-up creates customers; sign-in and the session re-check read them); the BFF checks it at
+start.
+
+| Configuration                                  | API client scopes beyond the shopper ones                                       | Checked at start |
+| ---------------------------------------------- | ------------------------------------------------------------------------------- | ---------------- |
+| commercetools commerce, no sign-in             | none                                                                            | —                |
+| commercetools commerce + commercetools sign-in | `manage_customers`                                                              | yes              |
+| commercetools commerce + another sign-in       | `manage_orders`, `manage_customers`, `manage_payments`, `manage_shopping_lists` | yes              |
+
+`manage_project` (an admin client) grants all of them.
 
 ## Configuring stores and shipping destinations
 
-Each storefront locale maps to a commercetools **Store**. The supported locales are declared in [`config/constants/src/i18n.ts`](../../../config/constants/src/i18n.ts) — **that file is the first thing to update when adding a new locale**. It carries the default `ctStoreKey` per locale. See [`config/constants/README.md`](../../../config/constants/README.md) for the full checklist.
+Each locale of the shop (`config/locales.json`) reads one commercetools **Store**. The integration's option names
+them, in `config/shop/shopin.config.ts`:
 
-Override the store key per-environment via `COMMERCETOOLS_STORE_KEYS`:
+```ts
+import { commercetools } from '@integrations/commercetools-commerce/shopin'
 
+const ct = commercetools({
+  storeKeys: { 'en-US': 'us-store', 'de-DE': 'eu-store' },
+})
 ```
-COMMERCETOOLS_STORE_KEYS=en-US:my-us-store,de-DE:my-de-store
-```
 
-When this var is unset, every language falls back to the `ctStoreKey` defined in `LOCALE_CONFIG`.
+A locale the option leaves out takes its store from `COMMERCETOOLS_STORE_KEYS=en-US:my-us-store,de-DE:my-de-store`
+(per environment); for a locale the option names, the option wins. Every locale
+needs a store: the BFF's start names a locale without one, and a store key for a locale the shop does not have.
 
-**When adding a new locale**, also create (or designate) a matching Store in the Merchant Center with the correct languages configured, then add its key to `COMMERCETOOLS_STORE_KEYS`.
+**When adding a new locale**, create (or designate) a matching Store in the Merchant Center with its language and
+countries, then add its key to `storeKeys`.
 
 **Shipping-country dropdown** — the address form in checkout reads the store's `countries` list directly from the commercetools Store resource. To control which countries appear in the dropdown:
 
@@ -46,17 +88,9 @@ Create the Type in **Merchant Center → Settings → Project settings → Custo
 
 Without the Type, or for a method without a value, no delivery time is shown and everything else works as before. A field with a different type (e.g. a plain `String`) is ignored rather than failing the cart or order request.
 
-## Service Provider
-
-The module includes `CommercetoolsServiceProvider` that implements the `DataSourceServiceProvider` interface, providing access to all Commercetools services through a unified interface.
-
 ## Usage
 
-This module is used by the BFF (Backend for Frontend) service. It's imported and configured in `apps/bff/src/data-source/data-source.module.ts` and used by the `DataSourceFactory` to route requests to Commercetools when the data source is set to `commercetools-set`.
-
-## Integration
-
-The module is automatically loaded by the BFF's `DataSourceModule` and provides services when the `commercetools-set` data source is selected.
+Import `@integrations/commercetools-commerce/shopin` in `config/shop/shopin.config.ts` and name it under the categories it should serve, then `npm run setup` (see the [root README](../../../README.md#quick-start)).
 
 ## License
 

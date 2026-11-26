@@ -3,7 +3,9 @@ import { NavigationService } from './navigation.service'
 import { ApiTags, ApiOkResponse } from '@nestjs/swagger'
 import { MainNavigationResponseSchema } from '@core/contracts/navigation/main-navigation'
 import type { MainNavigationResponse } from '@core/contracts/navigation/main-navigation'
+import { Reads } from '@core/integration-kit'
 
+@Reads('commerce')
 @Controller('navigation')
 @ApiTags('navigation')
 export class NavigationController {

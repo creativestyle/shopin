@@ -8,11 +8,11 @@ import {
   type MouseEvent,
 } from 'react'
 import { useLocale } from 'next-intl'
-import { LOCALE_CONFIG } from '@config/constants'
+import { listLocales } from '@config/constants'
 import { useOutsideClick } from './use-outside-click'
 import { useLocaleSwitcher } from '@/features/locale-routing/use-locale-switcher'
 
-const languages = Object.values(LOCALE_CONFIG)
+const languages = listLocales()
 
 export function useLanguageSwitcher() {
   const locale = useLocale()

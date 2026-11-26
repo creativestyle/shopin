@@ -1,13 +1,13 @@
 import { Injectable, Scope } from '@nestjs/common'
 import type { StoreConfigResponse } from '@core/contracts/store-config/store-config'
-import { DataSourceFactory } from '../../data-source/data-source.factory'
+import { Services } from '../../data-source/ports.module'
 
 @Injectable({ scope: Scope.REQUEST })
 export class StoreConfigService {
-  constructor(private readonly dataSourceFactory: DataSourceFactory) {}
+  constructor(private readonly services: Services) {}
 
   async getStoreConfig(): Promise<StoreConfigResponse> {
-    const { storeConfigService } = this.dataSourceFactory.getServices()
+    const { storeConfigService } = this.services
     return storeConfigService.getStoreConfig()
   }
 }

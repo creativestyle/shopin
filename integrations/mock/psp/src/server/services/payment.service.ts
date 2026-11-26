@@ -1,16 +1,12 @@
-import { Injectable, Inject } from '@nestjs/common'
-import { ConfigService } from '@nestjs/config'
-import { LANGUAGE_TOKEN } from '@core/i18n'
-import type { LanguageProvider } from '@core/contracts/core/request-providers'
+import { PAYMENT_STEP_PATH } from '@core/contracts/core/data-source-interfaces'
+import { RequestContext } from '@core/integration-kit'
+import { Injectable } from '@nestjs/common'
 import type { PaymentMethodsResponse } from '@core/contracts/cart/payment-method'
 import { PaymentMethodsResponseSchema } from '@core/contracts/cart/payment-method'
 
 @Injectable()
 export class PaymentService {
-  constructor(
-    @Inject(LANGUAGE_TOKEN) private readonly languageProvider: LanguageProvider,
-    private readonly configService: ConfigService
-  ) {}
+  constructor(private readonly languageProvider: RequestContext) {}
 
   async getPaymentMethods(): Promise<PaymentMethodsResponse> {
     const mockPaymentMethods = [
@@ -51,13 +47,12 @@ export class PaymentService {
    * @returns Payment link to redirect the user to
    */
   async getPaymentLink(cartId: string): Promise<{ paymentLink: string }> {
-    // Get the base URL from FRONTEND_URL (presentation URL) or use a default
-    const baseUrl =
-      this.configService.get<string>('FRONTEND_URL') || 'http://localhost:3000'
+    // the storefront's own URL comes from the core (a part never reads FRONTEND_URL)
+    const baseUrl = this.languageProvider.storefrontUrl
 
-    // Construct the payment link to the demo payment page
-    // The locale will be handled by the frontend routing
-    const paymentLink = `${baseUrl}/demo/mocked-payment-step/${cartId}`
+    // the storefront's own payment step (the PaymentStep slot, which this integration's descriptor requires);
+    // the locale is handled by the storefront's routing
+    const paymentLink = `${baseUrl}${PAYMENT_STEP_PATH}/${encodeURIComponent(cartId)}`
 
     return { paymentLink }
   }

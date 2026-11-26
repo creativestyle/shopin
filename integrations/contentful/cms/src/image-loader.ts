@@ -6,10 +6,8 @@
  * @see https://www.contentful.com/developers/docs/references/images-api/
  */
 
-import {
-  CONTENT_IMAGE_API_HOSTS,
-  CONTENT_IMAGE_DEFAULT_QUALITY,
-} from '@config/constants'
+import { CONTENTFUL_IMAGE_API_HOSTS } from './image-hosts'
+import { CONTENT_IMAGE_DEFAULT_QUALITY } from '@config/constants'
 
 export type ContentfulImageLoaderParams = {
   src: string
@@ -21,7 +19,7 @@ export function contentfulHostSupportsImageApi(url: string): boolean {
   try {
     const absolute = url.startsWith('//') ? `https:${url}` : url
     const host = new URL(absolute).hostname
-    return CONTENT_IMAGE_API_HOSTS.some(
+    return CONTENTFUL_IMAGE_API_HOSTS.some(
       (h) => host === h || host.endsWith('.' + h)
     )
   } catch {

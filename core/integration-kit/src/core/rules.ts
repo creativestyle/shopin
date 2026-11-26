@@ -28,6 +28,10 @@ export const CORE_ENV =
 export const SYSTEM_ENV =
   /^(PATH|HOME|USER|SHELL|PWD|TMPDIR|TMP|TEMP|LANG|LC_[A-Z_]+|TERM|CI|NODE_[A-Z0-9_]+|NPM_[A-Z0-9_]+|npm_[a-z0-9_]+|TURBO_[A-Z0-9_]+|NEXT_[A-Z0-9_]+)$/
 
+/** Core secrets: read once into the core-only config, then removed from `process.env`. */
+export const CORE_SECRETS =
+  /^(JWT_|CSRF_|SESSION_)[A-Z0-9_]+$|^NEXT_DRAFT_MODE_SECRET$/
+
 export function configErrors(config: ShopinConfig): string[] {
   const errors: string[] = []
   const byId = new Map(config.integrations.map((i) => [i.id, i]))

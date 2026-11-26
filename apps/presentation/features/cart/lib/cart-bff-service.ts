@@ -2,13 +2,13 @@ import {
   AddToCartRequestSchema,
   UpdateCartItemRequestSchema,
   RemoveCartItemRequestSchema,
-  CartResponseSchema,
   ApplyDiscountCodeRequestSchema,
   RemoveDiscountCodeRequestSchema,
   type CartResponse,
 } from '@core/contracts/cart/cart'
 import { BaseService } from '@/lib/bff/services/base-service'
 import { toPromoCodeError } from './promo-code-error'
+import { Contracts } from '@/lib/contracts'
 
 /**
  * Service for cart operations only (get cart, add/update/remove items).
@@ -27,7 +27,7 @@ export class CartService extends BaseService {
       return null
     }
 
-    return CartResponseSchema.parse(data)
+    return Contracts.cart.parse(data)
   }
 
   /**
@@ -40,7 +40,7 @@ export class CartService extends BaseService {
   }): Promise<CartResponse> {
     const validatedRequest = AddToCartRequestSchema.parse(request)
     const data = await this.post<CartResponse>('/cart/items', validatedRequest)
-    return CartResponseSchema.parse(data)
+    return Contracts.cart.parse(data)
   }
 
   /**
@@ -52,7 +52,7 @@ export class CartService extends BaseService {
   }): Promise<CartResponse> {
     const validatedRequest = UpdateCartItemRequestSchema.parse(request)
     const data = await this.put<CartResponse>('/cart/items', validatedRequest)
-    return CartResponseSchema.parse(data)
+    return Contracts.cart.parse(data)
   }
 
   /**
@@ -64,7 +64,7 @@ export class CartService extends BaseService {
       '/cart/items',
       validatedRequest
     )
-    return CartResponseSchema.parse(data)
+    return Contracts.cart.parse(data)
   }
 
   /** Custom onError because the default handling discards the body, and we need its reason. */
@@ -83,12 +83,19 @@ export class CartService extends BaseService {
         },
       }
     )
-    return CartResponseSchema.parse(data)
+    return Contracts.cart.parse(data)
   }
 
   /**
    * Remove an applied promo code
    */
+  /** The shop's own cart fields (`contracts.cart`; `null` removes one): the cart with them. */
+  async setFields(fields: Record<string, unknown>): Promise<CartResponse> {
+    return Contracts.cart.parse(
+      await this.put<CartResponse>('/cart/fields', fields)
+    )
+  }
+
   async removeDiscountCode(request: {
     discountCodeId: string
   }): Promise<CartResponse> {
@@ -97,7 +104,7 @@ export class CartService extends BaseService {
       '/cart/discount-code',
       validatedRequest
     )
-    return CartResponseSchema.parse(data)
+    return Contracts.cart.parse(data)
   }
 
   /**

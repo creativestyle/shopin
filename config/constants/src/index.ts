@@ -1,6 +1,3 @@
-// Re-export data source constants
-export * from './data-source'
-
 // Re-export i18n constants
 export * from './i18n'
 
@@ -42,9 +39,6 @@ export * from './cache'
 
 // Re-export content-image constants
 export * from './content-image'
-
-// Re-export product-image constants
-export * from './product-image'
 
 // Re-export search constants
 export * from './search'

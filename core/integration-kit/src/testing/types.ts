@@ -32,6 +32,12 @@ export interface CommerceContractData {
    * with `setCartFields` (fields your platform's cart takes, e.g. those of its custom type).
    */
   cart?: boolean | { fields: Record<string, unknown> }
+  /**
+   * Two discount codes of the platform that each apply to a cart holding `product`: run the discount code case
+   * (apply, a second code refused with `DiscountCodeError('alreadyApplied')` while one is applied, remove). Needs
+   * `cart`.
+   */
+  discountCodes?: [string, string]
   /** The port links customers of other identity providers (`customers`): run the linking cases. */
   customers?: boolean
   /**
@@ -66,6 +72,8 @@ export const COMMERCE: Record<
       'setShippingAddress',
       'getShippingMethods',
       'setShippingMethod',
+      'addDiscountCode',
+      'removeDiscountCode',
       'getActiveCart',
     ],
   },

@@ -4,6 +4,7 @@
 import { bffFetch } from '../core/bff-fetch'
 import { AcceptLanguageUtils } from '@core/i18n'
 import { I18N_CONFIG, DRAFT_MODE_HEADER } from '@config/constants'
+import { ALT_RESOLVED, DIMS } from '@/lib/variant/__fixtures__/variants'
 
 jest.mock('next/headers', () => ({
   cookies: async () => ({
@@ -152,19 +153,22 @@ describe('bffFetch', () => {
     it('sends explicit variantHeaders as-is', async () => {
       // When the [variant] layout (server) or usePathname (client) provides
       // explicit headers, they are forwarded verbatim to the BFF.
+      const header = DIMS[0]!.header
       await bffFetch('http://bff', 'nav', {
-        variantHeaders: { 'X-Data-Source': 'commercetools-algolia-set' },
+        variantHeaders: { [header]: ALT_RESOLVED[DIMS[0]!.name]! },
       })
-      expect(lastCallHeaders()['x-data-source']).toBe(
-        'commercetools-algolia-set'
+      expect(lastCallHeaders()[header.toLowerCase()]).toBe(
+        ALT_RESOLVED[DIMS[0]!.name]
       )
     })
 
-    it('omits X-Data-Source when variantHeaders is not provided', async () => {
-      // No explicit header → BFF defaults to its own default (commercetools-set).
-      // The data-source cookie is no longer read; variant is URL-based now.
+    it('omits the provider headers when variantHeaders is not provided', async () => {
+      // No explicit header → BFF uses each category's default provider.
+      // The provider cookies are not read here; variant is URL-based.
       await bffFetch('http://bff', 'nav')
-      expect(lastCallHeaders()['x-data-source']).toBeUndefined()
+      for (const d of DIMS) {
+        expect(lastCallHeaders()[d.header.toLowerCase()]).toBeUndefined()
+      }
     })
   })
 })

@@ -1,7 +1,7 @@
 import { Injectable, Inject } from '@nestjs/common'
-import { LANGUAGE_TOKEN, resolveCurrencyFromLanguage } from '@core/i18n'
+import { RequestContext } from '@core/integration-kit'
+import { resolveCurrencyFromLanguage } from '@core/i18n'
 import { ITEMS_PER_PAGE, MIN_PAGE } from '@config/constants'
-import type { LanguageProvider } from '@core/contracts/core/request-providers'
 import type { ProductSearchParams } from '@core/contracts/core/data-source-interfaces'
 import type { ProductSearchResponse } from '@core/contracts/product-search/product-search'
 import { MOCK_API, MockApi } from '../client/client.module'
@@ -28,7 +28,7 @@ const MAX_MATCH_COUNT = 60
 export class ProductSearchService {
   constructor(
     @Inject(MOCK_API) private readonly mockApi: MockApi,
-    @Inject(LANGUAGE_TOKEN) private readonly languageProvider: LanguageProvider
+    private readonly languageProvider: RequestContext
   ) {}
 
   /** Deterministic per query, so repeated searches and suggestions stay in sync. */
@@ -104,6 +104,9 @@ export class ProductSearchService {
         image: p.image,
         variantId: p.variantId,
         variantCount: p.variantCount,
+        // the catalog record's attributes, as the collection gives them: stripped by the contract, read by a
+        // shop's productCard hook
+        attributes: p.attributes,
       })),
       facets,
       priceRange,

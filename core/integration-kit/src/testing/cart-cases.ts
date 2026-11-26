@@ -5,7 +5,10 @@ import { ShippingMethodsResponseSchema } from '@core/contracts/cart/shipping-met
 import type { CaseContext } from './types'
 import { rejectsWith, ADDRESS } from './helpers'
 
-/** Cart: create, lines, discount codes, shipping, own fields, attach a guest cart. */
+/**
+ * Cart: create, lines, an unknown cart, discount codes (when the data names two), checkout (addresses, shipping, a
+ * payment method). The shop's own fields and attaching a guest cart are order cases (they need customers).
+ */
 export function cartCases(ctx: CaseContext): void {
   const { port, data, add } = ctx
   const { product } = data
@@ -54,6 +57,69 @@ export function cartCases(ctx: CaseContext): void {
           await rejectsWith(
             404,
             cartService.getCart(`no-such-cart-${randomUUID()}`)
+          )
+        },
+      }
+    )
+  }
+  if (data.cart && data.discountCodes) {
+    const [first, second] = data.discountCodes
+    add(
+      [
+        'productService',
+        'cartService.addDiscountCode',
+        'cartService.removeDiscountCode',
+      ],
+      {
+        name: 'commerce: a discount code applies and is removed; a second code is refused while one is applied',
+        async run() {
+          const { cartService: carts, productService } = await port()
+          const { product: item } = await productService.getProduct(
+            product!.slug
+          )
+          const cart = await carts.createCart()
+          await carts.addToCart(cart.id, item.id, product!.variantId, 1)
+          const before = CartResponseSchema.parse(await carts.getCart(cart.id))
+          const applied = CartResponseSchema.parse(
+            await carts.addDiscountCode(cart.id, first)
+          )
+          const code = applied.discountCodes?.find((c) => c.applied)
+          assert.ok(code, `${first}: the cart holds no applied code`)
+          assert.ok(
+            applied.grandTotal.regularPriceInCents <
+              before.grandTotal.regularPriceInCents,
+            `${first}: the grand total did not go down`
+          )
+          await assert.rejects(
+            carts.addDiscountCode(cart.id, second),
+            (error: { name?: string; reason?: string }) =>
+              error?.name === 'DiscountCodeError' &&
+              error.reason === 'alreadyApplied',
+            `${second} was not refused (DiscountCodeError alreadyApplied) while ${first} is applied`
+          )
+          const kept = CartResponseSchema.parse(await carts.getCart(cart.id))
+          assert.deepEqual(
+            kept.discountCodes?.filter((c) => c.applied).map((c) => c.id),
+            [code.id],
+            'the refused code changed the codes on the cart'
+          )
+          const removed = CartResponseSchema.parse(
+            await carts.removeDiscountCode(cart.id, code.id)
+          )
+          assert.equal(
+            removed.discountCodes?.some((c) => c.applied) ?? false,
+            false
+          )
+          assert.equal(
+            removed.grandTotal.regularPriceInCents,
+            before.grandTotal.regularPriceInCents
+          )
+          const next = CartResponseSchema.parse(
+            await carts.addDiscountCode(cart.id, second)
+          )
+          assert.ok(
+            next.discountCodes?.some((c) => c.applied),
+            `${second} does not apply once ${first} is removed`
           )
         },
       }

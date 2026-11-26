@@ -5,6 +5,8 @@ import { ContentPage } from '@/features/content/content-page'
 import { buildContentPageMetadata } from '@/features/content/build-content-page-metadata'
 import { getContentPage } from '@/features/content/get-content-page'
 import { tryGetSiteBaseUrl } from '@/lib/site-url'
+import { bffForPage, findShopPage } from '@/lib/shop-pages'
+import { createBffFetchServer } from '@/lib/bff/core/bff-fetch-server'
 
 /** Paths with a file extension (e.g. .html, .json) are not CMS pages — 404. */
 function hasFileExtension(slug: string): boolean {
@@ -51,11 +53,26 @@ export async function generateMetadata({
 
 export default async function Page({
   params,
+  searchParams,
 }: {
   params: Promise<{ variant: string; locale: string; page: string[] }>
+  searchParams: Promise<Record<string, string | string[] | undefined>>
 }) {
   const { variant, locale, page } = await params
   initRouteContext({ variant, locale })
+  // the shop's own page (config/storefront, slot Pages) wins over a CMS page of the same path
+  const shopPage = findShopPage(page)
+  if (shopPage) {
+    const { fetch } = await createBffFetchServer()
+    return (
+      <shopPage.Page
+        path={shopPage.path}
+        searchParams={await searchParams}
+        locale={locale}
+        bff={bffForPage(fetch)}
+      />
+    )
+  }
   const cmsSlug = getCmsSlug(page)
   if (!cmsSlug) {
     notFound()

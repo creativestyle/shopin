@@ -1,31 +1,63 @@
 {
   "name": "@demo/mock-tracking-tags",
-  "version": "1.0.0",
+  "version": "0.0.0",
   "description": "Demo-only mock analytics and marketing tags that show cookie-consent gating in action.",
   "author": "creativestyle GmbH",
   "private": true,
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "./dist/index.js",
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
-    "lint": "eslint --fix ./src --max-warnings=0",
-    "format": "prettier --write ./src",
-    "format:check": "prettier --check --ignore-unknown ./src",
-    "check-types": "tsc --noEmit"
+    "lint": "eslint --fix ./src ./test --max-warnings=0",
+    "format": "prettier --write ./src ./test",
+    "format:check": "prettier --check --ignore-unknown ./src ./test",
+    "check-types": "tsc --noEmit && tsc -p tsconfig.test.json",
+    "setup": "tsc",
+    "test": "jest"
   },
-  "dependencies": {
+  "devDependencies": {
+    "@core/eslint-config": "*",
+    "@core/prettier-config": "*",
+    "@core/typescript-config": "*",
+    "@testing-library/dom": "^10.4.0",
+    "@testing-library/react": "^16.3.0",
+    "@types/jest": "^30.0.0",
+    "@types/react": "19.2.7",
+    "@types/react-dom": "19.2.3",
+    "eslint": "^9.20.1",
+    "jest": "^30.0.5",
+    "jest-environment-jsdom": "^30.0.5",
+    "ts-jest": "^29.4.9",
+    "typescript": "^5.7.3"
+  },
+  "peerDependencies": {
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "next": "16.4.6"
   },
-  "devDependencies": {
-    "@core/typescript-config": "*",
-    "@core/eslint-config": "*",
-    "@core/prettier-config": "*",
-    "@types/react": "19.2.7",
-    "@types/react-dom": "19.2.3",
-    "eslint": "^9.20.1",
-    "typescript": "^5.7.3"
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    },
+    "react-dom": {
+      "optional": true
+    },
+    "next": {
+      "optional": true
+    }
+  },
+  "exports": {
+    ".": {
+      "shopin-shop": {
+        "types": "./dist/types/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "shopin-demo": {
+        "types": "./dist/types/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "default": "./dist/index.js"
+    },
+    "./sources.css": "./sources.css"
   }
 }

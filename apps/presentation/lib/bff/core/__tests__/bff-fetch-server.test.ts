@@ -20,10 +20,13 @@ jest.mock('@/lib/draft-mode', () => ({
 import { createBffFetchServer } from '../bff-fetch-server'
 import type { BffFetchOptions } from '../bff-fetch'
 import { BffUnreachableError } from '../../utils/bff-unreachable-error'
+import { DEFAULT_RESOLVED, DIMS } from '@/lib/variant/__fixtures__/variants'
 
 const BASE_URL = 'http://bff-internal'
-const VARIANT_RESOLVED = { dataSource: 'commercetools-set' }
-const VARIANT_HEADERS = { 'X-Data-Source': 'commercetools-set' }
+const VARIANT_RESOLVED = { ...DEFAULT_RESOLVED }
+const VARIANT_HEADERS = Object.fromEntries(
+  DIMS.map((d) => [d.header, DEFAULT_RESOLVED[d.name]!])
+)
 const MOCK_RESPONSE = { ok: true, status: 200 } as unknown as Response
 
 function mocks() {
@@ -231,7 +234,7 @@ describe('createBffFetchServer', () => {
     const client = await createBffFetchServer()
     // Pass variantHeaders from the caller — extraOpts must override it with the resolved headers.
     // A reversed spread ({ ...extraOpts, ...options }) would leave it wrong and fail.
-    const callerHeaders = { 'X-Data-Source': 'wrong-source' }
+    const callerHeaders = { [DIMS[0]!.header]: 'wrong-source' }
     await client.fetch('/nav', {
       method: 'POST',
       variantHeaders: callerHeaders,

@@ -1,48 +1,24 @@
 /**
- * Next.js Image loader for commercetools product images.
- * Transforms CDN URLs to use pre-generated size variants via filename suffix.
+ * Next.js Image loader for product images. The serving commerce integration declares its image hosts and
+ * how they resize (shopin.config.ts → STOREFRONT); this file knows no vendor URL scheme.
  * @see https://nextjs.org/docs/app/api-reference/components/image#loader
- * @see https://docs.commercetools.com/api/projects/products#image
  */
 
-import { PRODUCT_IMAGE_HOSTS } from '@config/constants'
-import { isHostSupported } from './image-host-utils'
-
-const SIZE_BREAKPOINTS = [
-  { maxWidth: 50, suffix: '-thumb' },
-  { maxWidth: 150, suffix: '-small' },
-  { maxWidth: 400, suffix: '-medium' },
-  { maxWidth: 700, suffix: '-large' },
-] as const
+import { imageSourceOf, resizeImage } from '@/lib/image-source'
+import { STOREFRONT } from './storefront-config'
 
 type ProductImageLoaderParams = {
   src: string
   width: number
-}
-
-function getSizeSuffix(width: number): string {
-  for (const { maxWidth, suffix } of SIZE_BREAKPOINTS) {
-    if (width <= maxWidth) {
-      return suffix
-    }
-  }
-  return '-zoom'
-}
-
-function buildProductImageUrl({
-  src,
-  width,
-}: ProductImageLoaderParams): string {
-  const suffix = getSizeSuffix(width)
-  // Captures extension, optional query string, and optional fragment separately
-  // so each is preserved after suffix insertion. No-op for extensionless URLs.
-  return src.replace(/(\.[^./?#]+)(\?[^#]*)?(#.*)?$/, `${suffix}$1$2$3`)
+  quality?: number
 }
 
 export function productImageLoader(
   src: string
-): typeof buildProductImageUrl | undefined {
-  return isHostSupported(src, PRODUCT_IMAGE_HOSTS)
-    ? buildProductImageUrl
+): ((params: ProductImageLoaderParams) => string) | undefined {
+  const source = imageSourceOf(src, STOREFRONT.productImages)
+  return source?.resize
+    ? ({ src, width, quality = 75 }: ProductImageLoaderParams) =>
+        resizeImage(src, width, quality, source)
     : undefined
 }

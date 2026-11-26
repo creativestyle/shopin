@@ -1,7 +1,7 @@
+import { RequestContext } from '@core/integration-kit'
 import { Injectable, Inject } from '@nestjs/common'
 import { MOCK_API, MockApi } from '../client/client.module'
-import { LANGUAGE_TOKEN, resolveCurrencyFromLanguage } from '@core/i18n'
-import type { LanguageProvider } from '@core/contracts/core/request-providers'
+import { resolveCurrencyFromLanguage } from '@core/i18n'
 import type { ProductCollectionResponse } from '@core/contracts/product-collection/product-collection'
 import type { Filters } from '@core/contracts/product-collection/product-collection-page'
 import {
@@ -27,7 +27,7 @@ import {
 export class ProductCollectionService {
   constructor(
     @Inject(MOCK_API) private readonly mockApi: MockApi,
-    @Inject(LANGUAGE_TOKEN) private readonly languageProvider: LanguageProvider
+    private readonly languageProvider: RequestContext
   ) {}
 
   async getProductCollection(
@@ -86,6 +86,8 @@ export class ProductCollectionService {
       image: p.image,
       variantId: p.variantId,
       variantCount: p.variantCount,
+      // the catalog record's attributes: stripped by the contract, read by a shop's mapper hook
+      attributes: p.attributes,
     }))
 
     return {

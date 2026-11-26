@@ -1,3 +1,4 @@
+import type { AlgoliaMappers } from './mapper-hooks'
 import {
   ITEMS_PER_PAGE,
   MIN_PAGE,
@@ -39,7 +40,8 @@ export class AlgoliaSearchService implements SearchProvider {
 
   constructor(
     private readonly client: AlgoliaClient,
-    private readonly indexName: string
+    private readonly indexName: string,
+    private readonly productCard?: AlgoliaMappers['productCard']
   ) {}
 
   private async getAttributeMetadata(): Promise<AttributeMetadata[]> {
@@ -178,9 +180,11 @@ export class AlgoliaSearchService implements SearchProvider {
         ? mergeAlgoliaFacets(unfiltered.facets, response.facets)
         : response.facets
 
-    const products = response.hits.map((hit) =>
-      mapAlgoliaHitToProduct(hit, language)
-    )
+    // the shop's hook runs after the built-in mapper and sees the whole record
+    const products = response.hits.map((hit) => {
+      const card = mapAlgoliaHitToProduct(hit, language)
+      return this.productCard ? this.productCard(hit, card) : card
+    })
     const facets = mapAlgoliaFacets(allFacets, attributeMetadata, language)
 
     return {

@@ -2,14 +2,14 @@ import { z } from 'zod'
 
 /**
  * Payment method response schema
- * Compatible with commercetools PaymentMethod structure
+ * Shape follows the common commerce PaymentMethod structure
  */
 export const PaymentMethodResponseSchema = z.object({
   id: z.string(),
   name: z.string(),
   localizedDescription: z.record(z.string(), z.string()).optional(),
-  method: z.string().optional(), // e.g., 'credit-card', 'paypal', 'invoice', etc.
-  paymentInterface: z.string().optional(), // e.g., 'stripe', 'paypal', 'adyen', etc.
+  method: z.string().optional(), // e.g., 'credit-card', 'wallet', 'invoice', etc.
+  paymentInterface: z.string().optional(), // the PSP integration that handles this payment
   isDefault: z.boolean().optional(),
 })
 

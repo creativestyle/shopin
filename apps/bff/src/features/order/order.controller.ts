@@ -33,12 +33,14 @@ import { z } from 'zod'
 import { ZodBody, ZodQuery } from '../../common/validation'
 import { CartTokenRefreshInterceptor } from '../cart/cart-token-refresh.interceptor'
 import { UseCsrfGuard } from '../csrf/csrf.decorator'
+import { Reads } from '@core/integration-kit'
 
 const GetOrdersQuerySchema = z.object({
   limit: z.coerce.number().int().positive().optional(),
   offset: z.coerce.number().int().nonnegative().optional(),
 })
 
+@Reads('commerce')
 @Controller('order')
 @ApiTags('order')
 @UseInterceptors(CartTokenRefreshInterceptor)

@@ -8,7 +8,6 @@ import {
 } from '@nestjs/swagger'
 import {
   ProductCollectionPageResponse,
-  ProductCollectionPageResponseSchema,
   ProductCollectionSlugSchema,
   PageSchema,
   LimitSchema,
@@ -27,7 +26,10 @@ import {
   VALID_SORT_OPTIONS,
   type SortOption,
 } from '@config/constants'
+import { Reads } from '@core/integration-kit'
+import { Contracts } from '../../data-source/contracts'
 
+@Reads('commerce')
 @Controller('productCollection')
 @ApiTags('productCollection')
 export class ProductCollectionController {
@@ -96,7 +98,7 @@ export class ProductCollectionController {
     @ZodQuery(PriceMinSchema, 'priceMin') priceMin: number | undefined,
     @ZodQuery(PriceMaxSchema, 'priceMax') priceMax: number | undefined
   ): Promise<ProductCollectionPageResponse> {
-    return ProductCollectionPageResponseSchema.strip().parse(
+    return Contracts.productCollectionPage.parse(
       await this.productCollectionService.getProductCollectionPage(
         productCollectionSlug,
         page,

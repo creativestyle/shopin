@@ -1,8 +1,9 @@
 'use client'
 
 import { useState, useId } from 'react'
-import type { DataSource } from '@config/constants'
-import { setDataSourceCookie } from '../utils/cookies'
+
+/** A data source's key (`DATA_SOURCES` in ../sets). */
+type DataSource = string
 
 export interface DataSourceOption {
   value: DataSource
@@ -22,12 +23,15 @@ interface DataSourceSelectorProps {
   initialDataSource: DataSource
   labels: DataSourceSelectorLabels
   options: readonly DataSourceOption[]
+  /** Applies a data source (writes its provider cookies). */
+  onSelect: (dataSource: DataSource) => void
 }
 
 export function DataSourceSelector({
   initialDataSource,
   labels,
   options,
+  onSelect,
 }: DataSourceSelectorProps) {
   const [selectedDataSource, setSelectedDataSource] =
     useState<DataSource>(initialDataSource)
@@ -36,7 +40,7 @@ export function DataSourceSelector({
 
   const handleDataSourceChange = (dataSource: DataSource) => {
     setSelectedDataSource(dataSource)
-    setDataSourceCookie(dataSource)
+    onSelect(dataSource)
     // Reload the page to apply the new data source
     window.location.reload()
   }

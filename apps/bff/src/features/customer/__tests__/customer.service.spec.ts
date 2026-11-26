@@ -7,14 +7,18 @@ function createService(customer: object) {
   const generateEmailToken = jest
     .fn()
     .mockResolvedValue({ emailToken: 'token-1' })
-  const dataSourceFactory = {
-    getServices: () => ({ customerService: { changeCustomerEmail } }),
-    getAuthServices: () => ({
-      generateEmailTokenService: { generateEmailToken },
-    }),
+  const services = { customerService: { changeCustomerEmail } }
+  const ports = {
+    auth: {
+      accountFlows: { generateEmailTokenService: { generateEmailToken } },
+    },
   }
   return {
-    service: new CustomerService(dataSourceFactory as never),
+    service: new CustomerService(
+      services as never,
+      {} as never,
+      ports as never
+    ),
     generateEmailToken,
   }
 }

@@ -1,9 +1,8 @@
+import { RequestContext } from '@core/integration-kit'
 import { Injectable, Inject, NotFoundException } from '@nestjs/common'
 import { PinoLogger } from 'nestjs-pino'
 import { MOCK_API, MockApi } from '../client/client.module'
-import { LANGUAGE_TOKEN } from '@core/i18n'
 import { resolveCurrencyFromLanguage } from '@core/i18n/currency-utils'
-import type { LanguageProvider } from '@core/contracts/core/request-providers'
 import type {
   WishlistResponse,
   AddToWishlistRequest,
@@ -25,7 +24,7 @@ export const wishlistStore = new Map<string, WishlistResponse>()
 export class WishlistService {
   constructor(
     @Inject(MOCK_API) private readonly mockApi: MockApi,
-    @Inject(LANGUAGE_TOKEN) private readonly languageProvider: LanguageProvider,
+    private readonly languageProvider: RequestContext,
     private readonly logger: PinoLogger
   ) {
     this.logger.setContext(WishlistService.name)

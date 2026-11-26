@@ -1,2 +1,2 @@
-// React components for demo UI
-export { PaymentDemo } from './components/payment-demo'
+// The mock payment provider's payment page (PaymentStep slot, wired by mock-api's descriptor)
+export { PaymentDemo } from './payment-page'

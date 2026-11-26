@@ -1,4 +1,4 @@
-import { Injectable, Scope } from '@nestjs/common'
+import { Injectable } from '@nestjs/common'
 import {
   type AddAddressRequest,
   type UpdateAddressRequest,
@@ -6,7 +6,10 @@ import {
   type AddressesResponse,
   AddressResponseSchema,
 } from '@core/contracts/customer/address'
-import { UserClientService } from '../client/user-client.service'
+import {
+  CustomerScope,
+  type ShopperApi,
+} from '../shared/customer-scope.service'
 import { MyCustomerApiResponseSchema } from '../schemas/customer'
 import {
   MyCustomerAddressApiResponse,
@@ -14,14 +17,14 @@ import {
 } from '../schemas/customer-address'
 import { MyCustomerUpdateAction } from '@commercetools/platform-sdk'
 
-@Injectable({ scope: Scope.REQUEST })
+@Injectable()
 export class CommercetoolsCustomerAddressService {
-  constructor(private readonly userClientService: UserClientService) {}
+  constructor(private readonly scope: CustomerScope) {}
 
   async getAddresses(): Promise<AddressesResponse> {
-    const client = await this.userClientService.getClient()
-    const response = await client.me().get().execute()
-    const customer = MyCustomerWithAddressesResponseSchema.parse(response.body)
+    const customer = MyCustomerWithAddressesResponseSchema.parse(
+      await (await this.scope.api()).customer.get()
+    )
 
     return {
       addresses: customer.addresses || [],
@@ -39,23 +42,10 @@ export class CommercetoolsCustomerAddressService {
     const { isDefaultShipping, isDefaultBilling, ...addressData } =
       addAddressRequest
 
-    const response = await client
-      .me()
-      .post({
-        body: {
-          version: customer.version,
-          actions: [
-            {
-              action: 'addAddress',
-              address: addressData,
-            },
-          ],
-        },
-      })
-      .execute()
-
     const updatedCustomer = MyCustomerWithAddressesResponseSchema.parse(
-      response.body
+      await client.customer.update(customer.version, [
+        { action: 'addAddress', address: addressData },
+      ])
     )
     const newAddress =
       updatedCustomer.addresses?.[updatedCustomer.addresses.length - 1]
@@ -110,18 +100,8 @@ export class CommercetoolsCustomerAddressService {
       isDefaultBilling
     )
 
-    const response = await client
-      .me()
-      .post({
-        body: {
-          version: customer.version,
-          actions,
-        },
-      })
-      .execute()
-
     const updatedCustomer = MyCustomerWithAddressesResponseSchema.parse(
-      response.body
+      await client.customer.update(customer.version, actions)
     )
     const updatedAddress = updatedCustomer.addresses?.find(
       (addr: MyCustomerAddressApiResponse) => addr.id === id
@@ -168,26 +148,19 @@ export class CommercetoolsCustomerAddressService {
   }
 
   private async getCurrentCustomer() {
-    const client = await this.userClientService.getClient()
-    const response = await client.me().get().execute()
-    const customer = MyCustomerApiResponseSchema.parse(response.body)
+    const client = await this.scope.api()
+    const customer = MyCustomerApiResponseSchema.parse(
+      await client.customer.get()
+    )
     return { client, customer }
   }
 
   private async executeCustomerUpdate(
-    client: Awaited<ReturnType<typeof this.userClientService.getClient>>,
+    client: ShopperApi,
     version: number,
     actions: MyCustomerUpdateAction[]
   ): Promise<void> {
-    await client
-      .me()
-      .post({
-        body: {
-          version,
-          actions,
-        },
-      })
-      .execute()
+    await client.customer.update(version, actions)
   }
 
   private addDefaultAddressActions(

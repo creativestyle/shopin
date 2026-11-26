@@ -13,7 +13,9 @@ import {
   HeaderResponseSchema,
 } from '@core/contracts/content/layout'
 import { ZodParam } from '../../common/validation'
+import { Reads } from '@core/integration-kit'
 
+@Reads('cms', 'commerce')
 @Controller('content')
 @ApiTags('content')
 export class ContentController {
@@ -43,7 +45,9 @@ export class ContentController {
   }
 
   @Get('header')
-  @ApiOkResponse({ description: 'Header (top bar + main nav) from Contentful' })
+  @ApiOkResponse({
+    description: 'Header (top bar + main nav) from the configured CMS',
+  })
   async getHeader(
     @Req() req?: Request,
     @Res({ passthrough: true }) res?: Response
@@ -59,7 +63,7 @@ export class ContentController {
 
   @Get('footer')
   @ApiOkResponse({
-    description: 'Footer sections and legal links from Contentful',
+    description: 'Footer sections and legal links from the configured CMS',
   })
   async getFooter(
     @Req() req?: Request,

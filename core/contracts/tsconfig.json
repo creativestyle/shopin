@@ -5,8 +5,20 @@
     "rootDir": "./src",
     "paths": {
       "@/*": ["./src/*"]
-    }
+    },
+    "composite": true,
+    "customConditions": ["shopin-framework"],
+    "tsBuildInfoFile": "dist/tsconfig.tsbuildinfo"
   },
-  "include": ["env.d.ts", "src/**/*", "src/**/*.vue"],
-  "exclude": ["node_modules", "dist"]
+  "include": ["env.d.ts", "src/**/*", "src/**/*.vue", "src/**/*.json"],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "**/__tests__/**",
+    "**/__fixtures__/**",
+    "**/__mocks__/**",
+    "**/*.spec.ts",
+    "**/*.test.ts",
+    "**/*.test.tsx"
+  ]
 }

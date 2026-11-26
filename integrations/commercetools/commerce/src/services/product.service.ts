@@ -1,8 +1,7 @@
-import { Injectable, Inject, NotFoundException, Scope } from '@nestjs/common'
-import type { Client } from '@integrations/commercetools-core'
-import { COMMERCETOOLS_CLIENT } from '../client/client.module'
-import { LANGUAGE_TOKEN } from '@core/i18n'
-import type { LanguageProvider } from '@core/contracts/core/request-providers'
+import { RequestContext } from '@core/integration-kit'
+import { Injectable, Inject, NotFoundException, Optional } from '@nestjs/common'
+import { MapperHooks } from '../mapper-hooks'
+import { COMMERCETOOLS_CLIENT, Client } from '@integrations/commercetools-core'
 import { resolveCurrencyFromLanguage } from '@core/i18n/currency-utils'
 import { resolveCountryFromLanguage } from '@core/i18n/language-tag-utils'
 import type { ProductResponse } from '@core/contracts/product/product'
@@ -15,20 +14,37 @@ import { mapVariantToGallery } from '../mappers/gallery'
 import { mapMetaSeo } from '../mappers/seo'
 import { mapVariantsToShopin, mapVariantsToResponse } from '../mappers/variants'
 import { ProductProjectionPagedQueryApiResponseSchema } from '../schemas/product-projection'
-import type { Category, LocalizedString } from '@commercetools/platform-sdk'
+import type {
+  Category,
+  LocalizedString,
+  ProductProjection,
+  ProductProjectionPagedQueryResponse,
+} from '@commercetools/platform-sdk'
 import { buildCategoryPath, buildProductPath } from '@config/constants'
 
-@Injectable({ scope: Scope.REQUEST })
+@Injectable()
 export class ProductService {
   constructor(
     @Inject(COMMERCETOOLS_CLIENT) private readonly client: Client,
-    @Inject(LANGUAGE_TOKEN) private readonly languageProvider: LanguageProvider
+    private readonly languageProvider: RequestContext,
+    @Optional() private readonly hooks?: MapperHooks
   ) {}
 
+  /** The product page's product, with the shop's `product` hook applied after the built-in mapper. */
   async getProduct(
     productSlug: string,
     variantId?: string
   ): Promise<ProductResponse> {
+    const { page, projection } = await this.mapProduct(productSlug, variantId)
+    return this.hooks?.product
+      ? { ...page, product: this.hooks.product(projection, page.product) }
+      : page
+  }
+
+  private async mapProduct(
+    productSlug: string,
+    variantId?: string
+  ): Promise<{ page: ProductResponse; projection: ProductProjection }> {
     const currentLanguage = this.languageProvider.getCurrentLanguage()
     const currency = resolveCurrencyFromLanguage(currentLanguage)
     const country = resolveCountryFromLanguage(currentLanguage)
@@ -55,6 +71,8 @@ export class ProductService {
       response.body
     )
     const product = pagedResponse.results[0]
+    const projection = (response.body as ProductProjectionPagedQueryResponse)
+      .results[0]!
     if (!product) {
       throw new NotFoundException(`Product not found for slug: ${productSlug}`)
     }
@@ -110,7 +128,7 @@ export class ProductService {
       currentLanguage
     )
 
-    return {
+    const page: ProductResponse = {
       product: {
         id: product.id,
         name,
@@ -151,6 +169,7 @@ export class ProductService {
       ],
       seo: mapMetaSeo(product, currentLanguage),
     }
+    return { page, projection }
   }
 
   private resolveCategoryBreadcrumb(

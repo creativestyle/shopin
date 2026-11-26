@@ -1,5 +1,5 @@
 import { Injectable, NestMiddleware, Scope } from '@nestjs/common'
-import { Response, NextFunction } from 'express'
+import type { Response, NextFunction } from 'express'
 import {
   AcceptLanguageUtils,
   LANGUAGE_HEADER,

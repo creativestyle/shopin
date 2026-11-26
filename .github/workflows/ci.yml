@@ -30,6 +30,13 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # config:check compares the built config with its sources: build the two config packages first
+      - name: Build the shop config
+        run: npx turbo run build --filter=@shopin/config --filter=@shopin/storefront
+
+      - name: Config check
+        run: npm run config:check
+
       - name: Lint
         run: npm run lint
 

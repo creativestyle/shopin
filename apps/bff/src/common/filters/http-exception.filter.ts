@@ -1,5 +1,6 @@
 import {
   ArgumentsHost,
+  BadRequestException,
   Catch,
   ExceptionFilter,
   HttpException,
@@ -13,7 +14,10 @@ import { FrontendInputValidationException } from '../validation/frontend-input-v
 import { FrontendSafeException } from '../errors/frontend-safe.exception'
 
 /** Machine-readable discriminator our own exceptions may attach to any status. */
-type ErrorCode = { code?: string }
+type ErrorCode = {
+  code?: string
+  /** 502–504 of a port serving through others (`delegates`): the category and provider whose platform failed (ids, no message). */
+}
 
 type ErrorBody = ErrorCode &
   (
@@ -25,6 +29,10 @@ type ErrorBody = ErrorCode &
     | { statusCode: 409; message: string }
     | { statusCode: 429; message: string }
     | { statusCode: 500; message: string }
+    | { statusCode: 501; message: string }
+    | { statusCode: 502; message: string }
+    | { statusCode: 503; message: string }
+    | { statusCode: 504; message: string }
   )
 
 const STATUS_BODY_MAP: Record<number, ErrorBody> = {
@@ -47,11 +55,79 @@ const STATUS_BODY_MAP: Record<number, ErrorBody> = {
     statusCode: 429,
     message: 'Too many requests',
   },
+  // server-side statuses a caller acts on: a missing feature, and an upstream platform that failed, is down
+  // (retry later) or timed out. The body stays generic; the message is logged, never sent.
+  [HttpStatus.NOT_IMPLEMENTED]: { statusCode: 501, message: 'Not implemented' },
+  [HttpStatus.BAD_GATEWAY]: { statusCode: 502, message: 'Bad gateway' },
+  [HttpStatus.SERVICE_UNAVAILABLE]: {
+    statusCode: 503,
+    message: 'Service unavailable',
+  },
+  [HttpStatus.GATEWAY_TIMEOUT]: { statusCode: 504, message: 'Gateway timeout' },
 }
 
 const DEFAULT_ERROR_BODY: ErrorBody = {
   statusCode: 500,
   message: 'Internal server error',
+}
+
+/** Error names vendor SDKs give an upstream 5xx (the HTTP status text). */
+const UPSTREAM_NAMES: Record<string, number> = {
+  BadGateway: 502,
+  ServiceUnavailable: 503,
+  GatewayTimeout: 504,
+  // an SDK whose every host failed or timed out
+  RetryError: 503,
+  // fetch's AbortSignal.timeout(), an aborted request
+  TimeoutError: 504,
+  AbortError: 504,
+}
+/** Network error codes (Node, undici, axios): the platform cannot be reached (503) or did not answer in time (504). */
+const UPSTREAM_CODES: Record<string, number> = {
+  ECONNREFUSED: 503,
+  ECONNRESET: 503,
+  ENOTFOUND: 503,
+  EAI_AGAIN: 503,
+  EHOSTUNREACH: 503,
+  ETIMEDOUT: 504,
+  ECONNABORTED: 504,
+  UND_ERR_CONNECT_TIMEOUT: 504,
+}
+
+/**
+ * The status of a vendor SDK's or the network's error that is not a Nest exception: a platform that failed (502),
+ * is down or unreachable (503) or timed out (504), read from the error and its `cause` chain (fetch wraps the
+ * network error in `cause`). Undefined for anything else (a bug stays 500).
+ */
+function upstreamStatus(error: unknown): number | undefined {
+  let e = error
+  for (let depth = 0; depth < 4 && e && typeof e === 'object'; depth++) {
+    const x = e as {
+      statusCode?: unknown
+      status?: unknown
+      response?: { status?: unknown }
+      code?: unknown
+      name?: unknown
+      cause?: unknown
+    }
+    const status = [x.statusCode, x.status, x.response?.status].find(
+      (s) => typeof s === 'number'
+    ) as number | undefined
+    if (status !== undefined && status >= 502 && status <= 504) {
+      return status
+    }
+    const byCode =
+      typeof x.code === 'string' ? UPSTREAM_CODES[x.code] : undefined
+    const byName =
+      typeof x.name === 'string' && status === undefined
+        ? UPSTREAM_NAMES[x.name]
+        : undefined
+    if (byCode ?? byName) {
+      return byCode ?? byName
+    }
+    e = x.cause
+  }
+  return undefined
 }
 
 type RequestWithNestException = Request & {
@@ -93,7 +169,8 @@ export class HttpErrorFilter implements ExceptionFilter {
     if (exception instanceof Error && exception.message === 'invalid_token') {
       return HttpStatus.UNAUTHORIZED
     }
-    return HttpStatus.INTERNAL_SERVER_ERROR
+    // a vendor SDK's or the network's own error: the platform failed, is down or timed out
+    return upstreamStatus(exception) ?? HttpStatus.INTERNAL_SERVER_ERROR
   }
 
   private mapExceptionToErrorBody(
@@ -129,6 +206,19 @@ export class HttpErrorFilter implements ExceptionFilter {
       return { statusCode: body.statusCode, message, code } as ErrorBody
     }
 
+    // a route's own 400 (SHOPin's or a shop route's `BadRequestException('q: 2 to 100 characters')`) says what to
+    // fix in its own words; "Validation failed" with issues is the input validation's (above)
+    if (exception instanceof BadRequestException) {
+      const own = exception.getResponse()
+      const message =
+        typeof own === 'string'
+          ? own
+          : (own as { message?: unknown } | null)?.message
+      if (typeof message === 'string' && message) {
+        return { statusCode: 400, message }
+      }
+    }
+
     return body
   }
 
@@ -155,7 +245,7 @@ export class HttpErrorFilter implements ExceptionFilter {
     status: number
   ): void {
     const isError = exception instanceof Error
-    const isClientError = status in STATUS_BODY_MAP
+    const isClientError = status in STATUS_BODY_MAP && status < 500
     request.__nestException = {
       name: isError ? exception.name : 'Error',
       message: isError ? exception.message : 'Unhandled exception',

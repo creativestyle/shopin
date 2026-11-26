@@ -26,12 +26,14 @@ import type {
   SetPaymentMethodRequest,
   InitiatePaymentRequest,
 } from '@core/contracts/cart/payment-method'
-import { CartResponseSchema } from '@core/contracts/cart/cart'
 import type { CartResponse } from '@core/contracts/cart/cart'
 import { ZodBody } from '../../common/validation'
 import { CartTokenRefreshInterceptor } from '../cart/cart-token-refresh.interceptor'
 import { UseCsrfGuard } from '../csrf/csrf.decorator'
+import { Reads } from '@core/integration-kit'
+import { Contracts } from '../../data-source/contracts'
 
+@Reads('commerce', 'psp')
 @Controller('payment')
 @ApiTags('payment')
 @UseInterceptors(CartTokenRefreshInterceptor)
@@ -69,7 +71,7 @@ export class PaymentController {
     @ZodBody(SetPaymentMethodRequestSchema) request: SetPaymentMethodRequest
   ): Promise<CartResponse> {
     const cart = await this.paymentService.setPaymentMethod(request)
-    return CartResponseSchema.strip().parse(cart)
+    return Contracts.cart.parse(cart)
   }
 
   @Post('initiate')

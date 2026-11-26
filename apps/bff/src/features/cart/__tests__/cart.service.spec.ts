@@ -18,11 +18,10 @@ function createService({
   getCart?: jest.Mock
   addDiscountCode?: jest.Mock
 } = {}) {
-  const dataSourceFactory = {
-    getServices: () => ({ cartService: { getCart, addDiscountCode } }),
-  }
+  const services = { cartService: { getCart, addDiscountCode } }
   const service = new CartService(
-    dataSourceFactory as never,
+    services as never,
+    { commerce: {} } as never,
     {} as never,
     {} as never,
     {} as never
@@ -203,14 +202,14 @@ describe('CartService stale cart recovery', () => {
       deleteGuestCartId: jest.fn(),
       deleteLoggedInCartId: jest.fn(),
     }
-    const dataSourceFactory = {
-      getServices: () => ({ cartService: dataSourceCartService }),
-    }
+    const services = { cartService: dataSourceCartService }
+    const ports = { commerce: {} }
     tokenProvider = { getAuthStatus: jest.fn().mockResolvedValue(false) }
     const tokenStorageService = { hasAccessToken: () => true }
 
     service = new CartService(
-      dataSourceFactory as never,
+      services as never,
+      ports as never,
       cartIdService as never,
       tokenProvider as never,
       tokenStorageService as never

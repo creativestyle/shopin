@@ -106,7 +106,14 @@ export interface PortTypes {
   psp: Pick<AllServices, 'paymentService'>
   /** Sign-in only: returns who signed in, never a customer. */
   auth: {
-    signIn(credentials: Credentials): Promise<{
+    signIn(
+      credentials: Credentials,
+      /**
+       * Only for the commerce platform's own sign-in (the BFF passes it when auth and commerce are one provider):
+       * the shopper's guest session at that platform, so the platform takes the guest cart over at sign-in.
+       */
+      guest?: { commerceAccessToken: string }
+    ): Promise<{
       identity: SignedIn
       /** Only the commerce platform's own sign-in returns these: that customer's commerce session. */
       commerceSession?: SessionTokens
@@ -119,10 +126,11 @@ export interface PortTypes {
       commerceSession?: Partial<SessionTokens>
     ): Promise<void>
     /**
-     * Re-checks the identity (still exists, still verified). When it no longer holds, throws an error with a 4xx
-     * status (`UnauthorizedException`, `NotFoundException`, an SDK error with `statusCode: 404`): the shopper is
-     * signed out. Any other error (network, 5xx, timeout) counts as the provider being unreachable: the shopper
-     * stays signed in for up to an hour since the last confirmation, and the next request tries again.
+     * Re-checks the identity (still exists, still verified). When it no longer holds, throws a Nest HTTP exception
+     * with a 4xx status (`UnauthorizedException`, `NotFoundException`), or lets an SDK error with `statusCode` 404 or
+     * 410 through: the shopper is signed out. Any other error (network, 5xx, timeout, and an SDK's 401/403, which
+     * concern the BFF's own API client) counts as the provider being unreachable: the shopper stays signed in for
+     * up to an hour since the last confirmation, and the next request tries again.
      */
     refresh(identity: SignedIn): Promise<SignedIn>
     /** Password reset, e-mail verification, password change: only a platform that runs them itself. */

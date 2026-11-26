@@ -9,16 +9,13 @@ import { StoreConfigProvider } from '@/features/store-config/store-config-provid
 import { getStoreConfig } from '@/features/store-config/get-store-config-server'
 import { SkipToContent } from '@/components/layout/skip-to-content'
 import { QueryProvider } from '../../query-provider'
-import { DemoDisclaimerModalWrapper } from './demo-disclaimer-modal-wrapper'
+import { SiteNoticeMount } from './site-notice-mount'
 import { ConsentProvider } from '@/features/cookie-consent/consent-provider'
+import { TrackingTagsMount } from './tracking-tags-mount'
 import { CookieConsent } from '@/features/cookie-consent/cookie-consent'
-import { DemoTrackingTagsWrapper } from './demo-tracking-tags-wrapper'
-import {
-  listLocales,
-  urlPrefixToRfc,
-  PRODUCT_IMAGE_HOSTS,
-  CONTENT_IMAGE_API_HOSTS,
-} from '@config/constants'
+import { listLocales, urlPrefixToRfc } from '@config/constants'
+import { imageHosts } from '@/lib/image-source'
+import { STOREFRONT } from '@/lib/storefront-config'
 import { initRouteContext } from '@/lib/request-context/route-context'
 import { isVariantSegment } from '@/lib/variant/variant-key'
 import { DRAFT_SESSION_SCRIPT } from '@/lib/draft-session-marker'
@@ -29,7 +26,11 @@ const dmSans = DM_Sans({
   display: 'swap',
 })
 
-const PRECONNECT_HOSTS = [...PRODUCT_IMAGE_HOSTS, ...CONTENT_IMAGE_API_HOSTS]
+// the image hosts of the configured integrations (shopin.config.ts → STOREFRONT)
+const PRECONNECT_HOSTS = imageHosts([
+  ...STOREFRONT.productImages,
+  ...STOREFRONT.contentImages,
+])
 
 export const revalidate = 3600
 
@@ -88,9 +89,9 @@ export default async function LocaleLayout({
                     {children}
                   </div>
                   <Toaster position='bottom-right' />
-                  <DemoDisclaimerModalWrapper />
+                  <SiteNoticeMount />
                   <CookieConsent />
-                  <DemoTrackingTagsWrapper />
+                  <TrackingTagsMount />
                 </ConsentProvider>
               </AddToCartModalProvider>
             </StoreConfigProvider>

@@ -3,14 +3,14 @@ import { LANGUAGE_TOKEN } from '@core/i18n'
 import type { LanguageProvider } from '../../common/language/language.provider'
 import type { ProductSearchResponse } from '@core/contracts/product-search/product-search'
 import type { SearchProductsOptions } from '@core/contracts/product-search/search-provider'
-import { DataSourceFactory } from '../../data-source/data-source.factory'
+import { Services } from '../../data-source/ports.module'
 
 export type SearchProductsParams = Omit<SearchProductsOptions, 'language'>
 
 @Injectable({ scope: Scope.REQUEST })
 export class ProductSearchService {
   constructor(
-    private readonly dataSourceFactory: DataSourceFactory,
+    private readonly services: Services,
     @Inject(LANGUAGE_TOKEN) private readonly languageProvider: LanguageProvider
   ) {}
 
@@ -22,7 +22,7 @@ export class ProductSearchService {
       params
 
     const [searchResult, suggestions] = await Promise.all([
-      this.dataSourceFactory.getServices().searchService.searchProducts({
+      this.services.searchService.searchProducts({
         query,
         language,
         limit,
@@ -33,9 +33,7 @@ export class ProductSearchService {
         sort,
         saleOnly,
       }),
-      this.dataSourceFactory
-        .getServices()
-        .searchService.getSuggestions(query, language),
+      this.services.searchService.getSuggestions(query, language),
     ])
 
     return {

@@ -22,7 +22,6 @@ import {
   RemoveCartItemRequestSchema,
   SetBillingAddressRequestSchema,
   SetShippingAddressRequestSchema,
-  CartResponseSchema,
   ApplyDiscountCodeRequestSchema,
   RemoveDiscountCodeRequestSchema,
 } from '@core/contracts/cart/cart'
@@ -48,7 +47,10 @@ import { ZodBody } from '../../common/validation'
 import { CartTokenRefreshInterceptor } from './cart-token-refresh.interceptor'
 import { UseCsrfGuard } from '../csrf/csrf.decorator'
 import { SecureRateLimit } from '../../common/throttler/secure-rate-limit.decorator'
+import { Reads } from '@core/integration-kit'
+import { CartFieldsSchema, Contracts } from '../../data-source/contracts'
 
+@Reads('commerce')
 @Controller('cart')
 @ApiTags('cart')
 @UseInterceptors(CartTokenRefreshInterceptor)
@@ -68,7 +70,7 @@ export class CartController {
     if (!cart) {
       return null
     }
-    return CartResponseSchema.strip().parse(cart)
+    return Contracts.cart.parse(cart)
   }
 
   @Post('items')
@@ -86,9 +88,7 @@ export class CartController {
   async addToCart(
     @ZodBody(AddToCartRequestSchema) request: AddToCartRequest
   ): Promise<CartResponse> {
-    return CartResponseSchema.strip().parse(
-      await this.cartService.addToCart(request)
-    )
+    return Contracts.cart.parse(await this.cartService.addToCart(request))
   }
 
   @Put('items')
@@ -106,9 +106,7 @@ export class CartController {
   async updateCartItem(
     @ZodBody(UpdateCartItemRequestSchema) request: UpdateCartItemRequest
   ): Promise<CartResponse> {
-    return CartResponseSchema.strip().parse(
-      await this.cartService.updateCartItem(request)
-    )
+    return Contracts.cart.parse(await this.cartService.updateCartItem(request))
   }
 
   @Delete('items')
@@ -126,9 +124,7 @@ export class CartController {
   async removeCartItem(
     @ZodBody(RemoveCartItemRequestSchema) request: RemoveCartItemRequest
   ): Promise<CartResponse> {
-    return CartResponseSchema.strip().parse(
-      await this.cartService.removeCartItem(request)
-    )
+    return Contracts.cart.parse(await this.cartService.removeCartItem(request))
   }
 
   @Post('discount-code')
@@ -148,7 +144,7 @@ export class CartController {
   async applyDiscountCode(
     @ZodBody(ApplyDiscountCodeRequestSchema) request: ApplyDiscountCodeRequest
   ): Promise<CartResponse> {
-    return CartResponseSchema.strip().parse(
+    return Contracts.cart.parse(
       await this.cartService.applyDiscountCode(request)
     )
   }
@@ -168,7 +164,7 @@ export class CartController {
   async removeDiscountCode(
     @ZodBody(RemoveDiscountCodeRequestSchema) request: RemoveDiscountCodeRequest
   ): Promise<CartResponse> {
-    return CartResponseSchema.strip().parse(
+    return Contracts.cart.parse(
       await this.cartService.removeDiscountCode(request)
     )
   }
@@ -188,7 +184,7 @@ export class CartController {
   async setBillingAddress(
     @ZodBody(SetBillingAddressRequestSchema) request: SetBillingAddressRequest
   ): Promise<CartResponse> {
-    return CartResponseSchema.strip().parse(
+    return Contracts.cart.parse(
       await this.cartService.setBillingAddress(request)
     )
   }
@@ -208,9 +204,25 @@ export class CartController {
   async setShippingAddress(
     @ZodBody(SetShippingAddressRequestSchema) request: SetShippingAddressRequest
   ): Promise<CartResponse> {
-    return CartResponseSchema.strip().parse(
+    return Contracts.cart.parse(
       await this.cartService.setShippingAddress(request)
     )
+  }
+
+  @Put('fields')
+  @UseCsrfGuard()
+  @HttpCode(HttpStatus.OK)
+  @ApiOkResponse({
+    description:
+      "The shop's own cart fields set (contracts.cart); the cart with them",
+  })
+  @ApiBadRequestResponse({
+    description: "A field the shop's cart contract does not have, or refuses",
+  })
+  async setFields(
+    @ZodBody(CartFieldsSchema) fields: Record<string, unknown>
+  ): Promise<CartResponse> {
+    return Contracts.cart.parse(await this.cartService.setFields(fields))
   }
 
   @Get('shipping-methods')
@@ -243,7 +255,7 @@ export class CartController {
     @ZodBody(SetShippingMethodRequestSchema) request: SetShippingMethodRequest
   ): Promise<CartResponse> {
     const cart = await this.cartService.setShippingMethod(request)
-    return CartResponseSchema.strip().parse(cart)
+    return Contracts.cart.parse(cart)
   }
 
   @Delete()

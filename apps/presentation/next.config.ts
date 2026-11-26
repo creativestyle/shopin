@@ -1,7 +1,36 @@
 import type { NextConfig } from 'next'
 import createNextIntlPlugin from 'next-intl/plugin'
 import path from 'path'
-import { CONTENT_IMAGE_API_HOSTS, PRODUCT_IMAGE_HOSTS } from '@config/constants'
+import { readFileSync } from 'node:fs'
+import { parseEnv } from 'node:util'
+import type { StorefrontData } from '@core/integration-kit/core'
+import { imageHosts } from './lib/image-source'
+
+// One .env for the repository (its root). The storefront takes only its own names from it, never a BFF or
+// integration variable (BFF_INTERNAL_SECRET is shared with the BFF: the checkout guard's calls); the real environment wins.
+const STOREFRONT_ENV =
+  /^(NEXT_[A-Z0-9_]+|FRONTEND_URL|BFF_INTERNAL_SECRET|LOG_LEVEL|LOG_PRETTY_PRINT)$/
+try {
+  const file = parseEnv(
+    readFileSync(path.join(__dirname, '../../.env'), 'utf8')
+  ) as Record<string, string>
+  for (const [name, value] of Object.entries(file)) {
+    if (STOREFRONT_ENV.test(name) && process.env[name] === undefined) {
+      process.env[name] = value
+    }
+  }
+} catch {
+  // no .env (CI, a deployment): the environment is set by the platform
+}
+
+// The configured integrations' storefront data (written by `npm run setup` into config/storefront), read once at
+// build time and inlined as JSON. The storefront never loads the BFF side of the config.
+const storefront: StorefrontData = JSON.parse(
+  readFileSync(
+    require.resolve('@shopin/storefront/storefront-data.json'),
+    'utf8'
+  )
+)
 
 const withNextIntl = createNextIntlPlugin()
 const svgLoader = {
@@ -20,6 +49,7 @@ const nextConfig: NextConfig = {
   output: 'standalone',
   outputFileTracingRoot: path.join(__dirname, '../../'),
   reactCompiler: true,
+  env: { SHOPIN_STOREFRONT: JSON.stringify(storefront) },
   turbopack: {
     rules: {
       '*.svg': {
@@ -30,18 +60,10 @@ const nextConfig: NextConfig = {
   },
   images: {
     remotePatterns: [
-      { protocol: 'https', hostname: 'placehold.co', pathname: '/**' },
-      {
-        protocol: 'https',
-        hostname: 'storage.googleapis.com',
-        pathname: '/**',
-      },
-      ...PRODUCT_IMAGE_HOSTS.map((hostname) => ({
-        protocol: 'https' as const,
-        hostname,
-        pathname: '/**' as const,
-      })),
-      ...CONTENT_IMAGE_API_HOSTS.map((hostname) => ({
+      ...imageHosts([
+        ...storefront.productImages,
+        ...storefront.contentImages,
+      ]).map((hostname) => ({
         protocol: 'https' as const,
         hostname,
         pathname: '/**' as const,

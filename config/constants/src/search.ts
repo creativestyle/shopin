@@ -22,7 +22,7 @@ export const FACETABLE_TYPES = new Set([
 export type FacetableFieldType =
   typeof FACETABLE_TYPES extends Set<infer T> ? T : never
 
-/** Attribute type names whose values are localized (need a language-keyed Algolia field). */
+/** Attribute type names whose values are localized (need a language-keyed field in an external search index). */
 export const LOCALIZED_ATTR_TYPES = new Set(['ltext', 'lenum'])
 
 /** Attribute names excluded from faceted search despite being searchable. */

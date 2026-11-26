@@ -1,5 +1,9 @@
 # @integrations/contentful-migration
 
+A tool of the Contentful cms part (`integrations/cms/contentful-api`), kept in its category. Setup time only: no app imports
+it; `npm run setup` adds it to the shop's dependencies when the config uses Contentful (`shopin.toolOf`). Run it with
+`npm run migrate` from the repo root (the root `.env` holds the `CONTENTFUL_*` variables).
+
 Content model and demo content for the SHOPin storefront accelerator, applied via [Contentful migrations](https://contentful.com/developers/docs/tutorials/cli/scripting-migrations/) (CMS-as-code). Defines content types (Page, teasers, layout, etc.) and optional seed data; run against your Contentful space so the BFF and `@integrations/contentful-cms` can serve pages and layout.
 
 ## Prerequisites
@@ -9,7 +13,7 @@ Content model and demo content for the SHOPin storefront accelerator, applied vi
 
 ## Environment
 
-Set in **repo root `.env`** (see [.env.example](../../../.env.example) for all descriptions):
+Set in the repository root `.env`:
 
 - `CONTENTFUL_MANAGEMENT_ACCESS_TOKEN` – Management API (Personal access token), not Delivery/Preview
 - `CONTENTFUL_SPACE` – Space ID
@@ -81,7 +85,7 @@ Filenames: **`GG-SS-NN-name.ts`** (source; built to `.js`). Dirs follow **`GG-SS
 
 **New teaser:** Add `01-02-teasers/01-02-NN-name.ts` (NN 01–13), export the migration function (`export = run`).
 
-**Preview in Contentful:** Settings → Content preview → Page → Preview URL e.g. `https://your-app.com/api/draft?secret=<NEXT_DRAFT_MODE_SECRET>&slug={entry.fields.slug}&locale={locale}`. Editors leave preview via the "Exit preview" banner (`/api/draft/exit`). See [Draft session behaviour](../../../apps/presentation/README.md#draft-session-behaviour) for what a draft session covers.
+**Preview in Contentful:** Settings → Content preview → Page → Preview URL e.g. `https://your-app.com/{locale}/{entry.fields.slug}?preview=true`
 
 **German (de-DE) content:** En-US and de-DE texts are defined **side by side** in the same demo migrations (02-01-01 … 02-01-05); entries are created with both locales in one go. Ensure the Contentful space has the **de-DE** locale (Settings → Locales) before running demo migrations.
 

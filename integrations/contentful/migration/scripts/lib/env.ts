@@ -11,7 +11,7 @@ export function requireEnv(): ContentfulEnv {
   if (!spaceId || !environmentId || !managementToken) {
     throw new Error(
       'Missing required env: CONTENTFUL_SPACE, CONTENTFUL_ENVIRONMENT, CONTENTFUL_MANAGEMENT_ACCESS_TOKEN. ' +
-        'Load .env (e.g. dotenv -e ../../../.env -- node dist/run-migrations.js migrate).'
+        'Load .env (e.g. dotenv -e ../../../.env -- node dist/scripts/run-migrations.js migrate).'
     )
   }
   return { spaceId, environmentId, managementToken }

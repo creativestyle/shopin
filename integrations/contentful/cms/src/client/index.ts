@@ -1,4 +1,4 @@
-export { GraphQLClientModule } from './graphql-client.module'
+export { graphqlClientProviders } from './graphql-client.module'
 export {
   GRAPHQL_CLIENT,
   CONTENTFUL_TOKENS,

@@ -1,10 +1,14 @@
 # @integrations/mock-commerce
 
-Mock commerce platform: catalog, product search, navigation, cart, checkout, orders, store config and wishlist, generated with faker. No account needed: the BFF uses it for the `mock-set` data source, chosen per request through the data-source header (the default is `commercetools-set`).
+NestJS module that provides mock implementations of the SHOPin storefront accelerator data-source services. Provides `commerce`, `search`, `cms` and `payment` from in-memory fixtures: no accounts or variables needed.
 
-- **Commerce only.** CMS content is `@integrations/mock-cms`, payment methods are `@integrations/mock-psp`, and when no search integration is configured, the BFF searches this catalog through its own commerce search (`apps/bff/src/data-source/commerce-search.provider.ts`).
-- **Product search** (`ProductSearchService`) answers every query with a deterministic set of matches, so the same query always gives the same products and suggestions.
-- **Tests:** `npm run test` (Jest; runs with `--experimental-vm-modules` because faker is an ES module).
+## Overview
+
+Implements the same service interfaces as `@integrations/commercetools-commerce` and `@integrations/contentful-cms`.
+
+## Usage
+
+Import `@integrations/mock-commerce/shopin` in `config/shop/shopin.config.ts` and name it under the categories it should serve, then `npm run setup` (see the [root README](../../../README.md#quick-start)).
 
 ## License
 

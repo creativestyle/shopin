@@ -16,6 +16,7 @@ jest.mock('@/lib/variant/variant-key', () => ({
 }))
 
 import { initRouteContext } from '../route-context'
+import { DEFAULT } from '@/lib/variant/__fixtures__/variants'
 
 function mocks() {
   return {
@@ -38,23 +39,21 @@ describe('initRouteContext', () => {
   it('calls setRequestLocale with the provided locale', () => {
     const m = mocks()
     m.isVariantSegment.mockReturnValue(true)
-    initRouteContext({ variant: '~commercetools-set', locale: 'en' })
+    initRouteContext({ variant: DEFAULT, locale: 'en' })
     expect(m.setRequestLocale).toHaveBeenCalledWith('en')
   })
 
   it('calls setRequestVariantFromSegment with the raw variant segment', () => {
     const m = mocks()
     m.isVariantSegment.mockReturnValue(true)
-    initRouteContext({ variant: '~commercetools-set', locale: 'en' })
-    expect(m.setRequestVariantFromSegment).toHaveBeenCalledWith(
-      '~commercetools-set'
-    )
+    initRouteContext({ variant: DEFAULT, locale: 'en' })
+    expect(m.setRequestVariantFromSegment).toHaveBeenCalledWith(DEFAULT)
   })
 
   it('sets both locale and variant on every call — neither is conditional', () => {
     const m = mocks()
     m.isVariantSegment.mockReturnValue(true)
-    initRouteContext({ variant: '~commercetools-set', locale: 'de' })
+    initRouteContext({ variant: DEFAULT, locale: 'de' })
     expect(m.setRequestLocale).toHaveBeenCalledTimes(1)
     expect(m.setRequestVariantFromSegment).toHaveBeenCalledTimes(1)
   })

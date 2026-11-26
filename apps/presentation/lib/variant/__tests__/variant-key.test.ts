@@ -3,7 +3,8 @@
  */
 /**
  * variant-key.ts provides the pure encode/decode/resolve helpers that power the
- * data-source ISR cache partitioning strategy. The proxy rewrites every
+ * provider-per-category ISR cache partitioning strategy. Fixtures come from the
+ * project config (../__fixtures__/variants), so no provider is named here. The proxy rewrites every
  * incoming clean URL to /~<variantKey>/<locale>/…, and the proxy canonicalizes
  * any ~-segment back to the clean URL via 308.
  *
@@ -22,32 +23,55 @@ import {
   variantHeadersFromSegment,
   getVariantSegmentFromPathname,
   DEFAULT_VARIANT_SEGMENT,
+  variantCacheTags,
 } from '../variant-key'
+import {
+  DIMS,
+  DEFAULT,
+  DEFAULT_RESOLVED,
+  ALT,
+  ALT_RESOLVED,
+  ALT_COOKIE,
+  RULED_OUT,
+  HAS_REQUIREMENTS,
+  segmentOf,
+  allVariants,
+} from '../__fixtures__/variants'
 
-// Real constants — no mocking needed for pure functions.
-const DEFAULT = 'commercetools-set'
-const ALT = 'commercetools-algolia-set'
-const COOKIE = 'data-source'
-const HEADER = 'X-Data-Source'
+const headersOf = (r: Record<string, string>) =>
+  Object.fromEntries(DIMS.map((d) => [d.header, r[d.name]]))
+// the inner value of a segment, without the ~ prefix
+const inner = (segment: string) => segment.slice(1)
 
 // ─── resolveVariant ──────────────────────────────────────────────────────────
 
 describe('resolveVariant', () => {
+  it('replaces a choice the config rules out with a provider that fits', () => {
+    expect(RULED_OUT !== undefined).toBe(HAS_REQUIREMENTS)
+    const cookies = Object.fromEntries(
+      DIMS.map((d) => [d.cookie, RULED_OUT!.raw[d.name]])
+    )
+    expect(resolveVariant((name) => cookies[name])).toEqual(RULED_OUT!.resolved)
+  })
+
   it('uses the cookie value when it is in the allowed list', () => {
-    const result = resolveVariant((name) => (name === COOKIE ? ALT : undefined))
-    expect(result.dataSource).toBe(ALT)
+    const result = resolveVariant((name) =>
+      name === ALT_COOKIE.name ? ALT_COOKIE.value : undefined
+    )
+    expect(result).toEqual(ALT_RESOLVED)
+    expect(result[DIMS[0]!.name]).toBe(ALT_COOKIE.value)
   })
 
   it('falls back to defaultValue when cookie value is not allowed', () => {
     const result = resolveVariant((name) =>
-      name === COOKIE ? 'bogus' : undefined
+      name === ALT_COOKIE.name ? 'bogus' : undefined
     )
-    expect(result.dataSource).toBe(DEFAULT)
+    expect(result).toEqual(DEFAULT_RESOLVED)
   })
 
   it('falls back to defaultValue when cookie is absent', () => {
     const result = resolveVariant(() => undefined)
-    expect(result.dataSource).toBe(DEFAULT)
+    expect(result).toEqual(DEFAULT_RESOLVED)
   })
 })
 
@@ -55,11 +79,11 @@ describe('resolveVariant', () => {
 
 describe('encodeVariant', () => {
   it('encodes default resolved object with ~ prefix', () => {
-    expect(encodeVariant({ dataSource: DEFAULT })).toBe(`~${DEFAULT}`)
+    expect(encodeVariant(DEFAULT_RESOLVED)).toBe(DEFAULT)
   })
 
   it('encodes non-default resolved object', () => {
-    expect(encodeVariant({ dataSource: ALT })).toBe(`~${ALT}`)
+    expect(encodeVariant(ALT_RESOLVED)).toBe(ALT)
   })
 })
 
@@ -67,20 +91,29 @@ describe('encodeVariant', () => {
 
 describe('decodeVariant', () => {
   it('decodes a valid ~ prefixed segment', () => {
-    expect(decodeVariant(`~${DEFAULT}`)).toEqual({ dataSource: DEFAULT })
+    expect(decodeVariant(DEFAULT)).toEqual(DEFAULT_RESOLVED)
+    expect(decodeVariant(ALT)).toEqual(ALT_RESOLVED)
   })
 
   it('decodes without ~ prefix (lenient)', () => {
-    expect(decodeVariant(DEFAULT)).toEqual({ dataSource: DEFAULT })
+    expect(decodeVariant(inner(ALT))).toEqual(ALT_RESOLVED)
   })
 
   it('returns defaultValue when part value is not allowed', () => {
-    expect(decodeVariant('~bogus')).toEqual({ dataSource: DEFAULT })
+    expect(decodeVariant('~bogus')).toEqual(DEFAULT_RESOLVED)
   })
 
-  it('returns defaultValue when part count is wrong', () => {
-    // With a single dimension, two parts separated by __ is too many
-    expect(decodeVariant(`~${DEFAULT}__extra`)).toEqual({ dataSource: DEFAULT })
+  it('returns defaultValue for dimensions missing from the segment', () => {
+    // Only the first dimension is given; the others take their defaults
+    expect(decodeVariant(`~${DEFAULT_RESOLVED[DIMS[0]!.name]}`)).toEqual(
+      DEFAULT_RESOLVED
+    )
+  })
+
+  it('applies the config requirements to a ruled-out combination', () => {
+    expect(decodeVariant(segmentOf(RULED_OUT!.raw))).toEqual(
+      RULED_OUT!.resolved
+    )
   })
 })
 
@@ -88,11 +121,23 @@ describe('decodeVariant', () => {
 
 describe('isVariantSegment', () => {
   it('returns true for a valid default variant segment', () => {
-    expect(isVariantSegment(`~${DEFAULT}`)).toBe(true)
+    expect(isVariantSegment(DEFAULT)).toBe(true)
+    expect(isVariantSegment(ALT)).toBe(true)
+  })
+
+  it('accepts every allowed combination and no other', () => {
+    const all = allVariants()
+    console.log('allowed variants:', all)
+    expect(all).toContain(DEFAULT)
+    expect(all.every(isVariantSegment)).toBe(true)
+  })
+
+  it('returns false for a combination the config rules out', () => {
+    expect(isVariantSegment(segmentOf(RULED_OUT!.raw))).toBe(false)
   })
 
   it('returns false when ~ prefix is missing', () => {
-    expect(isVariantSegment(DEFAULT)).toBe(false)
+    expect(isVariantSegment(inner(DEFAULT))).toBe(false)
   })
 
   it('returns false when value is not in the allowed list', () => {
@@ -100,8 +145,7 @@ describe('isVariantSegment', () => {
   })
 
   it('returns false when part count is wrong (extra __ parts)', () => {
-    // Registry has 1 dimension; two parts means wrong count
-    expect(isVariantSegment(`~${DEFAULT}__extra`)).toBe(false)
+    expect(isVariantSegment(`${DEFAULT}__extra`)).toBe(false)
   })
 })
 
@@ -110,11 +154,11 @@ describe('isVariantSegment', () => {
 
 describe('hasVariantPrefix', () => {
   it('returns true for a valid default variant segment', () => {
-    expect(hasVariantPrefix(`~${DEFAULT}`)).toBe(true)
+    expect(hasVariantPrefix(DEFAULT)).toBe(true)
   })
 
   it('returns true for a valid alt variant segment', () => {
-    expect(hasVariantPrefix(`~${ALT}`)).toBe(true)
+    expect(hasVariantPrefix(ALT)).toBe(true)
   })
 
   it('returns true for a ~ prefix with a bogus value (not in allowed list)', () => {
@@ -127,7 +171,7 @@ describe('hasVariantPrefix', () => {
   })
 
   it('returns false when ~ prefix is absent', () => {
-    expect(hasVariantPrefix(DEFAULT)).toBe(false)
+    expect(hasVariantPrefix(inner(DEFAULT))).toBe(false)
   })
 
   it('returns false for an empty string', () => {
@@ -144,14 +188,22 @@ describe('hasVariantPrefix', () => {
 // ─── variantHeaders ──────────────────────────────────────────────────────────
 
 describe('variantHeaders', () => {
-  it('maps resolved dataSource to the X-Data-Source header', () => {
-    expect(variantHeaders({ dataSource: DEFAULT })).toEqual({
-      [HEADER]: DEFAULT,
-    })
+  it('maps each resolved category to its X-<Category>-Provider header', () => {
+    expect(variantHeaders(DEFAULT_RESOLVED)).toEqual(
+      headersOf(DEFAULT_RESOLVED)
+    )
   })
 
-  it('maps non-default resolved dataSource', () => {
-    expect(variantHeaders({ dataSource: ALT })).toEqual({ [HEADER]: ALT })
+  it('maps a non-default resolved variant', () => {
+    expect(variantHeaders(ALT_RESOLVED)).toEqual(headersOf(ALT_RESOLVED))
+  })
+})
+
+describe('variantCacheTags', () => {
+  it('tags a fetch with variant:<category>:<provider> per dimension', () => {
+    expect(variantCacheTags(ALT_RESOLVED)).toEqual(
+      DIMS.map((d) => `variant:${d.name}:${ALT_RESOLVED[d.name]}`)
+    )
   })
 })
 
@@ -159,7 +211,7 @@ describe('variantHeaders', () => {
 
 describe('DEFAULT_VARIANT_SEGMENT', () => {
   it('equals the encoded default data source', () => {
-    expect(DEFAULT_VARIANT_SEGMENT).toBe(`~${DEFAULT}`)
+    expect(DEFAULT_VARIANT_SEGMENT).toBe(DEFAULT)
   })
 })
 
@@ -169,11 +221,11 @@ describe('DEFAULT_VARIANT_SEGMENT', () => {
 
 describe('isDefaultVariantSegment', () => {
   it('returns true for the default variant segment', () => {
-    expect(isDefaultVariantSegment(`~${DEFAULT}`)).toBe(true)
+    expect(isDefaultVariantSegment(DEFAULT)).toBe(true)
   })
 
   it('returns false for a non-default variant segment', () => {
-    expect(isDefaultVariantSegment(`~${ALT}`)).toBe(false)
+    expect(isDefaultVariantSegment(ALT)).toBe(false)
   })
 
   it('returns false for an invalid variant segment (wrong value)', () => {
@@ -181,27 +233,29 @@ describe('isDefaultVariantSegment', () => {
   })
 
   it('returns false when ~ prefix is missing', () => {
-    expect(isDefaultVariantSegment(DEFAULT)).toBe(false)
+    expect(isDefaultVariantSegment(inner(DEFAULT))).toBe(false)
   })
 })
 
 // ─── variantHeadersFromSegment ───────────────────────────────────────────────
-// Client BFF derives X-Data-Source from the URL segment instead of a cookie.
+// Client BFF derives the provider headers from the URL segment instead of the cookies.
 
 describe('variantHeadersFromSegment', () => {
   it('returns the correct header for the default segment', () => {
-    expect(variantHeadersFromSegment(`~${DEFAULT}`)).toEqual({
-      [HEADER]: DEFAULT,
-    })
+    expect(variantHeadersFromSegment(DEFAULT)).toEqual(
+      headersOf(DEFAULT_RESOLVED)
+    )
   })
 
   it('returns the correct header for the alt segment', () => {
-    expect(variantHeadersFromSegment(`~${ALT}`)).toEqual({ [HEADER]: ALT })
+    expect(variantHeadersFromSegment(ALT)).toEqual(headersOf(ALT_RESOLVED))
   })
 
   it('falls back to the default when the segment is invalid', () => {
     // decodeVariant is lenient — invalid segment decodes to defaultValue
-    expect(variantHeadersFromSegment('~bogus')).toEqual({ [HEADER]: DEFAULT })
+    expect(variantHeadersFromSegment('~bogus')).toEqual(
+      headersOf(DEFAULT_RESOLVED)
+    )
   })
 })
 
@@ -220,11 +274,11 @@ describe('getVariantSegmentFromPathname', () => {
 
   it('returns null when the first segment is the DEFAULT variant segment', () => {
     // Default segment is canonical-only; clients stay on clean URLs
-    expect(getVariantSegmentFromPathname(`/~${DEFAULT}/en/foo`)).toBeNull()
+    expect(getVariantSegmentFromPathname(`/${DEFAULT}/en/foo`)).toBeNull()
   })
 
   it('returns the alt segment for an alt-variant URL', () => {
-    expect(getVariantSegmentFromPathname(`/~${ALT}/en/foo`)).toBe(`~${ALT}`)
+    expect(getVariantSegmentFromPathname(`/${ALT}/en/foo`)).toBe(ALT)
   })
 
   it('returns null for a URL with an invalid ~ prefix (not a real variant segment)', () => {

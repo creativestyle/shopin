@@ -261,6 +261,12 @@ export interface LayoutService {
   getFooter(locale: string, preview?: boolean): Promise<FooterResponse | null>
 }
 
+/**
+ * The storefront route that hosts a payment step in the shop itself (`<storefront>/demo/mocked-payment-step/<paymentId>`, shopin's URL), for a
+ * payment provider whose payment page is a storefront slot (`PaymentStep`) instead of an external page.
+ */
+export const PAYMENT_STEP_PATH = '/demo/mocked-payment-step'
+
 export interface PaymentService {
   getPaymentMethods(cartId?: string): Promise<PaymentMethodsResponse>
   getPaymentLink(cartId: string): Promise<{ paymentLink: string }>
@@ -308,9 +314,10 @@ export interface ForgotPasswordService {
 }
 
 export interface ResetPasswordService {
+  /** `subject`: the identity whose password changed (the BFF revokes its sessions; never sent to the client). */
   resetPassword(
     resetPasswordRequest: ResetPasswordRequest
-  ): Promise<ResetPasswordResponse>
+  ): Promise<ResetPasswordResponse & { subject?: string }>
 }
 
 // All main services record - add new services here and they'll be available to all providers

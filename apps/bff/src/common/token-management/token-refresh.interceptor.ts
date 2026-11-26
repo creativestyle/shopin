@@ -7,11 +7,13 @@ import {
 } from '@nestjs/common'
 import { Observable, throwError, from } from 'rxjs'
 import { catchError, switchMap, tap } from 'rxjs/operators'
-import { DataSourceFactory } from '../../data-source/data-source.factory'
+import { Ports } from '../../data-source/ports.module'
+import { currentProviders, keyOf } from '../../data-source/providers'
 import { TokenStorageService } from './token-storage.service'
 import { CartIdService } from '../../features/cart-id/cart-id.service'
 import { TokenProvider } from './token-provider'
 import { AuthLoggerService, authLogContextFromRequest } from '../auth-logging'
+import { VaultService } from '../vault/vault.service'
 
 @Injectable()
 export class TokenRefreshInterceptor implements NestInterceptor<
@@ -21,11 +23,12 @@ export class TokenRefreshInterceptor implements NestInterceptor<
   private readonly REFRESH_ATTEMPTED_KEY = Symbol('refreshAttempted')
 
   constructor(
-    protected readonly dataSourceFactory: DataSourceFactory,
+    protected readonly ports: Ports,
     protected readonly tokenStorageService: TokenStorageService,
     protected readonly cartIdService: CartIdService,
     protected readonly tokenProvider: TokenProvider,
-    protected readonly authLogger: AuthLoggerService
+    protected readonly authLogger: AuthLoggerService,
+    protected readonly vault: VaultService
   ) {}
 
   intercept(
@@ -51,31 +54,9 @@ export class TokenRefreshInterceptor implements NestInterceptor<
 
       if (refreshToken) {
         try {
-          // Preserve auth status before refreshing
-          const authStatus = await this.tokenStorageService.getAuthStatus()
-          const isAuthenticated = authStatus === true
+          // one refresh at a time per session and part (vault), through the commerce part
+          await this.refreshCommerceSession()
 
-          const { refreshTokenService } =
-            this.dataSourceFactory.getAuthServices()
-          const newTokens = await refreshTokenService.refreshToken({
-            refreshToken,
-          })
-
-          await this.tokenStorageService.setAccessToken(
-            newTokens.accessToken,
-            newTokens.expiresIn,
-            isAuthenticated ?? false // Default to false if status unknown
-          )
-
-          if (
-            newTokens.refreshToken &&
-            typeof newTokens.refreshToken === 'string' &&
-            newTokens.refreshToken.trim() !== ''
-          ) {
-            await this.tokenStorageService.setRefreshToken(
-              newTokens.refreshToken
-            )
-          }
           this.authLogger.log({
             action: 'token_refresh',
             outcome: 'success',
@@ -83,14 +64,21 @@ export class TokenRefreshInterceptor implements NestInterceptor<
               authLogContextFromRequest(context.switchToHttp().getRequest())),
           })
         } catch (err) {
+          const dead = this.isDeadRefresh(err)
           this.authLogger.log({
             action: 'token_refresh',
             outcome: 'failure',
-            reason: 'token_expired',
+            reason: dead ? 'invalid_token' : 'token_expired',
             ...(context &&
               authLogContextFromRequest(context.switchToHttp().getRequest())),
           })
-          throw err
+          if (!dead) {
+            throw err
+          }
+          // the refresh token is spent or revoked: the session is over; the request goes on as a new guest
+          // (otherwise every cart, order and payment call fails until the vault cookie expires)
+          this.tokenStorageService.clearTokens()
+          await this.cartIdService.deleteAllCartIds()
         }
       }
     }
@@ -115,28 +103,9 @@ export class TokenRefreshInterceptor implements NestInterceptor<
 
         request[this.REFRESH_ATTEMPTED_KEY] = true
 
-        // Preserve auth status before refreshing
-        const authStatus = await this.tokenStorageService.getAuthStatus()
-        const isAuthenticated = authStatus === true
+        // one refresh at a time per session and part (vault), through the commerce part
 
-        const { refreshTokenService } = this.dataSourceFactory.getAuthServices()
-        const newTokens = await refreshTokenService.refreshToken({
-          refreshToken,
-        })
-
-        await this.tokenStorageService.setAccessToken(
-          newTokens.accessToken,
-          newTokens.expiresIn,
-          isAuthenticated ?? false // Default to false if status unknown
-        )
-
-        if (
-          newTokens.refreshToken &&
-          typeof newTokens.refreshToken === 'string' &&
-          newTokens.refreshToken.trim() !== ''
-        ) {
-          await this.tokenStorageService.setRefreshToken(newTokens.refreshToken)
-        }
+        const newTokens = await this.refreshCommerceSession()
 
         return newTokens
       })()
@@ -150,7 +119,10 @@ export class TokenRefreshInterceptor implements NestInterceptor<
       }),
       switchMap(() => next.handle() as unknown as Observable<unknown>),
       catchError((refreshError) => {
-        if (this.isUnauthorizedError(refreshError)) {
+        if (
+          this.isUnauthorizedError(refreshError) ||
+          this.isDeadRefresh(refreshError)
+        ) {
           this.authLogger.log({
             action: 'token_refresh',
             outcome: 'failure',
@@ -165,6 +137,32 @@ export class TokenRefreshInterceptor implements NestInterceptor<
         return throwError(() => refreshError)
       })
     )
+  }
+
+  /**
+   * Renews this request's commerce vault entry once, even when parallel requests ask at the same time.
+   * Only the commerce part that issued the tokens refreshes them: without a guest session there is nothing
+   * to refresh (401), never a fallback to another provider.
+   */
+  protected async refreshCommerceSession() {
+    const session = this.ports.commerce.guestSession
+    if (!session) {
+      throw new UnauthorizedException('No commerce session to refresh')
+    }
+    const provider = keyOf(currentProviders().providers.commerce!)
+    const tokens = await this.vault.refreshOnce('commerce', provider, (rt) =>
+      session.refresh(rt)
+    )
+    if (!tokens) {
+      throw new UnauthorizedException('No session to refresh')
+    }
+    return tokens
+  }
+
+  /** The token endpoint refused the refresh token itself (OAuth `invalid_grant`): it will never work again. */
+  protected isDeadRefresh(error: unknown): boolean {
+    const e = error as { statusCode?: number; body?: { error?: string } }
+    return e?.statusCode === 400 && e.body?.error === 'invalid_grant'
   }
 
   protected isUnauthorizedError(error: unknown): boolean {

@@ -6,7 +6,6 @@ import { TokenProvider } from './token-provider'
 import { TokenRefreshInterceptor } from './token-refresh.interceptor'
 import { ACCESS_TOKEN_TOKEN } from '@config/constants'
 import { StorageModule } from '../storage/storage.module'
-import { DataSourceModule } from '../../data-source/data-source.module'
 import { CartIdModule } from '../../features/cart-id/cart-id.module'
 
 /**
@@ -18,7 +17,7 @@ import { CartIdModule } from '../../features/cart-id/cart-id.module'
  */
 @Global()
 @Module({
-  imports: [ConfigModule, StorageModule, DataSourceModule, CartIdModule],
+  imports: [ConfigModule, StorageModule, CartIdModule],
   providers: [
     TokenStorageService,
     TokenEncryptionService,

@@ -1,0 +1,44 @@
+{
+  "name": "@demo/shop",
+  "version": "0.0.0",
+  "description": "The SHOPin demo's shop config (the BFF side, as config/shop): commercetools, Contentful and mock data behind the provider switch. `npm run use demo` points config/shop at it (and config/storefront at @demo/storefront); deleting demo/ removes the demo.",
+  "author": "creativestyle GmbH",
+  "private": true,
+  "exports": {
+    "./config": {
+      "shopin-shop": {
+        "types": "./dist/types/bff/config/shopin.config.d.ts",
+        "default": "./dist/bff/config/shopin.config.js"
+      },
+      "default": "./dist/bff/config/shopin.config.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc --build",
+    "setup": "tsc --build",
+    "check-types": "tsc --noEmit",
+    "lint": "eslint --fix ./config --max-warnings=0",
+    "format": "prettier --write ./config",
+    "format:check": "prettier --check --ignore-unknown ./config"
+  },
+  "dependencies": {
+    "@core/integration-kit": "*",
+    "@demo/provider-switch": "*",
+    "@integrations/commercetools-auth": "*",
+    "@integrations/commercetools-commerce": "*",
+    "@integrations/contentful-cms": "*",
+    "@integrations/mock-auth": "*",
+    "@integrations/mock-cms": "*",
+    "@integrations/mock-commerce": "*",
+    "@integrations/mock-psp": "*"
+  },
+  "peerDependencies": {
+    "@nestjs/common": "^11.1.14"
+  },
+  "devDependencies": {
+    "@core/eslint-config": "*",
+    "@core/prettier-config": "*",
+    "@core/typescript-config": "*",
+    "typescript": "^5.7.3"
+  }
+}

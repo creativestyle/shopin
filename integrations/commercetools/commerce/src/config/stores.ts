@@ -1,60 +1,80 @@
-import type { SupportedLocale } from '@config/constants'
-import { I18N_CONFIG, getLocale } from '@config/constants'
+/** The shop's store key per locale (`commercetools({ storeKeys })` in shopin.config.ts). */
+export type StoreKeys = Readonly<Record<string, string>>
 
-function parseStoreKeys(raw: string): Map<SupportedLocale, string> {
-  const map = new Map<SupportedLocale, string>()
-  if (!raw.trim()) {
-    return map
-  }
+function parseStoreKeys(raw: string): Map<string, string> {
+  const map = new Map<string, string>()
   for (const pair of raw.split(',')) {
     const idx = pair.indexOf(':')
-    if (idx > 0) {
-      const lang = pair.slice(0, idx).trim()
-      const key = pair.slice(idx + 1).trim()
-      if (lang && key) {
-        const isKnown = I18N_CONFIG.supportedLocales.includes(
-          lang as SupportedLocale
-        )
-        if (!isKnown) {
-          throw new Error(
-            `COMMERCETOOLS_STORE_KEYS contains unknown language "${lang}". ` +
-              `Valid values: ${I18N_CONFIG.supportedLocales.join(', ')}`
-          )
-        }
-        map.set(lang as SupportedLocale, key)
-      }
+    const lang = pair.slice(0, idx).trim()
+    const key = pair.slice(idx + 1).trim()
+    if (idx > 0 && lang && key) {
+      map.set(lang, key)
     }
   }
   return map
 }
 
-let storeKeyMap: Map<SupportedLocale, string> | null = null
+/**
+ * The store key per locale of one commerce port instance, resolved at its boot (`storeKeysFor`). Each instance has
+ * its own: nothing is kept at module level, so two instances (another config, a test) never see each other's keys.
+ */
+export class StoreKeyMap {
+  constructor(
+    private readonly keys: ReadonlyMap<string, string>,
+    private readonly defaultLocale: string | undefined
+  ) {}
 
-function getStoreKeyMap(): Map<SupportedLocale, string> {
-  if (storeKeyMap) {
-    return storeKeyMap
-  }
-  const map = parseStoreKeys(process.env.COMMERCETOOLS_STORE_KEYS ?? '')
-  if (map.size > 0) {
-    for (const lang of I18N_CONFIG.supportedLocales) {
-      if (!map.has(lang)) {
-        throw new Error(
-          `COMMERCETOOLS_STORE_KEYS is missing an entry for language "${lang}". ` +
-            `Expected format: en-US:us-store,de-DE:eu-store`
-        )
-      }
+  /** The store of a locale; a locale the shop does not list gets the first locale's store. */
+  forLanguage(language: string): string {
+    const key =
+      this.keys.get(language) ??
+      (this.defaultLocale === undefined
+        ? undefined
+        : this.keys.get(this.defaultLocale))
+    if (!key) {
+      throw new Error(`commercetools: no store key for ${language}`)
     }
+    return key
   }
-  storeKeyMap = map
-  return storeKeyMap
 }
 
-export function getCtStoreKeyForLanguage(
-  language: SupportedLocale | string
-): string {
-  const overrideKey = getStoreKeyMap().get(language as SupportedLocale)
-  if (overrideKey) {
-    return overrideKey
+/**
+ * The store key per locale: the factory option `storeKeys` (shopin.config.ts) first; COMMERCETOOLS_STORE_KEYS
+ * (`en-US:us-store,de-DE:eu-store`) only for a locale the option leaves out. Throws, naming the fix, when a key names a
+ * locale the shop does not have (config/locales.json) or a locale has no store key. The commerce port resolves it at
+ * boot.
+ */
+export function storeKeysFor(
+  env: string | undefined,
+  storeKeys: StoreKeys = {},
+  locales: readonly string[]
+): StoreKeyMap {
+  const map = new Map<string, string>(
+    Object.entries(storeKeys).filter(
+      (e): e is [string, string] => typeof e[1] === 'string'
+    )
+  )
+  for (const [lang, key] of parseStoreKeys(env ?? '')) {
+    if (!map.has(lang)) {
+      map.set(lang, key)
+    }
   }
-  return getLocale(language).ctStoreKey
+  const unknown = [...map.keys()].filter((lang) => !locales.includes(lang))
+  const missing = locales.filter((l) => !map.has(l))
+  const problems = [
+    ...(unknown.length
+      ? [
+          `store keys for ${unknown.join(', ')}, which config/locales.json does not list (${locales.join(', ')})`,
+        ]
+      : []),
+    ...(missing.length
+      ? [
+          `no store key for ${missing.join(', ')}: add it to commercetools({ storeKeys: { "${missing[0]}": "<store key>" } }) in shopin.config.ts, or to COMMERCETOOLS_STORE_KEYS`,
+        ]
+      : []),
+  ]
+  if (problems.length) {
+    throw new Error(`commercetools: ${problems.join('; ')}`)
+  }
+  return new StoreKeyMap(map, locales[0])
 }

@@ -1,0 +1,33 @@
+{
+  "name": "@shopin/config",
+  "version": "0.0.0",
+  "description": "The shop's BFF side: shopin.config.ts names the integration serving each category. The BFF loads it. Dependencies are written by `npm run setup`.",
+  "private": true,
+  "main": "./dist/shopin.config.js",
+  "scripts": {
+    "setup": "tsc",
+    "build": "tsc",
+    "check-types": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@core/integration-kit": "*",
+    "@faker-js/faker": "^10.5.0",
+    "@integrations/mock-auth": "*",
+    "@integrations/mock-cms": "*",
+    "@integrations/mock-commerce": "*",
+    "@integrations/mock-psp": "*"
+  },
+  "devDependencies": {
+    "@core/typescript-config": "*",
+    "typescript": "^5.7.3"
+  },
+  "exports": {
+    ".": {
+      "shopin-bff": {
+        "types": "./dist/types/shopin.config.d.ts",
+        "default": "./dist/shopin.config.js"
+      },
+      "default": "./dist/shopin.config.js"
+    }
+  }
+}

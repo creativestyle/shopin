@@ -1,0 +1,62 @@
+{
+  "name": "@demo/provider-switch",
+  "version": "0.0.0",
+  "description": "Demo and development only: lets each BFF request pick a provider per category (X-<Category>-Provider headers). An integration that serves through the listed ones (the kit's public delegates seam).",
+  "author": "creativestyle GmbH",
+  "private": true,
+  "exports": {
+    ".": {
+      "shopin-shop": {
+        "types": "./dist/types/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "shopin-demo": {
+        "types": "./dist/types/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "default": "./dist/index.js"
+    },
+    "./view": {
+      "shopin-shop": {
+        "types": "./dist/types/view.d.ts",
+        "default": "./dist/view.js"
+      },
+      "shopin-demo": {
+        "types": "./dist/types/view.d.ts",
+        "default": "./dist/view.js"
+      },
+      "default": "./dist/view.js"
+    },
+    "./module": {
+      "shopin-shop": {
+        "types": "./dist/types/module.d.ts",
+        "default": "./dist/module.js"
+      },
+      "shopin-demo": {
+        "types": "./dist/types/module.d.ts",
+        "default": "./dist/module.js"
+      },
+      "default": "./dist/module.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc --build",
+    "check-types": "tsc --noEmit",
+    "setup": "tsc --build",
+    "lint": "eslint --fix ./src ./test --max-warnings=0",
+    "format": "prettier --write ./src ./test",
+    "format:check": "prettier --check --ignore-unknown ./src ./test",
+    "test": "tsc --build && node --test \"test/*.test.mjs\""
+  },
+  "dependencies": {
+    "@core/integration-kit": "*"
+  },
+  "devDependencies": {
+    "@core/eslint-config": "*",
+    "@core/prettier-config": "*",
+    "@core/typescript-config": "*"
+  },
+  "peerDependencies": {
+    "@nestjs/common": "^11.1.3"
+  }
+}

@@ -58,7 +58,9 @@ import {
   authLogContextFromRequest,
   type AuthFailureReason,
 } from '../../common/auth-logging'
+import { Reads } from '@core/integration-kit'
 
+@Reads('commerce')
 @Controller('customer')
 @ApiTags('customer')
 @UseInterceptors(TokenRefreshInterceptor)

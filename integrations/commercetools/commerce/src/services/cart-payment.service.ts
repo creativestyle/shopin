@@ -1,26 +1,20 @@
-import { Injectable, Inject, Scope, forwardRef } from '@nestjs/common'
+import { RequestContext } from '@core/integration-kit'
+import { Injectable, Inject, forwardRef } from '@nestjs/common'
 import type { CartResponse } from '@core/contracts/cart/cart'
 import type { SetPaymentMethodRequest } from '@core/contracts/cart/payment-method'
 import { SetPaymentMethodRequestSchema } from '@core/contracts/cart/payment-method'
-import { LANGUAGE_TOKEN } from '@core/i18n'
-import type { LanguageProvider } from '@core/contracts/core/request-providers'
-import { UserClientService } from '../client/user-client.service'
+import { CustomerScope } from '../shared/customer-scope.service'
 import type { CartUpdateAction } from '../schemas/cart-update-action'
 import { CartService } from './cart.service'
 
-@Injectable({ scope: Scope.REQUEST })
+@Injectable()
 export class CartPaymentService {
   constructor(
-    private readonly userClientService: UserClientService,
+    private readonly scope: CustomerScope,
     @Inject(forwardRef(() => CartService))
     private readonly cartService: CartService,
-    @Inject(LANGUAGE_TOKEN)
-    private readonly languageProvider: LanguageProvider
+    private readonly languageProvider: RequestContext
   ) {}
-
-  private async getClient() {
-    return this.userClientService.getClient()
-  }
 
   /**
    * Checks if payment has transactions (from CartResponse)
@@ -57,31 +51,23 @@ export class CartPaymentService {
    * Updates payment amount to match cart total
    */
   private async updatePaymentAmount(
+    cartId: string,
     paymentId: string,
     paymentVersion: number,
     cartTotal: number,
     currencyCode: string
   ): Promise<void> {
-    const client = await this.getClient()
-    await client
-      .me()
-      .payments()
-      .withId({ ID: paymentId })
-      .post({
-        body: {
-          version: paymentVersion,
-          actions: [
-            {
-              action: 'changeAmountPlanned',
-              amount: {
-                centAmount: cartTotal,
-                currencyCode,
-              },
-            },
-          ],
+    await (
+      await this.scope.api()
+    ).payments.update(cartId, paymentId, paymentVersion, [
+      {
+        action: 'changeAmountPlanned',
+        amount: {
+          centAmount: cartTotal,
+          currencyCode,
         },
-      })
-      .execute()
+      },
+    ])
   }
 
   /**
@@ -95,7 +81,6 @@ export class CartPaymentService {
     paymentMethodName: string,
     localizedName?: Record<string, string>
   ): Promise<string> {
-    const client = await this.getClient()
     const currentLanguage = this.languageProvider.getCurrentLanguage()
 
     // Use localized name if provided, otherwise use paymentMethodName for current language
@@ -103,25 +88,17 @@ export class CartPaymentService {
       ? { ...localizedName }
       : { [currentLanguage]: paymentMethodName }
 
-    const response = await client
-      .me()
-      .payments()
-      .post({
-        body: {
-          amountPlanned: {
-            centAmount: amountCentAmount,
-            currencyCode,
-          },
-          paymentMethodInfo: {
-            method: paymentMethodId,
-            paymentInterface,
-            name,
-          },
-        },
-      })
-      .execute()
-
-    return response.body.id
+    return (await this.scope.api()).payments.create({
+      amountPlanned: {
+        centAmount: amountCentAmount,
+        currencyCode,
+      },
+      paymentMethodInfo: {
+        method: paymentMethodId,
+        paymentInterface,
+        name,
+      },
+    })
   }
 
   async setPaymentMethod(
@@ -250,6 +227,7 @@ export class CartPaymentService {
         // This includes payments with no transactions, Pending, Initial, or Failure states
         try {
           await this.updatePaymentAmount(
+            cartId,
             payment.id,
             payment.version,
             cartTotal,

@@ -3,8 +3,9 @@ import {
   ConflictException,
   NotFoundException,
 } from '@nestjs/common'
-import { DataSourceFactory } from '../../data-source/data-source.factory'
+import { Services } from '../../data-source/ports.module'
 import { CartIdService } from '../cart-id/cart-id.service'
+import { SessionService } from '../../common/session/session.service'
 import { TokenProvider } from '../../common/token-management/token-provider'
 import type {
   CreateOrderRequest,
@@ -12,13 +13,15 @@ import type {
   OrderResponse,
   OrdersResponse,
 } from '@core/contracts/order/order'
+import { DEFAULT_ORDER_PAGE_SIZE } from '@core/contracts/order/order'
 
 @Injectable()
 export class OrderService {
   constructor(
-    private readonly dataSourceFactory: DataSourceFactory,
+    private readonly services: Services,
     private readonly cartIdService: CartIdService,
-    private readonly tokenProvider: TokenProvider
+    private readonly tokenProvider: TokenProvider,
+    private readonly session: SessionService
   ) {}
 
   async createOrder(request: CreateOrderRequest): Promise<OrderResponse> {
@@ -27,7 +30,7 @@ export class OrderService {
       throw new NotFoundException(`Cart not found: ${request.cartId}`)
     }
 
-    const { orderService } = this.dataSourceFactory.getServices()
+    const { orderService } = this.services
 
     try {
       // Create order using the data source order service
@@ -42,6 +45,8 @@ export class OrderService {
         await this.cartIdService.deleteLoggedInCartId()
       } else {
         await this.cartIdService.deleteGuestCartId()
+        // the guest may read this order (its confirmation page), and no other
+        await this.session.setGuestOrder(order.id)
       }
 
       return order
@@ -67,13 +72,25 @@ export class OrderService {
       : await this.cartIdService.getGuestCartId()
   }
 
+  /**
+   * One order. A customer's: the commerce port returns only that customer's orders (its contract). A guest's:
+   * only the order this browser placed (the guest order cookie), checked here before the port is asked, so a
+   * platform that keeps guest orders together (the mock) never hands one guest another's order.
+   */
   async getOrder(orderId: string): Promise<OrderResponse> {
-    const { orderService } = this.dataSourceFactory.getServices()
+    const isLoggedIn = (await this.tokenProvider.getAuthStatus()) === true
+    if (!isLoggedIn && (await this.session.guestOrder()) !== orderId) {
+      throw new NotFoundException('Order not found')
+    }
+    const { orderService } = this.services
     return await orderService.getOrder(orderId)
   }
 
+  /** The account's order list (the commerce port returns only this shopper's orders). */
   async getOrders(request?: GetOrdersRequest): Promise<OrdersResponse> {
-    const { orderService } = this.dataSourceFactory.getServices()
-    return await orderService.getOrders(request)
+    return await this.services.orderService.getOrders({
+      offset: request?.offset ?? 0,
+      limit: request?.limit ?? DEFAULT_ORDER_PAGE_SIZE,
+    })
   }
 }

@@ -1,6 +1,6 @@
 import { TokenProvider } from '../../common/token-management/token-provider'
 import { TokenStorageService } from '../../common/token-management/token-storage.service'
-import { DataSourceFactory } from '../../data-source/data-source.factory'
+import { Services, Ports } from '../../data-source/ports.module'
 
 /**
  * Base service class for services that need authentication and session management.
@@ -10,7 +10,8 @@ export abstract class BaseAuthenticatedService {
   protected constructor(
     protected readonly tokenProvider: TokenProvider,
     protected readonly tokenStorageService: TokenStorageService,
-    protected readonly dataSourceFactory: DataSourceFactory
+    protected readonly services: Services,
+    protected readonly ports: Ports
   ) {}
 
   /**
@@ -27,29 +28,12 @@ export abstract class BaseAuthenticatedService {
    * Used by cart and wishlist services when creating resources for guests.
    */
   protected async ensureSession(): Promise<void> {
-    if (!this.tokenStorageService.hasAccessToken()) {
-      const { anonymousSessionService } =
-        this.dataSourceFactory.getAuthServices()
-      const sessionResult =
-        await anonymousSessionService.createAnonymousSession()
-
-      if (!sessionResult.success) {
-        throw new Error(
-          `Failed to create anonymous session: statusCode ${sessionResult.statusCode}`
-        )
-      }
-
-      // Store access token and refresh token in HTTP-only cookies
-      if (sessionResult.accessToken && sessionResult.refreshToken) {
-        await this.tokenStorageService.setTokens(
-          {
-            accessToken: sessionResult.accessToken,
-            refreshToken: sessionResult.refreshToken,
-            expiresIn: sessionResult.expiresIn,
-          },
-          false // User is guest (anonymous session)
-        )
-      }
+    // A commerce part that needs a guest session (an anonymous token) supplies one; others need none.
+    const commerceSession = this.ports.commerce.guestSession
+    if (!commerceSession || (await this.tokenStorageService.hasAccessToken())) {
+      return
     }
+    const tokens = await commerceSession.createGuestSession()
+    await this.tokenStorageService.setTokens(tokens, false)
   }
 }
