@@ -76,7 +76,7 @@ export const ROUTES = {
 
 let counter = 0
 
-/** Unique to the run and worker, so reruns and parallel workers never collide. */
+/** Unique to the run, pass and worker, so no two e-mails ever collide. */
 export function uniqueEmail(label = 'shopper') {
   // Both passes of npm run e2e share the run id but restart worker indexes
   const pass = process.env.E2E_FAULT_RUN === '1' ? 'faults-' : ''
