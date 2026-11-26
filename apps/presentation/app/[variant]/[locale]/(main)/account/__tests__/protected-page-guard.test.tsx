@@ -1,7 +1,9 @@
 import { render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { ProtectedPageGuard } from '../protected-page-guard'
 
 const mockPush = jest.fn()
+const mockRefetch = jest.fn()
 let mockPathname = '/account'
 let mockSearchParams = new URLSearchParams()
 let mockCustomer: { isLoggedIn: boolean; isLoading: boolean; error?: Error } = {
@@ -20,7 +22,7 @@ jest.mock('@/lib/navigation', () => ({
 }))
 
 jest.mock('@/features/customer/customer-use-customer', () => ({
-  useCustomer: () => mockCustomer,
+  useCustomer: () => ({ ...mockCustomer, refetch: mockRefetch }),
 }))
 
 function renderGuard(isVerifiedOnServer?: boolean) {
@@ -93,7 +95,8 @@ describe('ProtectedPageGuard', () => {
     expect(mockPush).toHaveBeenCalledWith('/sign-in?returnTo=%2Faccount')
   })
 
-  it('does not redirect on a failed query when the server confirmed the customer', () => {
+  it('shows a retry message on a failed query when the server confirmed the customer', async () => {
+    const user = userEvent.setup()
     mockCustomer = {
       isLoggedIn: false,
       isLoading: false,
@@ -101,8 +104,18 @@ describe('ProtectedPageGuard', () => {
     }
     renderGuard(true)
 
-    expect(screen.getByText('account content')).toBeInTheDocument()
+    expect(screen.getByRole('status')).toHaveTextContent(
+      'account.myAccount.customerLoadError'
+    )
+    expect(screen.queryByText('account content')).not.toBeInTheDocument()
     expect(mockPush).not.toHaveBeenCalled()
+
+    await user.click(
+      screen.getByRole('button', {
+        name: 'account.myAccount.customerLoadRetry',
+      })
+    )
+    expect(mockRefetch).toHaveBeenCalledTimes(1)
   })
 
   it('redirects on a failed query when the server could not decide', () => {

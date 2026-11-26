@@ -20,6 +20,7 @@ export function useCustomer() {
     data: customer,
     isLoading,
     error,
+    refetch,
   } = useQuery({
     queryKey: customerKeys.me(),
     queryFn,
@@ -39,5 +40,6 @@ export function useCustomer() {
     isLoading,
     error,
     isLoggedIn: !!customer,
+    refetch,
   }
 }
