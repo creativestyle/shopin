@@ -4,7 +4,10 @@ import { ProtectedPageGuard } from '../protected-page-guard'
 const mockPush = jest.fn()
 let mockPathname = '/account'
 let mockSearchParams = new URLSearchParams()
-let mockCustomer = { isLoggedIn: true, isLoading: false }
+let mockCustomer: { isLoggedIn: boolean; isLoading: boolean; error?: Error } = {
+  isLoggedIn: true,
+  isLoading: false,
+}
 
 jest.mock('next/navigation', () => ({
   ...jest.requireActual('next/navigation'),
@@ -86,6 +89,29 @@ describe('ProtectedPageGuard', () => {
   it('still redirects once the client sees no customer', () => {
     mockCustomer = { isLoggedIn: false, isLoading: false }
     renderGuard(true)
+
+    expect(mockPush).toHaveBeenCalledWith('/sign-in?returnTo=%2Faccount')
+  })
+
+  it('does not redirect on a failed query when the server confirmed the customer', () => {
+    mockCustomer = {
+      isLoggedIn: false,
+      isLoading: false,
+      error: new Error('Failed to fetch customer: 429'),
+    }
+    renderGuard(true)
+
+    expect(screen.getByText('account content')).toBeInTheDocument()
+    expect(mockPush).not.toHaveBeenCalled()
+  })
+
+  it('redirects on a failed query when the server could not decide', () => {
+    mockCustomer = {
+      isLoggedIn: false,
+      isLoading: false,
+      error: new Error('Failed to fetch customer: 500'),
+    }
+    renderGuard()
 
     expect(mockPush).toHaveBeenCalledWith('/sign-in?returnTo=%2Faccount')
   })

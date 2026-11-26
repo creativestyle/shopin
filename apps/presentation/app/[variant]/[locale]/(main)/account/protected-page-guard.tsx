@@ -23,7 +23,7 @@ export function ProtectedPageGuard({
   redirectTo,
   isVerifiedOnServer = false,
 }: ProtectedPageGuardProps) {
-  const { isLoggedIn, isLoading } = useCustomer()
+  const { isLoggedIn, isLoading, error } = useCustomer()
   const pathname = usePathname()
   const search = useSearchParams().toString()
 
@@ -33,7 +33,8 @@ export function ProtectedPageGuard({
 
   return (
     <RedirectWhen
-      when={!isLoading && !isLoggedIn}
+      // A failed query after a server-confirmed session is not a sign-out
+      when={!isLoading && !isLoggedIn && !(isVerifiedOnServer && error)}
       redirectTo={query ? `${redirectTo}?${query}` : redirectTo}
       isLoading={isLoading && !isVerifiedOnServer}
     >

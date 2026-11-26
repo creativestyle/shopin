@@ -6,6 +6,7 @@ const mockRedirect = jest.fn(({ href }: { href: string }) => {
   throw new Error(`NEXT_REDIRECT:${href}`)
 })
 let mockSession = 'signed-out'
+let mockGuardVerified: boolean | undefined
 
 jest.mock('next-intl/server', () => ({
   getTranslations: jest.fn((ns: string) =>
@@ -29,7 +30,16 @@ jest.mock('@/features/customer/customer-server-session', () => ({
 }))
 
 jest.mock('../../auth-page-guard', () => ({
-  AuthPageGuard: ({ children }: { children: ReactNode }) => children,
+  AuthPageGuard: ({
+    children,
+    isVerifiedOnServer,
+  }: {
+    children: ReactNode
+    isVerifiedOnServer?: boolean
+  }) => {
+    mockGuardVerified = isVerifiedOnServer
+    return children
+  },
 }))
 
 jest.mock('../sign-up-form-with-redirect', () => ({
@@ -57,6 +67,7 @@ describe('Sign-up page', () => {
   beforeEach(() => {
     jest.clearAllMocks()
     mockSession = 'signed-out'
+    mockGuardVerified = undefined
   })
 
   it('links back to sign-in without returnTo', async () => {
@@ -123,5 +134,28 @@ describe('Sign-up page', () => {
     mockSession = 'signed-in'
 
     await expect(renderServerPage({})).rejects.toThrow('NEXT_REDIRECT:/account')
+  })
+
+  it('ignores an unsafe returnTo in the server redirect', async () => {
+    mockSession = 'signed-in'
+
+    await expect(
+      renderServerPage({ returnTo: '/\t/evil.com' })
+    ).rejects.toThrow('NEXT_REDIRECT:/account')
+  })
+
+  it('lets the client guard skip loading when the server saw a guest', async () => {
+    await renderPage({})
+
+    expect(mockRedirect).not.toHaveBeenCalled()
+    expect(mockGuardVerified).toBe(true)
+  })
+
+  it('leaves the decision to the client guard when the session is unknown', async () => {
+    mockSession = 'unknown'
+    await renderPage({})
+
+    expect(mockRedirect).not.toHaveBeenCalled()
+    expect(mockGuardVerified).toBe(false)
   })
 })
