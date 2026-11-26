@@ -5,7 +5,6 @@ import { DataSourceModule } from '../../data-source/data-source.module'
 import { TokenManagementModule } from '../../common/token-management/token-management.module'
 import { CartIdModule } from '../cart-id/cart-id.module'
 import { CustomerModule } from '../customer/customer.module'
-import { CommercetoolsApiModule } from '@integrations/commercetools-api'
 import { WishlistModule } from '../wishlist/wishlist.module'
 import { WishlistIdModule } from '../wishlist-id/wishlist-id.module'
 
@@ -16,7 +15,6 @@ import { WishlistIdModule } from '../wishlist-id/wishlist-id.module'
     TokenManagementModule,
     CartIdModule,
     CustomerModule,
-    CommercetoolsApiModule,
     WishlistModule,
     WishlistIdModule,
   ],

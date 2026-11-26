@@ -1,5 +1,5 @@
 import { initRouteContext } from '@/lib/request-context/route-context'
-import { PaymentDemo } from '@demo/mocked-payment-service-provider'
+import { PaymentDemo } from '@integrations/mock-psp'
 import { StandardContainer } from '@/components/ui/standard-container'
 import { PageContent } from '@/components/layout/page-shell'
 

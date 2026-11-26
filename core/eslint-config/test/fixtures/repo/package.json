@@ -1,0 +1,9 @@
+{
+  "name": "fixture-repo",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "core/*",
+    "integrations/*/*"
+  ]
+}

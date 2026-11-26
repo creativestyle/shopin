@@ -32,34 +32,37 @@ core/
   draft-token/      # Draft mode utilities
 config/
   constants/        # Shared primitive constants and derived types
-integrations/
-  algolia-api/          # Product search (Algolia) — wired via the commercetools-algolia data source
-  commercetools-api/    # Product catalog, cart, checkout, navigation
-  commercetools-auth/   # Customer auth (OAuth 2.0, password grant)
-  contentful-api/       # CMS content (pages, layout) via GraphQL
-  contentful-migration/ # CMS-as-code content model migrations
-  mock-api/             # Mock implementations for local dev
+integrations/       # One package per vendor and category: integrations/<vendor>/<category> (@integrations/<vendor>-<category>)
+  commercetools/core/       # What the commercetools parts share: server client, error helpers (no category)
+  commercetools/commerce/   # Product catalog, cart, checkout, navigation
+  commercetools/auth/       # Customer auth (OAuth 2.0, password grant)
+  algolia/search/           # Product search (Algolia) — wired via the commercetools-algolia-set data source
+  contentful/cms/           # CMS content (pages, layout) via GraphQL
+  contentful/migration/     # CMS-as-code content model migrations
+  mock/commerce/            # Mock implementations for local dev
+  mock/psp/                 # Demo payment page the mock payment redirects to
 demo/               # Optional demo packages (removable for production)
   data-source-selector/
   data-source-header-reader/
   demo-disclaimer/
-  mocked-payment-service-provider/
+  mock-tracking-tags/
 ```
 
 ## Key commands
 
-| Command                      | What it does                                |
-| ---------------------------- | ------------------------------------------- |
-| `npm run setup`              | Build core packages, prepare monorepo       |
-| `npm run dev`                | Start all dev servers                       |
-| `npm run build`              | Production build                            |
-| `npm run test`               | Run all tests                               |
-| `npm run lint`               | ESLint across all packages                  |
-| `npm run format`             | Prettier across all packages                |
-| `npm run format:check`       | Prettier check (non-mutating, CI gate)      |
-| `npm run check-types`        | TypeScript type checking                    |
-| `npm run check-dependencies` | `npm audit --audit-level=critical`          |
-| `npm run start:local`        | Run production builds locally (build first) |
+| Command                      | What it does                                                           |
+| ---------------------------- | ---------------------------------------------------------------------- |
+| `npm run setup`              | Build core packages, prepare monorepo                                  |
+| `npm run dev`                | Start all dev servers                                                  |
+| `npm run build`              | Production build                                                       |
+| `npm run test`               | Run all tests                                                          |
+| `npm run lint`               | ESLint across all packages                                             |
+| `npm run lint:boundaries`    | Integration import boundaries across the repo (part of `npm run lint`) |
+| `npm run format`             | Prettier across all packages                                           |
+| `npm run format:check`       | Prettier check (non-mutating, CI gate)                                 |
+| `npm run check-types`        | TypeScript type checking                                               |
+| `npm run check-dependencies` | `npm audit --audit-level=critical`                                     |
+| `npm run start:local`        | Run production builds locally (build first)                            |
 
 Dev server ports: presentation :3000, BFF :4000 (Swagger at /bff/api), Storybook :6006, Typedoc :5000.
 
@@ -74,10 +77,11 @@ Presentation (Next.js) → BFF (NestJS) → Integration adapters → External AP
 - **Presentation** only talks to the BFF, never directly to external APIs.
 - **BFF** uses `DataSourceFactory` to select the right integration per request.
 - **Integrations** implement contract interfaces, fetching in the backend's format and mapping to shared types.
-- **Data sources can be mixed:** e.g. Commercetools for commerce + Algolia for product search + Contentful for CMS + mock for payment (see the `commercetools-algolia` set in `DataSourceFactory`).
+- **Data sources can be mixed:** e.g. Commercetools for commerce + Algolia for product search + Contentful for CMS + mock for payment (see the `commercetools-algolia-set` data source in `DataSourceFactory`).
 
 ## Conventions
 
+- **Integrations are self-contained** — a package under `integrations/<vendor>/<category>` imports no other integration (only its vendor's `integrations/<vendor>/core`), nothing from `apps/`, `demo/` or `test/`, and no relative path outside its folder. Code outside `integrations/` imports no integration package or vendor SDK (exceptions only in the `ALLOW` list of `eslint.boundaries.config.mjs`), and no relative import path goes through an `integrations/` folder. `npm run lint:boundaries` (part of `npm run lint`) enforces both. Code two vendors need goes into a `@core` package; code one vendor's parts share goes into `integrations/<vendor>/core`.
 - **Feature-based directories** in `apps/presentation/features/` — one dir per domain (account, auth, cart, checkout, etc.). Internal imports are ESLint-enforced.
 - **Contracts first** — define Zod schemas in `core/contracts` before implementing. Naming: `*Schema` for Zod, `*Response`/`*Request` for types.
 - **UI components** use shadcn/ui patterns with `cva` for variants. Design tokens via Tailwind — no hardcoded color/spacing values.
