@@ -8,11 +8,11 @@ let mockSearchParams = new URLSearchParams()
 
 jest.mock('next/navigation', () => ({
   ...jest.requireActual('next/navigation'),
-  useRouter: () => ({ push: mockPush }),
   useSearchParams: () => mockSearchParams,
 }))
 
 jest.mock('@/lib/navigation', () => ({
+  useRouter: () => ({ push: mockPush }),
   Link: ({ href, children }: { href: string; children: ReactNode }) => (
     <a href={href}>{children}</a>
   ),
@@ -22,7 +22,7 @@ describe('RegistrationSuccessWithHref', () => {
   beforeEach(() => {
     jest.clearAllMocks()
     sessionStorage.clear()
-    mockSearchParams = new URLSearchParams('token=abc&isCheckout=true')
+    mockSearchParams = new URLSearchParams('token=abc&returnTo=%2Fcheckout')
   })
 
   it('redirects home when the user did not just register', () => {
@@ -46,6 +46,9 @@ describe('RegistrationSuccessWithHref', () => {
       screen.getByRole('link', {
         name: 'account.registrationSuccess.confirmButton',
       })
-    ).toHaveAttribute('href', '/sign-up/verify-email?token=abc&isCheckout=true')
+    ).toHaveAttribute(
+      'href',
+      '/sign-up/verify-email?token=abc&returnTo=%2Fcheckout'
+    )
   })
 })

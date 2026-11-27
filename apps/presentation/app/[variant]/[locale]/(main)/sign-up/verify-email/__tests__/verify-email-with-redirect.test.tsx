@@ -41,14 +41,14 @@ describe('VerifyEmailWithRedirect', () => {
     expect(sessionStorage.getItem('registration-completed')).toBeNull()
   })
 
-  it('keeps the checkout param', async () => {
-    mockSearchParams = new URLSearchParams('token=abc&isCheckout=true')
+  it('keeps the returnTo param', async () => {
+    mockSearchParams = new URLSearchParams('token=abc&returnTo=%2Fcheckout')
     render(<VerifyEmailWithRedirect />)
 
     await userEvent.click(screen.getByRole('button', { name: 'verify' }))
 
     expect(mockReplace).toHaveBeenCalledWith(
-      '/sign-in?verified=true&isCheckout=true'
+      '/sign-in?verified=true&returnTo=%2Fcheckout'
     )
   })
 })

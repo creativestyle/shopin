@@ -10,8 +10,9 @@ const LOCALE_DIR = join(__dirname, '../../app/[variant]/[locale]')
 const PREVIEWABLE = new Set(['p', 'c', 'preview'])
 
 function routeFolders(dir: string): string[] {
+  // Private folders (e.g. __tests__) are not routes
   return readdirSync(dir, { withFileTypes: true })
-    .filter((entry) => entry.isDirectory())
+    .filter((entry) => entry.isDirectory() && !entry.name.startsWith('_'))
     .flatMap((entry) => {
       // Route groups add no URL segment; look inside them
       if (/^\(.+\)$/.test(entry.name)) {

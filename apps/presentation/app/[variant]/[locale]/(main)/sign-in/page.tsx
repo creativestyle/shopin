@@ -1,22 +1,40 @@
 import { getTranslations } from 'next-intl/server'
 import { initRouteContext } from '@/lib/request-context/route-context'
-import { Link } from '@/lib/navigation'
+import { Link, redirect } from '@/lib/navigation'
 import { LoginForm } from '@/features/auth/auth-login-form'
 import { AuthPageGuard } from '../auth-page-guard'
+import { getReturnToServer, setReturnToFromSearchParams } from '@/lib/return-to'
 import { StandardContainer } from '@/components/ui/standard-container'
 import { SignInConfirmation } from '@/features/auth/auth-sign-in-confirmation'
+import { getServerSession } from '@/features/customer/customer-server-session'
 
 export default async function Page({
   params,
+  searchParams,
 }: {
   params: Promise<{ variant: string; locale: string }>
+  searchParams: Promise<Record<string, string | string[] | undefined>>
 }) {
   const { variant, locale } = await params
+  const resolvedSearchParams = await searchParams
   initRouteContext({ variant, locale })
+
+  const session = await getServerSession()
+  if (session === 'signed-in') {
+    redirect({
+      href: getReturnToServer(resolvedSearchParams) ?? '/account',
+      locale,
+    })
+  }
+
   const t = await getTranslations('account.signIn')
 
+  const signUpParams = new URLSearchParams()
+  setReturnToFromSearchParams(signUpParams, resolvedSearchParams)
+  const signUpQuery = signUpParams.toString()
+
   return (
-    <AuthPageGuard>
+    <AuthPageGuard isVerifiedOnServer={session === 'signed-out'}>
       <StandardContainer className='py-4 pb-16'>
         <div className='mx-auto mt-10 flex w-full max-w-md flex-col items-start px-3 sm:px-6'>
           <SignInConfirmation />
@@ -35,7 +53,7 @@ export default async function Page({
           <div className='text-center text-sm text-gray-700'>
             <span>{t('noAccount')} </span>
             <Link
-              href={`/sign-up`}
+              href={`/sign-up${signUpQuery ? `?${signUpQuery}` : ''}`}
               className='underline hover:text-gray-950'
             >
               {t('signUp')}
