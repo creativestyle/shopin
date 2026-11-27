@@ -1,7 +1,7 @@
 'use client'
 
 import { useId } from 'react'
-import type { SetupCategory } from '../rows'
+import type { SetupCategory, SetupUnavailable } from '../rows'
 
 export interface DataSourceSelectorLabels {
   title: string
@@ -10,6 +10,8 @@ export interface DataSourceSelectorLabels {
   selected: string
   /** Before the reason a category has no provider now. */
   unavailable: string
+  /** The fixed reasons, with the provider's name. */
+  reasons: Record<'notConfigured' | 'checkFailed', (provider: string) => string>
   /** A category's heading. */
   category: (category: string) => string
 }
@@ -27,6 +29,11 @@ export function DataSourceSelector({
   onSelect,
 }: DataSourceSelectorProps) {
   const id = useId()
+  /** A fixed reason in the page's language (with the provider's name), or text that already is. */
+  const reasonText = (reason: SetupUnavailable) =>
+    'code' in reason
+      ? labels.reasons[reason.code](reason.provider)
+      : reason.text
   const headingId = `${id}-heading`
 
   const choose = (cookie: string, provider: string) => {
@@ -61,7 +68,7 @@ export function DataSourceSelector({
             </h3>
             {row.unavailable && (
               <p className='text-sm text-red-700 mb-2'>
-                {labels.unavailable} {row.unavailable}
+                {labels.unavailable} {reasonText(row.unavailable)}
               </p>
             )}
             <div
@@ -100,7 +107,7 @@ export function DataSourceSelector({
                           id={reasonId}
                           className='text-sm text-gray-700'
                         >
-                          {option.disabledReason}
+                          {reasonText(option.disabledReason)}
                         </p>
                       )}
                     </div>

@@ -45,9 +45,21 @@ export interface CategoryView {
 
 export type ProviderView = CategoryView[]
 export type Selection = Partial<Record<Category, string>>
+/**
+ * Why no provider serves a category: the provider passed over with the code the BFF marked it with at boot
+ * (`not configured`, `credentials check failed`), or the reason of a requirement the selection does not meet (in the
+ * language asked for). The /setup page translates the codes.
+ */
+export type UnavailableWhy =
+  | { provider: string; code: string }
+  | { reason: string }
+
 export interface Resolution {
   providers: Selection
+  /** Per unavailable category, the reason as one English-or-requirement-language line (logs, 503 messages). */
   unavailable: Partial<Record<Category, string>>
+  /** The same, as its parts. */
+  why: Partial<Record<Category, UnavailableWhy>>
 }
 
 /**
@@ -123,6 +135,20 @@ export function fits(
   )
 }
 
+/** Why a provider cannot serve whatever the selection: the code the BFF marked it with at boot, with its name. */
+function ownUnavailability(
+  option: ProviderOption,
+  language?: string
+): UnavailableWhy | undefined {
+  return option.unavailable
+    ? { provider: reasonIn(option.label, language), code: option.unavailable }
+    : undefined
+}
+
+/** An unavailability as one line (logs, 503 messages, the switch's text). */
+const whyText = (w: UnavailableWhy): string =>
+  'code' in w ? `${w.provider}: ${w.code}` : w.reason
+
 /**
  * The chosen provider if its requirements are met, else the first one whose are. Reasons are in `language`,
  * English by default.
@@ -134,6 +160,7 @@ export function resolveProviders(
 ): Resolution {
   const providers: Selection = {}
   const unavailable: Partial<Record<Category, string>> = {}
+  const why: Partial<Record<Category, UnavailableWhy>> = {}
   const switched = new Set(view.map((c) => c.category))
   for (const c of view) {
     const wanted = c.options.find((o) => o.id === chosen[c.category])
@@ -145,12 +172,14 @@ export function resolveProviders(
       providers[c.category] = pick.id
     } else {
       const o = wanted ?? c.options.find((x) => x.unavailable) ?? c.options[0]
-      unavailable[c.category] = o?.unavailable
-        ? `${reasonIn(o.label, language)}: ${o.unavailable}`
-        : reasonIn(o?.requires?.reason ?? 'not configured', language)
+      const w: UnavailableWhy = (o && ownUnavailability(o, language)) ?? {
+        reason: reasonIn(o?.requires?.reason ?? 'not configured', language),
+      }
+      why[c.category] = w
+      unavailable[c.category] = whyText(w)
     }
   }
-  return { providers, unavailable }
+  return { providers, unavailable, why }
 }
 
 export interface SwitcherOption {
@@ -160,9 +189,14 @@ export interface SwitcherOption {
   /** What it does, in the page's language ('' when its descriptor has no description). */
   description: string
   selected: boolean
-  /** Set when the current selection of the other categories rules this provider out. */
+  /**
+   * Set when this provider cannot be chosen now: it cannot serve at all (`disabledWhy` holds the code), or the
+   * current selection of the other categories rules it out (its requirement's reason).
+   */
   disabledReason?: string
-  /** With `disabledReason`: the providers to choose first (category and provider label), from its `needs`. */
+  /** With `disabledReason` for a provider that cannot serve: its parts, for a page that translates the codes. */
+  disabledWhy?: UnavailableWhy
+  /** With a requirement's `disabledReason`: the providers to choose first (category and label), from its `needs`. */
   switchTo?: { category: Category; label: string }[]
 }
 
@@ -171,6 +205,8 @@ export interface SwitcherCategory {
   cookie: string
   switchable: boolean
   unavailable?: string
+  /** With `unavailable`: its parts, for a page that translates the codes. */
+  unavailableWhy?: UnavailableWhy
   options: SwitcherOption[]
 }
 
@@ -183,35 +219,55 @@ export function switcherOptions(
   chosen: Partial<Record<string, string | undefined>>,
   language = 'en'
 ): SwitcherCategory[] {
-  const { providers, unavailable } = resolveProviders(view, chosen, language)
+  const { providers, unavailable, why } = resolveProviders(
+    view,
+    chosen,
+    language
+  )
+  const switched = new Set(view.map((v) => v.category))
   return view.map((c) => ({
     category: c.category,
     cookie: c.cookie,
     switchable: c.options.length > 1,
     ...(unavailable[c.category]
-      ? { unavailable: unavailable[c.category] }
+      ? {
+          unavailable: unavailable[c.category],
+          unavailableWhy: why[c.category],
+        }
       : {}),
     options: c.options.map((o) => ({
       id: o.id,
       label: reasonIn(o.label, language),
       description: o.description ? reasonIn(o.description, language) : '',
       selected: providers[c.category] === o.id,
-      ...(fits(o, providers, new Set(view.map((v) => v.category)))
-        ? {}
-        : {
-            disabledReason: reasonIn(o.requires!.reason, language),
-            switchTo: (
-              Object.entries(o.requires!.needs) as [Category, string][]
-            ).map(([category, id]) => ({
-              category,
-              label: reasonIn(
-                view
-                  .find((v) => v.category === category)
-                  ?.options.find((n) => n.id === id)?.label ?? id,
-                language
-              ),
-            })),
-          }),
+      ...disabled(o),
     })),
   }))
+
+  /** Why an option cannot be chosen: its own unavailability first, else the pairing its requirement rules out. */
+  function disabled(
+    o: ProviderOption
+  ): Pick<SwitcherOption, 'disabledReason' | 'disabledWhy' | 'switchTo'> {
+    const own = ownUnavailability(o, language)
+    if (own) {
+      return { disabledReason: whyText(own), disabledWhy: own }
+    }
+    if (fits(o, providers, switched)) {
+      return {}
+    }
+    return {
+      disabledReason: reasonIn(o.requires!.reason, language),
+      switchTo: (Object.entries(o.requires!.needs) as [Category, string][]).map(
+        ([category, id]) => ({
+          category,
+          label: reasonIn(
+            view
+              .find((v) => v.category === category)
+              ?.options.find((n) => n.id === id)?.label ?? id,
+            language
+          ),
+        })
+      ),
+    }
+  }
 }

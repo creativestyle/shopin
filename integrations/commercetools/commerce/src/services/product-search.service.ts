@@ -15,6 +15,7 @@ import {
   buildPostFilters,
   buildFacets,
   buildSortExpressions,
+  priceScope,
   buildAttributeFilters,
 } from '../helpers/product-collection-filters'
 import { executeFacetedSearch } from '../helpers/faceted-search'
@@ -98,16 +99,20 @@ export class ProductSearchService {
       currentLanguage,
       filterableAttributes
     )
+    const priceChannel = this.channels.priceChannel()
     const postFilters = buildPostFilters(
       filters,
       currentLanguage,
       filterableAttributes,
       currency,
       priceMin,
-      priceMax
+      priceMax,
+      priceChannel
     )
-    const sortExpressions = buildSortExpressions(sort, currentLanguage)
-    const facets = buildFacets(currentLanguage, filterableAttributes)
+    // with the store's channel, the price filter, facet and sort use the prices the cards show
+    const scope = priceScope(currency, priceChannel)
+    const sortExpressions = buildSortExpressions(sort, currentLanguage, scope)
+    const facets = buildFacets(currentLanguage, filterableAttributes, scope)
 
     const hasActiveFilters =
       attributeFilters.length > 0 ||
@@ -137,7 +142,7 @@ export class ProductSearchService {
       language: currentLanguage,
       currency,
       country,
-      priceChannel: this.channels.priceChannel(),
+      priceChannel,
       limit,
       offset,
       filterableAttributes,

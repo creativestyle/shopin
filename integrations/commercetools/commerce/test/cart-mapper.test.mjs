@@ -174,6 +174,77 @@ describe('payment info: one flat summary, never the commercetools payment record
     [[{ type: 'Charge', state: 'Failure' }], 'failed'],
     [[{ type: 'Charge', state: 'Pending' }], 'pending'],
     [undefined, 'pending'],
+    // led by the latest successful transaction
+    [
+      [
+        { type: 'Authorization', state: 'Success' },
+        { type: 'CancelAuthorization', state: 'Success' },
+      ],
+      'cancelled',
+    ],
+    [
+      [
+        { type: 'Authorization', state: 'Success' },
+        { type: 'CancelAuthorization', state: 'Failure' },
+      ],
+      'authorized',
+    ],
+    [
+      [
+        { type: 'Authorization', state: 'Success' },
+        { type: 'CancelAuthorization', state: 'Success' },
+        { type: 'Authorization', state: 'Success' },
+      ],
+      'authorized',
+    ],
+    [
+      [
+        { type: 'Charge', state: 'Success' },
+        { type: 'Refund', state: 'Success' },
+      ],
+      'cancelled',
+    ],
+    [
+      [
+        { type: 'Charge', state: 'Success' },
+        { type: 'Chargeback', state: 'Success' },
+      ],
+      'cancelled',
+    ],
+    [
+      [
+        { type: 'Charge', state: 'Success' },
+        {
+          type: 'Refund',
+          state: 'Success',
+          amount: { centAmount: 500, currencyCode: 'EUR' },
+        },
+      ],
+      'paid',
+    ],
+    [
+      [
+        { type: 'Charge', state: 'Success' },
+        {
+          type: 'Refund',
+          state: 'Success',
+          amount: { centAmount: 999, currencyCode: 'EUR' },
+        },
+        {
+          type: 'Refund',
+          state: 'Success',
+          amount: { centAmount: 1000, currencyCode: 'EUR' },
+        },
+      ],
+      'cancelled',
+    ],
+    [
+      [
+        { type: 'Charge', state: 'Success' },
+        { type: 'Refund', state: 'Failure' },
+      ],
+      'paid',
+    ],
   ]) {
     it(format('transactions %j → %s', transactions, status), () => {
       assert.deepEqual(mapPaymentInfo(payment(transactions)), {

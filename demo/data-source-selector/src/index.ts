@@ -2,4 +2,4 @@
 export { DataSourceSelector, DataSourcePanel, SetupPage } from './components'
 export { writeProviderCookie } from './cookies'
 export { setupRows } from './rows'
-export type { SetupCategory, SetupOption } from './rows'
+export type { SetupCategory, SetupOption, SetupUnavailable } from './rows'

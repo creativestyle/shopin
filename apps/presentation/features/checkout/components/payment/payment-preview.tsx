@@ -3,10 +3,7 @@
 import { useCart } from '@/features/cart/cart-use-cart'
 import { useLocale, useTranslations } from 'next-intl'
 import { usePaymentMethods } from '../../hooks/use-payment-methods'
-import {
-  getPaymentMethodId,
-  getPaymentInterface,
-} from '../../lib/payment-utils'
+import { getPaymentMethodId, getPaymentProvider } from '../../lib/payment-utils'
 
 export function PaymentPreview() {
   const locale = useLocale()
@@ -18,8 +15,8 @@ export function PaymentPreview() {
   const paymentMethodId = cart?.paymentInfo
     ? getPaymentMethodId(cart.paymentInfo)
     : undefined
-  const paymentInterface = cart?.paymentInfo
-    ? getPaymentInterface(cart.paymentInfo)
+  const provider = cart?.paymentInfo
+    ? getPaymentProvider(cart.paymentInfo)
     : undefined
   const paymentMethods = paymentMethodsData?.paymentMethods || []
 
@@ -39,9 +36,9 @@ export function PaymentPreview() {
       {paymentMethodId && selectedMethod && (
         <div className='space-y-1 text-sm text-gray-700'>
           <div>{description}</div>
-          {paymentInterface && (
+          {provider && (
             <div className='text-gray-600'>
-              {t('via', { interface: paymentInterface })}
+              {t('via', { interface: provider })}
             </div>
           )}
         </div>

@@ -66,6 +66,15 @@ function browser(server: Server) {
 let server: Server;
 let password: string;
 
+/** What the payment provider confirms for a browser's cart: its total now, as the mock's pretend page sends it back. */
+async function paidTotal(b: ReturnType<typeof browser>) {
+  const { grandTotal } = (await b.send("GET", "/bff/cart")).body;
+  return {
+    amount: String(grandTotal.regularPriceInCents),
+    currency: grandTotal.currency,
+  };
+}
+
 beforeAll(async () => {
   // the shop's real config: mock commerce and psp, sign-in by the mock identity provider, which stands in for an
   // outside provider such as Auth0 (its own id, not commerce's: no own-platform hand-over)
@@ -90,7 +99,7 @@ describe("S3 over mock commerce: another identity provider, no commerce code cha
     const carolOrder = (
       await carol.send("POST", "/bff/payment/return", {
         paymentId: carolCart,
-        params: { result: "paid" },
+        params: { result: "paid", ...(await paidTotal(carol)) },
       })
     ).body.orderId;
     expect(carolOrder).toEqual(expect.any(String));
@@ -148,7 +157,7 @@ describe("S3 over mock commerce: another identity provider, no commerce code cha
     // alice's own order: created for her and listed for her only
     const paid = await alice.send("POST", "/bff/payment/return", {
       paymentId: guestCart,
-      params: { result: "paid" },
+      params: { result: "paid", ...(await paidTotal(alice)) },
       customerId: carolId,
     });
     expect(paid.body).toEqual({ status: "paid", orderId: expect.any(String) });

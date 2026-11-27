@@ -191,7 +191,7 @@ export class CartPaymentService {
       cartTotal,
       currencyCode,
       validatedRequest.paymentMethodId,
-      validatedRequest.paymentInterface,
+      validatedRequest.provider,
       validatedRequest.paymentMethodName,
       validatedRequest.localizedDescription
     )

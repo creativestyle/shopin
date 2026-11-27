@@ -1,8 +1,10 @@
 /**
  * The shop's real config (config/shop, `@shopin/config`, no mock of it), booted as the BFF runs it and driven over
  * HTTP like the storefront does (CSRF token, cookies): the payment return route `POST /bff/payment/return` creates an
- * order only for a paid or authorized result of the shopper's own cart. Every other result (failed, cancelled, pending) and a paid
- * result for another shopper's cart order nothing: the cart stays the shopper's active cart. (#345 criterion 33.)
+ * order only for a paid or authorized result of the shopper's own cart, paid at the cart's total. Every other result
+ * (failed, cancelled, pending), a paid result for another shopper's cart and a payment for a cart that changed after
+ * the payment started order nothing: the cart stays the shopper's active cart. A reload of the return page after the
+ * order answers with the same order, and only in the session that placed it. (#345 criterion 33.)
  * The payment integration decides the result; the request only carries what the provider sent back.
  */
 import { CORE_ENV, exactEnv, boot, http } from "./harness";
@@ -50,8 +52,39 @@ function shopper(server: Server) {
       return added.body.id as string;
     },
     cartId: async () => (await send("GET", "/bff/cart")).body?.id,
-    paymentReturn: (paymentId: string, result: string) =>
-      send("POST", "/bff/payment/return", { paymentId, params: { result } }),
+    /**
+     * Starts paying as the checkout does (a method, then the provider's link): the amount and currency the mock's
+     * pretend page was opened for, which it sends back as the amount it charged.
+     */
+    async initiate(cartId: string): Promise<Record<string, string>> {
+      const method = await send("PUT", "/bff/payment/method", {
+        paymentMethodId: "invoice",
+        provider: "mocked",
+        paymentMethodName: "Invoice",
+      });
+      expect(method.status).toBe(200);
+      // the method's payment integration is the cart's payment provider (one name in the contracts)
+      expect(method.body.paymentInfo).toMatchObject({
+        method: "invoice",
+        provider: "mocked",
+      });
+      const started = await send("POST", "/bff/payment/initiate", { cartId });
+      expect(started.status).toBe(201);
+      const link = new URL(started.body.paymentLink);
+      return {
+        amount: link.searchParams.get("amount") ?? "",
+        currency: link.searchParams.get("currency") ?? "",
+      };
+    },
+    paymentReturn: (
+      paymentId: string,
+      result: string,
+      paid: Record<string, string> = {},
+    ) =>
+      send("POST", "/bff/payment/return", {
+        paymentId,
+        params: { result, ...paid },
+      }),
   };
 }
 
@@ -69,13 +102,14 @@ describe("config/shop: the payment return route", () => {
     async (result) => {
       const alice = shopper(server);
       const cart = await alice.start();
-      const res = await alice.paymentReturn(cart, result);
+      const total = await alice.initiate(cart);
+      const res = await alice.paymentReturn(cart, result, total);
       expect(res.status).toBe(200);
       // the payment's status as the payment integration reported it, and no order
       expect(res.body).toEqual({ status: result });
       expect(await alice.cartId()).toBe(cart);
       // the cart was not ordered: paying it now still creates its order
-      const paid = await alice.paymentReturn(cart, "paid");
+      const paid = await alice.paymentReturn(cart, "paid", total);
       expect(paid.body).toEqual({
         status: "paid",
         orderId: expect.any(String),
@@ -88,15 +122,64 @@ describe("config/shop: the payment return route", () => {
     const bob = shopper(server);
     const aliceCart = await alice.start();
     const bobCart = await bob.start();
-    const res = await alice.paymentReturn(bobCart, "paid");
+    const bobTotal = await bob.initiate(bobCart);
+    const res = await alice.paymentReturn(bobCart, "paid", bobTotal);
     expect(res.status).toBe(200);
     expect(res.body.orderId).toBeUndefined();
     expect(res.body.status).toBe("failed");
     expect(await alice.cartId()).toBe(aliceCart);
     expect(await bob.cartId()).toBe(bobCart);
     // bob's cart was not ordered by alice's return: bob paying it creates its order
-    const own = await bob.paymentReturn(bobCart, "paid");
+    const own = await bob.paymentReturn(bobCart, "paid", bobTotal);
     expect(own.body).toEqual({ status: "paid", orderId: expect.any(String) });
+    // and alice replaying bob's paid return after his order gets neither his order nor one of her own
+    const replay = await alice.paymentReturn(bobCart, "paid", bobTotal);
+    expect(replay.body).toEqual({ status: "failed" });
+    expect(await alice.cartId()).toBe(aliceCart);
+  });
+
+  it("a cart changed after the payment started (an item added in another tab) is not ordered against that payment", async () => {
+    const alice = shopper(server);
+    const cart = await alice.start();
+    const total = await alice.initiate(cart);
+    // another tab adds an item while the provider's page is open
+    const search = await alice.send(
+      "GET",
+      "/bff/productSearch?query=shirt&limit=1",
+    );
+    const added = await alice.send("POST", "/bff/cart/items", {
+      productId: search.body.products[0].id,
+      quantity: 1,
+    });
+    expect(added.status).toBe(201);
+    expect(String(added.body.grandTotal.regularPriceInCents)).not.toBe(
+      total.amount,
+    );
+    const res = await alice.paymentReturn(cart, "paid", total);
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual({ status: "failed" });
+    expect(await alice.cartId()).toBe(cart);
+    // another currency for the same amount orders nothing either
+    const otherCurrency = await alice.paymentReturn(cart, "paid", {
+      amount: String(added.body.grandTotal.regularPriceInCents),
+      currency: total.currency === "EUR" ? "USD" : "EUR",
+    });
+    expect(otherCurrency.body).toEqual({ status: "failed" });
+    // and a paid result without an amount orders nothing
+    expect((await alice.paymentReturn(cart, "paid")).body).toEqual({
+      status: "failed",
+    });
+    expect(await alice.cartId()).toBe(cart);
+    // paying the cart as it is now orders it
+    const repaid = await alice.paymentReturn(
+      cart,
+      "paid",
+      await alice.initiate(cart),
+    );
+    expect(repaid.body).toEqual({
+      status: "paid",
+      orderId: expect.any(String),
+    });
   });
 
   it.each(["paid", "authorized"])(
@@ -104,7 +187,8 @@ describe("config/shop: the payment return route", () => {
     async (result) => {
       const alice = shopper(server);
       const cart = await alice.start();
-      const res = await alice.paymentReturn(cart, result);
+      const total = await alice.initiate(cart);
+      const res = await alice.paymentReturn(cart, result, total);
       expect(res.status).toBe(200);
       expect(res.body).toEqual({ status: result, orderId: expect.any(String) });
       // the cart became the order: no active cart, the order is the shopper's
@@ -112,9 +196,16 @@ describe("config/shop: the payment return route", () => {
       const order = await alice.send("GET", `/bff/order/${res.body.orderId}`);
       expect(order.status).toBe(200);
       expect(order.body.id).toBe(res.body.orderId);
-      // paying the same cart again orders nothing more
-      const again = await alice.paymentReturn(cart, result);
-      expect(again.body.orderId).toBeUndefined();
+      // a reload of the return page (or Retry after a lost answer) gets the same order, never 'failed', and
+      // orders nothing more
+      const again = await alice.paymentReturn(cart, result, total);
+      expect(again.body).toEqual({ status: result, orderId: res.body.orderId });
+      expect(await alice.cartId()).toBeUndefined();
+      // another browser replaying the same return gets nothing of alice's order
+      const bob = shopper(server);
+      await bob.start();
+      const replay = await bob.paymentReturn(cart, result, total);
+      expect(replay.body).toEqual({ status: "failed" });
     },
   );
 });

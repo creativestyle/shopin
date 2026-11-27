@@ -1,7 +1,8 @@
 /**
  * Starting a payment: only for the shopper's own cart (the sealed cart cookie). A cart id from the request body that
  * is not the shopper's answers 404, the same as an unknown cart, and the payment integration is never asked, so no
- * one can re-price or get a payment link for another shopper's cart.
+ * one can re-price or get a payment link for another shopper's cart. The provider is asked for the cart's total
+ * after the amounts were checked (the return checks the confirmed amount against the cart again).
  */
 import { NotFoundException } from '@nestjs/common'
 import { PaymentService } from './payment.service'
@@ -11,13 +12,23 @@ function setup(ownCart: string | null = 'cart-1') {
   const getPaymentLink = jest.fn(async (cartId: string) => ({
     paymentLink: `https://psp.example/pay/${cartId}`,
   }))
+  const getCart = jest.fn(async () =>
+    ownCart
+      ? {
+          id: ownCart,
+          grandTotal: { regularPriceInCents: 4999, currency: 'EUR' },
+          currency: 'EUR',
+        }
+      : null
+  )
   const service = new PaymentService(
     {
       cartPaymentService: { verifyAndUpdatePaymentAmounts },
       paymentService: { getPaymentLink },
     } as never,
-    {} as never,
-    { ownCartId: async () => ownCart ?? undefined } as never
+    { getCart } as never,
+    { ownCartId: async () => ownCart ?? undefined } as never,
+    {} as never
   )
   return { service, verifyAndUpdatePaymentAmounts, getPaymentLink }
 }
@@ -29,7 +40,10 @@ describe('payment initiate', () => {
       paymentLink: 'https://psp.example/pay/cart-1',
     })
     expect(verifyAndUpdatePaymentAmounts).toHaveBeenCalledWith('cart-1')
-    expect(getPaymentLink).toHaveBeenCalledWith('cart-1')
+    expect(getPaymentLink).toHaveBeenCalledWith('cart-1', {
+      amount: 4999,
+      currency: 'EUR',
+    })
   })
 
   it('a foreign cart id: 404, the payment integration is not asked', async () => {

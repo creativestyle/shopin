@@ -6,7 +6,7 @@ import { stripLocalePrefix } from '@config/constants'
  * whole subtree below it.
  *
  * Used to keep such URLs out of the sitemap. robots.txt itself is owned by the
- * hosting configuration (Upsun serves it from the static web root, ahead of
+ * hosting configuration (the host serves it from the static web root, ahead of
  * Next.js), so this list also serves as the reference for its Disallow entries —
  * keep the two in sync when routes are added.
  *

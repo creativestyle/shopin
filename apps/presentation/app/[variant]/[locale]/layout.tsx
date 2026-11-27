@@ -1,4 +1,4 @@
-import type { ComponentProps, ReactNode } from 'react'
+import type { ReactNode } from 'react'
 import { notFound } from 'next/navigation'
 import { NextIntlClientProvider } from 'next-intl'
 import { getMessages } from 'next-intl/server'
@@ -13,7 +13,7 @@ import { SiteNoticeMount } from './site-notice-mount'
 import { ConsentProvider } from '@/features/cookie-consent/consent-provider'
 import { TrackingTagsMount } from './tracking-tags-mount'
 import { ClientSlotsProvider } from '@/features/slots/client-slots'
-import { CartExtra, SiteNotice, TrackingTags } from '@/lib/slots'
+import { clientSlot, SiteNotice } from '@/lib/slots'
 import { CookieConsent } from '@/features/cookie-consent/cookie-consent'
 import { listLocales, urlPrefixToRfc } from '@config/constants'
 import { imageHosts } from '@/lib/image-source'
@@ -21,6 +21,10 @@ import { STOREFRONT } from '@/lib/storefront-config'
 import { initRouteContext } from '@/lib/request-context/route-context'
 import { isVariantSegment } from '@/lib/variant/variant-key'
 import { DRAFT_SESSION_SCRIPT } from '@/lib/draft-session-marker'
+
+// client components only: rendered below without their props, the browser adds them (throws naming the slot)
+const TrackingTags = clientSlot('TrackingTags')
+const CartExtra = clientSlot('CartExtra')
 
 const dmSans = DM_Sans({
   subsets: ['latin'],
@@ -97,13 +101,7 @@ export default async function LocaleLayout({
                       />
                     ) : undefined
                   }
-                  cartExtra={
-                    CartExtra ? (
-                      <CartExtra
-                        {...({} as ComponentProps<typeof CartExtra>)}
-                      />
-                    ) : undefined
-                  }
+                  cartExtra={CartExtra ? <CartExtra /> : undefined}
                 >
                   <ConsentProvider>
                     <div className='container-type-inline-size flex min-h-screen flex-col'>

@@ -9,7 +9,8 @@ export const PaymentMethodResponseSchema = z.object({
   name: z.string(),
   localizedDescription: z.record(z.string(), z.string()).optional(),
   method: z.string().optional(), // e.g., 'credit-card', 'wallet', 'invoice', etc.
-  paymentInterface: z.string().optional(), // the PSP integration that handles this payment
+  /** The payment integration that handles this method (the cart's `paymentInfo.provider`). */
+  provider: z.string().optional(),
   isDefault: z.boolean().optional(),
 })
 
@@ -31,7 +32,8 @@ export type PaymentMethodsResponse = z.infer<
  */
 export const SetPaymentMethodRequestSchema = z.object({
   paymentMethodId: z.string(),
-  paymentInterface: z.string().min(1),
+  /** The payment integration that handles the method, as the method list names it. */
+  provider: z.string().min(1),
   paymentMethodName: z.string().min(1),
   localizedDescription: z.record(z.string(), z.string()).optional(),
 })
@@ -74,15 +76,28 @@ export const PaymentStatusSchema = z.enum([
 export type PaymentStatus = z.infer<typeof PaymentStatusSchema>
 
 /**
- * The provider's answer: the status, and the cart the payment was started for (`getPaymentLink(cartId)`), so the BFF
- * orders only that cart: a payment id of someone else's paid payment never orders this shopper's cart.
+ * The provider's answer: the status, the cart the payment was started for (`getPaymentLink(cartId, total)`), and the
+ * amount and currency the provider confirmed. The BFF orders only that cart, and only when the confirmed amount and
+ * currency equal the cart's total at the return: a payment id of someone else's paid payment never orders this
+ * shopper's cart, and a cart changed while the provider's page was open is never ordered against the old payment.
+ * A `paid` or `authorized` result without an amount orders nothing.
  */
 export const PaymentResultSchema = z.object({
   status: PaymentStatusSchema,
   cartId: z.string(),
+  /** The confirmed amount in the currency's minor units (cents), as the cart's totals are. */
+  amount: z.number().int().nonnegative().optional(),
+  /** The confirmed amount's currency (ISO 4217). */
+  currency: z.string().optional(),
 })
 
 export type PaymentResult = z.infer<typeof PaymentResultSchema>
+
+/** What the payment is started for: the cart's total, in minor units, and its currency. */
+export interface PaymentAmount {
+  amount: number
+  currency: string
+}
 
 /** The return route's answer: the order when the payment went through, else the payment's status. */
 export const PaymentReturnResponseSchema = z.object({

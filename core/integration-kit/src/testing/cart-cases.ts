@@ -171,7 +171,7 @@ export function cartCases(ctx: CaseContext): void {
           CartResponseSchema.parse(
             await cartPaymentService.setPaymentMethod(cart.id, {
               paymentMethodId: 'contract-invoice',
-              paymentInterface: 'contract-psp',
+              provider: 'contract-psp',
               paymentMethodName: 'Invoice',
             })
           )

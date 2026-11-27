@@ -14,7 +14,10 @@ export interface StorefrontSlots {
   SiteNotice?: SlotComponent<Record<string, never>> | undefined
   /** The payment page at PAYMENT_STEP_PATH, for a payment provider hosted in the shop. */
   PaymentStep?: SlotComponent<Record<string, never>> | undefined
-  /** Analytics and marketing tags, given the visitor's consent. */
+  /**
+   * Analytics and marketing tags, given the visitor's consent. A client component (`'use client'`): the consent is
+   * added in the browser, so the storefront throws for a server component.
+   */
   TrackingTags?:
     | SlotComponent<{ ready: boolean; analytics: boolean; marketing: boolean }>
     | undefined
@@ -22,7 +25,8 @@ export interface StorefrontSlots {
    * Under the cart summary (cart, checkout): the shop's own cart fields (`contracts.cart`). `setFields` writes
    * them to the shopper's cart (`setFields({ giftMessage })`, `null` removes one; checked against the cart
    * contract, the commerce platform's `setCartFields`); the cart then shows the new values. It throws when the
-   * BFF refuses.
+   * BFF refuses. A client component (`'use client'`): the props are added in the browser, so the storefront throws
+   * for a server component.
    */
   CartExtra?:
     | SlotComponent<{
@@ -38,16 +42,18 @@ export interface StorefrontSlots {
    */
   Pages?: Readonly<Record<string, ShopPage>> | undefined
   /**
-   * The CMS's preview (draft mode) request: reads the request its preview button opens (`/api/draft?…`). It returns
-   * the page to preview when the request carries the preview secret (`secretMatches` compares a value with it,
-   * timing-safe; the secret stays SHOPin's), else `undefined` (401). A missing `slug` or `locale` is a 400. Without
-   * it, `/api/draft` answers 404: the configured CMS has no preview.
+   * The CMS's preview (draft mode) request: reads the parameters of the request its preview button opens
+   * (`/api/draft?…`), each `null` when the request lacks it, or returns `null` for a request that is no preview
+   * request of this CMS. It only reads: SHOPin compares `secret` with its preview secret (timing-safe) and answers
+   * 401 unless it matches; a missing `slug` or `locale` is a 400. Without it, `/api/draft` answers 404: the
+   * configured CMS has no preview.
    */
   PreviewRequest?:
-    | ((
-        query: URLSearchParams,
-        secretMatches: (value: string | null) => boolean
-      ) => { slug: string | null; locale: string | null } | undefined)
+    | ((query: URLSearchParams) => {
+        secret: string | null
+        slug: string | null
+        locale: string | null
+      } | null)
     | undefined
 }
 

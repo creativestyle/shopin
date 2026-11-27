@@ -1423,9 +1423,15 @@ const demoOn = (root = ".") =>
 /**
  * `npm run use demo remove`: deletes demo/ for good (a shop's repository keeps none of the SHOPin demo); setup then
  * installs without it. Refused while the demo is on, and while a workspace outside demo/ still depends on a demo
- * package (named, so the shop removes that first): nothing is deleted then.
+ * package (named, so the shop removes that first), and while an interrupted run's `.demo-removed` is left: nothing is
+ * deleted or moved then.
  */
 export function removeDemo(root = ".") {
+  // a copy an interrupted earlier run left aside is never deleted or overwritten: the shop decides what it is
+  if (existsSync(join(root, DEMO_ASIDE)))
+    return [
+      `${DEMO_ASIDE}/ is left from an interrupted npm run use demo remove: move it back to demo/ (when demo/ is gone) or delete it, then run npm run use demo remove again; nothing was moved`,
+    ];
   if (!existsSync(join(root, "demo")))
     return ["there is no demo/ to remove (already removed)"];
   if (demoOn(root))
@@ -1452,7 +1458,6 @@ export function removeDemo(root = ".") {
       "remove those dependencies (and the code that uses them) first; demo/ is unchanged",
     ];
   // moved aside, not deleted: `npm run use` deletes it once the setup after it succeeded, and puts it back otherwise
-  rmSync(join(root, DEMO_ASIDE), { recursive: true, force: true });
   renameSync(join(root, "demo"), join(root, DEMO_ASIDE));
   return [];
 }

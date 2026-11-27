@@ -91,6 +91,23 @@ export const GUEST_ORDER_MS = 60 * 60 * 1000
 const guestOrderCookie = (commerce: string) =>
   scopedName('shopin-guest-order', commerce)
 
+/** The order a payment return created, remembered for the cart it was paid for. */
+export interface PaidOrder {
+  cartId: string
+  orderId: string
+  status: 'paid' | 'authorized'
+}
+const paidOrderCookie = (commerce: string) =>
+  scopedName('shopin-paid-order', commerce)
+const SealedPaidOrderSchema = z.object({
+  cartId: z.string().min(1),
+  orderId: z.string().min(1),
+  status: z.enum(['paid', 'authorized']),
+  customer: z.string().optional(),
+  sid: z.string().optional(),
+})
+type SealedPaidOrder = z.infer<typeof SealedPaidOrderSchema>
+
 /** A cart or wishlist id cookie's sealed content: the id and, for a signed-in shopper, the customer it belongs to. */
 interface SealedId {
   id: string
@@ -270,6 +287,78 @@ export class SessionService {
   /** The order this browser placed as a guest within GUEST_ORDER_MS; undefined otherwise. */
   guestOrder(): Promise<string | undefined> {
     return this.openId(guestOrderCookie(this.commerce), true)
+  }
+
+  // ─── the order a payment return created (a reload or Retry of the return page) ──────────────
+
+  /**
+   * Remembers the order the payment return created for `cartId`, for this browser's session only: encrypted, bound to
+   * this commerce provider, the signed-in customer and the session id (none for a guest), short-lived
+   * (GUEST_ORDER_MS). A reload, the back button or a Retry of the return page answers with this order, since the
+   * cart is gone by then.
+   */
+  async setPaidOrder(paid: PaidOrder): Promise<void> {
+    const name = paidOrderCookie(this.commerce)
+    const sealed: SealedPaidOrder = { ...paid, ...(await this.owner()) }
+    this.cookies.setCookie(
+      name,
+      await this.encryption.encryptAndSign(
+        JSON.stringify(sealed),
+        GUEST_ORDER_MS,
+        idAudience(name)
+      ),
+      this.cookies.createCookieOptions(GUEST_ORDER_MS)
+    )
+  }
+
+  /**
+   * The order this session's payment return created for `cartId`; undefined for another cart, and for a record of
+   * another session or customer (a copied cookie), which is dropped.
+   */
+  async paidOrder(cartId: string): Promise<PaidOrder | undefined> {
+    const name = paidOrderCookie(this.commerce)
+    const raw = this.cookies.getCookie(name)
+    if (!raw) {
+      return undefined
+    }
+    let sealed: SealedPaidOrder | undefined
+    try {
+      const parsed = SealedPaidOrderSchema.safeParse(
+        JSON.parse(
+          await this.encryption.decryptAndVerify(raw, idAudience(name))
+        )
+      )
+      sealed = parsed.success ? parsed.data : undefined
+    } catch {
+      sealed = undefined
+    }
+    const owner = await this.owner()
+    if (
+      !sealed ||
+      sealed.customer !== owner.customer ||
+      sealed.sid !== owner.sid
+    ) {
+      this.cookies.clearCookie(name)
+      return undefined
+    }
+    if (sealed.cartId !== cartId) {
+      return undefined
+    }
+    return {
+      cartId: sealed.cartId,
+      orderId: sealed.orderId,
+      status: sealed.status,
+    }
+  }
+
+  /** Who a paid-order record belongs to: this session's id and linked customer (both absent for a guest). */
+  private async owner(): Promise<{ customer?: string; sid?: string }> {
+    const state = await this.state()
+    const customer = state.links[this.commerce]
+    return {
+      ...(customer ? { customer } : {}),
+      ...(state.sid ? { sid: state.sid } : {}),
+    }
   }
 
   // ─── cart ids, per commerce provider and currency ─────────────────────────────────────────

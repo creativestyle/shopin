@@ -12,11 +12,11 @@ export function getPaymentMethodId(
 }
 
 /**
- * Extracts the payment interface from payment info
+ * Extracts the payment provider (the payment integration handling it) from payment info
  * @param paymentInfo - The payment info from cart or order
- * @returns The payment interface (e.g., 'internal', 'stripe', 'paypal') or undefined
+ * @returns The payment provider (e.g. 'mocked' or a payment integration's id) or undefined
  */
-export function getPaymentInterface(
+export function getPaymentProvider(
   paymentInfo: PaymentInfoResponse | undefined
 ): string | undefined {
   return paymentInfo?.provider

@@ -25,14 +25,43 @@ const shop: { readonly [K in keyof StorefrontSlots]?: unknown } = {
 export const PaymentStep: ComponentType | undefined = shop.PaymentStep as never
 /** A notice over every page except the legal ones (the demo's demo notice). */
 export const SiteNotice: ComponentType | undefined = shop.SiteNotice as never
-/** Analytics and marketing tags, given the visitor's consent (the demo's sample tags). */
-export const TrackingTags:
-  | ComponentType<Parameters<NonNullable<StorefrontSlots['TrackingTags']>>[0]>
-  | undefined = shop.TrackingTags as never
-/** The shop's own cart fields, under the cart summary. */
-export const CartExtra:
-  | ComponentType<Parameters<NonNullable<StorefrontSlots['CartExtra']>>[0]>
-  | undefined = shop.CartExtra as never
+
+/** The slots the server layout renders without their props; a client mount adds them (`cloneElement`). */
+type ClientSlotName = 'TrackingTags' | 'CartExtra'
+/**
+ * A client slot as the server layout holds it: a client reference it renders with none (or only initial) props;
+ * the mount in the browser adds the props it knows (consent, the cart).
+ */
+export type ClientSlot<K extends ClientSlotName> = ComponentType<
+  Partial<Parameters<NonNullable<StorefrontSlots[K]>>[0]>
+>
+
+const CLIENT_REFERENCE = Symbol.for('react.client.reference')
+
+/**
+ * A client slot (TrackingTags: analytics and marketing tags given the visitor's consent; CartExtra: the shop's own
+ * cart fields under the cart summary), or undefined when the shop has none. It must be a client component: the
+ * server layout renders it without its props and the browser adds them, so a server component would run without
+ * a cart, or once without consent. Anything else throws, naming the slot. Called where the layout renders it, so
+ * a module that reads other slots (routes, shop pages) never trips over it.
+ */
+export function clientSlot<K extends ClientSlotName>(
+  name: K
+): ClientSlot<K> | undefined {
+  const component = shop[name]
+  if (component === undefined) {
+    return undefined
+  }
+  if (
+    (component as { $$typeof?: unknown } | null)?.$$typeof !== CLIENT_REFERENCE
+  ) {
+    throw new Error(
+      `The storefront slot ${name} must be a client component: add 'use client' at the top of the file that defines it (the layout renders it on the server without its props; the browser adds them).`
+    )
+  }
+  return component as ClientSlot<K>
+}
+
 /** The configured CMS's preview request reader (`/api/draft`); undefined when it has no preview. */
 export const PreviewRequest: StorefrontSlots['PreviewRequest'] =
   shop.PreviewRequest as never

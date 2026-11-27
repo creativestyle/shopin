@@ -246,11 +246,50 @@ function mapShippingInfo(
   }
 }
 
+type PaymentTransaction = {
+  type: string
+  state: string
+  amount: { centAmount: number }
+}
+type PaymentStatus = NonNullable<CartResponse['paymentInfo']>['status']
+
+/**
+ * A payment's status from its transactions (commercetools keeps them in the order they were added), led by the
+ * latest successful one: a cancelled authorization is `cancelled`; a refund or chargeback that returns everything
+ * charged is `cancelled` too (the contract has no refunded status: nothing is paid any more); otherwise a successful
+ * charge is `paid` (a partial refund leaves it paid), a successful authorization `authorized`, a failure `failed`,
+ * anything else `pending`.
+ */
+function paymentStatus(transactions: PaymentTransaction[]): PaymentStatus {
+  const successful = transactions.filter((t) => t.state === 'Success')
+  const latest = successful.at(-1)?.type
+  const sum = (types: string[]) =>
+    successful
+      .filter((t) => types.includes(t.type))
+      .reduce((total, t) => total + t.amount.centAmount, 0)
+  if (latest === 'CancelAuthorization') {
+    return 'cancelled'
+  }
+  if (latest === 'Refund' || latest === 'Chargeback') {
+    const charged = sum(['Charge'])
+    if (charged > 0 && sum(['Refund', 'Chargeback']) >= charged) {
+      return 'cancelled'
+    }
+  }
+  const succeeded = (type: string) => successful.some((t) => t.type === type)
+  return succeeded('Charge')
+    ? 'paid'
+    : succeeded('Authorization')
+      ? 'authorized'
+      : transactions.some((t) => t.state === 'Failure')
+        ? 'failed'
+        : 'pending'
+}
+
 /**
  * The cart's payment as SHOPin's flat summary: its first payment's method, the payment interface handling it, the
- * localized name, the amount, and a status from its transactions (a successful charge: paid; a successful
- * authorization: authorized; a failure: failed; otherwise pending). Needs `paymentInfo.payments[*]` expanded for the
- * status and amount; without it the summary says pending.
+ * localized name, the amount, and a status from its transactions (see `paymentStatus`). Needs
+ * `paymentInfo.payments[*]` expanded for the status and amount; without it the summary says pending.
  */
 export function mapPaymentInfo(
   paymentInfo: CartApiResponse['paymentInfo']
@@ -261,16 +300,7 @@ export function mapPaymentInfo(
   }
   const expanded = payment.obj
   const info = expanded?.paymentMethodInfo ?? payment.paymentMethodInfo
-  const transactions = expanded?.transactions ?? []
-  const succeeded = (type: string) =>
-    transactions.some((t) => t.type === type && t.state === 'Success')
-  const status = succeeded('Charge')
-    ? 'paid'
-    : succeeded('Authorization')
-      ? 'authorized'
-      : transactions.some((t) => t.state === 'Failure')
-        ? 'failed'
-        : 'pending'
+  const status = paymentStatus(expanded?.transactions ?? [])
   const planned = expanded?.amountPlanned
   return {
     method: info?.method ?? '',

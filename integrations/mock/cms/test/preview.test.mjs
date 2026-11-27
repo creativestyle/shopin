@@ -1,45 +1,30 @@
 /**
  * The mock CMS's preview request (the storefront's PreviewRequest slot): the usual preview URL
- * (`/api/draft?secret=…&slug=…&locale=…`); the secret is compared by the storefront, never here.
+ * (`/api/draft?secret=…&slug=…&locale=…`). It only reads the parameters; the storefront compares the secret.
  */
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { previewRequest } from '../dist/preview.js'
 
-test('the page to preview when the secret matches; a missing slug or locale stays null for the storefront to refuse', () => {
-  const seen = []
-  const matches = (value) => {
-    seen.push(value)
-    return value === 's3cret'
-  }
+test('reads the secret, the slug and the locale from the query', () => {
   assert.deepEqual(
     previewRequest(
-      new URLSearchParams('secret=s3cret&slug=about&locale=de-DE'),
-      matches
+      new URLSearchParams('secret=s3cret&slug=about&locale=de-DE')
     ),
-    { slug: 'about', locale: 'de-DE' }
+    { secret: 's3cret', slug: 'about', locale: 'de-DE' }
   )
-  assert.deepEqual(
-    previewRequest(new URLSearchParams('secret=s3cret&slug=about'), matches),
-    {
-      slug: 'about',
-      locale: null,
-    }
-  )
-  assert.deepEqual(seen, ['s3cret', 's3cret'])
 })
 
-test('no page without the secret', () => {
-  const matches = (value) => value === 's3cret'
-  assert.equal(
-    previewRequest(
-      new URLSearchParams('secret=wrong&slug=about&locale=en-US'),
-      matches
-    ),
-    undefined
-  )
-  assert.equal(
-    previewRequest(new URLSearchParams('slug=about&locale=en-US'), matches),
-    undefined
-  )
+test('a missing parameter is null, for the storefront to refuse', () => {
+  for (const missing of ['secret', 'slug', 'locale']) {
+    const query = new URLSearchParams('secret=s3cret&slug=about&locale=de-DE')
+    query.delete(missing)
+    const read = previewRequest(query)
+    assert.equal(read[missing], null, missing)
+    for (const other of ['secret', 'slug', 'locale'].filter(
+      (k) => k !== missing
+    )) {
+      assert.notEqual(read[other], null, `${other} without ${missing}`)
+    }
+  }
 })

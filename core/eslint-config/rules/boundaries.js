@@ -272,7 +272,7 @@ function allowedFor(context) {
 
 /**
  * How a vendor's name is written (`acme`, `Acme`, `ACME`), as a pattern for its own name in any text. Other
- * mixtures of case are other words (`ContentFul…` in `DialogContentFullscreen` is not a vendor's name).
+ * mixtures of case are other words (a vendor's name inside a longer identifier such as `DialogContentFullscreen` is not a match).
  */
 function vendorPattern(vendors) {
   const forms = vendors.flatMap((v) => {

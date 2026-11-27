@@ -5,6 +5,7 @@ import type { ProviderView, Selection } from '@demo/provider-switch/view'
 import { setupRows } from '../rows'
 import { writeProviderCookie } from '../cookies'
 import { DataSourceSelector } from './data-source-selector'
+import { selectorLabels } from './labels'
 
 /**
  * The provider switch with its texts (`dataSourceSelector` in the storefront texts): per category the installed
@@ -23,17 +24,7 @@ export function DataSourcePanel({
 
   return (
     <DataSourceSelector
-      labels={{
-        title: t('title'),
-        intro: t('intro'),
-        select: t('select'),
-        selected: t('selected'),
-        unavailable: t('unavailable'),
-        category: (category) =>
-          t.has(`categories.${category}`)
-            ? t(`categories.${category}`)
-            : category,
-      }}
+      labels={selectorLabels(t)}
       rows={rows}
       onSelect={(cookie, provider) => writeProviderCookie(cookie, provider)}
     />

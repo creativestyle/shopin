@@ -133,11 +133,6 @@ export class AuthService {
   }
 
   /**
-   * After sign-in and the guest-cart takeover: a signed-in shopper never keeps the guest's commerce token.
-   * Either the identity provider handed the customer's commerce session (a customer entry, kept), or the
-   * commerce part acts for the linked customer without one (the guest entry is dropped).
-   */
-  /**
    * Before a sign-in: an expired guest token is renewed through the commerce part (the vault's single-flight
    * refresh), because the auth routes have no refresh interceptor. A token that cannot be renewed stays as it is.
    */
@@ -157,6 +152,11 @@ export class AuthService {
       .catch(() => undefined)
   }
 
+  /**
+   * After sign-in and the guest-cart takeover: a signed-in shopper never keeps the guest's commerce token.
+   * Either the identity provider handed the customer's commerce session (a customer entry, kept), or the
+   * commerce part acts for the linked customer without one (the guest entry is dropped).
+   */
   async dropGuestSession(): Promise<void> {
     if ((await this.tokenStorageService.getAuthStatus()) === false) {
       this.tokenStorageService.clearTokens()

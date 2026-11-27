@@ -39,7 +39,7 @@ export function PaymentActive() {
         (method) => method.id === selectedMethod
       )
 
-      if (!selectedPaymentMethod?.paymentInterface) {
+      if (!selectedPaymentMethod?.provider) {
         return
       }
 
@@ -49,7 +49,7 @@ export function PaymentActive() {
 
       const updatedCart = await handleSetPaymentMethod({
         paymentMethodId: selectedPaymentMethod.id,
-        paymentInterface: selectedPaymentMethod.paymentInterface,
+        provider: selectedPaymentMethod.provider,
         paymentMethodName: localizedName,
         localizedDescription: selectedPaymentMethod.localizedDescription,
       })

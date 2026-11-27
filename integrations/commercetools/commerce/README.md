@@ -38,11 +38,15 @@ every call to the customer, and the guest cart is merged into the customer's at 
 `manage_customers` (sign-up creates customers; sign-in and the session re-check read them); the BFF checks it at
 start.
 
-| Configuration                                  | API client scopes beyond the shopper ones                                       | Checked at start |
-| ---------------------------------------------- | ------------------------------------------------------------------------------- | ---------------- |
-| commercetools commerce, no sign-in             | none (`view_types` when the shop has cart fields)                               | —                |
-| commercetools commerce + commercetools sign-in | `manage_customers`                                                              | yes              |
-| commercetools commerce + another sign-in       | `manage_orders`, `manage_customers`, `manage_payments`, `manage_shopping_lists` | yes              |
+Every configuration needs `view_stores` (or `manage_stores`) beyond the shopper scopes: the start-up check reads each
+configured Store (its distribution channel, below). Without it that read answers 403, the check fails naming the
+scope, and the `commerce` category is unavailable (its routes answer 503).
+
+| Configuration                                  | API client scopes beyond the shopper ones                                                      | Checked at start |
+| ---------------------------------------------- | ---------------------------------------------------------------------------------------------- | ---------------- |
+| commercetools commerce, no sign-in             | `view_stores` (`view_types` when the shop has cart fields)                                     | `view_stores`    |
+| commercetools commerce + commercetools sign-in | `view_stores`, `manage_customers`                                                              | yes              |
+| commercetools commerce + another sign-in       | `view_stores`, `manage_orders`, `manage_customers`, `manage_payments`, `manage_shopping_lists` | yes              |
 
 `manage_project` (an admin client) grants all of them.
 
@@ -75,13 +79,23 @@ needs a store: the BFF's start names a locale without one, and a store key for a
 **When adding a new locale**, create (or designate) a matching Store in the Merchant Center with its language and
 countries, then add its key to `storeKeys`.
 
+**Prices** are selected by the request's currency and country and by the store's distribution channel (the first one
+the Store lists; none when it lists none), read once at start. Product pages, listings, search (with its price filter,
+price facet and price sort) and the wishlist show that price, and a line item added to the cart takes the same channel.
+Prices are not selected by customer group (as before): in a project with customer-group prices, a signed-in customer's
+cart can charge a different price than the pages show. Stock is not limited to the channel.
+
+Carts are kept per currency, not per store, so stores whose locales share a currency must have the same distribution
+channel (or all none). Otherwise the start-up check fails, naming the stores and the currency, and `commerce` is
+unavailable.
+
 **Shipping-country dropdown** — the address form in checkout reads the store's `countries` list directly from the commercetools Store resource. To control which countries appear in the dropdown:
 
 1. Open **Merchant Center → Settings → Stores → <your store>**.
 2. Under **Countries**, add every ISO 3166-1 alpha-2 code you want to ship to (e.g. `DE`, `AT`, `CH`).
 3. Save. No code deployment needed — the storefront reads this list on each request.
 
-If a Store has **no countries configured** or the Store fetch fails, the storefront logs a warning and `shippingCountries` is `[]` — the shipping country dropdown in checkout will be empty. Likewise, if the commercetools project fetch fails or returns no countries, `projectCountries` is `[]` and billing address forms and customer account address management will render with an empty country dropdown. A sensible fallback varies per project; callers that need a guaranteed non-empty list should pass an explicit `countries` prop to `AddressForm`.
+If a Store has **no countries configured**, or a later fetch of it fails while the BFF runs (a Store that cannot be read at start fails the start-up check first, above), the storefront logs a warning and `shippingCountries` is `[]` — the shipping country dropdown in checkout will be empty. Likewise, if the commercetools project fetch fails or returns no countries, `projectCountries` is `[]` and billing address forms and customer account address management will render with an empty country dropdown. A sensible fallback varies per project; callers that need a guaranteed non-empty list should pass an explicit `countries` prop to `AddressForm`.
 
 ## Shipping method delivery time
 

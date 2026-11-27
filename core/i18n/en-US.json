@@ -818,6 +818,10 @@
     "select": "Select",
     "selected": "Selected",
     "unavailable": "Not available now:",
+    "reasons": {
+      "notConfigured": "{provider}: not configured",
+      "checkFailed": "{provider}: credentials check failed"
+    },
     "categories": {
       "commerce": "Commerce",
       "search": "Search",

@@ -52,6 +52,7 @@ import type {
   SetShippingMethodRequest,
 } from '@core/contracts/cart/shipping-method'
 import type {
+  PaymentAmount,
   PaymentMethodsResponse,
   PaymentResult,
   PaymentReturnRequest,
@@ -273,10 +274,15 @@ export const PAYMENT_STEP_PATH = '/demo/mocked-payment-step'
 
 export interface PaymentService {
   getPaymentMethods(cartId?: string): Promise<PaymentMethodsResponse>
-  getPaymentLink(cartId: string): Promise<{ paymentLink: string }>
+  /** A link to the provider's payment page for `total` (the cart's total when the shopper starts paying). */
+  getPaymentLink(
+    cartId: string,
+    total: PaymentAmount
+  ): Promise<{ paymentLink: string }>
   /**
    * After the provider sent the shopper back to the shop's return route: the payment's status, asked of the
-   * provider with what it sent back (`params`). Only `paid` or `authorized` lets the BFF create the order.
+   * provider with what it sent back (`params`), with the amount and currency the provider confirmed. Only `paid` or
+   * `authorized` with an amount equal to the cart's total lets the BFF create the order.
    */
   getPaymentResult(request: PaymentReturnRequest): Promise<PaymentResult>
 }

@@ -231,16 +231,15 @@ describe('commercetools prices by the store’s distribution channel', () => {
 describe('commercetools StoreChannels', () => {
   afterEach(() => mock.restoreAll())
 
+  // fr-FR is not a shop locale in config/locales.json, so its currency is the default locale's (USD, as en-US):
+  // it shares en-US's store, as stores of one currency must share their channel (below)
   const LOCALES = ['en-US', 'de-DE', 'fr-FR']
-  function channels(server, language = { current: 'en-US' }) {
+  const KEYS = { 'en-US': 'us-store', 'de-DE': 'eu-store', 'fr-FR': 'us-store' }
+  function channels(server, language = { current: 'en-US' }, keys = KEYS) {
     return new StoreChannels(
       server,
       { getCurrentLanguage: () => language.current },
-      storeKeysFor(
-        undefined,
-        { 'en-US': 'us-store', 'de-DE': 'eu-store', 'fr-FR': 'eu-store' },
-        LOCALES
-      )
+      storeKeysFor(undefined, keys, LOCALES)
     )
   }
 
@@ -258,7 +257,7 @@ describe('commercetools StoreChannels', () => {
     language.current = 'de-DE'
     assert.equal(c.priceChannel(), undefined)
     language.current = 'fr-FR'
-    assert.equal(c.priceChannel(), undefined)
+    assert.equal(c.priceChannel(), 'channel-us')
 
     assert.deepEqual(server.storeCalls, [
       'GET stores/key=us-store',
@@ -293,6 +292,84 @@ describe('commercetools StoreChannels', () => {
     const c = channels(new FakeProjectClient())
     assert.throws(() => c.priceChannel(), {
       message: /read by the start-up check, which has not run/,
+    })
+  })
+
+  // carts are kept per currency (not per store): two stores of one currency with different channels would put line
+  // items priced by both channels into one cart, so that configuration fails the start-up check
+  for (const [why, fr] of [
+    ['different channels', [channel('channel-fr')]],
+    ['one channel, the other none', []],
+  ]) {
+    it(`two stores sharing a currency with ${why} fail the load, naming both stores and the currency`, async () => {
+      const server = new FakeProjectClient()
+      server.stores_.push(
+        { key: 'us-store', distributionChannels: [channel('channel-us')] },
+        { key: 'eu-store', distributionChannels: [] },
+        { key: 'fr-store', distributionChannels: fr }
+      )
+      const c = channels(server, undefined, {
+        'en-US': 'us-store',
+        'de-DE': 'eu-store',
+        'fr-FR': 'fr-store',
+      })
+
+      await assert.rejects(c.load(), (error) => {
+        assert.match(
+          error.message,
+          /^commercetools Stores "us-store" \(channel channel-us\), "fr-store" /
+        )
+        assert.match(
+          error.message,
+          / share the currency USD but not the distribution channel/
+        )
+        assert.doesNotMatch(error.message, /eu-store/)
+        return true
+      })
+      assert.throws(() => c.priceChannel(), { message: /which has not run/ })
+    })
+  }
+
+  it('two stores sharing a currency with the same channel pass the load', async () => {
+    const server = new FakeProjectClient()
+    server.stores_.push(
+      { key: 'us-store', distributionChannels: [channel('channel-us')] },
+      { key: 'eu-store', distributionChannels: [] },
+      { key: 'fr-store', distributionChannels: [channel('channel-us')] }
+    )
+    const language = { current: 'fr-FR' }
+    const c = channels(server, language, {
+      'en-US': 'us-store',
+      'de-DE': 'eu-store',
+      'fr-FR': 'fr-store',
+    })
+
+    await c.load()
+    assert.equal(c.priceChannel(), 'channel-us')
+    language.current = 'de-DE'
+    assert.equal(c.priceChannel(), undefined)
+  })
+
+  it('a store the API client may not read (403): names the scope it needs', async () => {
+    const server = new FakeProjectClient()
+    server.stores_.push({ key: 'eu-store', distributionChannels: [] })
+    server.stores = () => ({
+      withKey: () => ({
+        get: () => ({
+          execute: async () => {
+            throw Object.assign(
+              new Error(
+                'Insufficient scope. One of the following scopes is missing: view_stores'
+              ),
+              { statusCode: 403, body: { statusCode: 403 } }
+            )
+          },
+        }),
+      }),
+    })
+    await assert.rejects(channels(server).load(), {
+      message:
+        /^commercetools Store "us-store" cannot be read: HTTP 403, the API client needs the scope view_stores \(or manage_stores\)/,
     })
   })
 

@@ -24,7 +24,8 @@ const localePrefixes = new Set(listLocales().map((l) => l.urlPrefix))
 /**
  * Draft Mode endpoint for headless CMS preview.
  * The configured CMS reads its own preview request (the `PreviewRequest` slot its integration fills: which
- * parameters carry the secret, the slug and the locale); the secret itself is NEXT_DRAFT_MODE_SECRET, compared here.
+ * parameters carry the secret, the slug and the locale); it only reads them. The secret is compared here with
+ * NEXT_DRAFT_MODE_SECRET, so draft mode never depends on an integration checking it.
  * Without a CMS preview the route answers 404.
  *
  * The CMS typically sends locale as en-US, de-DE, etc. We redirect to app URL prefix (en, de).
@@ -47,11 +48,9 @@ export function GET(request: NextRequest) {
   if (!PreviewRequest) {
     return new NextResponse('Not found', { status: 404 })
   }
-  const preview = PreviewRequest(
-    request.nextUrl.searchParams,
-    isDraftSecretValid
-  )
-  if (!preview) {
+  // The CMS only reads the parameters; the secret is compared here, whatever the integration returns.
+  const preview = PreviewRequest(request.nextUrl.searchParams)
+  if (!preview || !isDraftSecretValid(preview.secret)) {
     return new NextResponse('Invalid token', { status: 401 })
   }
   const { slug, locale: localeParam } = preview

@@ -8,9 +8,16 @@ export function PaymentDemo() {
   const locale = useLocale()
   const paymentId = params?.paymentId as string
 
-  // as an external provider does: back to the shop's one return route, with the payment and its result
+  // as an external provider does: back to the shop's one return route, with the payment, its result and the amount
+  // it was opened for (its link's `amount` and `currency`), the amount this pretend provider "charged"
   const returnTo = (result: 'paid' | 'failed') => {
-    const query = new URLSearchParams({ paymentId, result })
+    const opened = new URLSearchParams(window.location.search)
+    const query = new URLSearchParams({
+      paymentId,
+      result,
+      amount: opened.get('amount') ?? '',
+      currency: opened.get('currency') ?? '',
+    })
     window.location.href = `/${locale}/checkout/payment/return?${query.toString()}`
   }
   const handlePayNow = () => returnTo('paid')

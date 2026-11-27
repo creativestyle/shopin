@@ -84,13 +84,15 @@ test('a pairing that does not work together is disabled with the reason its desc
   const search = rows.find((r) => r.category === 'search')
   assert.equal(search.options.find((o) => o.id === 'commerce').selected, true)
   const disabled = search.options.find((o) => o.id === 'fx-index')
-  assert.equal(disabled.disabledReason, 'The index is fed from the platform')
+  assert.deepEqual(disabled.disabledReason, {
+    text: 'The index is fed from the platform',
+  })
   assert.equal(disabled.selected, false)
-  assert.equal(
+  assert.deepEqual(
     setupRows(view, { commerce: 'fx-sample' }, 'de').find(
       (r) => r.category === 'search'
     ).options[1].disabledReason,
-    'Der Index wird aus der Plattform befüllt'
+    { text: 'Der Index wird aus der Plattform befüllt' }
   )
 })
 

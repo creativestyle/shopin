@@ -60,7 +60,7 @@ const ownSignInByProvider = new Map<ProviderId, boolean>()
  * (`requires: { auth: { needs: { commerce } } }`). The one rule for the hand-over between sign-in and commerce
  * (D-84): only such a sign-in gets the guest's commerce token, has the commerce session it returns kept, signs in
  * with the customer id as subject, merges the guest cart itself, and has its session end with that commerce session.
- * A sign-in that may only pair with this commerce but is another provider (the mock identity, Auth0 limited to one
+ * A sign-in that may only pair with this commerce but is another provider (the mock identity, an outside identity provider limited to one
  * shop) is an identity provider like any other: identity only, linked through the commerce port's `customers`.
  */
 function ownSignInOf({ auth, commerce }: Serving['providers']): boolean {

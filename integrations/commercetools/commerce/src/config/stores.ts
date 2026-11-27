@@ -29,6 +29,11 @@ export class StoreKeyMap {
     return [...new Set(this.keys.values())]
   }
 
+  /** Each configured locale with its store. */
+  locales(): [locale: string, store: string][] {
+    return [...this.keys]
+  }
+
   /** The store of a locale; a locale the shop does not list gets the first locale's store. */
   forLanguage(language: string): string {
     const key =

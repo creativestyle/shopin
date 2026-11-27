@@ -817,6 +817,10 @@
     "select": "Auswählen",
     "selected": "Ausgewählt",
     "unavailable": "Derzeit nicht verfügbar:",
+    "reasons": {
+      "notConfigured": "{provider}: nicht konfiguriert",
+      "checkFailed": "{provider}: Prüfung der Zugangsdaten fehlgeschlagen"
+    },
     "categories": {
       "commerce": "Commerce",
       "search": "Suche",

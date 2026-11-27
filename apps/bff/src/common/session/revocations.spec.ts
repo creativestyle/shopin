@@ -9,6 +9,7 @@ import {
   utimesSync,
   writeFileSync,
 } from 'node:fs'
+import fs from 'node:fs'
 import { join } from 'node:path'
 import { tmpdir } from 'node:os'
 import { RevocationList, revocationFile, takeStaleLock } from './revocations'
@@ -78,6 +79,37 @@ describe('session revocations survive a restart', () => {
       new RevocationList(30 * DAY, () => file).isRevoked({ sid: 'after-crash' })
     ).toBe(true)
     expect(existsSync(`${file}.lock`)).toBe(false)
+  })
+
+  it('a lock taken over while this instance writes: nothing is written over the new owner, the revocation fails', () => {
+    const sub = mkdtempSync(join(dir, 'takeover-'))
+    const file = join(sub, 'revocations.json')
+    const theirs = JSON.stringify({
+      sessions: [['their-sid', Date.now() + DAY]],
+      identities: [],
+    })
+    const list = new RevocationList(30 * DAY, () => file)
+    const realWrite = fs.writeFileSync
+    // while this instance writes its temp file, another one takes the lock over (stale-lock takeover) and saves
+    const write = jest
+      .spyOn(fs, 'writeFileSync')
+      .mockImplementation((path, data, options) => {
+        realWrite(path, data, options)
+        if (String(path).endsWith('.tmp')) {
+          realWrite(`${file}.lock`, 'another-instance')
+          realWrite(file, theirs)
+        }
+      })
+    try {
+      expect(() => list.revoke('my-sid')).toThrow(/taken over/)
+    } finally {
+      write.mockRestore()
+    }
+    // the other writer's list stands, and its lock stays
+    expect(readFileSync(file, 'utf8')).toBe(theirs)
+    expect(readFileSync(`${file}.lock`, 'utf8')).toBe('another-instance')
+    // no temp file left behind
+    expect(readdirSync(sub).filter((f) => f.endsWith('.tmp'))).toEqual([])
   })
 
   it('a check looks at the file at most once a second (one stat per process, not per request)', () => {

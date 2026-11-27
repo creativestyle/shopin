@@ -631,11 +631,18 @@ test("npm run use demo remove: refused while the demo is on or still depended on
     );
     assert.match(refused.at(-1), /demo\/ is unchanged/);
     assert.ok(existsSync(join(dir, "demo")));
-    // nothing depends on it: out of the workspaces, kept aside until the setup after it succeeded; a second run says so
+    // nothing depends on it: out of the workspaces, kept aside until the setup after it succeeded; a second run while
+    // the copy is still aside names it and leaves it; once it is gone, a run says there is no demo/
     put(dir, "apps/web/package.json", { name: "@apps/web" });
     assert.deepEqual(removeDemo(dir), []);
     assert.ok(!existsSync(join(dir, "demo")));
     assert.ok(existsSync(join(dir, DEMO_ASIDE, "shop/package.json")));
+    assert.match(
+      removeDemo(dir)[0],
+      /^\.demo-removed\/ is left from an interrupted/,
+    );
+    assert.ok(existsSync(join(dir, DEMO_ASIDE, "shop/package.json")));
+    renameSync(join(dir, DEMO_ASIDE), join(dir, "deleted-by-the-shop"));
     assert.match(removeDemo(dir)[0], /there is no demo\/ to remove/);
   }));
 
@@ -663,6 +670,30 @@ test("npm run use leaves alone a demo copy an interrupted earlier run left aside
       r.stdout + r.stderr,
     );
     assert.ok(!existsSync(join(dir, "demo")));
+    assert.doesNotMatch(r.stdout, /deleted demo\//);
+  }));
+
+test("npm run use demo remove is refused while an interrupted run's copy is left aside: nothing moved, the copy intact", () =>
+  temp("demo-remove-leftover", (dir) => {
+    const { run } = repository(dir);
+    // an earlier `use demo remove` was killed after moving demo/ aside; demo/ came back since (e.g. git restore)
+    cpSync(join(dir, "demo"), join(dir, DEMO_ASIDE), { recursive: true });
+    writeFileSync(join(dir, DEMO_ASIDE, "leftover.txt"), "older copy");
+    const r = run("use", "demo", "remove");
+    assert.notEqual(r.status, 0, r.stdout + r.stderr);
+    assert.match(
+      r.stderr,
+      /\.demo-removed\/ is left from an interrupted npm run use demo remove: move it back to demo\/ \(when demo\/ is gone\) or delete it/,
+    );
+    assert.equal(
+      readFileSync(join(dir, DEMO_ASIDE, "leftover.txt"), "utf8"),
+      "older copy",
+      "the leftover copy is neither deleted nor overwritten",
+    );
+    assert.ok(
+      existsSync(join(dir, "demo/shop/package.json")),
+      "demo/ not moved",
+    );
     assert.doesNotMatch(r.stdout, /deleted demo\//);
   }));
 

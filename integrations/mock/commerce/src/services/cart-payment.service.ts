@@ -22,7 +22,7 @@ export class CartPaymentService {
       // the mock's payment: the chosen method, pending until the mock payment page reports a result
       paymentInfo: {
         method: validatedRequest.paymentMethodId,
-        provider: validatedRequest.paymentInterface,
+        provider: validatedRequest.provider,
         status: 'pending',
         amount: cart.grandTotal,
       },

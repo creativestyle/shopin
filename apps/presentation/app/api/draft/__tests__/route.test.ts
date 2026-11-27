@@ -27,7 +27,7 @@ jest.mock('@/lib/draft-mode', () => ({
 }))
 
 // The configured CMS's preview reader (the `PreviewRequest` slot): by default one with the usual parameters
-// (secret, slug, locale), as the CMS integrations read theirs.
+// (secret, slug, locale), as the CMS integrations read theirs. It only reads; the route compares the secret.
 const mockSlots: { PreviewRequest?: unknown } = {}
 // a getter: the route module loads before this file's constants are set
 jest.mock('@/lib/slots', () => ({
@@ -35,13 +35,11 @@ jest.mock('@/lib/slots', () => ({
     return mockSlots.PreviewRequest
   },
 }))
-const usualPreview = (
-  query: URLSearchParams,
-  secretMatches: (value: string | null) => boolean
-) =>
-  secretMatches(query.get('secret'))
-    ? { slug: query.get('slug'), locale: query.get('locale') }
-    : undefined
+const usualPreview = (query: URLSearchParams) => ({
+  secret: query.get('secret'),
+  slug: query.get('slug'),
+  locale: query.get('locale'),
+})
 
 jest.mock('@/features/content/homepage-slug', () => ({
   getHomepageSlugForLocale: jest.fn(),
@@ -113,13 +111,11 @@ describe('GET /api/draft', () => {
     })
 
     it("takes the CMS's own parameter names; the secret is still SHOPin's check", () => {
-      mockSlots.PreviewRequest = (
-        query: URLSearchParams,
-        secretMatches: (value: string | null) => boolean
-      ) =>
-        secretMatches(query.get('token'))
-          ? { slug: query.get('path'), locale: query.get('lang') }
-          : undefined
+      mockSlots.PreviewRequest = (query: URLSearchParams) => ({
+        secret: query.get('token'),
+        slug: query.get('path'),
+        locale: query.get('lang'),
+      })
       const res = GET(
         makeRequest({ token: 'the-secret', path: 'about', lang: 'de-DE' })
       )
@@ -127,6 +123,33 @@ describe('GET /api/draft', () => {
         'the-secret'
       )
       expect(locationUrl(res).pathname).toBe('/de/preview/about')
+    })
+
+    it('refuses a reader that returns the page without the secret: no draft mode, no token', async () => {
+      // The real comparison: a reader that skips the secret must not turn on draft mode.
+      draftModeMocks().isDraftSecretValid.mockImplementation(
+        (value: string | null) => value === 'the-secret'
+      )
+      mockSlots.PreviewRequest = (query: URLSearchParams) => ({
+        secret: null,
+        slug: query.get('slug'),
+        locale: query.get('locale'),
+      })
+      const res = GET(
+        makeRequest({ secret: 'the-secret', slug: 'about', locale: 'en-US' })
+      )
+      expect(res.status).toBe(401)
+      expect(res.headers.get('set-cookie')).toBeNull()
+      expect(draftModeMocks().createPreviewToken).not.toHaveBeenCalled()
+    })
+
+    it('answers 401 when the reader finds no preview request', async () => {
+      mockSlots.PreviewRequest = function noPreviewRequest() {
+        return null
+      }
+      const res = GET(makeRequest(validParams()))
+      expect(res.status).toBe(401)
+      expect(draftModeMocks().createPreviewToken).not.toHaveBeenCalled()
     })
   })
 
