@@ -24,6 +24,11 @@ export class StoreKeyMap {
     private readonly defaultLocale: string | undefined
   ) {}
 
+  /** Every configured store, once each (two locales may share a store). */
+  stores(): string[] {
+    return [...new Set(this.keys.values())]
+  }
+
   /** The store of a locale; a locale the shop does not list gets the first locale's store. */
   forLanguage(language: string): string {
     const key =

@@ -208,6 +208,7 @@ export function providerSwitch<const L extends Lists>(
   return defineIntegration({
     id: 'switch',
     label: 'Provider switch (demo)',
+    description: 'Each visitor chooses the provider per category',
     delegates,
     storefront: { variants: variants(lists) },
     ports: Object.fromEntries(

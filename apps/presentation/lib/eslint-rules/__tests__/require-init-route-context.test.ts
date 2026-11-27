@@ -78,7 +78,7 @@ tester.run('require-init-route-context', rule, {
       code: `
         async function Page({ params }) {
           const { locale } = await params
-          initRouteContext({ variant: '~commercetools-set', locale })
+          initRouteContext({ variant: '~platform-set', locale })
         }
       `,
       errors: [{ messageId: 'badCall' }],
@@ -117,7 +117,7 @@ tester.run('require-init-route-context', rule, {
     {
       code: `
         async function Page({ params }) {
-          const variant = '~commercetools-set'
+          const variant = '~platform-set'
           const { locale } = await params
           initRouteContext({ variant, locale })
         }
@@ -139,7 +139,7 @@ tester.run('require-init-route-context', rule, {
     {
       code: `
         async function generateMetadata({ params }) {
-          const variant = '~commercetools-set'
+          const variant = '~platform-set'
           const { locale } = await params
           initRouteContext({ variant, locale })
         }
@@ -157,7 +157,7 @@ tester.run('require-init-route-context', rule, {
           initRouteContext({ variant: '~mock-set', locale: 'en' })
         }
         async function Page({ params }) {
-          initRouteContext({ variant: '~commercetools-set', locale: 'en' })
+          initRouteContext({ variant: '~platform-set', locale: 'en' })
         }
       `,
       errors: [{ messageId: 'badCall' }, { messageId: 'badCall' }],

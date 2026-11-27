@@ -9,7 +9,7 @@ export interface EnvVar {
   env: string
   optional?: boolean
   /**
-   * The value when the variable is not set; setup writes it into `.env` (`CONTENTFUL_ENVIRONMENT=master`). One rule
+   * The value when the variable is not set; setup writes it into `.env` (`ACME_ENVIRONMENT=master`). One rule
    * for a value built on the BFF's own address: `{BFF_URL}` stands for the BFF's public URL (from the BFF's own
    * config), in the default and in a value set in `.env` (`default: '{BFF_URL}/<path>'`).
    */
@@ -70,14 +70,16 @@ export interface Integration<
   /**
    * The integration's name, shown to people (an integration's switcher, `/bff/capabilities`, "not available"
    * messages): one text or one per language, the same shape as a requirement's `reason`
-   * (`{ en: 'Sample data', de: 'Beispieldaten' }`); the id when left out. What it does goes into `description`.
+   * (`{ en: 'Sample data', de: 'Beispieldaten' }`). Required: every integration names itself. What it does goes
+   * into `description`.
    */
-  label?: Requirement['reason']
+  label: Requirement['reason']
   /**
    * What the integration does, in a few words, shown under its name (the `/setup` switcher): the same shape as
-   * `label` (`{ en: 'Generated, works without any account', de: '…' }`); none when left out.
+   * `label` (`{ en: 'Generated, works without any account', de: '…' }`). Required: every integration says what it
+   * does.
    */
-  description?: Requirement['reason']
+  description: Requirement['reason']
   /** One port per category, loaded lazily (`() => require('./cms').default`): reading the config loads no Nest. */
   ports: { [C in P]: () => PortDefinition<C> }
   /** Per category: the variables that port reads, handed over as `PortOptions`. */
@@ -104,10 +106,12 @@ export interface Integration<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   delegates?: readonly Integration<string, any>[]
   storefront?: {
-    productImages?: ImageSource
-    contentImages?: ImageSource
+    /** The product image hosts it serves: one source, or several when they resize differently. */
+    productImages?: ImageSource | readonly ImageSource[]
+    /** The content image hosts it serves: one source, or several when they resize differently. */
+    contentImages?: ImageSource | readonly ImageSource[]
     /**
-     * A CMS's origins that may show the preview (draft mode) in a frame, e.g. `https://app.contentful.com`. The
+     * A CMS's origins that may show the preview (draft mode) in a frame, e.g. `https://app.cms.example`. The
      * storefront allows exactly these (and itself) as `frame-ancestors` on its preview routes; without any, it sets
      * no frame policy there.
      */

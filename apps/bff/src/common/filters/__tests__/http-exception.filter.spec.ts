@@ -241,14 +241,14 @@ describe('HttpErrorFilter: errors that are not Nest exceptions', () => {
   // no vendor's error shape, so whatever arrives raw is a bug: 500, its message never sent
   it.each([
     [
-      'a commercetools-shaped 503',
+      'a platform-shaped 503',
       Object.assign(new Error('upstream down'), {
         name: 'ServiceUnavailable',
         statusCode: 503,
       }),
     ],
     [
-      'an Algolia-shaped RetryError',
+      'a search-service-shaped RetryError',
       Object.assign(new Error('Unreachable hosts'), { name: 'RetryError' }),
     ],
     [

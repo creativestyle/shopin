@@ -33,12 +33,15 @@ const noPort = <C extends Category>(category: C) =>
 function fixture<C extends Category>(
   id: string,
   serves: C[],
-  extra: Pick<Integration, 'label' | 'storefront'> & {
+  extra: Partial<Pick<Integration, 'label' | 'storefront'>> & {
     requires?: Partial<Record<C, Requirement>>
   } = {}
 ) {
   return defineIntegration({
     id,
+    // every descriptor names itself and says what it does; a fixture without a label is named by its id
+    label: id,
+    description: `The ${id} fixture`,
     ...extra,
     ports: Object.fromEntries(
       serves.map((c) => [c, () => noPort(c)])
@@ -59,7 +62,7 @@ export const remote = fixture('remote', ['commerce', 'search', 'auth'], {
   },
   storefront: {
     productImages: {
-      hosts: ['images.eu-central-1.aws.commercetools.com'],
+      hosts: ['images.eu.platform.example'],
       resize: {
         kind: 'suffix',
         steps: [
@@ -166,6 +169,8 @@ export function router<const L extends Lists>(lists: L) {
   const delegates = [...new Set(Object.values(lists).flat())] as Integration[]
   return defineIntegration({
     id: 'router',
+    label: 'Router',
+    description: 'Serves each request through the chosen fixture',
     delegates,
     storefront: { variants: variantsOf(lists) },
     ports: Object.fromEntries(

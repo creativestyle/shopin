@@ -8,6 +8,7 @@ import type {
 } from '@core/contracts/wishlist/wishlist'
 import { CustomerScope } from '../shared/customer-scope.service'
 import { mapShoppingListToWishlist } from '../mappers/wishlist'
+import { StoreChannels } from './store-channels.service'
 
 @Injectable()
 export class WishlistService {
@@ -16,6 +17,7 @@ export class WishlistService {
   constructor(
     private readonly scope: CustomerScope,
     private readonly languageProvider: RequestContext,
+    private readonly channels: StoreChannels,
     @Optional() private readonly hooks?: MapperHooks
   ) {}
 
@@ -45,7 +47,8 @@ export class WishlistService {
       list,
       currentLanguage,
       client,
-      this.hooks?.productCard
+      this.hooks?.productCard,
+      this.channels.priceChannel()
     )
 
     if (page !== undefined && limit !== undefined && limit > 0) {
@@ -78,7 +81,8 @@ export class WishlistService {
         existing.results[0]!,
         currentLanguage,
         client,
-        this.hooks?.productCard
+        this.hooks?.productCard,
+        this.channels.priceChannel()
       )
     }
 
@@ -93,7 +97,8 @@ export class WishlistService {
       created,
       currentLanguage,
       client,
-      this.hooks?.productCard
+      this.hooks?.productCard,
+      this.channels.priceChannel()
     )
   }
 
@@ -129,7 +134,8 @@ export class WishlistService {
       updated,
       currentLanguage,
       client,
-      this.hooks?.productCard
+      this.hooks?.productCard,
+      this.channels.priceChannel()
     )
   }
 
@@ -161,7 +167,8 @@ export class WishlistService {
       updated,
       currentLanguage,
       client,
-      this.hooks?.productCard
+      this.hooks?.productCard,
+      this.channels.priceChannel()
     )
   }
 }

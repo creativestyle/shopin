@@ -20,6 +20,9 @@ const commerce = commercePart.default
 const { commercetools } = shopin
 const { MapperHooks: MapperHooksToken } = mapperHooks
 
+/** The store has no distribution channel (StoreChannels): prices by currency and country. */
+const noChannel = { priceChannel: () => undefined }
+
 const cartBody = {
   id: 'cart-1',
   version: 1,
@@ -36,6 +39,7 @@ const processCart = (hooks) => {
     {},
     {},
     { getCurrentLanguage: () => 'en-US' },
+    noChannel,
     hooks
   )
   return service.processCartResponse(cartBody, 'en-US')
@@ -104,6 +108,7 @@ describe('commercetools mapper hooks', () => {
     const hooked = new ProductService(
       projectionsClient([projection]),
       english,
+      noChannel,
       {
         product: poolType,
       }
@@ -112,7 +117,11 @@ describe('commercetools mapper hooks', () => {
     assert.equal(product.id, 'p1')
     assert.equal(product.name, 'Pool')
     assert.equal(product.poolType, 'above-ground')
-    const plain = new ProductService(projectionsClient([projection]), english)
+    const plain = new ProductService(
+      projectionsClient([projection]),
+      english,
+      noChannel
+    )
     assert.equal('poolType' in (await plain.getProduct('pool')).product, false)
   })
 

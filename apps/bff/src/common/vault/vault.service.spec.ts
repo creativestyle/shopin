@@ -6,7 +6,7 @@ import { TokenStorageService } from '../token-management/token-storage.service'
 
 jest.mock('../../data-source/providers', () => ({
   keyOf: (id: string) => id,
-  currentProviders: () => ({ providers: { commerce: 'commercetools' } }),
+  currentProviders: () => ({ providers: { commerce: 'platform' } }),
 }))
 
 const key = () => randomBytes(32).toString('base64')
@@ -39,22 +39,22 @@ function browser(linked?: (provider: string) => Promise<string | undefined>) {
 }
 
 describe('VaultService.refreshOnce', () => {
-  it('keeps the refresh token when the provider returns none (commercetools does not rotate it)', async () => {
+  it('keeps the refresh token when the provider returns none (the platform does not rotate it)', async () => {
     const { request } = browser()
     await request().set(
       'commerce',
-      'commercetools',
+      'platform',
       { accessToken: 'a1', refreshToken: 'r1', expiresIn: -1 },
       false
     )
     const refreshed = await request().refreshOnce(
       'commerce',
-      'commercetools',
+      'platform',
       async () => ({ accessToken: 'a2', expiresIn: 3600 }) as never
     )
     expect(refreshed).toMatchObject({ accessToken: 'a2', refreshToken: 'r1' })
     // the next request still has the entry (it was dropped as invalid before)
-    expect(await request().entry('commerce', 'commercetools')).toMatchObject({
+    expect(await request().entry('commerce', 'platform')).toMatchObject({
       accessToken: 'a2',
       refreshToken: 'r1',
       customer: false,
@@ -89,19 +89,19 @@ describe("a customer's commerce token lives only as long as the session that lin
   }
   let link: string | undefined
   const linked = async (provider: string) =>
-    provider === 'commercetools' ? link : undefined
+    provider === 'platform' ? link : undefined
 
   it('kept while the session links a customer at that provider', async () => {
     link = 'ct-customer-1'
     const { request } = browser(linked)
     await request().set(
       'commerce',
-      'commercetools',
+      'platform',
       customerToken,
       true,
       'ct-customer-1'
     )
-    expect(await request().entry('commerce', 'commercetools')).toMatchObject({
+    expect(await request().entry('commerce', 'platform')).toMatchObject({
       accessToken: 'c1',
       customer: true,
     })
@@ -112,17 +112,17 @@ describe("a customer's commerce token lives only as long as the session that lin
     const { jar, request } = browser(linked)
     await request().set(
       'commerce',
-      'commercetools',
+      'platform',
       customerToken,
       true,
       'ct-customer-1'
     )
     link = undefined
-    expect(await request().entry('commerce', 'commercetools')).toBeUndefined()
+    expect(await request().entry('commerce', 'platform')).toBeUndefined()
     expect(
-      await request().forPart('commerce', 'commercetools').get()
+      await request().forPart('commerce', 'platform').get()
     ).toBeUndefined()
-    expect(jar.has('vault.commerce.commercetools')).toBe(false)
+    expect(jar.has('vault.commerce.platform')).toBe(false)
   })
 
   it("dropped when the session links another customer (a victim's copied vault cookie next to the attacker's own sign-in)", async () => {
@@ -130,21 +130,21 @@ describe("a customer's commerce token lives only as long as the session that lin
     const { jar, request } = browser(linked)
     await request().set(
       'commerce',
-      'commercetools',
+      'platform',
       customerToken,
       true,
       'ct-victim'
     )
     link = 'ct-attacker'
-    expect(await request().entry('commerce', 'commercetools')).toBeUndefined()
-    expect(jar.has('vault.commerce.commercetools')).toBe(false)
+    expect(await request().entry('commerce', 'platform')).toBeUndefined()
+    expect(jar.has('vault.commerce.platform')).toBe(false)
   })
 
   it('a customer entry that does not name its customer is never trusted', async () => {
     link = 'ct-customer-1'
     const { request } = browser(linked)
-    await request().set('commerce', 'commercetools', customerToken, true)
-    expect(await request().entry('commerce', 'commercetools')).toBeUndefined()
+    await request().set('commerce', 'platform', customerToken, true)
+    expect(await request().entry('commerce', 'platform')).toBeUndefined()
   })
 
   it('the refresh keeps whose entry it is', async () => {
@@ -152,21 +152,21 @@ describe("a customer's commerce token lives only as long as the session that lin
     const { request } = browser(linked)
     await request().set(
       'commerce',
-      'commercetools',
+      'platform',
       { ...customerToken, expiresIn: -1 },
       true,
       'ct-customer-1'
     )
     await request().refreshOnce(
       'commerce',
-      'commercetools',
+      'platform',
       async () =>
         ({
           accessToken: 'c2',
           expiresIn: 3600,
         }) as never
     )
-    expect(await request().entry('commerce', 'commercetools')).toMatchObject({
+    expect(await request().entry('commerce', 'platform')).toMatchObject({
       accessToken: 'c2',
       customerId: 'ct-customer-1',
     })
@@ -175,8 +175,8 @@ describe("a customer's commerce token lives only as long as the session that lin
   it("a guest's token needs no link", async () => {
     link = undefined
     const { request } = browser(linked)
-    await request().set('commerce', 'commercetools', customerToken, false)
-    expect(await request().entry('commerce', 'commercetools')).toMatchObject({
+    await request().set('commerce', 'platform', customerToken, false)
+    expect(await request().entry('commerce', 'platform')).toMatchObject({
       customer: false,
     })
   })
@@ -187,14 +187,14 @@ describe("a part's view of its entry (TokenVault)", () => {
     const { request } = browser(async () => 'ct-customer-1')
     await request().set(
       'commerce',
-      'commercetools',
+      'platform',
       { accessToken: 'c1', refreshToken: 'cr1', expiresIn: -1 },
       true,
       'ct-customer-1'
     )
-    expect(
-      await request().forPart('commerce', 'commercetools').get()
-    ).toMatchObject({ customer: true, expiresIn: 0 })
+    expect(await request().forPart('commerce', 'platform').get()).toMatchObject(
+      { customer: true, expiresIn: 0 }
+    )
   })
 })
 
@@ -204,14 +204,14 @@ describe('a stale customer cookie is no token (the first cart call creates a gue
     const { jar, request } = browser(async () => link)
     await request().set(
       'commerce',
-      'commercetools',
+      'platform',
       { accessToken: 'c1', refreshToken: 'cr1', expiresIn: 3600 },
       true,
       'ct-customer-1'
     )
     expect(await new TokenStorageService(request()).hasAccessToken()).toBe(true)
     link = undefined // the session ended (30 days idle); the 200-day vault cookie is still there
-    expect(jar.has('vault.commerce.commercetools')).toBe(true)
+    expect(jar.has('vault.commerce.platform')).toBe(true)
     expect(await new TokenStorageService(request()).hasAccessToken()).toBe(
       false
     )
@@ -222,9 +222,9 @@ describe("a port that stores a customer's token", () => {
   it('stores it for the customer the session links, so the vault keeps trusting it', async () => {
     const { request } = browser(async () => 'ct-customer-1')
     await request()
-      .forPart('commerce', 'commercetools')
+      .forPart('commerce', 'platform')
       .set({ accessToken: 'c1', refreshToken: 'r1', expiresIn: 3600 }, true)
-    expect(await request().entry('commerce', 'commercetools')).toMatchObject({
+    expect(await request().entry('commerce', 'platform')).toMatchObject({
       accessToken: 'c1',
       customerId: 'ct-customer-1',
     })

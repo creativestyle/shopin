@@ -14,9 +14,11 @@ import { buildPort, commerceContract } from '@core/integration-kit/testing'
 import shopin from '../dist/shopin.js'
 import core from '@integrations/commercetools-core'
 import { FakeMeClient, FakeProjectClient } from './fake-client.mjs'
+import storeChannels from '../dist/services/store-channels.service.js'
 
 const { commercetools } = shopin
 const { COMMERCETOOLS_CLIENT, UserClientService } = core
+const { STORE_CHANNELS } = storeChannels
 
 const OPTIONS = {
   projectKey: 'proj',
@@ -41,6 +43,8 @@ const RUN_HERE = [
 
 describe('commercetools commerce port: the commerce contract (fake API client)', () => {
   const client = new FakeProjectClient()
+  // the store of every locale, without a distribution channel (prices by currency and country)
+  client.stores_.push({ key: 'store-en-US', distributionChannels: [] })
   // the project's Custom Type for the shop's cart fields (setCartFields gives a cart without a type this one)
   client.types_.push({
     id: 'type-shop',
@@ -74,19 +78,11 @@ describe('commercetools commerce port: the commerce contract (fake API client)',
     getClient: async () =>
       new FakeMeClient('anon-token', { carts: guestCarts }, meCalls),
   }
-  const port = (as = {}) =>
-    buildPort(commercetools({ storeKeys: STORE_KEYS }).ports.commerce(), {
-      ...as,
-      storefrontUrl: 'https://shop.test',
-      options: OPTIONS,
-      providers: [
-        { provide: COMMERCETOOLS_CLIENT, useValue: client },
-        { provide: UserClientService, useValue: guest },
-      ],
-    })
-  const cases = commerceContract(
-    (as) =>
-      buildPort(commercetools({ storeKeys: STORE_KEYS }).ports.commerce(), {
+  /** The port as the BFF has it after its start-up check: the stores' distribution channels read. */
+  const port = async (as = {}) => {
+    const built = await buildPort(
+      commercetools({ storeKeys: STORE_KEYS }).ports.commerce(),
+      {
         ...as,
         storefrontUrl: 'https://shop.test',
         options: OPTIONS,
@@ -94,14 +90,17 @@ describe('commercetools commerce port: the commerce contract (fake API client)',
           { provide: COMMERCETOOLS_CLIENT, useValue: client },
           { provide: UserClientService, useValue: guest },
         ],
-      }),
-    {
-      product: { slug: 'linen-shirt' },
-      cart: { fields: { giftMessage: 'contract' } },
-      customers: true,
-      orders: true,
-    }
-  ).filter((c) => RUN_HERE.some((name) => c.name.includes(name)))
+      }
+    )
+    await built[STORE_CHANNELS].load()
+    return built
+  }
+  const cases = commerceContract((as) => port(as), {
+    product: { slug: 'linen-shirt' },
+    cart: { fields: { giftMessage: 'contract' } },
+    customers: true,
+    orders: true,
+  }).filter((c) => RUN_HERE.some((name) => c.name.includes(name)))
 
   it('runs the five cases the fake supports', () => {
     assert.equal(cases.length, 5)

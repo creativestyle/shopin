@@ -53,6 +53,7 @@ import {
   CartUpdateActionSchema,
   type CartUpdateAction,
 } from '../schemas/cart-update-action'
+import { StoreChannels } from './store-channels.service'
 
 interface GetCartOptions extends ContractGetCartOptions {
   expand?: string[]
@@ -85,6 +86,7 @@ export class CartService {
     private readonly scope: CustomerScope,
     @Inject(COMMERCETOOLS_CLIENT) private readonly server: Client,
     private readonly languageProvider: RequestContext,
+    private readonly channels: StoreChannels,
     @Optional() private readonly hooks?: MapperHooks
   ) {}
 
@@ -374,11 +376,16 @@ export class CartService {
       }
     }
 
+    // the line item's price is selected by the store's distribution channel (a cart has no channel of its own)
+    const distributionChannel = this.channels.priceChannel()
     const actionData: CartUpdateAction = {
       action: 'addLineItem',
       productId,
       variantId: parsedVariantId,
       quantity: quantity ?? 1,
+      ...(distributionChannel && {
+        distributionChannel: { typeId: 'channel', id: distributionChannel },
+      }),
     }
 
     return this.updateCartWithAction(cartId, actionData, true)

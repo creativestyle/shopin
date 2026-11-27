@@ -7,6 +7,7 @@ import { defineConfig, defineIntegration, port } from '@core/integration-kit'
 const broken = defineIntegration({
   id: 'broken',
   label: 'Broken',
+  description: 'A commerce port that throws while the BFF builds it',
   ports: {
     commerce: () =>
       port('commerce', {

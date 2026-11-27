@@ -16,6 +16,10 @@ import * as services from '../services'
 import { CommercetoolsServiceProviderImpl } from '../commercetools-service-provider'
 import { MapperHooks, type CommercetoolsMappers } from '../mapper-hooks'
 import { StoreKeyMap, storeKeysFor, type StoreKeys } from '../config/stores'
+import {
+  STORE_CHANNELS,
+  StoreChannels,
+} from '../services/store-channels.service'
 
 const SERVICES = Object.values(services).filter(
   (v) => typeof v === 'function'
@@ -47,8 +51,18 @@ export const commercePort = (
       CommercetoolsServiceProviderImpl,
     ],
     // StoreKeyMap: injected so the store keys are checked at boot even before a service reads them
-    inject: [CommercetoolsServiceProviderImpl, PortOptions, StoreKeyMap],
-    useFactory: (p: CommercetoolsServiceProviderImpl, options: PortOptions) => {
+    inject: [
+      CommercetoolsServiceProviderImpl,
+      PortOptions,
+      StoreKeyMap,
+      StoreChannels,
+    ],
+    useFactory: (
+      p: CommercetoolsServiceProviderImpl,
+      options: PortOptions,
+      _storeKeys: StoreKeyMap,
+      channels: StoreChannels
+    ) => {
       const services = p.getServices()
       return {
         ...services,
@@ -63,13 +77,16 @@ export const commercePort = (
         // to create and link customers (COMMERCETOOLS_LINK_CUSTOMERS=1); without them such a sign-in stops the boot
         ...(options.linkCustomers === '1' ? { customers: p.customers } : {}),
         guestSession: p.guestSession,
+        // for the start-up check below: it reads the stores' distribution channels
+        [STORE_CHANNELS]: channels,
       }
     },
     // commercetools' errors as the shopper gets them (404, 409, a request-caused 400, 502-504)
     errors: commercetoolsErrorMeaning,
     // once at boot: an anonymous token request for the project proves the auth URL, the project key and the API
-    // client (the same check and messages as every vendor's: host and variable)
-    probe: async (_commerce, options) => {
+    // client (the same check and messages as every vendor's: host and variable); then every configured store's
+    // distribution channel is read, kept for the requests (a store that cannot be read fails the check)
+    probe: async (commerce, options) => {
       await checkEndpoint(
         `${String(options.authUrl).replace(/\/$/, '')}/oauth/${encodeURIComponent(String(options.projectKey))}/anonymous/token`,
         {
@@ -89,6 +106,9 @@ export const commercePort = (
       if (options.linkCustomers === '1') {
         await checkProjectScopes(options as CommercetoolsOptions)
       }
+      await (commerce as unknown as { [STORE_CHANNELS]: StoreChannels })[
+        STORE_CHANNELS
+      ].load()
     },
   })
 

@@ -20,8 +20,12 @@ declare module '../src' {
   }
 }
 
+// every descriptor names itself and says what it does (both required, see the end of this file)
+const about = { label: 'Fixture', description: 'A fixture integration' }
+
 const shop = defineIntegration({
   id: 'shop',
+  ...about,
   ports: {
     commerce: () => port('commerce', { useFactory: () => ({}) as never }),
     search: () => port('search', { useFactory: () => ({}) as never }),
@@ -29,6 +33,7 @@ const shop = defineIntegration({
 })
 const pages = defineIntegration({
   id: 'pages',
+  ...about,
   ports: { cms: () => port('cms', { useFactory: () => ({}) as never }) },
 })
 
@@ -44,6 +49,7 @@ defineConfig({ commerce: shop, companyRegister: pages })
 
 const rules = defineIntegration({
   id: 'rules',
+  ...about,
   ports: {
     orderRules: () =>
       port('orderRules', { useFactory: () => ({ check: async () => true }) }),
@@ -54,6 +60,7 @@ defineConfig({ commerce: shop, orderRules: rules })
 // the kind's port is typed by the declaration: a factory must return it
 defineIntegration({
   id: 'bad-rules',
+  ...about,
   ports: {
     // @ts-expect-error Property 'check' is missing
     orderRules: () => port('orderRules', { useFactory: () => ({}) }),
@@ -103,6 +110,7 @@ defineConfig({ cms: pages })
 // a port must return the category's interface
 defineIntegration({
   id: 'bad',
+  ...about,
   ports: {
     // @ts-expect-error Type '{ nope: boolean; }' is not assignable to type 'Pick<AllServices, "pageService" | "layoutService">'
     cms: () => port('cms', { useFactory: () => ({ nope: true }) }),
@@ -112,6 +120,7 @@ defineIntegration({
 // a port of another category under a key: Type 'PortDefinition<"search">' is not assignable to 'PortDefinition<"cms">'
 defineIntegration({
   id: 'mixed',
+  ...about,
   ports: {
     // @ts-expect-error
     cms: () => port('search', { useFactory: () => ({}) as never }),
@@ -134,9 +143,44 @@ defineIntegration({
 })
 defineIntegration({
   id: 'described-no-en',
+  label: 'Sample data',
   // @ts-expect-error Property 'en' is missing
   description: { de: 'Erzeugt, ohne Konto' },
   ports: { cms: () => port('cms', { useFactory: () => ({}) as never }) },
+})
+
+// A descriptor without its name or its description does not compile (story criterion 9).
+// @ts-expect-error Property 'label' is missing
+defineIntegration({
+  id: 'nameless',
+  description: 'Generated, no account',
+  ports: { cms: () => port('cms', { useFactory: () => ({}) as never }) },
+})
+// @ts-expect-error Property 'description' is missing
+defineIntegration({
+  id: 'undescribed',
+  label: 'Sample data',
+  ports: { cms: () => port('cms', { useFactory: () => ({}) as never }) },
+})
+
+// Several image sources when their hosts resize differently; each is still an ImageSource.
+defineIntegration({
+  id: 'two-hosts',
+  ...about,
+  ports: { cms: () => port('cms', { useFactory: () => ({}) as never }) },
+  storefront: {
+    contentImages: [
+      { hosts: ['plain.example'] },
+      { hosts: ['api.example'], resize: { kind: 'query', width: 'w' } },
+    ],
+  },
+})
+defineIntegration({
+  id: 'bad-hosts',
+  ...about,
+  ports: { cms: () => port('cms', { useFactory: () => ({}) as never }) },
+  // @ts-expect-error Property 'hosts' is missing
+  storefront: { contentImages: [{ resize: { kind: 'query', width: 'w' } }] },
 })
 
 // Storefront slots are optional: a shop file written before a slot existed (here: only the first three) still

@@ -21,13 +21,15 @@ type ValidLineItem = Omit<ShoppingListLineItem, 'productId' | 'variant'> & {
 /**
  * Maps a Commercetools ShoppingList to WishlistResponse
  * Fetches product projections to get slugs and prices for the current language; the shop's card hook
- * (`commercetools({ mappers: { productCard } })`) gets each item's projection and its mapped card.
+ * (`commercetools({ mappers: { productCard } })`) gets each item's projection and its mapped card. `priceChannel`: the
+ * store's distribution channel, when it has one.
  */
 export async function mapShoppingListToWishlist(
   shoppingList: ShoppingList,
   currentLanguage: string,
   client: ByProjectKeyRequestBuilder,
-  productCard?: CommercetoolsMappers['productCard']
+  productCard?: CommercetoolsMappers['productCard'],
+  priceChannel?: string
 ): Promise<WishlistResponse & { version: number }> {
   // Drop items whose product was deleted/unpublished (no variant). Items without a price in
   // the store currency stay on the list and show no price.
@@ -44,7 +46,8 @@ export async function mapShoppingListToWishlist(
     productIds,
     currentLanguage,
     resolveCurrencyFromLanguage(currentLanguage),
-    resolveCountryFromLanguage(currentLanguage)
+    resolveCountryFromLanguage(currentLanguage),
+    priceChannel
   )
   const projectionById = new Map<string, ProductProjectionApiResponse>(
     fetched.map((product) => [product.id, product])

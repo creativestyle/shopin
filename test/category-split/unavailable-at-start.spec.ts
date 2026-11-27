@@ -26,6 +26,8 @@ const failing = (
 ) =>
   kit.defineIntegration({
     id,
+    label: id,
+    description: "test fixture",
     omits: ["wishlist"],
     ports: {
       [category]: () =>
@@ -86,6 +88,8 @@ describe("credentials at start", () => {
       // commerce checks its credentials; search, the same platform, has no check of its own
       const platform = kit.defineIntegration({
         id: "one-platform",
+        label: "one-platform",
+        description: "test fixture",
         omits: ["wishlist"],
         ports: {
           commerce: () =>
@@ -131,6 +135,8 @@ describe("credentials at start", () => {
       const kit: Kit = require("@core/integration-kit");
       const platform = kit.defineIntegration({
         id: "one-platform",
+        label: "one-platform",
+        description: "test fixture",
         omits: ["wishlist"],
         requires: {
           auth: {
@@ -174,6 +180,8 @@ describe("credentials at start", () => {
       const kit: Kit = require("@core/integration-kit");
       const platform = kit.defineIntegration({
         id: "one-platform",
+        label: "one-platform",
+        description: "test fixture",
         omits: ["wishlist"],
         requires: {
           auth: {
@@ -270,6 +278,8 @@ describe("credentials at start", () => {
         const reached = jest.fn();
         const platform = kit.defineIntegration({
           id: "one-platform",
+          label: "one-platform",
+          description: "test fixture",
           omits: ["wishlist"],
           requires: {
             auth: {

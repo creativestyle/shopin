@@ -26,10 +26,10 @@ describe('CapabilitiesController', () => {
   })
 
   it('a search integration keeps its own provider; with commerce unavailable, search is too, for the same reason', () => {
-    serving({ commerce: 'ct', search: 'algolia' })
+    serving({ commerce: 'ct', search: 'finder' })
     expect(
       new CapabilitiesController().getCapabilities().providers.search
-    ).toBe('algolia')
+    ).toBe('finder')
     serving({}, { commerce: 'credentials check failed' })
     const c = new CapabilitiesController().getCapabilities()
     expect(c.providers.search).toBeUndefined()

@@ -149,7 +149,7 @@ describe('CartService.applyDiscountCode', () => {
   })
 
   it('rethrows other integration errors unchanged', async () => {
-    const failure = new Error('commercetools unavailable')
+    const failure = new Error('platform unavailable')
     const { service } = createService({
       addDiscountCode: jest.fn().mockRejectedValue(failure),
     })

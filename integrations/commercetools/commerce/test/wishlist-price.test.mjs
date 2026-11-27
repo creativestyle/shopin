@@ -7,6 +7,9 @@ import customerScope from '../dist/shared/customer-scope.service.js'
 const { WishlistService } = wishlistService
 const { CustomerScope } = customerScope
 
+/** The store has no distribution channel (StoreChannels): prices by currency and country. */
+const noChannel = { priceChannel: () => undefined }
+
 /**
  * Jest's `toHaveBeenCalledWith({ queryArgs: expect.objectContaining(fields) })`: some call had exactly one
  * argument, `{ queryArgs }`, whose `queryArgs` holds each of the fields.
@@ -81,7 +84,8 @@ function createService(language, lineItems, projections) {
   const languageProvider = { getCurrentLanguage: () => language }
   const service = new WishlistService(
     new CustomerScope({}, userClientService, { get: async () => undefined }),
-    languageProvider
+    languageProvider,
+    noChannel
   )
   return { service, projectionsGet }
 }

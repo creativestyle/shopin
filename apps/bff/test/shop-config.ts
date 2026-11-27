@@ -9,6 +9,7 @@ import { defineConfig, defineIntegration } from '@core/integration-kit'
 const shop = defineIntegration({
   id: 'shop',
   label: 'Shop',
+  description: 'Every commerce service, for the BFF unit tests',
   ports: {
     commerce: () => {
       throw new Error('the BFF unit tests load no port')

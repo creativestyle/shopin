@@ -52,3 +52,51 @@ test('serves a valid header and footer', async () => {
   HeaderResponseSchema.parse(await layout.getHeader())
   FooterResponseSchema.parse(await layout.getFooter())
 })
+
+/** Every image (an object with `url` and `alt`) in a value, at any depth. */
+function images(value, found = []) {
+  if (Array.isArray(value)) {
+    value.forEach((v) => images(v, found))
+  } else if (value && typeof value === 'object') {
+    if (typeof value.url === 'string' && 'alt' in value) {
+      found.push(value.url)
+    }
+    Object.values(value).forEach((v) => images(v, found))
+  }
+  return found
+}
+
+test('every image host the sample pages use is declared, so the storefront resizes and preconnects it (criterion 20)', async () => {
+  const sources = [descriptor.mockCms().storefront.contentImages].flat()
+  const sourceOf = (url) => {
+    const host = new URL(url).hostname
+    return sources.find((s) =>
+      s.hosts.some((h) => host === h || host.endsWith(`.${h}`))
+    )
+  }
+  const pages = await Promise.all(
+    ['homepage', 'about', 'support', 'any-other-page'].map((slug) =>
+      new PageService().getPage(slug)
+    )
+  )
+  const layout = new LayoutService()
+  const urls = images([
+    pages,
+    await layout.getHeader(),
+    await layout.getFooter(),
+  ]).filter((url) => /^https?:\/\//.test(url))
+  assert.ok(urls.length > 0)
+  assert.deepEqual(
+    urls.filter((url) => !sourceOf(url)),
+    [],
+    'image hosts the descriptor does not declare'
+  )
+  // the hero image's host is an image API: resized by query, as before the integrations moved out of the storefront
+  const hero = urls.find((url) => url.includes('cloudfront.net'))
+  assert.deepEqual(sourceOf(hero).resize, {
+    kind: 'query',
+    width: 'w',
+    quality: 'q',
+    fixed: { fm: 'webp' },
+  })
+})

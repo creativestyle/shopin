@@ -27,7 +27,7 @@ jest.mock('@/lib/draft-mode', () => ({
 }))
 
 // The configured CMS's preview reader (the `PreviewRequest` slot): by default one with the usual parameters
-// (secret, slug, locale), as the mock CMS and Contentful read theirs.
+// (secret, slug, locale), as the CMS integrations read theirs.
 const mockSlots: { PreviewRequest?: unknown } = {}
 // a getter: the route module loads before this file's constants are set
 jest.mock('@/lib/slots', () => ({
@@ -353,7 +353,7 @@ describe('GET /api/draft', () => {
   })
 
   // ─── 3c: Cookie attributes for cross-site CMS preview ─────────────────────
-  // These cases verify the SameSite=None;Secure cookie that enables Contentful's
+  // These cases verify the SameSite=None;Secure cookie that enables a CMS's
   // cross-site iframe context (HTTPS production path).  The HTTP/__pt path is
   // tested e2e in test/e2e/specs/draft-preview/preview-token.spec.ts and draft-preview/preview-iframe.spec.ts.
 
@@ -366,7 +366,7 @@ describe('GET /api/draft', () => {
       expect(setCookie).toContain('preview-tok-xyz')
       expect(setCookie.toLowerCase()).toContain('httponly')
       expect(setCookie.toLowerCase()).toContain('secure')
-      // SameSite=None is required for Contentful cross-site iframe context
+      // SameSite=None is required for a CMS's cross-site iframe context
       expect(setCookie.toLowerCase()).toContain('samesite=none')
     })
 

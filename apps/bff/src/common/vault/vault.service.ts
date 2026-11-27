@@ -183,7 +183,7 @@ export class VaultService {
       )
       refreshing.set(flightKey, flight)
     }
-    // a provider that does not rotate the refresh token (commercetools) returns none: the stored one stays valid
+    // a provider that does not rotate the refresh token returns none: the stored one stays valid
     const result = await flight
     const tokens = {
       ...result,

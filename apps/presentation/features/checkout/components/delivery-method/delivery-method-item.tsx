@@ -42,7 +42,6 @@ export function DeliveryMethodItem({
               deliveryTime={method.deliveryTime}
               priceInCents={method.price.regularPriceInCents}
               currency={method.price.currency}
-              fractionDigits={method.price.fractionDigits}
               freeAboveInCents={method.freeAbove?.regularPriceInCents}
               freeAboveCurrency={method.freeAbove?.currency}
             />

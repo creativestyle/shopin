@@ -14,8 +14,8 @@ export const SITEMAP_REVALIDATE_SECONDS = 3600
 export const SITEMAP_COLLECTION_PAGE_SIZE = MAX_ITEMS_PER_PAGE
 
 /**
- * Deepest result a category listing can be paged to (commercetools Product Search
- * caps `offset` at 10,000). Products beyond it are left out of the sitemap with a
+ * Deepest result a category listing can be paged to (the commerce
+ * platform's product search caps `offset` at 10,000). Products beyond it are left out of the sitemap with a
  * warning; lower this for a data source with a smaller window.
  */
 export const SITEMAP_MAX_COLLECTION_RESULTS = 10000
@@ -37,8 +37,8 @@ export const SITEMAP_CATEGORY_CONCURRENCY = 6
 /**
  * Whether product discovery descends into sub-categories.
  *
- * The commercetools data source resolves a category query against its entire
- * subtree (`categoriesSubTree`), so a top-level category already returns every
+ * A data source with subtree category semantics resolves a category query against
+ * its entire subtree, so a top-level category already returns every
  * product beneath it and walking its children only re-fetches the same products —
  * roughly tripling the request count on a three-level tree for zero extra URLs.
  * Set to true only for a data source that scopes products to the exact category.

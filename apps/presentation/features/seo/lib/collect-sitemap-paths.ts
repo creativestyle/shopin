@@ -79,7 +79,7 @@ export function collectCategoryPaths(
  * The categories to actually *query* when enumerating products, as opposed to the
  * ones to list as URLs.
  *
- * With subtree category semantics (commercetools: `categoriesSubTree`) a
+ * With subtree category semantics (a commerce platform's subtree filter) a
  * top-level category already returns every product beneath it, so querying its
  * children repeats the same products — on a three-level tree that is ~3× the
  * requests for zero extra URLs. `includeSubcategories` restores the full walk for

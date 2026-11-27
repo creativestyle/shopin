@@ -6,6 +6,7 @@
  */
 import testing from '@core/integration-kit/testing'
 import descriptor from '../dist/shopin.js'
+import storeChannels from '../dist/services/store-channels.service.js'
 
 const { buildPort, commerceContract } = testing
 const { commercetools } = descriptor
@@ -34,13 +35,20 @@ export function contractCases(options, data) {
   let caseNo = 0
   let n = 0
   const cases = commerceContract(
-    (as) =>
-      buildPort(commercetools({ storeKeys: STORE_KEYS }).ports.commerce(), {
-        ...as,
-        storefrontUrl: 'https://shop.test',
-        options,
-        locales: Object.keys(STORE_KEYS),
-      }),
+    // as the BFF has the port after its start-up check: the stores' distribution channels read
+    async (as) => {
+      const port = await buildPort(
+        commercetools({ storeKeys: STORE_KEYS }).ports.commerce(),
+        {
+          ...as,
+          storefrontUrl: 'https://shop.test',
+          options,
+          locales: Object.keys(STORE_KEYS),
+        }
+      )
+      await port[storeChannels.STORE_CHANNELS].load()
+      return port
+    },
     { ...data, unique: () => `rec${caseNo}x${++n}` }
   )
   return cases.map((c, i) => ({

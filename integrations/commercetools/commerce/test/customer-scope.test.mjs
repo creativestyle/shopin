@@ -12,10 +12,12 @@ import { TokenVault } from '@core/integration-kit'
 import shopin from '../dist/shopin.js'
 import core from '@integrations/commercetools-core'
 import { FakeMeClient, FakeProjectClient } from './fake-client.mjs'
+import storeChannels from '../dist/services/store-channels.service.js'
 
 const { CustomerScope } = customerScope
 const { commercetools } = shopin
 const { COMMERCETOOLS_CLIENT, UserClientService } = core
+const { STORE_CHANNELS } = storeChannels
 
 /** `customerToken`: the vault holds the customer's own commercetools token (commercetools' own sign-in). */
 function scope(customerId, customerToken = false) {
@@ -302,6 +304,8 @@ describe('commercetools commerce port with sign-in by another identity provider'
     const server = new FakeProjectClient()
     // what the customer owns at commercetools, reachable through me() only with their own token
     const own = new FakeProjectClient()
+    // the locale's store, without a distribution channel
+    server.stores_.push({ key: 'store-en-US', distributionChannels: [] })
     for (const p of [server, own]) {
       p.products_.push(PRODUCT)
       p.carts_.push({
@@ -352,6 +356,8 @@ describe('commercetools commerce port with sign-in by another identity provider'
         providers,
       }
     )
+    // what the start-up check does before requests: read the stores' distribution channels
+    await commerce[STORE_CHANNELS].load()
     return { commerce, server, meCalls }
   }
 

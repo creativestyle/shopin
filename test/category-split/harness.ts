@@ -150,12 +150,19 @@ export async function request(
   const {
     REQUEST_CONTEXT_ID,
   } = require("@nestjs/core/router/request/request-constants");
+  /** The options of each cookie this request set (as `res.cookie` got them: what Set-Cookie carries). */
+  const cookieOptions: Record<string, Record<string, unknown>> = {};
   const req = {
     headers: { "accept-language": "en-US", ...headers },
     cookies: { ...jar },
     res: {
-      cookie: (name: string, value: string) => {
+      cookie: (
+        name: string,
+        value: string,
+        options: Record<string, unknown> = {},
+      ) => {
         jar[name] = value;
+        cookieOptions[name] = options;
       },
       clearCookie: (name: string) => {
         delete jar[name];
@@ -182,7 +189,7 @@ export async function request(
   /** Runs `fn` as part of serving this request. */
   const serve = <T>(fn: () => T): T =>
     bff("common/request-store/request-store").runInRequest(req, fn);
-  return { req, get, serve };
+  return { req, get, serve, cookieOptions };
 }
 
 /**

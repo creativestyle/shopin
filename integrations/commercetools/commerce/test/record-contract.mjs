@@ -11,6 +11,7 @@
 import { mkdirSync, writeFileSync } from 'node:fs'
 import testing from '@core/integration-kit/testing'
 import descriptor from '../dist/shopin.js'
+import storeChannels from '../dist/services/store-channels.service.js'
 import {
   contractCases,
   RECORDED,
@@ -88,6 +89,8 @@ const finder = await testing.buildPort(
     locales: Object.keys(STORE_KEYS),
   }
 )
+// as the start-up check does: the stores' distribution channels, before any price is asked for
+await finder[storeChannels.STORE_CHANNELS].load()
 const slug = (
   await finder.productSearchService.searchProducts({ query: '', limit: 1 })
 ).products[0]?.slug

@@ -7,6 +7,12 @@ export const MOCK_IDENTITY_USERS = [
     emailVerified: true,
   },
   {
+    subject: 'mock-idp|carol',
+    email: 'carol@example.com',
+    name: 'Carol Verified',
+    emailVerified: true,
+  },
+  {
     subject: 'mock-idp|bob',
     email: 'bob@example.com',
     name: 'Bob Unverified',

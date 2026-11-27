@@ -359,15 +359,15 @@ test('rule: every integration that fills an extended contract has its mapper hoo
     () =>
       defineConfig({
         commerce,
-        search: integ('algolia', ['search']),
+        search: integ('finder', ['search']),
         contracts: { productCard },
       }),
-    /contracts\.productCard adds the shop's fields, but "algolia" fills productCard without a mappers\.productCard hook/
+    /contracts\.productCard adds the shop's fields, but "finder" fills productCard without a mappers\.productCard hook/
   )
   assert.doesNotThrow(() =>
     defineConfig({
       commerce,
-      search: hooked(integ('algolia', ['search']), { productCard: hook }),
+      search: hooked(integ('finder', ['search']), { productCard: hook }),
       contracts: { productCard },
     })
   )
@@ -376,7 +376,7 @@ test('rule: every integration that fills an extended contract has its mapper hoo
     () =>
       defineConfig({
         commerce: integ('ct', ['commerce']),
-        search: hooked(integ('algolia', ['search']), { productCard: hook }),
+        search: hooked(integ('finder', ['search']), { productCard: hook }),
         contracts: { productCard },
       }),
     /"ct" fills productCard without a mappers\.productCard hook/
@@ -407,7 +407,7 @@ test("rule: the product page's product comes from commerce: an extension needs i
   assert.doesNotThrow(() =>
     defineConfig({
       commerce: hooked(integ('ct', ['commerce']), { product: hook }),
-      search: integ('algolia', ['search']),
+      search: integ('finder', ['search']),
       contracts: { product },
     })
   )
@@ -824,12 +824,12 @@ test('a misspelled config key comes with the key it is close to', () => {
 
 test("the BFF's missing-variable message names a misspelling the environment sets", () => {
   const cms = integ('cms-x', ['cms'], {
-    env: { cms: { space: { env: 'CONTENTFUL_SPACE' } } },
+    env: { cms: { space: { env: 'CMS_X_SPACE' } } },
   })
   const config = resolveConfig({ commerce: integ('c', ['commerce']), cms })
   assert.throws(
-    () => load(config, () => undefined, [], ['CONTENTFUL_SAPCE', 'LOG_LEVEL']),
-    /CONTENTFUL_SPACE: did you mean it\? \.env sets CONTENTFUL_SAPCE/
+    () => load(config, () => undefined, [], ['CMS_X_SAPCE', 'LOG_LEVEL']),
+    /CMS_X_SPACE: did you mean it\? \.env sets CMS_X_SAPCE/
   )
 })
 
@@ -947,6 +947,24 @@ test('storefrontData: image hosts come only from integrations that serve a categ
   })
   assert.deepEqual(data.productImages, [{ hosts: ['used.test'] }])
   assert.deepEqual(data.contentImages, [{ hosts: ['cdn.used.test'] }])
+})
+
+test('storefrontData: an integration may declare several image sources (hosts that resize differently)', () => {
+  const plain = { hosts: ['plain.test'] }
+  const api = {
+    hosts: ['api.test'],
+    resize: { kind: 'query', width: 'w' },
+  }
+  const data = storefrontData({
+    integrations: [
+      integ('pages', ['commerce', 'cms'], {
+        storefront: { productImages: plain, contentImages: [plain, api] },
+      }),
+    ],
+    providers: { commerce: 'pages', cms: 'pages' },
+  })
+  assert.deepEqual(data.productImages, [plain])
+  assert.deepEqual(data.contentImages, [plain, api])
 })
 
 test('storefrontData: preview origins come only from the integration serving cms', () => {

@@ -4,6 +4,9 @@ import productService from '../dist/services/product.service.js'
 
 const { ProductService } = productService
 
+/** The store has no distribution channel (StoreChannels): prices by currency and country. */
+const noChannel = { priceChannel: () => undefined }
+
 function createService(language, meta) {
   const product = {
     id: 'product-1',
@@ -18,7 +21,7 @@ function createService(language, meta) {
   }))
   const client = { productProjections: () => ({ get }) }
   const languageProvider = { getCurrentLanguage: () => language }
-  return new ProductService(client, languageProvider)
+  return new ProductService(client, languageProvider, noChannel)
 }
 
 describe('CommercetoolsProductService seo mapping', () => {

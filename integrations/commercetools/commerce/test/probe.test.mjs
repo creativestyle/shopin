@@ -1,12 +1,40 @@
 /**
  * The credentials check at the BFF's start, as for every vendor: an unreachable auth host or a refused API client is
  * named with the host and the variable to fix (never a bare "fetch failed"); the BFF then marks commerce unavailable.
+ * With the credentials good, it reads every configured store's distribution channel for the requests; a store that
+ * cannot be read fails the check the same way.
  */
 import { describe, it, afterEach } from 'node:test'
 import assert from 'node:assert/strict'
 import commerce from '../dist/parts/commerce.js'
+import storeChannels from '../dist/services/store-channels.service.js'
+import stores from '../dist/config/stores.js'
+import { FakeProjectClient } from './fake-client.mjs'
 
 const { commercePort } = commerce
+const { STORE_CHANNELS, StoreChannels } = storeChannels
+const { storeKeysFor } = stores
+
+/** The port value the check gets: its stores (`us-store` for en-US, `eu-store` for de-DE) answered by `server`. */
+const portOf = (server) => ({
+  [STORE_CHANNELS]: new StoreChannels(
+    server,
+    { getCurrentLanguage: () => 'en-US' },
+    storeKeysFor(undefined, { 'en-US': 'us-store', 'de-DE': 'eu-store' }, [
+      'en-US',
+      'de-DE',
+    ])
+  ),
+})
+/** A project with both stores, neither with a distribution channel. */
+const withStores = () => {
+  const server = new FakeProjectClient()
+  server.stores_.push(
+    { key: 'us-store', distributionChannels: [] },
+    { key: 'eu-store', distributionChannels: [] }
+  )
+  return server
+}
 
 const OPTIONS = {
   projectKey: 'shop-project',
@@ -15,7 +43,8 @@ const OPTIONS = {
   apiUrl: 'https://api.europe-west1.gcp.commercetools.com',
   authUrl: 'https://auth.europe-west1.gcp.commercetools.com',
 }
-const probe = () => commercePort().probe({}, OPTIONS)
+const probe = (server = withStores()) =>
+  commercePort().probe(portOf(server), OPTIONS)
 
 describe('commercetools credentials check at start', () => {
   const real = globalThis.fetch
@@ -69,13 +98,10 @@ describe('commercetools API client scopes at start, with customer linking on', (
     globalThis.fetch = real
   })
   const probeLinking = () =>
-    commercePort().probe(
-      {},
-      {
-        ...OPTIONS,
-        linkCustomers: '1',
-      }
-    )
+    commercePort().probe(portOf(withStores()), {
+      ...OPTIONS,
+      linkCustomers: '1',
+    })
   const answering =
     (scope, urls = []) =>
     async (url) => {
@@ -124,5 +150,39 @@ describe('commercetools API client scopes at start, with customer linking on', (
       message:
         /lacks the scopes: manage_orders, manage_customers, manage_payments, manage_shopping_lists\./,
     })
+  })
+})
+
+describe('commercetools store channels at start', () => {
+  const real = globalThis.fetch
+  afterEach(() => {
+    globalThis.fetch = real
+  })
+
+  it('with the credentials good, every configured store is read once', async () => {
+    globalThis.fetch = async () => new Response('{}', { status: 200 })
+    const server = withStores()
+    await probe(server)
+    assert.deepEqual(server.storeCalls.toSorted(), [
+      'GET stores/key=eu-store',
+      'GET stores/key=us-store',
+    ])
+  })
+
+  it('a store that cannot be read fails the check, naming the store and where its key is set', async () => {
+    globalThis.fetch = async () => new Response('{}', { status: 200 })
+    const server = new FakeProjectClient()
+    server.stores_.push({ key: 'us-store', distributionChannels: [] })
+    await assert.rejects(probe(server), {
+      message:
+        /^commercetools Store "eu-store" cannot be read \(commercetools\(\{ storeKeys \}\) or COMMERCETOOLS_STORE_KEYS\): HTTP 404$/,
+    })
+  })
+
+  it('refused credentials: no store is read', async () => {
+    globalThis.fetch = async () => new Response('', { status: 401 })
+    const server = withStores()
+    await assert.rejects(probe(server))
+    assert.deepEqual(server.storeCalls, [])
   })
 })

@@ -22,6 +22,8 @@ type Kit = typeof import('@core/integration-kit')
 const failing = (kit: Kit, id: string, category: 'cms' | 'commerce') =>
   kit.defineIntegration({
     id,
+    label: id,
+    description: 'A port whose credentials check fails',
     ports: {
       [category]: () =>
         kit.port(category, {

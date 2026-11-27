@@ -21,6 +21,7 @@ import { executeFacetedSearch } from '../helpers/faceted-search'
 import { mapProjectionsToCards } from '../mappers/search-results'
 import { fetchProjectionsByIds } from '../helpers/fetch-projections'
 import { FilterableAttributesCacheService } from './filterable-attributes-cache.service'
+import { StoreChannels } from './store-channels.service'
 
 @Injectable()
 export class ProductSearchService {
@@ -28,6 +29,7 @@ export class ProductSearchService {
     @Inject(COMMERCETOOLS_CLIENT) private readonly client: Client,
     private readonly languageProvider: RequestContext,
     private readonly filterableAttributesCache: FilterableAttributesCacheService,
+    private readonly channels: StoreChannels,
     @Optional() private readonly hooks?: MapperHooks
   ) {}
 
@@ -135,6 +137,7 @@ export class ProductSearchService {
       language: currentLanguage,
       currency,
       country,
+      priceChannel: this.channels.priceChannel(),
       limit,
       offset,
       filterableAttributes,
@@ -179,7 +182,8 @@ export class ProductSearchService {
           ids,
           language,
           currency,
-          country
+          country,
+          this.channels.priceChannel()
         )
       : []
 

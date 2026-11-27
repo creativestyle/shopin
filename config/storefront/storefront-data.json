@@ -17,6 +17,17 @@
   "contentImages": [
     {
       "hosts": ["placehold.co", "storage.googleapis.com"]
+    },
+    {
+      "hosts": ["d187yychpee5t0.cloudfront.net"],
+      "resize": {
+        "kind": "query",
+        "width": "w",
+        "quality": "q",
+        "fixed": {
+          "fm": "webp"
+        }
+      }
     }
   ],
   "previewOrigins": [],

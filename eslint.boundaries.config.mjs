@@ -10,11 +10,40 @@
  *   stay visible. The number of ALLOW entries is fixed below (ALLOW_ENTRIES), so the list can only shrink.
  * - shopin/no-relative-integration-path: no relative import path goes through an integrations/ folder (config files
  *   excepted).
+ * - shopin/integration-env: an integration's src/ reads no environment variable (process.env, import.meta.env); its
+ *   options, filled by the BFF from the descriptor's env, are the only source.
+ * - shopin/no-vendor-name: apps/, core/ and config/constants name no vendor, comments and strings included (D-63).
+ *   The vendors are the folders under integrations/ (the mock is no vendor), so a vendor added there is checked.
  *
  * Inline `eslint-disable` comments have no effect here: the only way to allow an import is an ALLOW entry.
  */
+import fs from "node:fs";
 import typescriptEslint from "typescript-eslint";
 import { shopinPlugin } from "@core/eslint-config/boundaries";
+
+/**
+ * The vendors: every folder under integrations/ that holds an integration package (`<vendor>/<part>/package.json`),
+ * except the mock, which is SHOPin's own sample data. Read from the folders, so no list is kept by hand.
+ */
+const INTEGRATIONS = new URL("./integrations/", import.meta.url);
+const VENDORS = fs
+  .readdirSync(INTEGRATIONS, { withFileTypes: true })
+  .filter((vendor) => vendor.isDirectory() && vendor.name !== "mock")
+  .filter((vendor) =>
+    fs
+      .readdirSync(new URL(`${vendor.name}/`, INTEGRATIONS), {
+        withFileTypes: true,
+      })
+      .some(
+        (part) =>
+          part.isDirectory() &&
+          fs.existsSync(
+            new URL(`${vendor.name}/${part.name}/package.json`, INTEGRATIONS),
+          ),
+      ),
+  )
+  .map((vendor) => vendor.name)
+  .sort();
 
 /**
  * The shop's config files, by their path from the repository root: they name the configured integrations by design
@@ -92,11 +121,23 @@ export default [
       "shopin/integration-boundaries": "error",
       "shopin/no-integration-imports": [
         "error",
-        { allow: ALLOW, config: CONFIG },
+        { allow: ALLOW, config: CONFIG, vendors: VENDORS },
       ],
       // lists every allowed import on each run; ALLOW_ENTRIES above keeps the list from growing
       "shopin/integration-import-exception": ["warn", { allow: ALLOW }],
       "shopin/no-relative-integration-path": "error",
+      "shopin/integration-env": "error",
+    },
+  },
+  {
+    // framework code names no vendor (D-63): the apps, the core packages and the shared constants
+    files: [
+      "apps/**/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs}",
+      "core/**/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs}",
+      "config/constants/**/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs}",
+    ],
+    rules: {
+      "shopin/no-vendor-name": ["error", { vendors: VENDORS }],
     },
   },
   {

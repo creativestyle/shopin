@@ -5,6 +5,9 @@ import productService from '../dist/services/product.service.js'
 
 const { ProductService } = productService
 
+/** The store has no distribution channel (StoreChannels): prices by currency and country. */
+const noChannel = { priceChannel: () => undefined }
+
 /**
  * Jest's `toHaveBeenCalledWith({ queryArgs: expect.objectContaining(fields) })`: some call had exactly one
  * argument, `{ queryArgs }`, whose `queryArgs` holds each of the fields.
@@ -61,7 +64,7 @@ function createService(language, variant) {
   }))
   const client = { productProjections: () => ({ get }) }
   const languageProvider = { getCurrentLanguage: () => language }
-  const service = new ProductService(client, languageProvider)
+  const service = new ProductService(client, languageProvider, noChannel)
   return { service, get }
 }
 

@@ -248,7 +248,7 @@ export class CartService extends BaseAuthenticatedService {
    * - Sign-in through another identity provider, on a platform with `attachGuestCart`: the guest cart is taken over
    *   first. With items, it becomes the customer's cart (the shopper's latest intent; an older active cart stays in
    *   the account). An empty one leaves the customer's active cart in charge.
-   * - The platform's own sign-in merges the guest cart itself (commercetools `me/login`): its active cart wins.
+   * - The platform's own sign-in merges the guest cart itself (its own customer sign-in): its active cart wins.
    * - A platform that cannot list a customer's carts keeps the guest cart id for the customer.
    * The guest cart cookie goes only once the cart is settled, or when the platform refuses the cart as another
    * shopper's (403, 404). Any other error is rethrown with the cookie kept (sign-in still succeeds).

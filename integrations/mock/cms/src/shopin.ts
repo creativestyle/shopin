@@ -13,7 +13,19 @@ export const mockCms = () =>
       de: 'Erzeugt, ohne Konto nutzbar',
     },
     storefront: {
-      contentImages: { hosts: ['placehold.co', 'storage.googleapis.com'] },
+      contentImages: [
+        { hosts: ['placehold.co', 'storage.googleapis.com'] },
+        // the sample homepage's hero image (mock-pages/homepage.ts): an image API that resizes by query
+        {
+          hosts: ['d187yychpee5t0.cloudfront.net'],
+          resize: {
+            kind: 'query',
+            width: 'w',
+            quality: 'q',
+            fixed: { fm: 'webp' },
+          },
+        },
+      ],
       // the same preview URL as Contentful's, so a draft preview can be tried on sample data
       slots: {
         cms: {

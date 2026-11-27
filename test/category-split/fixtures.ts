@@ -56,6 +56,7 @@ function descriptor<P extends Category>(
   return defineIntegration<string, P>({
     id: o.id,
     label: o.label ?? o.id,
+    description: `${o.id} test fixture`,
     ...(o.env ? { env: o.env as Integration<string, P>["env"] } : {}),
     ...(o.requires
       ? { requires: o.requires as Integration<string, P>["requires"] }

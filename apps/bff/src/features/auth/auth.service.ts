@@ -85,7 +85,7 @@ export class AuthService {
 
   /**
    * The guest's commerce session, only when the identity provider is the commerce platform's own sign-in: that
-   * platform takes the guest cart over at sign-in (commercetools merges it). Never handed to another provider.
+   * platform takes the guest cart over at sign-in (it merges it). Never handed to another provider.
    */
   private async guestSessionForNativeSignIn(): Promise<
     { commerceAccessToken: string } | undefined

@@ -1,5 +1,5 @@
 /**
- * Homepage slug per URL prefix (Contentful page entry has different slug per locale).
+ * Homepage slug per URL prefix (a CMS page entry may have a different slug per locale).
  * Used when fetching the homepage so the correct locale is returned (e.g. en "homepage", de "startseite").
  */
 

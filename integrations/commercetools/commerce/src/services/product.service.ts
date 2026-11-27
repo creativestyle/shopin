@@ -21,12 +21,14 @@ import type {
   ProductProjectionPagedQueryResponse,
 } from '@commercetools/platform-sdk'
 import { buildCategoryPath, buildProductPath } from '@config/constants'
+import { StoreChannels } from './store-channels.service'
 
 @Injectable()
 export class ProductService {
   constructor(
     @Inject(COMMERCETOOLS_CLIENT) private readonly client: Client,
     private readonly languageProvider: RequestContext,
+    private readonly channels: StoreChannels,
     @Optional() private readonly hooks?: MapperHooks
   ) {}
 
@@ -48,6 +50,7 @@ export class ProductService {
     const currentLanguage = this.languageProvider.getCurrentLanguage()
     const currency = resolveCurrencyFromLanguage(currentLanguage)
     const country = resolveCountryFromLanguage(currentLanguage)
+    const priceChannel = this.channels.priceChannel()
 
     const response = await this.client
       .productProjections()
@@ -63,6 +66,7 @@ export class ProductService {
           limit: 1,
           priceCurrency: currency,
           priceCountry: country,
+          ...(priceChannel && { priceChannel }),
         },
       })
       .execute()

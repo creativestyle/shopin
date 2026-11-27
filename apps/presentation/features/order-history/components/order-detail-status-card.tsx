@@ -39,8 +39,9 @@ export const OrderDetailStatusCard: FC<OrderDetailStatusCardProps> = ({
               {t('paymentMethod')}
             </div>
             <div className='mt-1 text-sm'>
+              {/* an integration that knows no method sends '' (the contract's method is required) */}
               {order.paymentInfo.name?.[locale] ??
-                order.paymentInfo.method ??
+                (order.paymentInfo.method || undefined) ??
                 t('notAvailable')}
             </div>
           </div>

@@ -15,7 +15,7 @@ type Props = {
 
 /**
  * Renders a content image from the contract (url, alt, width, height).
- * Uses next/image with a loader that builds URLs (e.g. Contentful w/q/fm);
+ * Uses next/image with a loader that builds URLs (e.g. a CMS image API's w/q/fm);
  * integrations pass a single base URL. Next.js calls the loader per width for srcset.
  *
  * When `preload` is true, Next 16's `preload` prop is forwarded, which injects a

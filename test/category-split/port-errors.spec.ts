@@ -13,6 +13,8 @@ describe("platform errors through the BFF", () => {
       const kit: Kit = require("@core/integration-kit");
       const platform = kit.defineIntegration({
         id: "erring-shop",
+        label: "erring-shop",
+        description: "test fixture",
         omits: ["wishlist"],
         ports: {
           commerce: () =>

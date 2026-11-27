@@ -125,8 +125,8 @@ describe('ensureCheckoutStep', () => {
 
   it('forwards only BFF cookies, unchanged, plus the correlation id', async () => {
     setCookies([
-      { name: 'cart-guest.commercetools-USD', value: 'c1' },
-      { name: 'vault.commerce.commercetools', value: 't1' },
+      { name: 'cart-guest.platform-USD', value: 'c1' },
+      { name: 'vault.commerce.platform', value: 't1' },
       { name: 'shopin-session', value: 's1' },
       { name: 'wishlist-logged.mock-USD', value: 'w1' },
       { name: 'preview_token', value: 'secret-preview' },
@@ -139,7 +139,7 @@ describe('ensureCheckoutStep', () => {
 
     const headers = new Headers(baseFetch.mock.calls[0][1].headers)
     expect(headers.get('Cookie')).toBe(
-      'cart-guest.commercetools-USD=c1; vault.commerce.commercetools=t1; shopin-session=s1; wishlist-logged.mock-USD=w1'
+      'cart-guest.platform-USD=c1; vault.commerce.platform=t1; shopin-session=s1; wishlist-logged.mock-USD=w1'
     )
     expect(headers.get('x-correlation-id')).toBe('corr-1')
   })
@@ -181,9 +181,9 @@ describe('ensureCheckoutStep', () => {
 
   it.each([
     [
-      'no cart id cookie (a signed-in commercetools shopper without a cart)',
+      'no cart id cookie (a signed-in shopper without a cart)',
       [
-        { name: 'vault.commerce.commercetools', value: 't1' },
+        { name: 'vault.commerce.platform', value: 't1' },
         { name: 'shopin-session', value: 's1' },
       ],
     ],

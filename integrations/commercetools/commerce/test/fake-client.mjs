@@ -95,6 +95,14 @@ export class FakeProjectClient {
   calls = []
   /** Calls on carts, kept apart from the customer calls. @type {string[]} */
   cartCalls = []
+  /** The actions of every cart update, as sent. @type {object[]} */
+  cartActions = []
+  /** Stores; `distributionChannels` are channel references. @type {{ key: string; distributionChannels: { typeId: 'channel'; id: string }[] }[]} */
+  stores_ = []
+  /** Reads of stores, kept apart from the shopper's calls. @type {string[]} */
+  storeCalls = []
+  /** The query arguments of every product projection query, as sent. @type {object[]} */
+  projectionQueries = []
   #n = 0
 
   #match(where) {
@@ -223,6 +231,7 @@ export class FakeProjectClient {
               })
             }
             for (const a of body.actions) {
+              this.cartActions.push(structuredClone(a))
               this.cartCalls.push(
                 `POST carts/${ID} ${a.action} ${a.customerId ?? a.productId ?? ''}`.trim()
               )
@@ -310,11 +319,30 @@ export class FakeProjectClient {
     }
   }
 
+  /** Stores, read by key (404 for a key the project lacks). */
+  stores() {
+    return {
+      withKey: ({ key }) => ({
+        get: () => ({
+          execute: async () => {
+            this.storeCalls.push(`GET stores/key=${key}`)
+            const store = this.stores_.find((x) => x.key === key)
+            if (!store) {
+              throw notFound()
+            }
+            return { body: store }
+          },
+        }),
+      }),
+    }
+  }
+
   /** Published product projections, found by slug (`where: slug(<locale>="<slug>")`). */
   productProjections() {
     return {
       get: ({ queryArgs }) => ({
         execute: async () => {
+          this.projectionQueries.push(structuredClone(queryArgs))
           const slug = queryArgs.where.match(/^slug\([^=]+="(.*)"\)$/)?.[1]
           const results = this.products_.filter((p) =>
             Object.values(p.slug).includes(slug ?? '')

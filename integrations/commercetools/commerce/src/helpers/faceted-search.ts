@@ -28,6 +28,8 @@ export interface FacetedSearchParams {
   language: string
   currency: string
   country: string
+  /** The store's distribution channel (StoreChannels), when it has one. */
+  priceChannel?: string
   limit: number
   offset: number
   filterableAttributes: FilterableAttribute[]
@@ -56,6 +58,7 @@ export async function executeFacetedSearch(
     language,
     currency,
     country,
+    priceChannel,
     limit,
     offset,
     filterableAttributes,
@@ -109,7 +112,14 @@ export async function executeFacetedSearch(
   const ids = results.map((r) => r.id)
 
   const projections = ids.length
-    ? await fetchProjectionsByIds(client, ids, language, currency, country)
+    ? await fetchProjectionsByIds(
+        client,
+        ids,
+        language,
+        currency,
+        country,
+        priceChannel
+      )
     : []
 
   return {

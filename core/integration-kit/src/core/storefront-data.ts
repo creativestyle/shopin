@@ -47,6 +47,16 @@ export interface StorefrontData {
   }
 }
 
+/** An integration's image sources as a list: none, one, or several (hosts that resize differently). */
+function sourcesOf(
+  sources: ImageSource | readonly ImageSource[] | undefined
+): ImageSource[] {
+  if (!sources) {
+    return []
+  }
+  return 'hosts' in sources ? [sources] : [...sources]
+}
+
 export function storefrontData(config: ShopinConfig): StorefrontData {
   const byId = new Map(config.integrations.map((i) => [i.id, i]))
   // per category the integrations that may serve it, in order: the serving one's delegates, else itself
@@ -95,12 +105,8 @@ export function storefrontData(config: ShopinConfig): StorefrontData {
     labels: Object.fromEntries(
       config.integrations.map((i) => [i.id, i.label ?? i.id])
     ),
-    productImages: parts.flatMap((p) =>
-      p.productImages ? [p.productImages] : []
-    ),
-    contentImages: parts.flatMap((p) =>
-      p.contentImages ? [p.contentImages] : []
-    ),
+    productImages: parts.flatMap((p) => sourcesOf(p.productImages)),
+    contentImages: parts.flatMap((p) => sourcesOf(p.contentImages)),
     previewOrigins: [
       ...new Set(
         candidates

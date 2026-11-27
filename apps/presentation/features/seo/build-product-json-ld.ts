@@ -57,7 +57,7 @@ function resolveImages(
  * images and, when the product is priced, an Offer with the effective price and currency.
  *
  * Not emitted because no data source provides it yet — adding either means extending
- * `ProductDetailsResponse` in core/contracts plus the commercetools/mock mappers:
+ * `ProductDetailsResponse` in core/contracts plus the commerce integrations' mappers:
  *  - `offers.availability` — no stock/availability field in the catalog contract.
  *  - `aggregateRating` / `review` — no review provider is integrated.
  * Both are *recommended*, not required, properties: the markup validates without them,

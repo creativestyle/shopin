@@ -25,6 +25,7 @@ import { mapCategoryTree } from '../mappers/product-collection'
 import { buildCategoryBreadcrumb } from '../mappers/category-breadcrumb'
 import { mapMetaSeo } from '../mappers/seo'
 import { FilterableAttributesCacheService } from './filterable-attributes-cache.service'
+import { StoreChannels } from './store-channels.service'
 
 @Injectable()
 export class ProductCollectionService {
@@ -32,6 +33,7 @@ export class ProductCollectionService {
     @Inject(COMMERCETOOLS_CLIENT) private readonly client: Client,
     private readonly languageProvider: RequestContext,
     private readonly filterableAttributesCache: FilterableAttributesCacheService,
+    private readonly channels: StoreChannels,
     @Optional() private readonly hooks?: MapperHooks
   ) {}
 
@@ -165,6 +167,7 @@ export class ProductCollectionService {
       language: currentLanguage,
       currency,
       country,
+      priceChannel: this.channels.priceChannel(),
       limit,
       offset,
       filterableAttributes,
