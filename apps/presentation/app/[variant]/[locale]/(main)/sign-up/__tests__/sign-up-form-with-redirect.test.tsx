@@ -36,14 +36,14 @@ describe('SignUpFormWithRedirect', () => {
     expect(sessionStorage.getItem('registration-completed')).toBe('true')
   })
 
-  it('keeps the checkout param', async () => {
-    mockSearchParams = new URLSearchParams('isCheckout=true')
+  it('keeps the returnTo param', async () => {
+    mockSearchParams = new URLSearchParams('returnTo=%2Fcheckout')
     render(<SignUpFormWithRedirect />)
 
     await userEvent.click(screen.getByRole('button', { name: 'register' }))
 
     expect(mockPush).toHaveBeenCalledWith(
-      '/sign-up/success?token=tok&isCheckout=true'
+      '/sign-up/success?token=tok&returnTo=%2Fcheckout'
     )
   })
 })

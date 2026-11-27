@@ -5,7 +5,7 @@ import { RegistrationSuccess } from '@/features/auth/auth-registration-success'
 import { useHasCompletedRegistration } from '@/features/auth/auth-registration-flag'
 import { RedirectWhen } from '@/components/redirect-when'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
-import { setIsCheckoutFromSearchParams } from '@/features/checkout/checkout-param-utils'
+import { setReturnToFromSearchParams } from '@/lib/return-to'
 
 /**
  * Wraps RegistrationSuccess and builds verify-email URL from page context. Page owns the URL.
@@ -20,7 +20,7 @@ export function RegistrationSuccessWithHref() {
   if (token) {
     params.set('token', token)
   }
-  setIsCheckoutFromSearchParams(params, searchParams)
+  setReturnToFromSearchParams(params, searchParams)
   const verifyEmailHref = `/sign-up/verify-email?${params.toString()}`
 
   return (

@@ -445,6 +445,8 @@
       "logoutSuccess": "Sie wurden erfolgreich abgemeldet.",
       "logoutError": "Fehler beim Abmelden. Bitte versuchen Sie es erneut.",
       "noCustomerData": "Keine Kundendaten verfügbar.",
+      "customerLoadError": "Ihre Kontodaten konnten nicht geladen werden.",
+      "customerLoadRetry": "Erneut versuchen",
       "overviewWelcomeMessage": "Herzlich willkommen, {name}!",
       "overviewLabel": "Übersicht",
       "ordersLabel": "Meine Bestellungen",

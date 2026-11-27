@@ -446,6 +446,8 @@
       "logoutSuccess": "You have been logged out successfully.",
       "logoutError": "Logout failed. Please try again.",
       "noCustomerData": "No customer data available.",
+      "customerLoadError": "We couldn't load your account details.",
+      "customerLoadRetry": "Try again",
       "overviewWelcomeMessage": "Welcome back, {name}!",
       "overviewLabel": "Overview",
       "ordersLabel": "My Orders",

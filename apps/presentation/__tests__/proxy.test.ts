@@ -731,3 +731,35 @@ describe('x-next-intl-locale forwarding', () => {
     })
   })
 })
+
+describe('request path forwarding', () => {
+  const header = 'x-middleware-request-x-shopin-request-path'
+
+  it('forwards the path and query without the locale prefix', () => {
+    const res = proxy(makeRequest('/de/account/orders?page=3'))
+    expect(res.headers.get(header)).toBe('/account/orders?page=3')
+  })
+
+  it('forwards an unprefixed path as is', () => {
+    const res = proxy(makeRequest('/account'))
+    expect(res.headers.get(header)).toBe('/account')
+  })
+
+  it('overwrites a client-sent value', () => {
+    const res = proxy(
+      new NextRequest(`${BASE}/account`, {
+        headers: { 'x-shopin-request-path': '//evil.com' },
+      })
+    )
+    expect(res.headers.get(header)).toBe('/account')
+  })
+
+  it('drops a client-sent value on preview paths', () => {
+    const res = proxy(
+      new NextRequest(`${BASE}/preview/slug`, {
+        headers: { 'x-shopin-request-path': '//evil.com' },
+      })
+    )
+    expect(res.headers.get(header)).toBeNull()
+  })
+})

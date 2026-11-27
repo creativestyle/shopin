@@ -47,12 +47,12 @@ describe('SignInConfirmation', () => {
     expect(screen.getByRole('status')).toHaveTextContent(`${NS}.passwordReset`)
   })
 
-  it('strips the flag from the URL and keeps the checkout param', async () => {
-    renderAt('?verified=true&isCheckout=true')
+  it('strips the flag from the URL and keeps the returnTo param', async () => {
+    renderAt('?verified=true&returnTo=%2Fcheckout')
 
     await nextFrame()
 
-    expect(mockReplace).toHaveBeenCalledWith('/sign-in?isCheckout=true', {
+    expect(mockReplace).toHaveBeenCalledWith('/sign-in?returnTo=%2Fcheckout', {
       scroll: false,
     })
   })

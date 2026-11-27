@@ -51,13 +51,12 @@ The BFF reads env from the **repo root `.env`**. Variables used by the BFF itsel
   production (the BFF refuses to start without it); `http://localhost:3000` otherwise
 - **`LOG_LEVEL`**, **`LOG_PRETTY_PRINT`** – Logging (via `@core/logger-config`)
 - **`BFF_RATE_LIMIT_*`** – Rate limiting (optional)
-- **`BFF_INTERNAL_SECRET`** – Shared secret for the presentation server's per-shopper calls (checkout guard); requests carrying it skip rate limiting. Set the same value for **both** the presentation and BFF apps; when unset, those calls are rate-limited by the Next.js server's IP and share one bucket
+- **`BFF_INTERNAL_SECRET`** – Shared secret for the presentation server's per-shopper calls (checkout guard, and the session check on every account, sign-in and sign-up page view); requests carrying it skip rate limiting. Set the same value for **both** the presentation and BFF apps; when unset, those calls are rate-limited by the Next.js server's IP and share one bucket, and once it runs out the account and auth pages fall back to the client-side guard
 - **`BFF_SESSION_REVOCATIONS_FILE`** – where logouts and password changes are remembered (a path on persistent
   storage). Required in production. Several BFF instances use one file on shared storage (on Upsun a network
   storage mount); with NFS, keep attribute caching short (`actimeo`), since an instance sees another's revocation
   when its `stat` of the file changes (it looks at most once a second). The boot stops when the file's folder is
   not writable
-- **`BFF_RATE_LIMIT_*`** – Rate limiting (optional)
 - **`BFF_TRUST_PROXY`** – Behind a proxy: the number of proxies (`1`) or their addresses, so the rate limits count
   each client's address (`X-Forwarded-For`), not the proxy's. Off when unset
 - **`JWT_ENCRYPTION_KEY`**, **`JWT_SIGNING_KEY`** – Token encryption/signing

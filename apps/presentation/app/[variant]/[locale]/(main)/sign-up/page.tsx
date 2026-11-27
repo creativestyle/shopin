@@ -1,11 +1,14 @@
 import { getTranslations } from 'next-intl/server'
 import { initRouteContext } from '@/lib/request-context/route-context'
-import { Link } from '@/lib/navigation'
+import { Link, redirect } from '@/lib/navigation'
 import { SignUpFormWithRedirect } from './sign-up-form-with-redirect'
 import ChevronLeftIcon from '@/public/icons/chevron-left.svg'
 import { AuthPageGuard } from '../auth-page-guard'
-import { getIsCheckoutServer } from '@/features/checkout/checkout-param-utils'
+import { getReturnToServer, setReturnTo } from '@/lib/return-to'
 import { StandardContainer } from '@/components/ui/standard-container'
+import { getServerSession } from '@/features/customer/customer-server-session'
+
+const CHECKOUT_PATH = /^\/checkout(?:[/?#]|$)/
 
 export default async function Page({
   params,
@@ -17,17 +20,31 @@ export default async function Page({
   const { variant, locale } = await params
   const resolvedSearchParams = await searchParams
   initRouteContext({ variant, locale })
-  const t = await getTranslations('account.signUp')
+  const returnTo = getReturnToServer(resolvedSearchParams)
 
-  const isCheckout = getIsCheckoutServer(resolvedSearchParams)
+  const session = await getServerSession()
+  if (session === 'signed-in') {
+    redirect({ href: returnTo ?? '/account', locale })
+  }
+
+  const t = await getTranslations('account.signUp')
+  const isCheckout = !!returnTo && CHECKOUT_PATH.test(returnTo)
+
+  const signInParams = new URLSearchParams()
+  setReturnTo(signInParams, returnTo)
+  const signInQuery = signInParams.toString()
+  const backHref =
+    isCheckout && returnTo
+      ? returnTo
+      : `/sign-in${signInQuery ? `?${signInQuery}` : ''}`
 
   return (
-    <AuthPageGuard>
+    <AuthPageGuard isVerifiedOnServer={session === 'signed-out'}>
       <StandardContainer className='py-4 pb-16'>
         <div className='mx-auto mt-2 flex w-full max-w-md flex-col items-start px-3 sm:px-6'>
           <div className='flex w-full flex-col items-center'>
             <Link
-              href={isCheckout ? '/checkout' : '/sign-in'}
+              href={backHref}
               className='mb-5 flex items-center gap-4 text-sm text-gray-700 underline'
             >
               <ChevronLeftIcon className='size-6' />

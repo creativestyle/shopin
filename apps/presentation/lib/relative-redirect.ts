@@ -1,19 +1,12 @@
 import { NextResponse } from 'next/server'
-
-// One leading slash, then printable ASCII only; no backslash anywhere
-const SAFE_RELATIVE_LOCATION = /^\/(?![/\\])[!-[\]-~]*$/
-
-/** True when a browser resolves the location against the requested host. */
-function isSafeRelativeLocation(location: string): boolean {
-  return SAFE_RELATIVE_LOCATION.test(location)
-}
+import { isSafeRelativePath } from './safe-relative-path'
 
 /** 307 with a path-only Location; anything that could leave the host falls back to `/`. */
 export function relativeRedirect(location: string): NextResponse {
   return new NextResponse(null, {
     status: 307,
     headers: {
-      Location: isSafeRelativeLocation(location) ? location : '/',
+      Location: isSafeRelativePath(location) ? location : '/',
     },
   })
 }

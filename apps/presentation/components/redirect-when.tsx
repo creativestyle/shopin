@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter } from '@/lib/navigation'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 
 interface RedirectWhenProps {
