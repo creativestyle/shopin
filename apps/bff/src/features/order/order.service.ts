@@ -65,6 +65,11 @@ export class OrderService {
     }
   }
 
+  /** The shopper's own cart id (the sealed cookie), the cart a payment must have been started for. */
+  async ownCartId(): Promise<string | undefined> {
+    return this.getOwnCartId()
+  }
+
   private async getOwnCartId(): Promise<string | undefined> {
     const isLoggedIn = (await this.tokenProvider.getAuthStatus()) === true
     return isLoggedIn

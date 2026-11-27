@@ -9,9 +9,10 @@ import type { MockOptions } from './options'
 export const mock = (options: MockOptions = {}) =>
   defineIntegration({
     id: 'mock',
-    label: {
-      en: 'Sample data: generated, works without any account',
-      de: 'Beispieldaten: erzeugt, ohne Konto nutzbar',
+    label: { en: 'Sample data', de: 'Beispieldaten' },
+    description: {
+      en: 'Generated, works without any account',
+      de: 'Erzeugt, ohne Konto nutzbar',
     },
     mappers: options.mappers,
     storefront: {

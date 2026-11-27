@@ -28,6 +28,7 @@ import { currentRequest } from '../common/request-store/request-store'
 import { frontendUrl, partEnv, partEnvNames } from '../common/env/env-file'
 import {
   currentProviders,
+  isOwnSignIn,
   keyOf,
   markFailed,
   setServing,
@@ -35,7 +36,8 @@ import {
 } from './providers'
 import { GUARDS_METADATA } from '@nestjs/common/constants'
 import { CsrfOnWritesGuard } from '../features/csrf/csrf.guard'
-import { CommerceSearchProvider } from './commerce-search.provider'
+import { CommerceSearchProvider } from '@core/contracts/product-search/commerce-search'
+import { withPortErrors } from './port-errors'
 
 /**
  * Injectable: the serving port per category (commerce always; the others and the shop's own kinds when
@@ -239,7 +241,9 @@ function portModuleOf(
       {
         provide: token,
         inject: (port.inject ?? []) as Type[],
-        useFactory: port.useFactory,
+        // the integration's own error translation on every service call (sign-in flows excluded)
+        useFactory: async (...deps: never[]) =>
+          withPortErrors(await port.useFactory(...deps), category, port.errors),
       },
     ],
     exports: [token],
@@ -273,6 +277,16 @@ function assertOmits(all: Record<string, Record<string, unknown>>): void {
 }
 
 const logger = new Logger('Providers')
+
+/**
+ * What public responses (`/bff/capabilities`, the demo's `/bff/switch`) say about an unavailable provider: a fixed
+ * code, never the check's message (it names the vendor host, credential variables, statuses, a project key). The
+ * full reason is in the start-up log.
+ */
+export const UNAVAILABLE = {
+  check: 'credentials check failed',
+  notConfigured: 'not configured',
+} as const
 
 /** How long one credentials check may take at boot. */
 const PROBE_MS = 5000
@@ -319,17 +333,20 @@ async function probe(instances: unknown[]): Promise<void> {
     })
   )
   for (const { category, id, via, port } of loaded) {
-    const reason = port.probe
+    const detail = port.probe
       ? failedCategory.get(`${instance(via, id)}|${category}`)
       : failed.get(instance(via, id))
-    if (!reason) {
+    if (!detail) {
       continue
     }
+    // the detail (host, variable names, status) only in the log; /bff/capabilities is public: a fixed code there
+    logger.warn(
+      `"${keyOf(id)}" (${category}${via ? `, through "${keyOf(via as never)}"` : ''}) is unavailable: ${detail}`
+    )
     if (via) {
-      ;(unavailableDelegates[category] ??= {})[keyOf(id)] = reason
+      ;(unavailableDelegates[category] ??= {})[keyOf(id)] = UNAVAILABLE.check
     } else {
-      markFailed(category, reason)
-      logger.warn(`"${keyOf(id)}" (${category}) is unavailable: ${reason}`)
+      markFailed(category, UNAVAILABLE.check)
     }
   }
 }
@@ -346,12 +363,10 @@ function assertLinkable(ports: ServingPorts): void {
   if (!providers.auth || !providers.commerce) {
     return
   }
-  const auth = providers.auth
-  const native = project.integrations.find((i) => i.id === auth)?.requires?.auth
-    ?.needs.commerce
-  if (!native && !ports.commerce.customers) {
+  // the commerce platform's own sign-in links nothing; every other sign-in links through `customers`
+  if (!isOwnSignIn() && !ports.commerce.customers) {
     throw new Error(
-      `shopin.config: sign-in through "${auth}" needs the commerce integration to link customer accounts, and "${providers.commerce}" does not (its README says whether a setting allows it)`
+      `shopin.config: sign-in through "${providers.auth}" needs the commerce integration to link customer accounts, and "${providers.commerce}" does not (its README says whether a setting allows it)`
     )
   }
 }
@@ -377,7 +392,9 @@ export class PortsModule {
     })
     loaded = found.ports
     for (const { category, id, reason } of found.unavailable) {
-      ;(unavailableDelegates[category] ??= {})[keyOf(id)] = reason
+      logger.warn(`"${keyOf(id)}" (${category}) cannot serve: ${reason}`)
+      ;(unavailableDelegates[category] ??= {})[keyOf(id)] =
+        UNAVAILABLE.notConfigured
     }
     const tokens = loaded.map((p) => Symbol(`${p.id} ${p.category} port`))
     // a delegate's module is imported by the module of the port serving through it

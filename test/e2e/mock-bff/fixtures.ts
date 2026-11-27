@@ -1,30 +1,31 @@
 /**
  * Canned BFF response fixtures for e2e tests.
  *
- * Fixtures are keyed on the X-Data-Source header value so the mock BFF can
- * return distinguishable responses per variant, making header-correctness
- * observable via content (not just via the /__requests inspection endpoint).
+ * Fixtures are keyed on the X-Search-Provider header value (the demo config's search
+ * dimension, cookie `shopin-search`) so the mock BFF can return distinguishable
+ * responses per variant, making header-correctness observable via content (not just
+ * via the /__requests inspection endpoint).
  *
- * Slug catalogs deliberately diverge between data sources so that the
- * locale-switch variant produces a wrong/fallback URL when the variant context is
- * can catch.
+ * Slug catalogs deliberately diverge between search providers so that the
+ * a locale switch that loses the variant context lands on a wrong/fallback URL.
  *
  * Default catalog:  product  en="blue-shirt"  de="blaues-hemd"
  *                   category en="mens-shirts"  de="herrenhemden"
  * Alt catalog:      product  en="red-shoes"   de="rote-schuhe"   (NOT in default)
  *                   category en="summer-sale"  de="sommerschlussverkauf" (NOT in default)
  *
- * Probe catalog:    ANY slug starting with "probe-" is served for ALL data sources
- *                   and all draft states.  Product/collection names embed the data
- *                   source + draft state so content-level assertions are still possible.
+ * Probe catalog:    ANY slug starting with "probe-" is served for ALL search providers
+ *                   and all draft states.  Product/collection names embed the
+ *                   search provider + draft state so content-level assertions are still possible.
  *                   These slugs are used by specs that need cold, unique URLs with no
  *                   cross-test ISR cache pollution.
  */
 
-export const DEFAULT_SOURCE = 'commercetools-set'
-export const ALT_SOURCE = 'commercetools-algolia-set'
+/** The demo's search providers: the commerce platform's own search (default) and Algolia. */
+export const DEFAULT_SEARCH = 'commerce'
+export const ALT_SEARCH = 'algolia'
 
-// ─── Shared (source-agnostic) ────────────────────────────────────────────────
+// ─── Shared (provider-agnostic) ────────────────────────────────────────────────
 
 export const NAVIGATION_FIXTURE = {
   items: [
@@ -58,30 +59,30 @@ function makeProductCard(id: string, name: string, slug: string) {
 
 // ─── Probe catalog ────────────────────────────────────────────────────────────
 // Any slug starting with "probe-" gets a generated fixture keyed on the data
-// source and draft flag so tests can still assert content-level variant divergence.
+// search provider and draft flag so tests can still assert content-level variant divergence.
 
-export function makeProbeProduct(slug: string, dataSource: string, draft = false) {
-  const label = draft ? `DRAFT:${dataSource}` : dataSource
+export function makeProbeProduct(slug: string, searchProvider: string, draft = false) {
+  const label = draft ? `DRAFT:${searchProvider}` : searchProvider
   return {
-    breadcrumb: [{ label: dataSource, path: `/p/${slug}` }],
+    breadcrumb: [{ label: searchProvider, path: `/p/${slug}` }],
     product: {
       id: `probe-${slug}`,
       name: `${label} — ${slug}`,
       slug,
       price: { regularPriceInCents: 999, currency: 'EUR' },
       gallery: { images: [{ src: 'https://placehold.co/400x400', alt: slug }] },
-      description: `Probe product for ${dataSource}`,
+      description: `Probe product for ${searchProvider}`,
       slugByLocale: { 'en-US': slug, 'de-DE': `de-${slug}` },
     },
   }
 }
 
-export function makeProbeCollection(slug: string, dataSource: string, draft = false) {
-  const label = draft ? `DRAFT:${dataSource}` : dataSource
+export function makeProbeCollection(slug: string, searchProvider: string, draft = false) {
+  const label = draft ? `DRAFT:${searchProvider}` : searchProvider
   const item1 = makeProductCard(`${slug}-item-1`, `${label} — ${slug} item 1`, `${slug}-item-1`)
   const item2 = makeProductCard(`${slug}-item-2`, `${label} — ${slug} item 2`, `${slug}-item-2`)
   return {
-    breadcrumb: [{ label: dataSource, path: `/c/${slug}` }],
+    breadcrumb: [{ label: searchProvider, path: `/c/${slug}` }],
     productList: [item1, item2],
     total: 2,
     categoryName: `${label} — ${slug}`,
@@ -290,7 +291,7 @@ function makeContentPage(
   }
 }
 
-// Content pages are shared across data sources (CMS is not per-variant)
+// Content pages are shared across search providers (CMS is not per-variant)
 export const CONTENT_PAGES: Record<string, object> = {
   homepage: makeContentPage('homepage', 'Home', { 'en-US': 'homepage', 'de-DE': 'startseite' }),
   startseite: makeContentPage('startseite', 'Startseite', { 'en-US': 'homepage', 'de-DE': 'startseite' }),

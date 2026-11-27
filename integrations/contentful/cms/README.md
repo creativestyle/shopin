@@ -17,6 +17,14 @@ contentful); the BFF hands them to this port only. Secrets: provide them through
 - `CONTENTFUL_PREVIEW_ACCESS_TOKEN` — Preview API (draft content; optional)
 - `CONTENTFUL_SPACE`, `CONTENTFUL_ENVIRONMENT` (default `master`; setup writes it into `.env`)
 
+## Preview (draft mode)
+
+Set the content preview URL in Contentful (Settings → Content preview) to
+`https://<your-shop>/api/draft?secret=<NEXT_DRAFT_MODE_SECRET>&slug={entry.fields.slug}&locale={locale}`. This
+package reads that request for the storefront (its `PreviewRequest` slot) and allows `https://app.contentful.com` to
+show the preview in the entry editor's frame (`previewOrigins`); the storefront sends that as `frame-ancestors` on its
+preview pages.
+
 ## Content model and migrations
 
 Content model and migration details live in the **[@integrations/contentful-migration](../contentful-migration/README.md)** package.

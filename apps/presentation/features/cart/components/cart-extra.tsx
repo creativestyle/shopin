@@ -1,9 +1,9 @@
 'use client'
 
-import { useCallback } from 'react'
+import { cloneElement, useCallback } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import type { CartResponse } from '@core/contracts/cart/cart'
-import { CartExtra } from '@/lib/slots'
+import { useClientSlots } from '@/features/slots/client-slots'
 import { cartKeys } from '../cart-keys'
 import { useCartService } from '../hooks/use-cart-service'
 
@@ -13,26 +13,33 @@ function useSetFields(): (fields: Record<string, unknown>) => Promise<void> {
   const queryClient = useQueryClient()
   return useCallback(
     async (fields) => {
-      queryClient.setQueryData(
-        cartKeys.all,
-        await cartService.setFields(fields)
-      )
+      const cart = await cartService.setFields(fields)
+      // as the other cart writes: a refetch in flight must not overwrite the new cart
+      await queryClient.cancelQueries({ queryKey: cartKeys.all, exact: true })
+      queryClient.setQueryData(cartKeys.all, cart)
     },
     [cartService, queryClient]
   )
 }
 
-function WithFields({ cart }: { cart: CartResponse }) {
+function WithFields({
+  cart,
+  slot,
+}: {
+  cart: CartResponse
+  slot: NonNullable<ReturnType<typeof useClientSlots>['cartExtra']>
+}) {
   const setFields = useSetFields()
-  return CartExtra ? (
-    <CartExtra
-      cart={cart}
-      setFields={setFields}
-    />
-  ) : null
+  return cloneElement(slot, { cart, setFields })
 }
 
 /** The shop's own cart fields (slot CartExtra) under the cart summary; nothing when the shop has none. */
 export function ShopCartExtra({ cart }: { cart: CartResponse }) {
-  return CartExtra ? <WithFields cart={cart} /> : null
+  const { cartExtra } = useClientSlots()
+  return cartExtra ? (
+    <WithFields
+      cart={cart}
+      slot={cartExtra}
+    />
+  ) : null
 }

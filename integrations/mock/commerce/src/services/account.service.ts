@@ -321,6 +321,10 @@ export class MockOrderService extends ForCustomer {
         owner !== 'guest'
           ? customerStore.get(owner)?.email
           : cart.billingAddress?.email,
+      // an order is placed only after the payment return reported it paid (the BFF's payment return route)
+      ...(cart.paymentInfo
+        ? { paymentInfo: { ...cart.paymentInfo, status: 'paid' } }
+        : {}),
     })
     orderStore.set(owner, [order, ...orders])
     orderedCarts.set(cart.id, order.id)

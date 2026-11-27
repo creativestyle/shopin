@@ -6,12 +6,15 @@ folder (then `npm run setup`) removes the demo, and nothing outside it names a p
 | Package                      | Folder                 | What it is                                                                                           | Used by                                                   |
 | ---------------------------- | ---------------------- | ---------------------------------------------------------------------------------------------------- | --------------------------------------------------------- |
 | `@demo/shop`                 | `shop`                 | The demo's config, the BFF side (as `config/shop`); no storefront package in its dependencies        | `npm run use demo`                                        |
-| `@demo/storefront`           | `storefront`           | The demo's storefront slots, pages and texts (as `config/storefront`)                                | `npm run use demo`                                        |
+| `@demo/storefront`           | `storefront`           | The demo's storefront slots and pages (as `config/storefront`)                                       | `npm run use demo`                                        |
 | `@demo/provider-switch`      | `provider-switch`      | Per-request provider choice in the BFF ([README](provider-switch/README.md))                         | `providerSwitch({ … })` in `shop/config/shopin.config.ts` |
 | `@demo/data-source-selector` | `data-source-selector` | The `/setup` page that switches providers ([README](data-source-selector/README.md))                 | `Pages.setup` in `storefront/src/storefront.mts`          |
 | `@demo/demo-disclaimer`      | `demo-disclaimer`      | The "This is a demo shop" notice over every page except the legal ones                               | `SiteNotice` in `storefront/src/storefront.mts`           |
-| `@demo/switch-scenarios`     | `switch-scenarios`     | The switch's tests in the real BFF (the framework's scenario harness)                                | `npm test`                                                |
+| `@demo/switch-scenarios`     | `switch-scenarios`     | The switch's tests in the real BFF (the framework's scenario harness)                                | `npm test`; CI runs it in the demo job                    |
 | `@demo/mock-tracking-tags`   | `mock-tracking-tags`   | Fake analytics and marketing tags behind the cookie consent ([README](mock-tracking-tags/README.md)) | `TrackingTags` in `storefront/src/storefront.mts`         |
+
+`e2e/` (not a package) holds the demo's Playwright specs, the provider switch end to end; they run with the E2E
+harness in `test/e2e` on the demo config: `npm run e2e:demo` (test/e2e README, "Demo suite").
 
 ## On and off
 

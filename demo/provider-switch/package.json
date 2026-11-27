@@ -49,6 +49,7 @@
     "test": "tsc --build && node --test \"test/*.test.mjs\""
   },
   "dependencies": {
+    "@core/contracts": "*",
     "@core/integration-kit": "*"
   },
   "devDependencies": {

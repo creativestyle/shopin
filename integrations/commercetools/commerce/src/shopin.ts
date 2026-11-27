@@ -23,9 +23,10 @@ export interface CommercetoolsOptions {
 export const commercetools = (options: CommercetoolsOptions = {}) =>
   defineIntegration({
     id: 'commercetools',
-    label: {
-      en: "commercetools: the project's catalog, carts, customer accounts and product search",
-      de: 'commercetools: Katalog, Warenkörbe, Kundenkonten und Produktsuche des Projekts',
+    label: 'commercetools',
+    description: {
+      en: "The project's catalog, carts, customer accounts and product search",
+      de: 'Katalog, Warenkörbe, Kundenkonten und Produktsuche des Projekts',
     },
     mappers: options.mappers,
     env: {

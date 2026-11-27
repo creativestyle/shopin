@@ -2,35 +2,45 @@
 
 import { useEffect, useRef } from 'react'
 import { useRouter } from '@/lib/navigation'
-import { useCreateCheckoutOrder } from './hooks/use-create-checkout-order'
-import { useCart } from '@/features/cart/cart-use-cart'
+import { useSearchParams } from 'next/navigation'
+import { useCompletePaymentReturn } from './hooks/use-complete-payment-return'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { useTranslations } from 'next-intl'
 import { Toast } from '@/components/ui/toast'
 import { Button } from '@/components/ui/button'
 
-export function PaymentSuccessCallback() {
+/** What the payment provider sent back to the return route: the payment id and its own parameters, as they came. */
+function returnRequest(search: URLSearchParams | null) {
+  const params = Object.fromEntries(search?.entries() ?? [])
+  const { paymentId = '', ...rest } = params
+  return { paymentId, params: rest }
+}
+
+/**
+ * The shop's one payment return route: asks the BFF for the payment's result once, which creates the order only
+ * for a paid or authorized payment (a confirmation), else sends the shopper back to pay again.
+ */
+export function PaymentReturnCallback() {
   const router = useRouter()
   const t = useTranslations('checkout')
-  const { cart } = useCart()
-  const attemptedCartIdRef = useRef<string | null>(null)
+  const search = useSearchParams()
+  const attemptedRef = useRef(false)
 
-  const { createOrder, error, isPending } = useCreateCheckoutOrder()
+  const { completePaymentReturn, error, isPending } = useCompletePaymentReturn()
+  const request = returnRequest(search)
 
   useEffect(() => {
-    // Only attempt once per cart - if cart changes, retry with new cart
-    if (!cart?.id) {
+    if (attemptedRef.current) {
       return
     }
-
-    if (attemptedCartIdRef.current === cart.id) {
+    attemptedRef.current = true
+    if (!request.paymentId) {
+      router.push('/checkout/review?paymentFailed=true')
       return
     }
-
-    attemptedCartIdRef.current = cart.id
-    createOrder()
+    completePaymentReturn(request)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [cart?.id])
+  }, [])
 
   // Show error state with retry button
   if (error) {
@@ -47,10 +57,7 @@ export function PaymentSuccessCallback() {
           <Button
             variant='primary'
             scheme='red'
-            onClick={() => {
-              attemptedCartIdRef.current = null
-              createOrder()
-            }}
+            onClick={() => completePaymentReturn(request)}
             disabled={isPending}
           >
             {isPending ? t('processingOrder') : t('retry')}

@@ -46,6 +46,11 @@ export interface CommerceContractData {
    * them through `customers`.
    */
   orders?: true | { customers: [string, string] }
+  /**
+   * Makes the made-up names the cases use (e-mails, external ids, unknown slugs): 8 random characters by default.
+   * A run against recorded responses passes a fixed sequence, so the replay asks for the same URLs as the recording.
+   */
+  unique?: () => string
 }
 
 /**
@@ -117,6 +122,8 @@ export const COMMERCE: Record<
 export interface CaseContext {
   port: (as?: ActingAs) => Promise<Port<'commerce'>>
   data: CommerceContractData
+  /** `data.unique`, or 8 random characters. */
+  unique: () => string
   add: (
     services: readonly string[],
     ...list: { name: string; run: Run }[]

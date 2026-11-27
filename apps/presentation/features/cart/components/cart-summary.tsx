@@ -80,8 +80,11 @@ export function CartSummary({
           fractionDigits={cart.grandTotal.fractionDigits ?? 2}
         />
       </div>
-      {/* the shop's own cart fields (slot CartExtra); an order is not a cart */}
-      {!('orderNumber' in cart) && <ShopCartExtra cart={cart} />}
+      {/* the shop's own cart fields (slot CartExtra) on the cart and at checkout: an order is not a cart, and the
+          add-to-cart sheet (modal) is a quick confirmation, not a form */}
+      {!('orderNumber' in cart) && variant !== 'modal' && (
+        <ShopCartExtra cart={cart} />
+      )}
       {actions && (
         <>
           <Divider />

@@ -18,6 +18,13 @@
         "default": "./dist/shopin.js"
       },
       "default": "./dist/shopin.js"
+    },
+    "./preview": {
+      "shopin-shop": {
+        "types": "./dist/types/preview.d.ts",
+        "default": "./dist/preview.js"
+      },
+      "default": "./dist/preview.js"
     }
   },
   "scripts": {
@@ -27,7 +34,7 @@
     "format": "prettier --write ./src",
     "format:check": "prettier --check --ignore-unknown ./src",
     "check-types": "tsc --noEmit",
-    "test": "jest",
+    "test": "tsc --build && node --test \"test/*.test.mjs\"",
     "setup": "tsc --build"
   },
   "dependencies": {
@@ -62,30 +69,5 @@
     "zod": {
       "optional": true
     }
-  },
-  "jest": {
-    "rootDir": ".",
-    "roots": [
-      "<rootDir>/test"
-    ],
-    "testRegex": ".*\\.spec\\.ts$",
-    "moduleFileExtensions": [
-      "js",
-      "json",
-      "ts"
-    ],
-    "transform": {
-      "^.+\\.ts$": [
-        "ts-jest",
-        {
-          "diagnostics": {
-            "ignoreCodes": [
-              151002
-            ]
-          }
-        }
-      ]
-    },
-    "testEnvironment": "node"
   }
 }

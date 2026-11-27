@@ -53,3 +53,34 @@ test("links to the storefront's payment step for the cart", async () => {
   ).getPaymentLink('cart-1')
   assert.equal(paymentLink, `https://shop.example${PAYMENT_STEP_PATH}/cart-1`)
 })
+
+test('the payment result: every status as the page reports it; anything else (no result, a typo) is failed, never paid', async () => {
+  const service = new PaymentService(context())
+  const result = (params) =>
+    service.getPaymentResult({ paymentId: 'cart-1', params })
+  assert.deepEqual(await result({ result: 'paid' }), {
+    status: 'paid',
+    cartId: 'cart-1',
+  })
+  assert.deepEqual(await result({ result: 'authorized' }), {
+    status: 'authorized',
+    cartId: 'cart-1',
+  })
+  assert.deepEqual(await result({ result: 'pending' }), {
+    status: 'pending',
+    cartId: 'cart-1',
+  })
+  assert.deepEqual(await result({ result: 'cancelled' }), {
+    status: 'cancelled',
+    cartId: 'cart-1',
+  })
+  assert.deepEqual(await result({ result: 'failed' }), {
+    status: 'failed',
+    cartId: 'cart-1',
+  })
+  assert.deepEqual(await result({}), { status: 'failed', cartId: 'cart-1' })
+  assert.deepEqual(await result({ result: 'PAID' }), {
+    status: 'failed',
+    cartId: 'cart-1',
+  })
+})

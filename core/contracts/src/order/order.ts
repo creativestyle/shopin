@@ -10,6 +10,10 @@ import { AddressBaseSchema } from '../address/address-base'
 
 export const DEFAULT_ORDER_PAGE_SIZE = 20
 
+/**
+ * The order's status, neutral across platforms: each commerce integration maps its own states onto these and puts
+ * its richer states in `orderStateDetail`.
+ */
 export const OrderStateSchema = z.enum([
   'Open',
   'Confirmed',
@@ -36,10 +40,13 @@ export type CreateOrderRequest = z.infer<typeof CreateOrderRequestSchema>
  */
 export const OrderResponseSchema = z.object({
   id: z.string(),
-  version: z.number(),
+  /** The platform's version, when it has one. */
+  version: z.number().optional(),
   orderNumber: z.string(),
   createdAt: z.string(),
   orderState: OrderStateSchema,
+  /** The platform's own, richer status (e.g. its order, shipment and payment states), for display or support. */
+  orderStateDetail: z.string().optional(),
   lineItems: z.array(LineItemResponseSchema),
   subtotal: BasicPriceResponseSchema,
   tax: BasicPriceResponseSchema.optional(),
@@ -75,8 +82,6 @@ export const OrderSummaryResponseSchema = z.object({
       alt: z.string().optional(),
     })
   ),
-  /** The commerce provider that holds the order (several during a platform migration). */
-  source: z.string().optional(),
 })
 
 export type OrderSummaryResponse = z.infer<typeof OrderSummaryResponseSchema>

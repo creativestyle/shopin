@@ -57,7 +57,10 @@ function setup() {
   )
   const request = { headers: {} }
   const context = {
-    switchToHttp: () => ({ getRequest: () => request }),
+    switchToHttp: () => ({
+      getRequest: () => request,
+      getResponse: () => ({ clearCookie: jest.fn() }),
+    }),
   } as unknown as ExecutionContext
 
   return {
@@ -152,5 +155,97 @@ describe('TokenRefreshInterceptor: a dead refresh token (OAuth invalid_grant)', 
       firstValueFrom(await interceptor.intercept(context, next))
     ).rejects.toThrow('ECONNRESET')
     expect(tokenStorageService.clearTokens).not.toHaveBeenCalled()
+  })
+})
+
+describe("a customer's dead refresh token ends the SHOPin session in the same request", () => {
+  it('the session is marked signed out and its cookie cleared; the request goes on as a guest', async () => {
+    const { interceptor, refreshToken, tokenStorageService } = setup()
+    tokenStorageService.getAccessToken.mockResolvedValue(undefined)
+    tokenStorageService.getAuthStatus.mockResolvedValue(true) // a customer's token
+    refreshToken.mockRejectedValue(
+      Object.assign(new Error('invalid_grant'), {
+        statusCode: 400,
+        body: { error: 'invalid_grant' },
+      })
+    )
+    const clearCookie = jest.fn()
+    const request = { headers: {} }
+    const context = {
+      switchToHttp: () => ({
+        getRequest: () => request,
+        getResponse: () => ({ clearCookie }),
+      }),
+    } as unknown as ExecutionContext
+    const next = { handle: jest.fn(() => of('ok')) } as unknown as CallHandler
+    await expect(
+      firstValueFrom(await interceptor.intercept(context, next))
+    ).resolves.toBe('ok')
+    expect(clearCookie).toHaveBeenCalledWith('shopin-session', { path: '/' })
+  })
+})
+
+describe('TokenRefreshInterceptor: no refresh across providers', () => {
+  it('a commerce part without a guest session answers 401; the auth part is never asked', async () => {
+    const authRefresh = jest.fn()
+    const ports = {
+      commerce: { services: {} },
+      auth: {
+        identity: {},
+        accountFlows: { refreshTokenService: { refreshToken: authRefresh } },
+      },
+    }
+    const vault = {
+      refreshOnce: jest.fn(
+        async (_c: string, _p: string, refresh: (rt: string) => unknown) =>
+          refresh('rt')
+      ),
+    }
+    const interceptor = new TokenRefreshInterceptor(
+      ports as never,
+      {} as never,
+      {} as never,
+      {} as never,
+      {} as never,
+      vault as never
+    )
+    await expect(
+      interceptor['refreshCommerceSession']()
+    ).rejects.toBeInstanceOf(UnauthorizedException)
+    expect(authRefresh).not.toHaveBeenCalled()
+    expect(vault.refreshOnce).not.toHaveBeenCalled()
+  })
+
+  it("the commerce part's own guest session refreshes its own entry", async () => {
+    const refresh = jest.fn(async () => ({
+      accessToken: 'a2',
+      refreshToken: 'r2',
+      expiresIn: 60,
+    }))
+    const vault = {
+      refreshOnce: jest.fn(
+        async (_c: string, _p: string, fn: (rt: string) => unknown) => fn('rt')
+      ),
+    }
+    const ports = { commerce: { services: {}, guestSession: { refresh } } }
+    const interceptor = new TokenRefreshInterceptor(
+      ports as never,
+      {} as never,
+      {} as never,
+      {} as never,
+      {} as never,
+      vault as never
+    )
+    expect(await interceptor['refreshCommerceSession']()).toEqual({
+      accessToken: 'a2',
+      refreshToken: 'r2',
+      expiresIn: 60,
+    })
+    expect(vault.refreshOnce).toHaveBeenCalledWith(
+      'commerce',
+      'test-commerce',
+      expect.any(Function)
+    )
+    expect(refresh).toHaveBeenCalledWith('rt')
   })
 })

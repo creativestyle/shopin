@@ -814,23 +814,16 @@
   },
   "dataSourceSelector": {
     "title": "Data Source Configuration",
-    "intro": "Select which data source the application should use for fetching products, categories and content.",
+    "intro": "Choose per category which installed integration serves the shop. A choice that does not work with the others is shown disabled, with the reason.",
     "select": "Select",
     "selected": "Selected",
-    "currentSelection": "Current selection:",
-    "sources": {
-      "mock-set": {
-        "name": "Mock API",
-        "description": "Use mock data for development and testing"
-      },
-      "commercetools-set": {
-        "name": "commercetools API",
-        "description": "Use commercetools API for product data"
-      },
-      "commercetools-algolia-set": {
-        "name": "commercetools API + Algolia",
-        "description": "Use commercetools API with Algolia-powered search"
-      }
+    "unavailable": "Not available now:",
+    "categories": {
+      "commerce": "Commerce",
+      "search": "Search",
+      "cms": "Content",
+      "auth": "Sign-in",
+      "psp": "Payment"
     }
   }
 }

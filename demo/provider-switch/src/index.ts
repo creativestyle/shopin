@@ -8,8 +8,11 @@ import {
   type Port,
   type StorefrontVariants,
 } from '@core/integration-kit'
+import { CommerceSearchProvider } from '@core/contracts/product-search/commerce-search'
 import { state, current } from './state'
 import {
+  COMMERCE_SEARCH,
+  integrationsOf,
   providerView,
   reasonIn,
   resolveProviders,
@@ -24,14 +27,8 @@ const reasonOf = (c: CategoryView) =>
       'it does not fit the other defaults'
   )
 
-/**
- * An object that forwards every property read to `target()` at call time (this request's provider). A call that
- * fails goes through `failed` (it names the provider of a platform that is down).
- */
-function follow<T extends object>(
-  target: () => T,
-  failed: (error: unknown) => unknown = (e) => e
-): T {
+/** An object that forwards every property read to `target()` at call time (this request's provider). */
+function follow<T extends object>(target: () => T): T {
   return new Proxy({} as T, {
     get: (_t, key) => {
       // a port factory's result is awaited at boot (no request then): it is not a promise
@@ -40,77 +37,17 @@ function follow<T extends object>(
       }
       const t = target()
       const value = Reflect.get(t, key)
-      if (typeof value !== 'function') {
-        return value
-      }
-      return (...args: unknown[]) => {
-        try {
-          const result = value.apply(t, args)
-          return result instanceof Promise
-            ? result.catch((e: unknown) => {
-                throw failed(e)
-              })
-            : result
-        } catch (e) {
-          throw failed(e)
-        }
-      }
+      return typeof value === 'function' ? value.bind(t) : value
     },
   })
 }
 
-/** The HTTP status an error stands for (Nest's `getStatus()`, or a `status`/`statusCode` field). */
-const statusOf = (e: unknown) => {
-  const x = e as {
-    getStatus?: () => number
-    status?: number
-    statusCode?: number
-  }
-  return x?.getStatus?.() ?? x?.status ?? x?.statusCode
-}
-
-/**
- * The platform failed, is down or timed out: a 502–504 status (a Nest exception, an SDK's `statusCode`/`status`,
- * axios' `response.status`), or a network error or timeout by code or name, also as fetch's `cause` (the BFF's
- * error filter answers these 502–504 too).
- */
-function isDown(error: unknown): boolean {
-  let e = error
-  for (let depth = 0; depth < 4 && e && typeof e === 'object'; depth++) {
-    const x = e as {
-      response?: { status?: number }
-      code?: unknown
-      name?: unknown
-      cause?: unknown
-    }
-    if ([502, 503, 504].includes(statusOf(x) ?? x.response?.status ?? 0)) {
-      return true
-    }
-    if (
-      /^(ECONNREFUSED|ECONNRESET|ENOTFOUND|EAI_AGAIN|EHOSTUNREACH|ETIMEDOUT|ECONNABORTED|UND_ERR_CONNECT_TIMEOUT)$/.test(
-        String(x.code)
-      ) ||
-      /^(BadGateway|ServiceUnavailable|GatewayTimeout|RetryError|TimeoutError|AbortError)$/.test(
-        String(x.name)
-      )
-    ) {
-      return true
-    }
-    e = x.cause
-  }
-  return false
-}
-
 /** One forwarding object per key of `shape` (a port's services): spreading it at boot keeps it dynamic. */
-function followEach<T extends object>(
-  shape: T,
-  target: () => T,
-  failed?: (error: unknown) => unknown
-): T {
+function followEach<T extends object>(shape: T, target: () => T): T {
   return Object.fromEntries(
     Object.keys(shape).map((key) => [
       key,
-      follow(() => target()[key as keyof T] as object, failed),
+      follow(() => target()[key as keyof T] as object),
     ])
   ) as T
 }
@@ -119,6 +56,14 @@ function followEach<T extends object>(
 function serving<C extends Category>(category: C): Port<C> {
   const { providers, unavailable } = current()
   const id = providers[category]
+  if (category === 'search' && id === COMMERCE_SEARCH) {
+    // this request's commerce provider's own product search, as the BFF serves a shop without a search integration
+    return {
+      searchService: new CommerceSearchProvider(
+        serving('commerce').productSearchService
+      ),
+    } as Port<C>
+  }
   const found = id ? state.delegates[category]?.ports[id] : undefined
   if (found) {
     return found as Port<C>
@@ -132,22 +77,6 @@ function serving<C extends Category>(category: C): Port<C> {
   )
 }
 
-// a platform that failed, is down or timed out (502, 503, 504): the error names this request's provider of the
-// category, so the BFF can tell the storefront which one (the demo then offers to switch back)
-const down = (category: Category) => (error: unknown) => {
-  if (
-    isDown(error) &&
-    error !== null &&
-    typeof error === 'object' &&
-    !('vendor' in error)
-  ) {
-    Object.defineProperty(error, 'vendor', {
-      value: { category, provider: current().providers[category] },
-    })
-  }
-  return error
-}
-
 /** One forwarding port for `category` over its delegates' ports. */
 function forwarding<C extends Category>(
   category: C,
@@ -159,17 +88,19 @@ function forwarding<C extends Category>(
     for (const key of new Set(ports.flatMap((p) => Object.keys(p)))) {
       Object.defineProperty(auth, key, {
         enumerable: true,
-        get: () =>
-          (follow(() => serving('auth') as object, down('auth')) as never)[key],
+        get: () => (follow(() => serving('auth') as object) as never)[key],
       })
     }
     return auth as Port<C>
   }
   if (category !== 'commerce') {
     return followEach(
-      ports[0]!,
-      () => serving(category) as object,
-      down(category)
+      // the members any of its ports has (search through COMMERCE_SEARCH alone loads no port)
+      Object.assign(
+        category === 'search' ? { searchService: {} } : {},
+        ...ports
+      ) as object,
+      () => serving(category) as object
     ) as Port<C>
   }
   // the services of every commerce port (`…Service`) forward one by one (a service only some offer, the wishlist,
@@ -179,11 +110,7 @@ function forwarding<C extends Category>(
   const services = Object.fromEntries(
     ports.flatMap((p) => Object.entries(p)).filter(([k]) => isService(k))
   ) as Port<'commerce'>
-  const commerce = followEach(
-    services,
-    () => serving('commerce'),
-    down('commerce')
-  )
+  const commerce = followEach(services, () => serving('commerce'))
   for (const key of new Set(ports.flatMap((p) => Object.keys(p)))) {
     if (!isService(key)) {
       Object.defineProperty(commerce, key, {
@@ -251,6 +178,14 @@ const CHOOSER: StorefrontVariants['chooser'] = {
 export function providerSwitch<const L extends Lists>(
   lists: L
 ): Integration<'switch', keyof L & Category> {
+  const misplaced = Object.entries(lists).flatMap(([category, list]) =>
+    category !== 'search' && list?.includes(COMMERCE_SEARCH)
+      ? [`${category} lists "${COMMERCE_SEARCH}", which only search offers`]
+      : []
+  )
+  if (misplaced.length) {
+    throw new Error(`shopin.config:\n  - ${misplaced.join('\n  - ')}`)
+  }
   state.view = providerView(lists)
   const { providers, unavailable } = resolveProviders(state.view, {})
   // the defaults (first of each list) serve together: none is passed over for a later one
@@ -267,7 +202,9 @@ export function providerSwitch<const L extends Lists>(
   }
   const categories = Object.keys(lists) as (keyof L & Category)[]
   // by instance, not by id: a vendor's parts (commercetools commerce and auth) share the id and the kit merges them
-  const delegates = [...new Set(Object.values(lists).flat())] as Integration[]
+  const delegates = [
+    ...new Set(Object.values(lists).flatMap(integrationsOf)),
+  ] as Integration[]
   return defineIntegration({
     id: 'switch',
     label: 'Provider switch (demo)',

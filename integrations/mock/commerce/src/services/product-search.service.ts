@@ -64,6 +64,7 @@ export class ProductSearchService {
   ): Promise<ProductSearchResponse> {
     const {
       query,
+      faceted = false,
       limit = ITEMS_PER_PAGE,
       page = MIN_PAGE,
       filters,
@@ -80,6 +81,32 @@ export class ProductSearchService {
     const currency = resolveCurrencyFromLanguage(
       this.languageProvider.getCurrentLanguage()
     )
+    const offset = (page - 1) * limit
+    const card = (p: ProductCardWithAttributes) => ({
+      id: p.id,
+      slug: p.slug,
+      name: p.name,
+      price: p.price && { ...p.price, currency },
+      image: p.image,
+      variantId: p.variantId,
+      variantCount: p.variantCount,
+      // the catalog record's attributes, as the collection gives them: stripped by the contract, read by a
+      // shop's productCard hook
+      attributes: p.attributes,
+    })
+
+    // a quick search (the search box, suggestions): the matches and their total, no facets, filters or price
+    // range, as commercetools answers it
+    if (!faceted && !saleOnly) {
+      return {
+        products: withShopinVariantSummary(
+          this.mockApi.getFaker(),
+          allProducts.slice(offset, offset + limit)
+        ).map(card),
+        total: allProducts.length,
+      }
+    }
+
     const priceRange = calculatePriceRange(allProducts)
     const filteredProducts = filterProductCards(allProducts, {
       filters,
@@ -89,25 +116,13 @@ export class ProductSearchService {
     })
 
     const facets = buildFacetsFromProducts(allProducts, filteredProducts)
-    const offset = (page - 1) * limit
     const pageProducts = withShopinVariantSummary(
       this.mockApi.getFaker(),
       filteredProducts.slice(offset, offset + limit)
     )
 
     return {
-      products: pageProducts.map((p) => ({
-        id: p.id,
-        slug: p.slug,
-        name: p.name,
-        price: p.price && { ...p.price, currency },
-        image: p.image,
-        variantId: p.variantId,
-        variantCount: p.variantCount,
-        // the catalog record's attributes, as the collection gives them: stripped by the contract, read by a
-        // shop's productCard hook
-        attributes: p.attributes,
-      })),
+      products: pageProducts.map(card),
       facets,
       priceRange,
       total: filteredProducts.length,

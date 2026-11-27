@@ -4,7 +4,7 @@ NestJS module that integrates [Commercetools](https://commercetools.com/) with t
 
 ## Overview
 
-This module implements the data-source service interfaces used by the BFF. It provides the categories `commerce`, `search` and `auth` (commercetools customer accounts); its `commerce` part has the `customer-link` capability.
+This module serves the `commerce` port the BFF uses: catalog, carts, checkout, customers and orders. When the shop configures no search integration, its product search serves `search` too. Sign-in is the separate auth part, [`@integrations/commercetools-auth`](../auth/README.md) (same `commercetools` id); with another identity provider, this part links its customers (below).
 
 ## Environment Variables
 
@@ -40,11 +40,20 @@ start.
 
 | Configuration                                  | API client scopes beyond the shopper ones                                       | Checked at start |
 | ---------------------------------------------- | ------------------------------------------------------------------------------- | ---------------- |
-| commercetools commerce, no sign-in             | none                                                                            | —                |
+| commercetools commerce, no sign-in             | none (`view_types` when the shop has cart fields)                               | —                |
 | commercetools commerce + commercetools sign-in | `manage_customers`                                                              | yes              |
 | commercetools commerce + another sign-in       | `manage_orders`, `manage_customers`, `manage_payments`, `manage_shopping_lists` | yes              |
 
 `manage_project` (an admin client) grants all of them.
+
+## Cart fields
+
+A shop's own cart fields (`contracts.cart` plus `cartFields` in `shopin.config.ts`, set with `PUT /bff/cart/fields`)
+are stored as Custom Fields on the cart. A cart without a Custom Type gets the type with the key `shop-cart-fields`,
+which the project must have. Nothing creates it: add it once in the Merchant Center or through the API, with
+`resourceTypeIds: ["order"]` (carts and orders share the resource type) and one field per name in `cartFields`, for
+example a `String` field `giftMessage`. Without it, the BFF answers 501 and names the type. A cart that already has
+another Custom Type must have the fields on that type, which the BFF reads with the API client (`view_types`).
 
 ## Configuring stores and shipping destinations
 

@@ -1,24 +1,31 @@
-// Every data source the demo offers has a name and a description in each storefront language
-// (shopin's apps/presentation/__tests__/data-source-translations.test.ts, moved here with the data sources).
+// The /setup page's own texts exist in each storefront language: its headings per category the kit knows (the
+// providers' names and descriptions come from their descriptors, not from these texts).
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { createRequire } from 'node:module'
-import { DATA_SOURCES } from '../dist/sets.js'
 
 const require = createRequire(import.meta.url)
+// the kit's categories (not exported by the package: read from the repository)
+const categories = require('../../../core/integration-kit/src/categories.json')
 const locales = {
   'en-US': require('@core/i18n/en-US.json'),
   'de-DE': require('@core/i18n/de-DE.json'),
 }
 
 for (const [locale, messages] of Object.entries(locales)) {
-  for (const source of Object.keys(DATA_SOURCES)) {
-    test(`${locale}: has name and description for ${source}`, () => {
-      const entry = messages.dataSourceSelector.sources[source]
-      assert.equal(typeof entry?.name, 'string')
-      assert.notEqual(entry.name, '')
-      assert.equal(typeof entry?.description, 'string')
-      assert.notEqual(entry.description, '')
-    })
-  }
+  test(`${locale}: has the /setup texts and a heading for every category`, () => {
+    const t = messages.dataSourceSelector
+    for (const key of ['title', 'intro', 'select', 'selected', 'unavailable']) {
+      assert.ok(typeof t[key] === 'string' && t[key] !== '', key)
+    }
+    for (const category of categories) {
+      assert.ok(
+        typeof t.categories?.[category] === 'string' &&
+          t.categories[category] !== '',
+        category
+      )
+    }
+    // no hand-written list of data sources: the descriptors name the providers
+    assert.equal(t.sources, undefined)
+  })
 }

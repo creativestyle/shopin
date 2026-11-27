@@ -23,8 +23,8 @@ try {
   // no .env (CI, a deployment): the environment is set by the platform
 }
 
-// The configured integrations' storefront data (written by `npm run setup` into config/storefront), read once at
-// build time and inlined as JSON. The storefront never loads the BFF side of the config.
+// The configured integrations' storefront data (written by `npm run setup` into config/storefront): here only for
+// the image hosts; the storefront imports the same file (lib/storefront-config.ts). Never the BFF side of the config.
 const storefront: StorefrontData = JSON.parse(
   readFileSync(
     require.resolve('@shopin/storefront/storefront-data.json'),
@@ -49,7 +49,6 @@ const nextConfig: NextConfig = {
   output: 'standalone',
   outputFileTracingRoot: path.join(__dirname, '../../'),
   reactCompiler: true,
-  env: { SHOPIN_STOREFRONT: JSON.stringify(storefront) },
   turbopack: {
     rules: {
       '*.svg': {

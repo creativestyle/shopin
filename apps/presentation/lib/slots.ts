@@ -1,9 +1,13 @@
+import 'server-only'
 import type { ComponentType, ReactNode } from 'react'
 import type { ShopPageProps, StorefrontSlots } from '@core/integration-kit'
 import * as exported from '@shopin/storefront'
 import * as wired from '@shopin/storefront/wired'
 
 /**
+ * Server-only: the shop's storefront file holds server pages too. The client slots reach the browser as elements
+ * through `ClientSlotsProvider` (the layout renders them), never through this module.
+ *
  * Every slot is optional: a shop file written before a slot existed simply has no export for it. A slot the shop
  * leaves `undefined` takes the component a configured integration fills it with (wired.mts, written by setup).
  */
@@ -29,8 +33,17 @@ export const TrackingTags:
 export const CartExtra:
   | ComponentType<Parameters<NonNullable<StorefrontSlots['CartExtra']>>[0]>
   | undefined = shop.CartExtra as never
-/** A shop page: a component that gets its path, the search params, the locale and `bff`. */
-type ShopPage = (props: ShopPageProps) => ReactNode | Promise<ReactNode>
+/** The configured CMS's preview request reader (`/api/draft`); undefined when it has no preview. */
+export const PreviewRequest: StorefrontSlots['PreviewRequest'] =
+  shop.PreviewRequest as never
+/**
+ * A shop page: a component that gets its path, the search params, the locale and `bff`, with Next's own
+ * `metadata` or `generateMetadata` when it has a title.
+ */
+type ShopPage = ((props: ShopPageProps) => ReactNode | Promise<ReactNode>) & {
+  metadata?: object
+  generateMetadata?(props: ShopPageProps): object | Promise<object>
+}
 
 /** The shop's own pages, by path. */
 export const Pages: Readonly<Partial<Record<string, ShopPage>>> = (shop.Pages ??

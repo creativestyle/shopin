@@ -28,7 +28,7 @@ export async function mapShoppingListToWishlist(
   currentLanguage: string,
   client: ByProjectKeyRequestBuilder,
   productCard?: CommercetoolsMappers['productCard']
-): Promise<WishlistResponse> {
+): Promise<WishlistResponse & { version: number }> {
   // Drop items whose product was deleted/unpublished (no variant). Items without a price in
   // the store currency stay on the list and show no price.
   const lineItems = (shoppingList.lineItems ?? []).filter(
@@ -90,12 +90,15 @@ export async function mapShoppingListToWishlist(
     }
   })
 
-  const wishlist = WishlistResponseSchema.parse({
-    id: shoppingList.id,
+  // commercetools lists always have a version; the service writes with it (the contract's `version` is optional)
+  const wishlist = {
+    ...WishlistResponseSchema.parse({
+      id: shoppingList.id,
+      items,
+      itemCount: items.length,
+    }),
     version: shoppingList.version,
-    items,
-    itemCount: items.length,
-  })
+  }
   if (!productCard) {
     return wishlist
   }

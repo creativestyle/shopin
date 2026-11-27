@@ -101,7 +101,14 @@ test('a method that answers 501 (a todo stub) fails its case, named by service.m
   for (const c of commerceContract(async () => noWishlist, {}).filter((c) =>
     c.name.includes('wishlistService.')
   )) {
-    await c.run()
+    const skipped = []
+    await c.run({ skip: (why) => skipped.push(why) })
+    assert.equal(skipped.length, 1, c.name)
+    // a runner that cannot skip (Jest) gets a failure, never a silent pass
+    await assert.rejects(
+      c.run(),
+      /this test runner cannot skip it: leave it out/
+    )
   }
 })
 
@@ -204,7 +211,14 @@ function cartPort(owned, customerId, carts, withFields) {
   port.cartService.getCart = async (id) => view(cartOf(id))
   port.cartService.addToCart = async (id) => {
     const c = cartOf(id)
-    c.lines.push({ id: `l${c.lines.length}` })
+    // a complete line (the cart contract), so a case that checks the cart against it passes for the right reason
+    c.lines.push({
+      id: `l${c.lines.length}`,
+      productId: 'p1',
+      quantity: 1,
+      price: { regularPriceInCents: 100, currency: 'USD', fractionDigits: 2 },
+      name: 'Product',
+    })
     return view(c)
   }
   if (withFields) {
@@ -249,6 +263,140 @@ test('setCartFields: written to the own cart, refused for others; not tested wit
   assert.equal(skips[1], 'skipped: the port has no setCartFields')
 })
 
+/**
+ * A port with orders, an address book and attachGuestCart besides carts, each owned by the customer that made it
+ * (`owned`: false lets any customer read or change anyone's): the contract cases must pass the first and fail the
+ * second, so a platform that leaks another customer's data cannot pass them.
+ */
+function accountPort(owned, customerId, store) {
+  const port = cartPort(owned, customerId, store.carts, false)
+  const mine = (record) => !owned || record.owner === customerId
+  const notFound = () => Object.assign(new Error('not found'), { status: 404 })
+  const orderView = (o) => ({
+    id: o.id,
+    version: 1,
+    orderNumber: o.id,
+    createdAt: '2026-01-01T00:00:00.000Z',
+    orderState: 'Open',
+    lineItems: [],
+    subtotal: { regularPriceInCents: 0, currency: 'USD', fractionDigits: 2 },
+    grandTotal: { regularPriceInCents: 0, currency: 'USD', fractionDigits: 2 },
+    currency: 'USD',
+    itemCount: 0,
+  })
+  port.orderService.createOrder = async ({ cartId }) => {
+    const cart = store.carts.get(cartId)
+    if (!cart || !mine(cart)) {
+      throw notFound()
+    }
+    if (store.ordered.has(cartId)) {
+      throw Object.assign(new Error('ordered'), { status: 409 })
+    }
+    const o = { id: `o${store.orders.size + 1}`, owner: customerId }
+    store.orders.set(o.id, o)
+    store.ordered.add(cartId)
+    return orderView(o)
+  }
+  port.orderService.getOrder = async (id) => {
+    const o = store.orders.get(id)
+    if (!o || !mine(o)) {
+      throw notFound()
+    }
+    return orderView(o)
+  }
+  port.orderService.getOrders = async () => {
+    const list = [...store.orders.values()].filter(mine).map((o) => {
+      const {
+        lineItems: _l,
+        subtotal: _s,
+        version: _v,
+        ...summary
+      } = orderView(o)
+      return { ...summary, lineItemImages: [] }
+    })
+    return { orders: list, total: list.length, offset: 0, limit: 20 }
+  }
+  const book = port.customerAddressService
+  book.getAddresses = async () => {
+    const list = [...store.addresses.values()].filter(mine)
+    const owner = store.defaults.get(customerId) ?? {}
+    return {
+      addresses: list.map(({ owner: _o, ...a }) => a),
+      ...owner,
+    }
+  }
+  book.addAddress = async (address) => {
+    const a = {
+      ...address,
+      id: `a${store.addresses.size + 1}`,
+      owner: customerId,
+    }
+    store.addresses.set(a.id, a)
+    const { owner: _o, ...view } = a
+    return view
+  }
+  const own = (id) => {
+    const a = store.addresses.get(id)
+    if (!a || !mine(a)) {
+      throw notFound()
+    }
+    return a
+  }
+  book.updateAddress = async ({ id, ...fields }) => {
+    const a = Object.assign(own(id), fields)
+    const { owner: _o, ...view } = a
+    return view
+  }
+  book.deleteAddress = async (id) => {
+    own(id)
+    store.addresses.delete(id)
+  }
+  const setDefault = (key) => async (id) => {
+    own(id)
+    store.defaults.set(customerId, {
+      ...store.defaults.get(customerId),
+      [key]: id,
+    })
+  }
+  book.setDefaultShippingAddress = setDefault('defaultShippingAddressId')
+  book.setDefaultBillingAddress = setDefault('defaultBillingAddressId')
+  port.attachGuestCart = async (cartId) => {
+    const cart = store.carts.get(cartId)
+    if (!cart || (owned && cart.owner && cart.owner !== customerId)) {
+      throw notFound()
+    }
+    cart.owner = customerId
+    return port.cartService.getCart(cartId)
+  }
+  return port
+}
+
+const accountCase = (owned, part) => {
+  const store = {
+    carts: new Map(),
+    orders: new Map(),
+    ordered: new Set(),
+    addresses: new Map(),
+    defaults: new Map(),
+  }
+  return commerceContract(
+    async (as = {}) => accountPort(owned, as.customerId, store),
+    { product: { slug: 'p' }, cart: true, orders: { customers: ['a', 'b'] } }
+  ).find((c) => c.name.includes(part))
+}
+
+for (const part of [
+  "a customer's order is readable by that customer only",
+  "the order list holds the customer's own orders only",
+  "a customer's addresses",
+  'at sign-in a guest cart is attached',
+]) {
+  test(`${part}: passes a port that keeps customers apart, fails one that does not`, async () => {
+    await accountCase(true, part).run()
+    await assert.rejects(accountCase(false, part).run())
+  })
+}
+
 test('the shape case passes a complete port and names a missing service or method', async () => {
   await shapeCase(stub()).run()
   const noCustomerService = stub()
@@ -290,8 +438,10 @@ test('the attach case is skipped for a port without attachGuestCart', async () =
     'cartService',
     'productService',
   ])
-  // stub() has no attachGuestCart: the case passes without calling the port's cart service
-  await attach.run()
+  // stub() has no attachGuestCart: the case is skipped without calling the port's cart service
+  const skipped = []
+  await attach.run({ skip: (why) => skipped.push(why) })
+  assert.deepEqual(skipped, ['skipped: the port has no attachGuestCart'])
 })
 
 test('the order case needs cart data', () => {

@@ -1,6 +1,4 @@
 import type { CartResponse } from '@core/contracts/cart/cart'
-import type { ProductCardResponse } from '@core/contracts/product-collection/product-card'
-import type { ProductDetailsResponse } from '@core/contracts/product/product-details'
 
 // ─── The storefront's view (build time) ─────────────────────────────────────────────────────────
 
@@ -8,7 +6,7 @@ import type { ProductDetailsResponse } from '@core/contracts/product/product-det
 type SlotComponent<P> = (props: P) => unknown
 
 /**
- * What `config/storefront/storefront.mts` exports: every name, each a component (or pages, or texts) or
+ * What `config/storefront/storefront.mts` exports: every name, each a component (or pages, or the preview reader) or
  * `undefined` (the storefront then hides it). Check the file with `satisfies StorefrontSlots`.
  */
 export interface StorefrontSlots {
@@ -16,11 +14,6 @@ export interface StorefrontSlots {
   SiteNotice?: SlotComponent<Record<string, never>> | undefined
   /** The payment page at PAYMENT_STEP_PATH, for a payment provider hosted in the shop. */
   PaymentStep?: SlotComponent<Record<string, never>> | undefined
-  /**
-   * Above the payment methods at checkout: what the payment integration tells the shopper (a test payment that
-   * moves no money). The checkout never reads a provider's own values to decide this.
-   */
-  PaymentNote?: SlotComponent<Record<string, never>> | undefined
   /** Analytics and marketing tags, given the visitor's consent. */
   TrackingTags?:
     | SlotComponent<{ ready: boolean; analytics: boolean; marketing: boolean }>
@@ -38,16 +31,6 @@ export interface StorefrontSlots {
       }>
     | undefined
   /**
-   * On every product card and on the product page: the shop's own product fields (`contracts.productCard`,
-   * `contracts.product`). `view` says where it renders.
-   */
-  ProductExtra?:
-    | SlotComponent<{
-        product: ProductCardResponse | ProductDetailsResponse
-        view: 'card' | 'page'
-      }>
-    | undefined
-  /**
    * The shop's own pages, by path (`{ 'company-register': CompanyRegisterPage }` serves
    * `/company-register`). A shop page wins over a CMS page of the same path. Its title and description: Next's
    * own page exports, set on the component (`CompanyRegisterPage.metadata = { title }`, or
@@ -55,10 +38,17 @@ export interface StorefrontSlots {
    */
   Pages?: Readonly<Record<string, ShopPage>> | undefined
   /**
-   * The shop's own texts per locale (`{ 'en-US': en, 'de-DE': de }`, from JSON files next to storefront.mts),
-   * merged over SHOPin's: a key the shop names wins. The shop's components read them with next-intl.
+   * The CMS's preview (draft mode) request: reads the request its preview button opens (`/api/draft?…`). It returns
+   * the page to preview when the request carries the preview secret (`secretMatches` compares a value with it,
+   * timing-safe; the secret stays SHOPin's), else `undefined` (401). A missing `slug` or `locale` is a 400. Without
+   * it, `/api/draft` answers 404: the configured CMS has no preview.
    */
-  Messages?: Readonly<Record<string, object>> | undefined
+  PreviewRequest?:
+    | ((
+        query: URLSearchParams,
+        secretMatches: (value: string | null) => boolean
+      ) => { slug: string | null; locale: string | null } | undefined)
+    | undefined
 }
 
 /** A shop page: a component, with Next's own `metadata` or `generateMetadata` when it has a title. */

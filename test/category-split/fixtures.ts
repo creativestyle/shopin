@@ -505,25 +505,38 @@ export const idpUsers = (): Map<string, IdpUser> =>
  * `users` is shared with the spec, which may add users; `down` makes sign-out fail.
  */
 export function fakeIdp(
-  o: Common & { users?: Map<string, IdpUser> },
+  o: Common & {
+    users?: Map<string, IdpUser>;
+    /** Returned with every identity, as a commerce platform's own sign-in returns the customer's session. */
+    commerceSession?: SessionTokens;
+  },
 ): Fixture<"auth"> & {
   users: Map<string, IdpUser>;
   down: { signOut: boolean };
+  /** The guest's commerce token each sign-in was handed (undefined: none). */
+  guests: (string | undefined)[];
 } {
   const state = newState();
   const users = o.users ?? idpUsers();
   const down = { signOut: false };
+  const guests: (string | undefined)[] = [];
   const auth = port("auth", {
     inject: [PortOptions],
     useFactory: (options: PortOptions): Port<"auth"> => {
       record(state, "auth", options, o.snoop);
       return {
-        signIn: async ({ email, password }) => {
+        signIn: async ({ email, password }, guest) => {
           state.calls.push(`signIn ${email}`);
+          guests.push(guest?.commerceAccessToken);
           const user = users.get(email);
           if (!user || password !== IDP_PASSWORD)
             throw new UnauthorizedException("Invalid email or password");
-          return { identity: user as SignedIn };
+          return {
+            identity: user as SignedIn,
+            ...(o.commerceSession
+              ? { commerceSession: o.commerceSession }
+              : {}),
+          };
         },
         signUp: async () => {
           throw new UnauthorizedException("no sign-up");
@@ -540,5 +553,6 @@ export function fakeIdp(
     state,
     users,
     down,
+    guests,
   });
 }

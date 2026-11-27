@@ -35,7 +35,11 @@ export class CsrfOnWritesGuard implements CanActivate {
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<{ method?: string }>()
-    if (['GET', 'HEAD', 'OPTIONS'].includes(request.method ?? 'GET')) {
+    // a request without a method is refused, never read as a GET (which would skip the check)
+    if (!request.method) {
+      throw new ForbiddenException('Invalid or missing CSRF token')
+    }
+    if (['GET', 'HEAD', 'OPTIONS'].includes(request.method.toUpperCase())) {
       return true
     }
     // the token service reads this request (REQUEST): register it for the context id the guard resolves in

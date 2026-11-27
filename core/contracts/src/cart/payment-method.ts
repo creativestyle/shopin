@@ -50,3 +50,44 @@ export const InitiatePaymentRequestSchema = z.object({
 export type InitiatePaymentRequest = z.infer<
   typeof InitiatePaymentRequestSchema
 >
+
+/**
+ * The payment provider sends the shopper back to the shop's one return route with its own query parameters (a
+ * payment id, a result token): the storefront hands them to the BFF as they came.
+ */
+export const PaymentReturnRequestSchema = z.object({
+  paymentId: z.string().min(1),
+  params: z.record(z.string(), z.string()).default({}),
+})
+
+export type PaymentReturnRequest = z.infer<typeof PaymentReturnRequestSchema>
+
+/** What the payment integration says about a payment: an order is created only for `paid` or `authorized`. */
+export const PaymentStatusSchema = z.enum([
+  'paid',
+  'authorized',
+  'pending',
+  'failed',
+  'cancelled',
+])
+
+export type PaymentStatus = z.infer<typeof PaymentStatusSchema>
+
+/**
+ * The provider's answer: the status, and the cart the payment was started for (`getPaymentLink(cartId)`), so the BFF
+ * orders only that cart: a payment id of someone else's paid payment never orders this shopper's cart.
+ */
+export const PaymentResultSchema = z.object({
+  status: PaymentStatusSchema,
+  cartId: z.string(),
+})
+
+export type PaymentResult = z.infer<typeof PaymentResultSchema>
+
+/** The return route's answer: the order when the payment went through, else the payment's status. */
+export const PaymentReturnResponseSchema = z.object({
+  status: PaymentStatusSchema,
+  orderId: z.string().optional(),
+})
+
+export type PaymentReturnResponse = z.infer<typeof PaymentReturnResponseSchema>

@@ -30,9 +30,9 @@ describe('CapabilitiesController', () => {
     expect(
       new CapabilitiesController().getCapabilities().providers.search
     ).toBe('algolia')
-    serving({}, { commerce: 'its credentials check failed' })
+    serving({}, { commerce: 'credentials check failed' })
     const c = new CapabilitiesController().getCapabilities()
     expect(c.providers.search).toBeUndefined()
-    expect(c.unavailable.search).toBe('its credentials check failed')
+    expect(c.unavailable.search).toBe('credentials check failed')
   })
 })

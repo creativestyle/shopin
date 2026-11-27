@@ -121,10 +121,12 @@ describe('the demo switch in the BFF', () => {
           commerce: 'local',
           cms: 'local',
         })
-        expect(got.unavailableProviders.commerce.vendor).toMatch(/VENDOR_KEY/)
-        expect(got.unavailableProviders.cms['broken-cms']).toMatch(
-          /credentials check failed \(401 Unauthorized\)/
+        // public: fixed codes only (the missing variable and the 401 are in the start-up log)
+        expect(got.unavailableProviders.commerce.vendor).toBe('not configured')
+        expect(got.unavailableProviders.cms['broken-cms']).toBe(
+          'credentials check failed'
         )
+        expect(JSON.stringify(got)).not.toMatch(/VENDOR_KEY|401/)
       } finally {
         await app.close()
       }
@@ -202,13 +204,101 @@ describe('the demo switch in the BFF', () => {
           'search:switch',
         ])
         const { unavailableDelegates } = bff('data-source/providers')
-        expect(unavailableDelegates.search.finder).toBe(
-          'its variables are not set (FINDER_APP_ID, FINDER_API_KEY, FINDER_INDEX): add them to .env'
+        expect(unavailableDelegates.search.finder).toBe('not configured')
+      } finally {
+        await app.close()
+      }
+    })
+  })
+
+  it("search through COMMERCE_SEARCH is this request's commerce provider's own product search; a search integration that needs another commerce falls back to it", async () => {
+    await jest.isolateModulesAsync(async () => {
+      const fx: Fixtures = require('@test/category-split/fixtures')
+      const kit: Kit = require('@core/integration-kit')
+      const { providerSwitch } = require('@demo/provider-switch')
+      const { COMMERCE_SEARCH } = require('@demo/provider-switch/view')
+      const first = fx.inMemoryCommerce({ id: 'first' })
+      const second = fx.inMemoryCommerce({ id: 'second' })
+      // like Algolia: an index fed from one commerce platform
+      const finder = fx.contentOnly({
+        id: 'finder',
+        serves: ['search'],
+        requires: {
+          search: {
+            needs: { commerce: 'first' },
+            reason: 'the finder index is fed from first',
+          },
+        },
+      })
+      useConfig(() => {
+        const switched = providerSwitch({
+          commerce: [first, second],
+          search: [COMMERCE_SEARCH, finder],
+        })
+        return kit.defineConfig({ commerce: switched, search: switched })
+      })
+      exactEnv({ ...CORE_ENV })
+      const app = await boot()
+      const { Services } = bff('data-source/ports.module')
+      const { CapabilitiesController } = bff(
+        'features/capabilities/capabilities.controller'
+      )
+      const as = async (commerce: string, search: string) => {
+        const r = await request(
+          app,
+          {},
+          { 'x-commerce-provider': commerce, 'x-search-provider': search }
+        )
+        const services = await r.get(Services)
+        return {
+          search: (await r.get(CapabilitiesController)).getCapabilities()
+            .providers.search,
+          // the fixtures' search members are stubs: the error names who served the call
+          served: r
+            .serve(async () =>
+              services.searchService.searchProducts({
+                query: 'shirt',
+                language: 'en-US',
+              })
+            )
+            .then(
+              () => 'resolved',
+              (e: Error) => e.message
+            ),
+        }
+      }
+      try {
+        const own = await as('second', COMMERCE_SEARCH)
+        expect(own.search).toBe(COMMERCE_SEARCH)
+        expect(await own.served).toBe(
+          'fixture second: productSearchService.searchProducts is not implemented'
+        )
+        const index = await as('first', 'finder')
+        expect(index.search).toBe('finder')
+        expect(await index.served).toBe(
+          'fixture finder: searchService.searchProducts is not implemented'
+        )
+        // the finder needs commerce "first": over "second" the request gets the commerce platform's own search
+        const fallback = await as('second', 'finder')
+        expect(fallback.search).toBe(COMMERCE_SEARCH)
+        expect(await fallback.served).toBe(
+          'fixture second: productSearchService.searchProducts is not implemented'
         )
       } finally {
         await app.close()
       }
     })
+  })
+
+  it('COMMERCE_SEARCH in a list other than search fails the config', () => {
+    const fx: Fixtures = jest.requireActual('@test/category-split/fixtures')
+    const { local } = fixtures(fx)
+    const { COMMERCE_SEARCH } = jest.requireActual('@demo/provider-switch/view')
+    expect(() =>
+      jest.requireActual('@demo/provider-switch').providerSwitch({
+        commerce: [local, COMMERCE_SEARCH],
+      })
+    ).toThrow('commerce lists "commerce", which only search offers')
   })
 
   it('with the switch, a first provider that cannot serve fails the config instead of falling back', () => {

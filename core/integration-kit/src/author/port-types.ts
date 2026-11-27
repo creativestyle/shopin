@@ -109,13 +109,18 @@ export interface PortTypes {
     signIn(
       credentials: Credentials,
       /**
-       * Only for the commerce platform's own sign-in (the BFF passes it when auth and commerce are one provider):
-       * the shopper's guest session at that platform, so the platform takes the guest cart over at sign-in.
+       * Only for the commerce platform's own sign-in: the BFF passes it when one provider serves auth and commerce
+       * (a vendor's parts share one id) and its descriptor requires exactly that commerce
+       * (`requires: { auth: { needs: { commerce } } }`). The shopper's guest session at that platform, so the platform
+       * takes the guest cart over at sign-in. Any other sign-in gets none.
        */
       guest?: { commerceAccessToken: string }
     ): Promise<{
       identity: SignedIn
-      /** Only the commerce platform's own sign-in returns these: that customer's commerce session. */
+      /**
+       * Only the commerce platform's own sign-in (as for `guest`: same provider as commerce, its descriptor requiring
+       * that commerce) returns these: that customer's commerce session. The BFF keeps it from no other sign-in.
+       */
       commerceSession?: SessionTokens
     }>
     signUp(

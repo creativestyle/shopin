@@ -67,8 +67,9 @@ describe('CommercetoolsCartService shipping methods', () => {
     const { shippingMethods } = await service.getShippingMethods('cart-1')
 
     expect(shippingMethods[0]?.price).toEqual({
-      centAmount: 500,
-      currencyCode: 'EUR',
+      regularPriceInCents: 500,
+      currency: 'EUR',
+      fractionDigits: 2,
     })
   })
 
@@ -80,8 +81,9 @@ describe('CommercetoolsCartService shipping methods', () => {
     const { shippingMethods } = await service.getShippingMethods('cart-1')
 
     expect(shippingMethods[0]?.price).toEqual({
-      centAmount: 700,
-      currencyCode: 'EUR',
+      regularPriceInCents: 700,
+      currency: 'EUR',
+      fractionDigits: 2,
     })
   })
 

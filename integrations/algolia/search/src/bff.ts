@@ -5,6 +5,7 @@ import {
   AlgoliaMapperHooks,
 } from './algolia-service-provider'
 import type { AlgoliaMappers } from './mapper-hooks'
+import { algoliaErrorMeaning } from './errors'
 
 /** Algolia search port. Options arrive as PortOptions; the shop's card hook runs after the built-in mapper. */
 export const searchPort = (mappers: AlgoliaMappers = {}) =>
@@ -18,6 +19,8 @@ export const searchPort = (mappers: AlgoliaMappers = {}) =>
     useFactory: (p: AlgoliaServiceProviderImpl) => ({
       searchService: p.getServices().searchService,
     }),
+    // Algolia's errors as the shopper gets them (a refused query 400; key or index 502; unreachable 503)
+    errors: algoliaErrorMeaning,
     // once at boot: the index's settings, read with the search key
     probe: (_search, options) =>
       checkEndpoint(

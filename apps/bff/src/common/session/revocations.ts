@@ -107,7 +107,10 @@ export class RevocationList {
 
   constructor(
     private readonly ttlMs: number,
-    private readonly fileOf: () => string | undefined = () => undefined
+    private readonly fileOf: () => string | undefined = () => undefined,
+    /** A read of the store failed while checking a session (logged by the BFF; the last loaded list stays). */
+    private readonly onReadError: (error: unknown) => void = (error) =>
+      console.error('session revocations: could not read the store', error)
   ) {}
 
   /** Reads the file once (and fails loudly when production has none). The BFF calls it at boot. */
@@ -139,8 +142,14 @@ export class RevocationList {
     this.load()
     const clock = Date.now()
     if (clock - this.looked >= REFRESH_MS) {
-      this.refresh()
       this.looked = clock
+      try {
+        this.refresh()
+      } catch (error) {
+        // the store could not be read this time (a network mount's ESTALE, EIO, a permission): the list stays as
+        // last loaded and the next check reads again; a storage hiccup never signs every shopper out
+        this.onReadError(error)
+      }
     }
     if (session.sid && (this.sessions.get(session.sid) ?? 0) > now) {
       return true
@@ -199,15 +208,18 @@ export class RevocationList {
       this.prune(now)
       return
     }
-    this.locked(this.file, () => {
+    this.locked(this.file, (stillOwned) => {
       this.refresh()
       apply()
       this.prune(now)
-      this.save()
+      this.save(stillOwned)
     })
   }
 
-  private locked(file: string, write: () => void): void {
+  private locked(
+    file: string,
+    write: (stillOwned: () => boolean) => void
+  ): void {
     const lock = `${file}.lock`
     // the lock holds its owner's token: a takeover can tell a stale lock from a fresh one
     const token = `${process.pid}:${randomUUID()}`
@@ -241,7 +253,13 @@ export class RevocationList {
       pause(5)
     }
     try {
-      write()
+      write(() => {
+        try {
+          return readFileSync(lock, 'utf8') === token
+        } catch {
+          return false
+        }
+      })
     } finally {
       // only its own lock: after a takeover the lock may be another instance's
       try {
@@ -268,14 +286,25 @@ export class RevocationList {
   }
 
   /** Writes the file atomically (a new file renamed over it); the caller holds the lock. */
-  private save(): void {
+  /**
+   * Writes the list: a temp file of its own (a random name, never shared with another writer), then an atomic rename,
+   * but only while this writer still holds the lock (a stale-lock takeover may have handed it to another instance
+   * meanwhile; then nothing is written and the revocation fails loudly instead of overwriting the other's).
+   */
+  private save(stillOwned: () => boolean): void {
     const file = this.file!
     const saved: Saved = {
       sessions: [...this.sessions],
       identities: [...this.identities],
     }
-    const tmp = `${file}.${process.pid}.tmp`
+    const tmp = `${file}.${randomUUID()}.tmp`
     writeFileSync(tmp, JSON.stringify(saved))
+    if (!stillOwned()) {
+      rmSync(tmp, { force: true })
+      throw new Error(
+        `the revocation file ${file} was taken over by another instance while writing`
+      )
+    }
     renameSync(tmp, file)
     this.seen = versionOf(file)
   }

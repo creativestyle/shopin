@@ -5,7 +5,11 @@ import {
   DEFAULT_COOKIE_SAME_SITE,
 } from '@config/constants'
 import { Ports } from '../../data-source/ports.module'
-import { currentProviders, keyOf } from '../../data-source/providers'
+import {
+  currentProviders,
+  isOwnSignIn,
+  keyOf,
+} from '../../data-source/providers'
 import { TokenEncryptionService } from '../token-management/token-encryption.service'
 import { VaultService } from '../vault/vault.service'
 import {
@@ -50,7 +54,8 @@ function isRefusal(error: unknown): boolean {
  * re-issued (sliding idle lifetime). Refused (a 4xx from the port, another subject, or that provider no
  * longer serves sign-in) → the shopper is signed out at once. Unreachable (network error, 5xx, timeout) →
  * the shopper stays signed in and the next request tries again, until SESSION_REFRESH_GRACE_MS after the
- * last confirmation. Revoked and expired sessions already read as signed out (readSession).
+ * last confirmation; so is a sign-in provider marked unavailable (its credentials check failed at start).
+ * Revoked and expired sessions already read as signed out (readSession).
  */
 @Injectable()
 export class SessionCheckMiddleware implements NestMiddleware {
@@ -79,9 +84,8 @@ export class SessionCheckMiddleware implements NestMiddleware {
     // the commerce platform's own sign-in: the customer's commerce token is what signs them in there. Without it
     // (a dead refresh token, an entry the vault no longer trusts) the session ends too, instead of a shopper who
     // looks signed in while every account call fails
-    const { providers } = currentProviders()
-    if (providers.auth && providers.auth === providers.commerce) {
-      const commerce = keyOf(providers.commerce)
+    if (isOwnSignIn()) {
+      const commerce = keyOf(currentProviders().providers.commerce!)
       if (state.links[commerce]) {
         const entry = await VaultService.forRequest(req, this.encryption).entry(
           'commerce',
@@ -99,6 +103,11 @@ export class SessionCheckMiddleware implements NestMiddleware {
     const { identity } = state
     const auth = this.ports.auth
     try {
+      if (currentProviders().unavailable.auth) {
+        // sign-in is configured but cannot serve (its credentials check failed): an outage, not a refusal, so the
+        // grace keeps the session instead of signing every shopper out
+        throw new Error('the identity provider is unavailable')
+      }
       if (
         !auth ||
         keyOf(currentProviders().providers.auth!) !== identity.provider

@@ -247,52 +247,45 @@ function mapShippingInfo(
 }
 
 /**
- * Maps payment info from Payment resources to contract
- * The BFF layer enriches the response by fetching payment details if needed.
- *
- * @param paymentInfo - Payment info from cart API response
+ * The cart's payment as SHOPin's flat summary: its first payment's method, the payment interface handling it, the
+ * localized name, the amount, and a status from its transactions (a successful charge: paid; a successful
+ * authorization: authorized; a failure: failed; otherwise pending). Needs `paymentInfo.payments[*]` expanded for the
+ * status and amount; without it the summary says pending.
  */
 export function mapPaymentInfo(
   paymentInfo: CartApiResponse['paymentInfo']
 ): CartResponse['paymentInfo'] {
-  if (!paymentInfo?.payments || paymentInfo.payments.length === 0) {
+  const payment = paymentInfo?.payments?.[0]
+  if (!payment) {
     return undefined
   }
-
-  // Map payments to flat contract format - merge obj data to top level
-  const mappedPayments = paymentInfo.payments.map((payment) => {
-    // Use obj data if present (expanded payment), otherwise use top-level data
-    const expandedPayment = payment.obj
-    const paymentMethodInfo =
-      expandedPayment?.paymentMethodInfo ?? payment.paymentMethodInfo
-    return {
-      typeId: 'payment' as const,
-      id: payment.id,
-      version: expandedPayment?.version,
-      // Prefer obj.paymentMethodInfo if available, fallback to top-level
-      // Include localized name from paymentMethodInfo.name
-      paymentMethodInfo: paymentMethodInfo
-        ? {
-            method: paymentMethodInfo.method,
-            paymentInterface: paymentMethodInfo.paymentInterface,
-            name: paymentMethodInfo.name,
-          }
-        : undefined,
-      transactions: expandedPayment?.transactions?.map((transaction) => ({
-        id: transaction.id,
-        type: transaction.type,
-        amount: {
-          centAmount: transaction.amount.centAmount,
-          currencyCode: transaction.amount.currencyCode,
-        },
-        state: transaction.state,
-      })),
-      amountPlanned: expandedPayment?.amountPlanned,
-    }
-  })
-
+  const expanded = payment.obj
+  const info = expanded?.paymentMethodInfo ?? payment.paymentMethodInfo
+  const transactions = expanded?.transactions ?? []
+  const succeeded = (type: string) =>
+    transactions.some((t) => t.type === type && t.state === 'Success')
+  const status = succeeded('Charge')
+    ? 'paid'
+    : succeeded('Authorization')
+      ? 'authorized'
+      : transactions.some((t) => t.state === 'Failure')
+        ? 'failed'
+        : 'pending'
+  const planned = expanded?.amountPlanned
   return {
-    payments: mappedPayments,
+    method: info?.method ?? '',
+    provider: info?.paymentInterface ?? '',
+    ...(info?.name ? { name: info.name } : {}),
+    status,
+    ...(planned
+      ? {
+          amount: {
+            regularPriceInCents: planned.centAmount,
+            currency: planned.currencyCode,
+            fractionDigits: planned.fractionDigits ?? 2,
+          },
+        }
+      : {}),
   }
 }
 

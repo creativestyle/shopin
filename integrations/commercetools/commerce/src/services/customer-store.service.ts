@@ -1,4 +1,9 @@
-import { Inject, Injectable, NotImplementedException } from '@nestjs/common'
+import {
+  ConflictException,
+  Inject,
+  Injectable,
+  NotImplementedException,
+} from '@nestjs/common'
 import type { Customer } from '@commercetools/platform-sdk'
 import {
   PortOptions,
@@ -12,6 +17,7 @@ import {
 } from '@integrations/commercetools-core'
 import type { CommercetoolsOptions } from '@integrations/commercetools-core'
 import { quoted } from '@integrations/commercetools-core'
+import { isDuplicateEmailError } from '@integrations/commercetools-core'
 
 /**
  * Customer lookups and writes for the BFF's linking policy: Customer.externalId = `<provider>:<subject>`;
@@ -27,13 +33,20 @@ export class CommercetoolsCustomerStore implements NonNullable<
     @Inject(PortOptions) private readonly options: CommercetoolsOptions
   ) {}
 
+  /** One customer, or none; two (an e-mail in several stores, a duplicate) is a conflict, never an arbitrary pick. */
   private async find(where: string): Promise<CustomerRecord | undefined> {
-    const c: Customer | undefined = (
+    const results: Customer[] = (
       await this.client
         .customers()
-        .get({ queryArgs: { where, limit: 1 } })
+        .get({ queryArgs: { where, limit: 2 } })
         .execute()
-    ).body.results[0]
+    ).body.results
+    if (results.length > 1) {
+      throw new ConflictException(
+        'More than one customer matches this sign-in; it cannot be linked'
+      )
+    }
+    const c = results[0]
     return (
       c && {
         id: c.id,
@@ -81,19 +94,27 @@ export class CommercetoolsCustomerStore implements NonNullable<
   async create(identity: SignedIn, externalId: string): Promise<string> {
     this.guardWrites()
     const [firstName, ...rest] = (identity.name ?? '').split(' ')
-    const { body } = await this.client
-      .customers()
-      .post({
-        body: {
-          email: identity.email,
-          externalId,
-          authenticationMode: 'ExternalAuth',
-          isEmailVerified: true,
-          ...(firstName ? { firstName } : {}),
-          ...(rest.length ? { lastName: rest.join(' ') } : {}),
-        },
-      })
-      .execute()
-    return body.customer.id
+    try {
+      const { body } = await this.client
+        .customers()
+        .post({
+          body: {
+            email: identity.email,
+            externalId,
+            authenticationMode: 'ExternalAuth',
+            isEmailVerified: true,
+            ...(firstName ? { firstName } : {}),
+            ...(rest.length ? { lastName: rest.join(' ') } : {}),
+          },
+        })
+        .execute()
+      return body.customer.id
+    } catch (error) {
+      // another request created this customer meanwhile: a conflict the BFF resolves by looking again
+      if (isDuplicateEmailError(error)) {
+        throw new ConflictException('A customer with this e-mail exists')
+      }
+      throw error
+    }
   }
 }

@@ -4,6 +4,8 @@ import type { CustomerStore } from './customer-link'
 const providers = { commerce: 'shop', auth: 'idp' }
 jest.mock('../../data-source/providers', () => ({
   keyOf: (id: string) => id,
+  // the platform's own sign-in (the descriptor rule itself is tested in test/category-split)
+  isOwnSignIn: () => providers.auth === providers.commerce,
   currentProviders: () => ({ providers, unavailable: {} }),
 }))
 import { AuthService } from './auth.service'
@@ -192,5 +194,51 @@ describe("AuthService.login: the guest's commerce session goes only to the platf
       await run()
       expect(signIn).toHaveBeenCalledWith(expect.anything(), undefined)
     }
+  })
+})
+
+describe('AuthService.renewGuestSession: an expired guest token is renewed before a sign-in', () => {
+  function make(entry: object | undefined) {
+    const refresh = jest.fn(async () => ({
+      accessToken: 'new',
+      expiresIn: 3600,
+    }))
+    const vault = {
+      entry: jest.fn(async () => entry),
+      refreshOnce: jest.fn(
+        async (_c: string, _p: string, fn: (rt: string) => Promise<unknown>) =>
+          fn('rt')
+      ),
+    }
+    const auth = new AuthService(
+      { commerce: { guestSession: { refresh } } } as never,
+      {} as never,
+      {} as never,
+      {} as never,
+      {} as never,
+      vault as never
+    )
+    return { auth, vault, refresh }
+  }
+  it('expired guest entry: renewed through the vault', async () => {
+    const { auth, refresh } = make({ customer: false, expired: true })
+    await auth.renewGuestSession()
+    expect(refresh).toHaveBeenCalledWith('rt')
+  })
+  it('a fresh entry, a customer entry or none: nothing to do', async () => {
+    for (const entry of [
+      { customer: false, expired: false },
+      { customer: true, expired: true },
+      undefined,
+    ]) {
+      const { auth, refresh } = make(entry)
+      await auth.renewGuestSession()
+      expect(refresh).not.toHaveBeenCalled()
+    }
+  })
+  it('a token that cannot be renewed stays as it is (no error)', async () => {
+    const { auth, refresh } = make({ customer: false, expired: true })
+    refresh.mockRejectedValue(new Error('invalid_grant'))
+    await expect(auth.renewGuestSession()).resolves.toBeUndefined()
   })
 })

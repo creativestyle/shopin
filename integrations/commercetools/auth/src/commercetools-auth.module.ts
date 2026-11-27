@@ -1,7 +1,10 @@
 import { type Provider } from '@nestjs/common'
 import { port } from '@core/integration-kit'
 import { clientProviders } from '@integrations/commercetools-core'
-import { checkGrantedScopes } from '@integrations/commercetools-core'
+import {
+  checkGrantedScopes,
+  commercetoolsErrorMeaning,
+} from '@integrations/commercetools-core'
 import type { CommercetoolsOptions } from '@integrations/commercetools-core'
 import * as services from './services'
 import { CommercetoolsErrorMatcher } from './utils/commercetools-error-matcher'
@@ -43,4 +46,6 @@ export default port('auth', {
       'commercetools sign-in creates and reads customers with the API client',
       'Create an API client with it in the Merchant Center.'
     ),
+  // the BFF takes only platform failures (502–504) from it for sign-in: the session check reads the 4xx itself
+  errors: commercetoolsErrorMeaning,
 })

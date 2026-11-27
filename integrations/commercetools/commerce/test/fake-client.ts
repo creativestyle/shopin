@@ -108,10 +108,22 @@ export class FakeProjectClient {
 
   customers() {
     return {
-      get: ({ queryArgs }: { queryArgs: { where: string } }) => ({
+      get: ({
+        queryArgs,
+      }: {
+        queryArgs: { where: string; limit?: number }
+      }) => ({
         execute: async () => {
           this.calls.push(`GET customers where ${queryArgs.where}`)
-          return { body: { results: this.match(queryArgs.where).slice(0, 1) } }
+          // as commercetools: at most `limit` results (its default is 20)
+          return {
+            body: {
+              results: this.match(queryArgs.where).slice(
+                0,
+                queryArgs.limit ?? 20
+              ),
+            },
+          }
         },
       }),
       post: ({ body }: { body: Omit<FakeCustomer, 'id' | 'version'> }) => ({
@@ -241,7 +253,16 @@ export class FakeProjectClient {
               if (a.action === 'setCustomType') {
                 const t = this.types_.find((x) => x.key === a.type!.key)
                 if (!t) {
-                  throw notFound()
+                  // as commercetools answers a reference to a type the project lacks
+                  const message = `The referenced object of type 'type' with key '${a.type!.key}' was not found. It either doesn't exist, or it can't be accessed from this endpoint.`
+                  throw Object.assign(new Error(message), {
+                    statusCode: 400,
+                    body: {
+                      statusCode: 400,
+                      message,
+                      errors: [{ code: 'ReferencedResourceNotFound', message }],
+                    },
+                  })
                 }
                 c.custom = {
                   type: { typeId: 'type', id: t.id },

@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto'
 import { type Port } from '../index'
 import {
   ContractCase,
@@ -24,7 +25,12 @@ export function commerceContract(
   const cases: { name: string; services: readonly string[]; run: Run }[] = []
   const add: CaseContext['add'] = (services, ...list) =>
     cases.push(...list.map((c) => ({ ...c, services })))
-  const ctx: CaseContext = { port, data, add }
+  const ctx: CaseContext = {
+    port,
+    data,
+    add,
+    unique: data.unique ?? (() => randomUUID().slice(0, 8)),
+  }
   shapeCases(ctx)
   catalogCases(ctx)
   cartCases(ctx)
@@ -48,7 +54,11 @@ export function commerceContract(
       if (typeof t?.skip === 'function') {
         t.skip(why)
       } else {
-        console.warn(`commerce contract, not run: ${c.name} (${why})`)
+        // a runner without skip (Jest) would count the case as passed: fail instead, so a caller leaves out the
+        // cases its port cannot run (filter them by name) rather than pass them silently
+        throw new Error(
+          `commerce contract case not run: ${c.name} (${why}); this test runner cannot skip it: leave it out`
+        )
       }
     },
   }))

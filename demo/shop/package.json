@@ -24,6 +24,7 @@
   "dependencies": {
     "@core/integration-kit": "*",
     "@demo/provider-switch": "*",
+    "@integrations/algolia-search": "*",
     "@integrations/commercetools-auth": "*",
     "@integrations/commercetools-commerce": "*",
     "@integrations/contentful-cms": "*",

@@ -118,6 +118,27 @@ defineIntegration({
   },
 })
 
+// The descriptor names an integration (`label`) and says what it does (`description`), each one text or one per
+// language (`en` required); the /setup switcher shows both.
+defineIntegration({
+  id: 'described',
+  label: { en: 'Sample data', de: 'Beispieldaten' },
+  description: { en: 'Generated, no account', de: 'Erzeugt, ohne Konto' },
+  ports: { cms: () => port('cms', { useFactory: () => ({}) as never }) },
+})
+defineIntegration({
+  id: 'described-plain',
+  label: 'Sample data',
+  description: 'Generated, no account',
+  ports: { cms: () => port('cms', { useFactory: () => ({}) as never }) },
+})
+defineIntegration({
+  id: 'described-no-en',
+  // @ts-expect-error Property 'en' is missing
+  description: { de: 'Erzeugt, ohne Konto' },
+  ports: { cms: () => port('cms', { useFactory: () => ({}) as never }) },
+})
+
 // Storefront slots are optional: a shop file written before a slot existed (here: only the first three) still
 // type-checks, so a release that adds a slot never breaks it; a misspelled slot name still fails.
 const PaymentPage = () => null
@@ -128,6 +149,14 @@ const PaymentPage = () => null
 }) satisfies StorefrontSlots
 // @ts-expect-error Object literal may only specify known properties ('PaymnetStep')
 ;({ PaymnetStep: PaymentPage }) satisfies StorefrontSlots
+// Only slots the storefront mounts exist: a slot nothing renders is not offered (no product extra, payment
+// note or shop texts until the storefront wires them).
+// @ts-expect-error Object literal may only specify known properties ('ProductExtra')
+;({ ProductExtra: PaymentPage }) satisfies StorefrontSlots
+// @ts-expect-error Object literal may only specify known properties ('PaymentNote')
+;({ PaymentNote: PaymentPage }) satisfies StorefrontSlots
+// @ts-expect-error Object literal may only specify known properties ('Messages')
+;({ Messages: {} }) satisfies StorefrontSlots
 
 // The BFF URL has no default: loadPorts needs it from the caller (the BFF's own config), never a hardcoded host.
 import { loadPorts, resolveConfig } from '../src/core'

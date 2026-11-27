@@ -3,6 +3,17 @@ import type { Port } from './port-types'
 import type { EnvSchema } from './descriptor'
 
 /**
+ * What one of the platform's errors means, decided by the integration (`errors` on its port): the status the shopper
+ * gets and, optionally, a fixed message (never the platform's own text). 400 for an error the request caused (a page
+ * beyond the searchable range), 401 for an expired shopper token (the BFF renews it), 403 refused, 404 not found,
+ * 409 changed meanwhile, 502 the platform failed or refused the API client, 503 unavailable, 504 timed out.
+ */
+export interface PortError {
+  status: 400 | 401 | 403 | 404 | 409 | 502 | 503 | 504
+  message?: string
+}
+
+/**
  * A port of an integration: the Nest providers it needs and the factory that returns its `Port<C>`.
  * The same fields as a Nest factory provider (`providers`, `imports`, `inject`, `useFactory`).
  */
@@ -19,6 +30,13 @@ export interface PortDefinition<C extends Category = Category> {
    * can serve shows the storefront's "not available" page).
    */
   probe?: (port: Port<C>, options: PortOptions) => Promise<void>
+  /**
+   * Optional: turns this platform's errors into what they mean (`PortError`); `undefined` keeps an error as it is
+   * (the BFF answers 500 for a bug, 502-504 for a network failure). The BFF applies it to the port's services
+   * (`…Service` members) and its other methods; sign-in flows (the `auth` port, `guestSession`, `customers`) keep
+   * their own errors, which the session check and the token refresh read.
+   */
+  errors?: (error: unknown) => PortError | undefined
   /**
    * Only for a port of an integration that serves through others (`delegates`): which of them serves the request
    * in progress (the BFF keys the shopper's tokens, customer link and sign-in by it), or why none can.

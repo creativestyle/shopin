@@ -7,9 +7,10 @@ import { defineIntegration } from '@core/integration-kit'
 export const mockIdentity = () =>
   defineIntegration({
     id: 'mock-identity',
-    label: {
-      en: 'Sample sign-in: as a sample customer (alice@example.com)',
-      de: 'Beispiel-Anmeldung: als Beispielkunde (alice@example.com)',
+    label: { en: 'Sample sign-in', de: 'Beispiel-Anmeldung' },
+    description: {
+      en: 'As a sample customer (alice@example.com)',
+      de: 'Als Beispielkunde (alice@example.com)',
     },
     requires: {
       auth: {

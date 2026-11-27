@@ -5,7 +5,7 @@
  *                           Uses the same HMAC-SHA256(exp, secret) format as @core/draft-token
  *                           without importing that package, keeping the e2e workspace standalone.
  *
- * setDataSourceCookie()   — writes the data-source cookie the same way the demo selector does.
+ * setProviderCookie()     — writes a category's provider cookie the same way the demo's /setup page does.
  *
  * resetRequests()         — clears the mock BFF's recorded request list.
  *
@@ -36,16 +36,21 @@ export function mintPreviewToken(
 
 // ─── Cookie helpers ───────────────────────────────────────────────────────────
 
-/** Writes the data-source cookie in exactly the same format as demo/data-source-selector. */
-export async function setDataSourceCookie(
+/**
+ * Writes the provider cookie of one category (`shopin-<category>`) in exactly the format of the demo's /setup page
+ * (demo/data-source-selector). Only the demo config has variant dimensions; there the storefront sends the choice as
+ * `X-<Category>-Provider` on every BFF call.
+ */
+export async function setProviderCookie(
   context: BrowserContext,
-  value: 'commercetools-set' | 'commercetools-algolia-set',
+  category: 'search',
+  provider: 'commerce' | 'algolia',
   domain = 'localhost'
 ) {
   await context.addCookies([
     {
-      name: 'data-source',
-      value,
+      name: `shopin-${category}`,
+      value: provider,
       domain,
       path: '/',
       sameSite: 'Lax',

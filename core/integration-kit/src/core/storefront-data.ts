@@ -27,6 +27,8 @@ export interface StorefrontData {
   labels: Record<string, Requirement['reason']>
   productImages: ImageSource[]
   contentImages: ImageSource[]
+  /** The origins the CMS integrations that serve `cms` allow to frame the preview (their `previewOrigins`). */
+  previewOrigins: string[]
   /**
    * The slots the serving integrations fill, each with its component (`from` package, export `name`) and who fills
    * it: setup writes them into config/storefront/wired.mts. The first serving provider of a category wins.
@@ -99,6 +101,14 @@ export function storefrontData(config: ShopinConfig): StorefrontData {
     contentImages: parts.flatMap((p) =>
       p.contentImages ? [p.contentImages] : []
     ),
+    previewOrigins: [
+      ...new Set(
+        candidates
+          .filter((c) => c.category === 'cms')
+          .flatMap((c) => c.list)
+          .flatMap((i) => byId.get(i.id)?.storefront?.previewOrigins ?? [])
+      ),
+    ],
     slots: Object.fromEntries(
       candidates
         .flatMap(({ category, list }) =>

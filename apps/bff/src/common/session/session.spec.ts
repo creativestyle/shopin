@@ -6,12 +6,19 @@ import {
 } from '@nestjs/common'
 
 // this request: commerce "shop", sign-in through "idp" (a test may make sign-in the shop's own: auth "shop")
-const mockProviders = { commerce: 'shop', auth: 'idp' }
+const mockProviders: { commerce: string; auth?: string } = {
+  commerce: 'shop',
+  auth: 'idp',
+}
+// a category whose credentials check failed at boot is not among the providers, it is unavailable (with why)
+const mockUnavailable: { auth?: string } = {}
 jest.mock('../../data-source/providers', () => ({
   keyOf: (id: string) => id,
+  // the platform's own sign-in (the descriptor rule itself is tested in test/category-split)
+  isOwnSignIn: () => mockProviders.auth === mockProviders.commerce,
   currentProviders: () => ({
     providers: mockProviders,
-    unavailable: {},
+    unavailable: mockUnavailable,
   }),
 }))
 // the session check needs only the serving auth port (no shop config is loaded)
@@ -287,6 +294,15 @@ describe('server-side revocation', () => {
 describe('cart and wishlist id cookies are sealed by the core', () => {
   const GUEST_CART = 'cart-guest.shop-USD'
   const LOGGED_CART = 'cart-logged.shop-USD'
+  // an identity of its own: earlier cases revoke the shared one at clock times far ahead, which would make these
+  // cases run signed out without noticing
+  const own = { ...identity, subject: 'u-cart-cookies' }
+  const signedIn = async (): Promise<Jar> => {
+    const jar: Jar = {}
+    await request(jar).session.signIn(own, 'c-1')
+    expect(await request(jar).session.linkedCustomer()).toBe('c-1')
+    return jar
+  }
 
   it('the browser holds the id encrypted; the session reads it back', async () => {
     const jar: Jar = {}
@@ -338,9 +354,10 @@ describe('cart and wishlist id cookies are sealed by the core', () => {
     expect(await request(jar).session.getCartId(false)).toBe('cart-of-c-1')
     const other: Jar = {}
     await request(other).session.signIn(
-      { ...identity, subject: 'u-2', email: 'bo@example.com' },
+      { ...identity, subject: 'u-cart-cookies-2', email: 'bo@example.com' },
       'c-2'
     )
+    expect(await request(other).session.linkedCustomer()).toBe('c-2')
     other[LOGGED_CART] = jar[LOGGED_CART]!
     expect(await request(other).session.getCartId(false)).toBeUndefined()
     expect(LOGGED_CART in other).toBe(false)
@@ -452,5 +469,57 @@ describe("the commerce platform's own sign-in: the session lives only with the c
     const jar: Jar = {}
     await request(jar).session.signIn(other, 'c-1')
     expect((await check(jar, async () => other)).identity).toEqual(other)
+  })
+})
+
+describe('the re-check signs out when the identity no longer holds', () => {
+  afterEach(() => {
+    mockProviders.auth = 'idp'
+  })
+  const own = { ...identity, subject: 'u-recheck' }
+  const signedInOwn = async () => {
+    const jar: Jar = {}
+    await request(jar).session.signIn(own, 'c-1')
+    jest.advanceTimersByTime(SESSION_RECHECK_MS + 1)
+    return jar
+  }
+  beforeEach(() =>
+    jest.useFakeTimers({
+      now: Date.now(),
+      doNotFake: ['setImmediate', 'nextTick'],
+    })
+  )
+  afterEach(() => jest.useRealTimers())
+
+  it('the provider answers for another subject: signed out', async () => {
+    const jar = await signedInOwn()
+    const other = jest.fn(async () => ({ ...own, subject: 'someone-else' }))
+    expect((await check(jar, other)).identity).toBeUndefined()
+    expect(SESSION_COOKIE in jar).toBe(false)
+  })
+
+  it("the session's sign-in provider is no longer configured: signed out without asking anyone", async () => {
+    const jar = await signedInOwn()
+    mockProviders.auth = 'another-idp'
+    const refresh = jest.fn(async () => own)
+    expect((await check(jar, refresh)).identity).toBeUndefined()
+    expect(refresh).not.toHaveBeenCalled()
+  })
+
+  it('sign-in unavailable since start (its credentials check failed): an outage, the session is kept within the grace', async () => {
+    const jar = await signedInOwn()
+    delete mockProviders.auth
+    mockUnavailable.auth = 'the credentials check failed'
+    try {
+      const refresh = jest.fn(async () => own)
+      expect((await check(jar, refresh)).identity).toEqual(own)
+      expect(SESSION_COOKIE in jar).toBe(true)
+      expect(refresh).not.toHaveBeenCalled()
+      // the grace still ends it: an outage that outlasts it signs out
+      jest.advanceTimersByTime(SESSION_REFRESH_GRACE_MS)
+      expect((await check(jar, refresh)).identity).toBeUndefined()
+    } finally {
+      delete mockUnavailable.auth
+    }
   })
 })

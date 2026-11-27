@@ -1,12 +1,9 @@
 import { z } from 'zod'
 
-/**
- * Shipping method price schema
- */
-export const ShippingMethodPriceSchema = z.object({
-  centAmount: z.number(),
-  currencyCode: z.string(),
-})
+import { BasicPriceResponseSchema } from '../core/basic-price'
+
+/** A shipping method's price: the shared price type (in cents, with its currency). */
+export const ShippingMethodPriceSchema = BasicPriceResponseSchema
 
 export type ShippingMethodPrice = z.infer<typeof ShippingMethodPriceSchema>
 

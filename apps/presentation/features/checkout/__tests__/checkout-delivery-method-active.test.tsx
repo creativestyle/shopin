@@ -57,7 +57,7 @@ function method(
   return {
     id: 'standard',
     name: 'Standard',
-    price: { centAmount: 500, currencyCode: 'USD' },
+    price: { regularPriceInCents: 500, currency: 'USD' },
     ...overrides,
   }
 }

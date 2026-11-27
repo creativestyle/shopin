@@ -99,7 +99,7 @@ const sharesPorts = (a: Integration, b: Integration) =>
 
 /**
  * A vendor's parts as one provider: the ports, variables, requirements and storefront slots of each part, the
- * first part's label and options (`omits`, `mappers`) where a later part has none. A part serves only its own
+ * first part's label, description and options (`omits`, `mappers`) where a later part has none. A part serves only its own
  * category, so nothing of one part replaces another's.
  */
 export function mergeParts(a: Integration, b: Integration): Integration {
@@ -121,6 +121,7 @@ export function mergeParts(a: Integration, b: Integration): Integration {
   return defined({
     ...a,
     label: a.label ?? b.label,
+    description: a.description ?? b.description,
     ports: { ...a.ports, ...b.ports },
     env: a.env || b.env ? { ...a.env, ...b.env } : undefined,
     requires:

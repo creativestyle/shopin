@@ -28,7 +28,7 @@ export class CommercetoolsCustomerService {
     @Inject(COMMERCETOOLS_CLIENT) private readonly server: Client
   ) {}
 
-  async getCurrentCustomer(): Promise<CustomerResponse> {
+  async getCurrentCustomer(): Promise<CustomerResponse & { version: number }> {
     const customer = MyCustomerApiResponseSchema.parse(
       await (await this.scope.api()).customer.get()
     )

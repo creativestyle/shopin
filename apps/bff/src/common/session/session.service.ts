@@ -51,7 +51,15 @@ export const SESSION_MAX_AGE_MS = 90 * 24 * 60 * MINUTE
 export const SESSION_REFRESH_GRACE_MS = 60 * MINUTE
 
 /** Revoked sessions and identities, server-side (this process). */
-export const revocations = new RevocationList(SESSION_IDLE_MS, revocationFile)
+export const revocations = new RevocationList(
+  SESSION_IDLE_MS,
+  revocationFile,
+  (error) =>
+    new Logger('SessionService').error(
+      'session revocations: the store could not be read; checking against the last loaded list',
+      error as Error
+    )
+)
 
 const log = new Logger('SessionService')
 

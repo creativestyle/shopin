@@ -1,10 +1,10 @@
 # @integrations/mock-commerce
 
-NestJS module that provides mock implementations of the SHOPin storefront accelerator data-source services. Provides `commerce`, `search`, `cms` and `payment` from in-memory fixtures: no accounts or variables needed.
+NestJS module that provides mock implementations of the SHOPin storefront accelerator data-source services. Provides `commerce` from in-memory fixtures (catalog, carts, wishlist, customers, orders): no accounts or variables needed. With no search integration configured, its product search serves search; CMS content and payment are the separate `@integrations/mock-cms` and `@integrations/mock-psp` packages.
 
 ## Overview
 
-Implements the same service interfaces as `@integrations/commercetools-commerce` and `@integrations/contentful-cms`.
+Implements the same commerce port as `@integrations/commercetools-commerce`.
 
 ## Usage
 

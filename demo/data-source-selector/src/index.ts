@@ -1,4 +1,5 @@
-// Demo /setup page: shopin's data-source selector over the demo's provider switch (shopin.config.ts of the demo).
+// Demo /setup page: the demo's provider switch per category (shopin.config.ts of the demo).
 export { DataSourceSelector, DataSourcePanel, SetupPage } from './components'
 export { writeProviderCookie } from './cookies'
-export { DATA_SOURCES, DEFAULT_DATA_SOURCE, dataSourceOf } from './sets'
+export { setupRows } from './rows'
+export type { SetupCategory, SetupOption } from './rows'

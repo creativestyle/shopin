@@ -57,3 +57,4 @@ skills-lock.json
 
 # TypeScript
 *.tsbuildinfo
+.demo-removed/

@@ -1,4 +1,4 @@
-import { Injectable, NotImplementedException } from '@nestjs/common'
+import { Injectable, Logger, NotImplementedException } from '@nestjs/common'
 import type { AllAuthServices } from '@core/contracts/core/data-source-interfaces'
 import type { SessionTokens, SignedIn } from '@core/integration-kit'
 import type { LoginRequest, LoginResponse } from '@core/contracts/auth/login'
@@ -23,7 +23,11 @@ import type {
   ResendVerificationEmailResponse,
 } from '@core/contracts/auth/resend-verification-email'
 import { Ports } from '../../data-source/ports.module'
-import { currentProviders, keyOf } from '../../data-source/providers'
+import {
+  currentProviders,
+  keyOf,
+  isOwnSignIn,
+} from '../../data-source/providers'
 import { TokenStorageService } from '../../common/token-management/token-storage.service'
 import { CartIdService } from '../cart-id/cart-id.service'
 import { WishlistIdService } from '../wishlist-id/wishlist-id.service'
@@ -38,6 +42,8 @@ import type { Identity } from '../../common/session/session.service'
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name)
+
   constructor(
     private readonly ports: Ports,
     private readonly tokenStorageService: TokenStorageService,
@@ -84,8 +90,7 @@ export class AuthService {
   private async guestSessionForNativeSignIn(): Promise<
     { commerceAccessToken: string } | undefined
   > {
-    const { providers } = currentProviders()
-    if (providers.auth !== providers.commerce) {
+    if (!isOwnSignIn()) {
       return undefined
     }
     if ((await this.tokenStorageService.getAuthStatus()) !== false) {
@@ -106,20 +111,25 @@ export class AuthService {
       ...signedIn,
       provider: keyOf(providers.auth!),
     }
-    const native = providers.auth === providers.commerce
+    const native = isOwnSignIn()
     const customerId = await linkCustomer(
       identity,
       this.ports.commerce.customers,
       { native }
     )
     await this.session.signIn(identity, customerId!)
-    if (commerceSession) {
-      await this.tokenStorageService.setTokens(
-        commerceSession,
-        true,
-        customerId!
-      )
+    if (!commerceSession) {
+      return
     }
+    // a commerce session is taken only from the commerce platform's own sign-in; another identity provider's
+    // would act for commerce customers it does not own
+    if (!native) {
+      this.logger.warn(
+        `sign-in through "${keyOf(providers.auth!)}" returned a commerce session; ignored, because it is not the sign-in of commerce "${keyOf(providers.commerce!)}"`
+      )
+      return
+    }
+    await this.tokenStorageService.setTokens(commerceSession, true, customerId!)
   }
 
   /**
@@ -127,6 +137,26 @@ export class AuthService {
    * Either the identity provider handed the customer's commerce session (a customer entry, kept), or the
    * commerce part acts for the linked customer without one (the guest entry is dropped).
    */
+  /**
+   * Before a sign-in: an expired guest token is renewed through the commerce part (the vault's single-flight
+   * refresh), because the auth routes have no refresh interceptor. A token that cannot be renewed stays as it is.
+   */
+  async renewGuestSession(): Promise<void> {
+    const session = this.ports.commerce.guestSession
+    if (!session) {
+      return
+    }
+    const { providers } = currentProviders()
+    const provider = keyOf(providers.commerce!)
+    const entry = await this.vault.entry('commerce', provider)
+    if (!entry || entry.customer || !entry.expired) {
+      return
+    }
+    await this.vault
+      .refreshOnce('commerce', provider, (rt) => session.refresh(rt))
+      .catch(() => undefined)
+  }
+
   async dropGuestSession(): Promise<void> {
     if ((await this.tokenStorageService.getAuthStatus()) === false) {
       this.tokenStorageService.clearTokens()

@@ -1,14 +1,10 @@
 import type { StorefrontData } from '@core/integration-kit/core'
-
-const raw = process.env.SHOPIN_STOREFRONT
-if (!raw) {
-  throw new Error(
-    'SHOPIN_STOREFRONT is not set: next.config.ts inlines it from config/shop/shopin.config.ts at build time (run the build through next.config.ts, or set it in tests)'
-  )
-}
+import data from '@shopin/storefront/storefront-data.json'
 
 /**
- * The storefront's view of shopin.config.ts: plain JSON that next.config.ts inlines at build time
- * (env SHOPIN_STOREFRONT). The storefront never imports an integration or the config itself.
+ * The storefront's view of shopin.config.ts: plain JSON that `npm run setup` writes into config/storefront
+ * (storefront-data.json), imported at build time. The storefront never imports an integration or the config itself.
  */
-export const STOREFRONT: StorefrontData = JSON.parse(raw)
+// JSON imports widen literal types (a category becomes `string`); setup writes the file from the typed config
+// (`storefrontData(config)`), and config:check fails when it is out of date.
+export const STOREFRONT: StorefrontData = data as unknown as StorefrontData

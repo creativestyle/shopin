@@ -1,5 +1,4 @@
 import assert from 'node:assert/strict'
-import { randomUUID } from 'node:crypto'
 import { CartResponseSchema } from '@core/contracts/cart/cart'
 import { ShippingMethodsResponseSchema } from '@core/contracts/cart/shipping-method'
 import type { CaseContext } from './types'
@@ -10,7 +9,7 @@ import { rejectsWith, ADDRESS } from './helpers'
  * payment method). The shop's own fields and attaching a guest cart are order cases (they need customers).
  */
 export function cartCases(ctx: CaseContext): void {
-  const { port, data, add } = ctx
+  const { port, data, add, unique } = ctx
   const { product } = data
   if (data.cart) {
     assert.ok(product, 'commerceContract: the cart cases need `product`')
@@ -56,7 +55,7 @@ export function cartCases(ctx: CaseContext): void {
           const { cartService } = await port()
           await rejectsWith(
             404,
-            cartService.getCart(`no-such-cart-${randomUUID()}`)
+            cartService.getCart(`no-such-cart-${unique()}`)
           )
         },
       }

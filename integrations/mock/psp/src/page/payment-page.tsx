@@ -8,15 +8,13 @@ export function PaymentDemo() {
   const locale = useLocale()
   const paymentId = params?.paymentId as string
 
-  const handlePayNow = () => {
-    // Redirect to success callback page which will handle order creation
-    window.location.href = `/${locale}/checkout/payment/success?paymentId=${paymentId}`
+  // as an external provider does: back to the shop's one return route, with the payment and its result
+  const returnTo = (result: 'paid' | 'failed') => {
+    const query = new URLSearchParams({ paymentId, result })
+    window.location.href = `/${locale}/checkout/payment/return?${query.toString()}`
   }
-
-  const handlePaymentFailure = () => {
-    // Redirect to failure callback page which will handle error display
-    window.location.href = `/${locale}/checkout/payment/failure?paymentId=${paymentId}`
-  }
+  const handlePayNow = () => returnTo('paid')
+  const handlePaymentFailure = () => returnTo('failed')
 
   return (
     <div className='w-full max-w-md rounded-lg border border-gray-200 bg-white p-8 shadow-sm'>

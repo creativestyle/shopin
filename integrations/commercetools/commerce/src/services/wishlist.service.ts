@@ -32,7 +32,7 @@ export class WishlistService {
     wishlistId: string,
     page?: number,
     limit?: number
-  ): Promise<WishlistResponse> {
+  ): Promise<WishlistResponse & { version: number }> {
     const currentLanguage = await this.getCurrentLanguage()
     const client = await this.getClient()
 

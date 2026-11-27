@@ -26,11 +26,28 @@ function getCmsSlug(pageSegments: string[] | undefined): string | null {
 
 export async function generateMetadata({
   params,
+  searchParams,
 }: {
   params: Promise<{ variant: string; locale: string; page: string[] }>
+  searchParams: Promise<Record<string, string | string[] | undefined>>
 }): Promise<Metadata> {
   const { variant, locale, page } = await params
   initRouteContext({ variant, locale })
+  // the shop's own page wins over a CMS page of the same path (as in the render): its own title and description
+  const shopPage = findShopPage(page)
+  if (shopPage) {
+    const { Page } = shopPage
+    if (Page.generateMetadata) {
+      const { fetch } = await createBffFetchServer()
+      return (await Page.generateMetadata({
+        path: shopPage.path,
+        searchParams: await searchParams,
+        locale,
+        bff: bffForPage(fetch),
+      })) as Metadata
+    }
+    return (Page.metadata ?? {}) as Metadata
+  }
   const cmsSlug = getCmsSlug(page)
   if (!cmsSlug) {
     return {}

@@ -135,3 +135,31 @@ describe('session revocations survive a restart', () => {
     }
   })
 })
+
+describe('a store that cannot be read while checking', () => {
+  it('keeps the last loaded list (no shopper signed out by a storage hiccup) and reports the error', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'revocations-read-'))
+    const file = join(dir, 'revocations.json')
+    const errors: unknown[] = []
+    const list = new RevocationList(
+      30 * DAY,
+      () => file,
+      (e) => errors.push(e)
+    )
+    list.revoke('revoked-sid')
+    expect(list.isRevoked({ sid: 'revoked-sid' })).toBe(true)
+    // another writer left a garbled file (or the mount answers with an error) and the next look is due
+    writeFileSync(file, '{ not json')
+    utimesSync(file, new Date(), new Date(Date.now() + 60_000))
+    const later = Date.now() + 10 * 60_000
+    const now = jest.spyOn(Date, 'now').mockReturnValue(later)
+    try {
+      expect(() => list.isRevoked({ sid: 'other' }, later)).not.toThrow()
+      expect(list.isRevoked({ sid: 'revoked-sid' }, later)).toBe(true)
+      expect(list.isRevoked({ sid: 'fine-sid' }, later)).toBe(false)
+      expect(errors).toHaveLength(1)
+    } finally {
+      now.mockRestore()
+    }
+  })
+})

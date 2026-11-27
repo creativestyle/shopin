@@ -1,19 +1,6 @@
 import type { PaymentInfoResponse } from '@core/contracts/cart/cart'
 
 /**
- * Gets the first payment from payment info
- * @param paymentInfo - The payment info from cart or order
- * @returns The first payment or undefined if no payments exist
- */
-function getFirstPayment(paymentInfo: PaymentInfoResponse | undefined) {
-  if (!paymentInfo?.payments || paymentInfo.payments.length === 0) {
-    return undefined
-  }
-
-  return paymentInfo.payments[0]
-}
-
-/**
  * Extracts the payment method ID from payment info
  * @param paymentInfo - The payment info from cart or order
  * @returns The payment method ID (e.g., 'prepayment', 'invoice') or undefined
@@ -21,8 +8,7 @@ function getFirstPayment(paymentInfo: PaymentInfoResponse | undefined) {
 export function getPaymentMethodId(
   paymentInfo: PaymentInfoResponse | undefined
 ): string | undefined {
-  const firstPayment = getFirstPayment(paymentInfo)
-  return firstPayment?.paymentMethodInfo?.method
+  return paymentInfo?.method
 }
 
 /**
@@ -33,8 +19,7 @@ export function getPaymentMethodId(
 export function getPaymentInterface(
   paymentInfo: PaymentInfoResponse | undefined
 ): string | undefined {
-  const firstPayment = getFirstPayment(paymentInfo)
-  return firstPayment?.paymentMethodInfo?.paymentInterface
+  return paymentInfo?.provider
 }
 
 /**
@@ -47,12 +32,7 @@ export function getPaymentMethodName(
   paymentInfo: PaymentInfoResponse | undefined,
   locale: string
 ): string | null {
-  const firstPayment = getFirstPayment(paymentInfo)
-  if (!firstPayment) {
-    return null
-  }
-
-  const localizedName = firstPayment.paymentMethodInfo?.name
+  const localizedName = paymentInfo?.name
 
   if (!localizedName) {
     return null

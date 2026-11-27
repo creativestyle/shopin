@@ -8,7 +8,7 @@ A modular storefront accelerator with a NestJS Backend for Frontend (BFF), Next.
 ## Features
 
 - **BFF + storefront** — Clear separation between API gateway (NestJS) and frontend (Next.js App Router). Suits any e-commerce or CMS backend you wire behind the BFF.
-- **Pluggable data sources** — Switch backends (e.g. e-commerce API, mock) and optionally attach a CMS for pages and layout. SHOPin ships with one integration set; you can add or replace integrations.
+- **Pluggable integrations** — One integration per category (commerce, search, CMS, payment, sign-in), named in `config/shop/shopin.config.ts` and switched with `npm run use`. You can add or replace integrations.
 - **Turborepo** — [Turborepo](https://turbo.build/repo) orchestrates builds, tasks, and caching across the monorepo. Shared packages for contracts, i18n, config, and tooling.
 - **Demo tooling** — Optional data-source selector and mocked flows for development; safe to remove for production.
 - **Documentation** — [Storybook](apps/storybook/README.md) for UI components, [Typedoc](apps/typedoc/README.md) for API docs.
@@ -136,7 +136,7 @@ After updating `LOCALE_CONFIG`, also:
 
 ## How integrations work
 
-The architecture aims to keep **core, BFF, and presentation as platform-agnostic as possible**. Only the **integrations** (in `integrations/`) hold platform-specific logic and data; they talk to a given e-commerce API, CMS, or mock, and **map** that data into the shared, agnostic types from [core/contracts](core/contracts/README.md). Each integration implements the same contract interfaces: it fetches or writes in the backend’s format, then returns or accepts the shared types (Zod schemas and TypeScript types). The BFF chooses which integration to use per request (data source) and exposes a **single API** to the frontend. The **presentation** app only talks to the BFF and stays agnostic of the backend. To add a new backend: implement an integration that fulfils the contract, register it in the BFF’s data-source layer ([apps/bff/README.md](apps/bff/README.md)), and extend contracts only if the domain requires it.
+The architecture aims to keep **core, BFF, and presentation as platform-agnostic as possible**. Only the **integrations** (in `integrations/`) hold platform-specific logic and data; they talk to a given e-commerce API, CMS, or mock, and **map** that data into the shared, agnostic types from [core/contracts](core/contracts/README.md). Each integration implements the same contract interfaces: it fetches or writes in the backend’s format, then returns or accepts the shared types (Zod schemas and TypeScript types). The BFF loads the integrations the shop config names once at start and exposes a **single API** to the frontend. The **presentation** app only talks to the BFF and stays agnostic of the backend. To add a new backend: write an integration package that serves the category's port (`defineIntegration`, [core/integration-kit](core/integration-kit/README.md)), name it in the shop config, and extend contracts only if the domain requires it ([docs/extending.md](docs/extending.md)).
 
 ## AI coding assistants
 

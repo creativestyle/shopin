@@ -50,7 +50,7 @@ const COMPLETE_CART: CartResponse = {
     shippingMethodName: 'Standard',
     price: PRICE,
   },
-  paymentInfo: { payments: [{ typeId: 'payment', id: 'payment-1' }] },
+  paymentInfo: { method: 'invoice', provider: 'mock', status: 'pending' },
 }
 
 // a guest on the mock shop has only a sealed cart id (the BFF keeps no token for the mock)

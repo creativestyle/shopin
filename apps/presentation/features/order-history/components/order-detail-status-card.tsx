@@ -33,14 +33,14 @@ export const OrderDetailStatusCard: FC<OrderDetailStatusCardProps> = ({
           </div>
         </div>
 
-        {order.paymentInfo?.payments?.[0]?.paymentMethodInfo && (
+        {order.paymentInfo && (
           <div>
             <div className='text-xs font-bold text-gray-500'>
               {t('paymentMethod')}
             </div>
             <div className='mt-1 text-sm'>
-              {order.paymentInfo.payments[0].paymentMethodInfo.name?.[locale] ??
-                order.paymentInfo.payments[0].paymentMethodInfo.method ??
+              {order.paymentInfo.name?.[locale] ??
+                order.paymentInfo.method ??
                 t('notAvailable')}
             </div>
           </div>

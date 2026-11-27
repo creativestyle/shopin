@@ -14,6 +14,18 @@ import { CartIdService } from '../../features/cart-id/cart-id.service'
 import { TokenProvider } from './token-provider'
 import { AuthLoggerService, authLogContextFromRequest } from '../auth-logging'
 import { VaultService } from '../vault/vault.service'
+import { DEFAULT_COOKIE_PATH } from '@config/constants'
+import { SESSION_COOKIE, setRequestSession } from '../session/session.service'
+
+/** Signs this request's shopper out of the SHOPin session (as the session check does): no link, cookie cleared. */
+function endSessionForRequest(context: ExecutionContext): void {
+  const http = context.switchToHttp()
+  const req = http.getRequest<object>()
+  setRequestSession(req, { links: {} })
+  http
+    .getResponse<{ clearCookie?: (n: string, o: object) => void }>()
+    ?.clearCookie?.(SESSION_COOKIE, { path: DEFAULT_COOKIE_PATH })
+}
 
 @Injectable()
 export class TokenRefreshInterceptor implements NestInterceptor<
@@ -76,9 +88,16 @@ export class TokenRefreshInterceptor implements NestInterceptor<
             throw err
           }
           // the refresh token is spent or revoked: the session is over; the request goes on as a new guest
-          // (otherwise every cart, order and payment call fails until the vault cookie expires)
+          // (otherwise every cart, order and payment call fails until the vault cookie expires). A customer's
+          // dead token ends the SHOPin session too, in this request: with the platform's own sign-in that token
+          // was the sign-in
+          const wasCustomer =
+            (await this.tokenStorageService.getAuthStatus()) === true
           this.tokenStorageService.clearTokens()
           await this.cartIdService.deleteAllCartIds()
+          if (wasCustomer && context) {
+            endSessionForRequest(context)
+          }
         }
       }
     }

@@ -7,7 +7,7 @@
  *
  * Token delivery:
  * - HTTPS (production): HttpOnly SameSite=None;Secure cookie set by /api/draft. Works in
- *   Contentful's cross-site iframe. The proxy reads the cookie and injects it as ?__pt=
+ *   the CMS's cross-site iframe. The proxy reads the cookie and injects it as ?__pt=
  *   in the internal rewrite URL. The token never appears in the public URL.
  * - HTTP (local dev): URL param ?__pt= appended by /api/draft (SameSite=None;Secure is
  *   unavailable without TLS). The preview page validates it. The proxy also establishes a

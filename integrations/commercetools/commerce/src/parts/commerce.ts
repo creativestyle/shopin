@@ -8,6 +8,7 @@ import {
 import { clientProviders } from '@integrations/commercetools-core'
 import type { CommercetoolsOptions } from '@integrations/commercetools-core'
 import { checkGrantedScopes } from '@integrations/commercetools-core'
+import { commercetoolsErrorMeaning } from '@integrations/commercetools-core'
 import { OAuthTokenService } from '@integrations/commercetools-core'
 import { CommercetoolsGuestSessionService } from '@integrations/commercetools-core'
 import { CustomerScope } from '../shared/customer-scope.service'
@@ -64,6 +65,8 @@ export const commercePort = (
         guestSession: p.guestSession,
       }
     },
+    // commercetools' errors as the shopper gets them (404, 409, a request-caused 400, 502-504)
+    errors: commercetoolsErrorMeaning,
     // once at boot: an anonymous token request for the project proves the auth URL, the project key and the API
     // client (the same check and messages as every vendor's: host and variable)
     probe: async (_commerce, options) => {

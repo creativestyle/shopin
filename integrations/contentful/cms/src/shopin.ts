@@ -5,9 +5,10 @@ import { contentfulEnv } from './env'
 export const contentful = () =>
   defineIntegration({
     id: 'contentful',
-    label: {
-      en: 'Contentful: pages and navigation from the space',
-      de: 'Contentful: Seiten und Navigation aus dem Space',
+    label: 'Contentful',
+    description: {
+      en: 'Pages and navigation from the space',
+      de: 'Seiten und Navigation aus dem Space',
     },
     env: { cms: contentfulEnv },
     // lazy: a port's Nest module and SDK load only when the config chooses it
@@ -22,6 +23,13 @@ export const contentful = () =>
           width: 'w',
           quality: 'q',
           fixed: { fm: 'webp' },
+        },
+      },
+      // the entry editor's preview pane frames the storefront
+      previewOrigins: ['https://app.contentful.com'],
+      slots: {
+        cms: {
+          PreviewRequest: '@integrations/contentful-cms/preview#previewRequest',
         },
       },
     },

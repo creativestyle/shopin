@@ -217,3 +217,16 @@ describe('a stale customer cookie is no token (the first cart call creates a gue
     )
   })
 })
+
+describe("a port that stores a customer's token", () => {
+  it('stores it for the customer the session links, so the vault keeps trusting it', async () => {
+    const { request } = browser(async () => 'ct-customer-1')
+    await request()
+      .forPart('commerce', 'commercetools')
+      .set({ accessToken: 'c1', refreshToken: 'r1', expiresIn: 3600 }, true)
+    expect(await request().entry('commerce', 'commercetools')).toMatchObject({
+      accessToken: 'c1',
+      customerId: 'ct-customer-1',
+    })
+  })
+})

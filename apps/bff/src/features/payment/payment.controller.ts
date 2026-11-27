@@ -20,6 +20,10 @@ import {
   PaymentMethodsResponseSchema,
   SetPaymentMethodRequestSchema,
   InitiatePaymentRequestSchema,
+  PaymentReturnRequestSchema,
+  PaymentReturnResponseSchema,
+  type PaymentReturnRequest,
+  type PaymentReturnResponse,
 } from '@core/contracts/cart/payment-method'
 import type {
   PaymentMethodsResponse,
@@ -91,5 +95,26 @@ export class PaymentController {
     @ZodBody(InitiatePaymentRequestSchema) request: InitiatePaymentRequest
   ): Promise<{ paymentLink: string }> {
     return await this.paymentService.initiatePayment(request.cartId)
+  }
+
+  /**
+   * The shop's one payment return route: the storefront passes what the provider sent back. The order is created
+   * only for a paid or authorized payment of this shopper's own cart.
+   */
+  @Post('return')
+  @SecureRateLimit()
+  @UseCsrfGuard()
+  @HttpCode(HttpStatus.OK)
+  @ApiOkResponse({
+    description:
+      'The payment status, and the order when the payment went through',
+  })
+  @ApiBadRequestResponse({ description: 'Invalid request data' })
+  async completePaymentReturn(
+    @ZodBody(PaymentReturnRequestSchema) request: PaymentReturnRequest
+  ): Promise<PaymentReturnResponse> {
+    return PaymentReturnResponseSchema.parse(
+      await this.paymentService.completePaymentReturn(request)
+    )
   }
 }

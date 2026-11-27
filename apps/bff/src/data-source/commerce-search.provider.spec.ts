@@ -1,7 +1,7 @@
 import type { ProductSearchService } from '@core/contracts/core/data-source-interfaces'
 import { SUGGESTION_FETCH_SIZE } from '@core/contracts/product-search/search-provider'
 import { DEFAULT_SUGGESTION_LIMIT } from '@config/constants'
-import { CommerceSearchProvider } from './commerce-search.provider'
+import { CommerceSearchProvider } from '@core/contracts/product-search/commerce-search'
 
 const card = (name: string) => ({
   id: name,

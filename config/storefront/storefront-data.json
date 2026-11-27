@@ -1,12 +1,12 @@
 {
   "labels": {
     "mock": {
-      "en": "Sample data: generated, works without any account",
-      "de": "Beispieldaten: erzeugt, ohne Konto nutzbar"
+      "en": "Sample data",
+      "de": "Beispieldaten"
     },
     "mock-identity": {
-      "en": "Sample sign-in: as a sample customer (alice@example.com)",
-      "de": "Beispiel-Anmeldung: als Beispielkunde (alice@example.com)"
+      "en": "Sample sign-in",
+      "de": "Beispiel-Anmeldung"
     }
   },
   "productImages": [
@@ -19,11 +19,17 @@
       "hosts": ["placehold.co", "storage.googleapis.com"]
     }
   ],
+  "previewOrigins": [],
   "slots": {
     "PaymentStep": {
       "from": "@integrations/mock-psp/page",
       "name": "PaymentDemo",
       "by": "mock (psp)"
+    },
+    "PreviewRequest": {
+      "from": "@integrations/mock-cms/preview",
+      "name": "previewRequest",
+      "by": "mock (cms)"
     }
   },
   "variants": {

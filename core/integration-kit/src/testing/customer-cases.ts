@@ -1,17 +1,16 @@
 import assert from 'node:assert/strict'
-import { randomUUID } from 'node:crypto'
 import type { CaseContext } from './types'
 
 /** Customers: lookups and writes the BFF uses to link a sign-in to a customer. */
 export function customerCases(ctx: CaseContext): void {
-  const { port, data, add } = ctx
+  const { port, data, add, unique } = ctx
   if (data.customers) {
     add([], {
       name: 'commerce: customers are found by external id and e-mail, created without password, re-linked',
       async run() {
         const { customers } = await port()
         assert.ok(customers, 'the port has no `customers` member')
-        const n = randomUUID().slice(0, 8)
+        const n = unique()
         const email = `contract-${n}@example.com`
         const externalId = `contract-idp:${n}`
         assert.equal(await customers.findByExternalId(externalId), undefined)

@@ -14,9 +14,10 @@ export interface AlgoliaOptions {
 export const algolia = (options: AlgoliaOptions = {}) => {
   return defineIntegration({
     id: 'algolia',
-    label: {
-      en: 'Algolia: search results from the index',
-      de: 'Algolia: Suchergebnisse aus dem Index',
+    label: 'Algolia',
+    description: {
+      en: 'Search results from the index',
+      de: 'Suchergebnisse aus dem Index',
     },
     mappers: options.mappers,
     requires: {

@@ -17,6 +17,7 @@ import {
   PortsModule,
   shopFeatures,
 } from './data-source/ports.module'
+import { ServingGuard } from './data-source/serving.guard'
 import { requestStoreMiddleware } from './common/request-store/request-store'
 import { I18nModule } from './features/i18n/i18n.module'
 import { LanguageModule } from './common/language/language.module'
@@ -91,7 +92,11 @@ const FEATURES: Type[] = [
     ...mountable([...FEATURES, ...shopFeatures()]),
   ],
   controllers: [],
-  providers: [{ provide: APP_GUARD, useClass: OptionalThrottlerGuard }],
+  providers: [
+    { provide: APP_GUARD, useClass: OptionalThrottlerGuard },
+    // a category marked unavailable answers 503 on every route that reads it (`@Reads`)
+    { provide: APP_GUARD, useClass: ServingGuard },
+  ],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {

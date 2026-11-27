@@ -1,3 +1,4 @@
+import { ConflictException } from '@nestjs/common'
 import type { CustomerRecord } from '@core/integration-kit'
 import type { Identity } from '../../common/session/session.service'
 import { linkCustomer, type CustomerStore } from './customer-link'
@@ -92,5 +93,43 @@ describe('linking policy (core)', () => {
       await linkCustomer({ ...alice, subject: 'ct-7' }, s, { native: true })
     ).toBe('ct-7')
     expect(calls).toEqual([])
+  })
+})
+
+describe('linkCustomer: two first sign-ins of the same identity at once', () => {
+  const identity = {
+    provider: 'idp',
+    subject: 'race',
+    email: 'race@example.com',
+    emailVerified: true,
+  }
+  it('the second takes the customer the first created (the create answered 409)', async () => {
+    let created = false
+    const store: CustomerStore = {
+      findByExternalId: async () =>
+        created ? { id: 'c-first', hasPassword: false } : undefined,
+      findByEmail: async () => undefined,
+      setExternalId: async () => undefined,
+      create: async () => {
+        created = true // the other request won the race
+        throw new ConflictException('A customer with this e-mail exists')
+      },
+    }
+    await expect(
+      linkCustomer(identity, store, { native: false })
+    ).resolves.toBe('c-first')
+  })
+  it('a conflict that is not this identity stands (another account owns the e-mail)', async () => {
+    const store: CustomerStore = {
+      findByExternalId: async () => undefined,
+      findByEmail: async () => undefined,
+      setExternalId: async () => undefined,
+      create: async () => {
+        throw new ConflictException('A customer with this e-mail exists')
+      },
+    }
+    await expect(
+      linkCustomer(identity, store, { native: false })
+    ).rejects.toBeInstanceOf(ConflictException)
   })
 })

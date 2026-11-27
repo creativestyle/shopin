@@ -7,12 +7,19 @@ import { defineIntegration } from '@core/integration-kit'
 export const mockCms = () =>
   defineIntegration({
     id: 'mock',
-    label: {
-      en: 'Sample data: generated, works without any account',
-      de: 'Beispieldaten: erzeugt, ohne Konto nutzbar',
+    label: { en: 'Sample data', de: 'Beispieldaten' },
+    description: {
+      en: 'Generated, works without any account',
+      de: 'Erzeugt, ohne Konto nutzbar',
     },
     storefront: {
       contentImages: { hosts: ['placehold.co', 'storage.googleapis.com'] },
+      // the same preview URL as Contentful's, so a draft preview can be tried on sample data
+      slots: {
+        cms: {
+          PreviewRequest: '@integrations/mock-cms/preview#previewRequest',
+        },
+      },
     },
     /* eslint-disable @typescript-eslint/no-require-imports */
     ports: {

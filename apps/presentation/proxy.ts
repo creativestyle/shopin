@@ -26,8 +26,17 @@ import {
   isPreviewTokenValid,
 } from '@/lib/draft-mode'
 import { isAppRouteSegment } from '@/lib/app-route-segments'
+import { STOREFRONT } from '@/lib/storefront-config'
 
 const intlMiddleware = createMiddleware(routing)
+
+/**
+ * Who may frame a preview: the storefront and the origins the configured CMS declares (its `previewOrigins`). A CMS
+ * that declares none gets no frame policy, as before.
+ */
+const PREVIEW_FRAME_POLICY = STOREFRONT.previewOrigins.length
+  ? `frame-ancestors 'self' ${STOREFRONT.previewOrigins.join(' ')}`
+  : undefined
 
 const knownLocalePrefixes = new Set(listLocales().map((l) => l.urlPrefix))
 const defaultLocalePrefix = getLocale(I18N_CONFIG.defaultLocale).urlPrefix
@@ -258,6 +267,9 @@ function handlePreviewPath(
     })
   }
   syncDraftMarkerCookie(request, response, !!activeToken)
+  if (PREVIEW_FRAME_POLICY) {
+    response.headers.set('Content-Security-Policy', PREVIEW_FRAME_POLICY)
+  }
 
   return response
 }

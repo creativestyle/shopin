@@ -16,7 +16,6 @@ import { FrontendSafeException } from '../errors/frontend-safe.exception'
 /** Machine-readable discriminator our own exceptions may attach to any status. */
 type ErrorCode = {
   code?: string
-  /** 502–504 of a port serving through others (`delegates`): the category and provider whose platform failed (ids, no message). */
 }
 
 type ErrorBody = ErrorCode &
@@ -71,65 +70,6 @@ const DEFAULT_ERROR_BODY: ErrorBody = {
   message: 'Internal server error',
 }
 
-/** Error names vendor SDKs give an upstream 5xx (the HTTP status text). */
-const UPSTREAM_NAMES: Record<string, number> = {
-  BadGateway: 502,
-  ServiceUnavailable: 503,
-  GatewayTimeout: 504,
-  // an SDK whose every host failed or timed out
-  RetryError: 503,
-  // fetch's AbortSignal.timeout(), an aborted request
-  TimeoutError: 504,
-  AbortError: 504,
-}
-/** Network error codes (Node, undici, axios): the platform cannot be reached (503) or did not answer in time (504). */
-const UPSTREAM_CODES: Record<string, number> = {
-  ECONNREFUSED: 503,
-  ECONNRESET: 503,
-  ENOTFOUND: 503,
-  EAI_AGAIN: 503,
-  EHOSTUNREACH: 503,
-  ETIMEDOUT: 504,
-  ECONNABORTED: 504,
-  UND_ERR_CONNECT_TIMEOUT: 504,
-}
-
-/**
- * The status of a vendor SDK's or the network's error that is not a Nest exception: a platform that failed (502),
- * is down or unreachable (503) or timed out (504), read from the error and its `cause` chain (fetch wraps the
- * network error in `cause`). Undefined for anything else (a bug stays 500).
- */
-function upstreamStatus(error: unknown): number | undefined {
-  let e = error
-  for (let depth = 0; depth < 4 && e && typeof e === 'object'; depth++) {
-    const x = e as {
-      statusCode?: unknown
-      status?: unknown
-      response?: { status?: unknown }
-      code?: unknown
-      name?: unknown
-      cause?: unknown
-    }
-    const status = [x.statusCode, x.status, x.response?.status].find(
-      (s) => typeof s === 'number'
-    ) as number | undefined
-    if (status !== undefined && status >= 502 && status <= 504) {
-      return status
-    }
-    const byCode =
-      typeof x.code === 'string' ? UPSTREAM_CODES[x.code] : undefined
-    const byName =
-      typeof x.name === 'string' && status === undefined
-        ? UPSTREAM_NAMES[x.name]
-        : undefined
-    if (byCode ?? byName) {
-      return byCode ?? byName
-    }
-    e = x.cause
-  }
-  return undefined
-}
-
 type RequestWithNestException = Request & {
   __nestException?: NestExceptionForLog
 }
@@ -149,28 +89,11 @@ export class HttpErrorFilter implements ExceptionFilter {
   }
 
   private getStatusFromException(exception: unknown): number {
-    // Check for Resource Owner Password Credentials Grant message first
-    // This happens when anonymous tokens are used to access endpoints that require password grant tokens
-    // This is a 403 Forbidden (authorization issue) not 401 Unauthorized (authentication issue)
-    // because the user has valid credentials but insufficient permissions (wrong grant type)
-    if (exception instanceof Error) {
-      const message = exception.message
-      if (
-        typeof message === 'string' &&
-        message.includes('Resource Owner Password Credentials Grant')
-      ) {
-        return HttpStatus.FORBIDDEN
-      }
-    }
-
-    if (exception instanceof HttpException) {
-      return exception.getStatus()
-    }
-    if (exception instanceof Error && exception.message === 'invalid_token') {
-      return HttpStatus.UNAUTHORIZED
-    }
-    // a vendor SDK's or the network's own error: the platform failed, is down or timed out
-    return upstreamStatus(exception) ?? HttpStatus.INTERNAL_SERVER_ERROR
+    // a platform's errors reach here as Nest exceptions: the BFF translates them where it calls a port
+    // (data-source/port-errors.ts). Anything else is a bug: 500.
+    return exception instanceof HttpException
+      ? exception.getStatus()
+      : HttpStatus.INTERNAL_SERVER_ERROR
   }
 
   private mapExceptionToErrorBody(

@@ -223,7 +223,15 @@ export class VaultService {
         const { accessToken, refreshToken, expiresIn, customer } = e
         return { accessToken, refreshToken, expiresIn, customer }
       },
-      set: (tokens, customer) => this.set(category, provider, tokens, customer),
+      // a port's customer token belongs to the customer this session links at that provider
+      set: async (tokens, customer) =>
+        this.set(
+          category,
+          provider,
+          tokens,
+          customer,
+          customer ? await this.linkedCustomer?.(provider) : undefined
+        ),
       clear: () => this.clear(category, provider),
     }
   }

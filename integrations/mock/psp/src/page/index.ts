@@ -1,2 +1,2 @@
-// The mock payment provider's payment page (PaymentStep slot, wired by mock-api's descriptor)
+// The mock payment provider's demo payment page: the PaymentStep slot, wired by this package's descriptor (shopin.ts)
 export { PaymentDemo } from './payment-page'

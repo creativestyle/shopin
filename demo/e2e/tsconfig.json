@@ -1,0 +1,5 @@
+{
+  "extends": "../../test/e2e/tsconfig.json",
+  "include": ["./**/*.ts"],
+  "exclude": ["node_modules", ".tsc-out"]
+}

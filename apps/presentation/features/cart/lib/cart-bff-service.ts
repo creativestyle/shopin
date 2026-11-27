@@ -86,9 +86,6 @@ export class CartService extends BaseService {
     return Contracts.cart.parse(data)
   }
 
-  /**
-   * Remove an applied promo code
-   */
   /** The shop's own cart fields (`contracts.cart`; `null` removes one): the cart with them. */
   async setFields(fields: Record<string, unknown>): Promise<CartResponse> {
     return Contracts.cart.parse(
@@ -96,6 +93,9 @@ export class CartService extends BaseService {
     )
   }
 
+  /**
+   * Remove an applied promo code
+   */
   async removeDiscountCode(request: {
     discountCodeId: string
   }): Promise<CartResponse> {

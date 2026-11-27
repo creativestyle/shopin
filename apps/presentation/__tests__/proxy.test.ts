@@ -223,6 +223,20 @@ describe('root path', () => {
 // The proxy detects preview by path shape (/preview/… or /{locale}/preview/…).
 // The token is validated by the preview page, not the middleware.
 
+describe('preview frame policy (the configured CMS declares who may frame the preview)', () => {
+  it("a preview allows the storefront and the CMS's origins as frame ancestors", () => {
+    const res = proxy(makeRequest('/preview/slug'))
+    expect(res.headers.get('content-security-policy')).toBe(
+      "frame-ancestors 'self' https://editor.headless.invalid"
+    )
+  })
+
+  it('a page outside the preview gets no frame policy from it', () => {
+    const res = proxy(makeRequest('/en/some-page'))
+    expect(res.headers.get('content-security-policy')).toBeNull()
+  })
+})
+
 describe('preview path routing — default locale', () => {
   it('rewrites /preview/slug to /<default-variant>/en/preview/slug', () => {
     const res = proxy(makeRequest('/preview/slug'))

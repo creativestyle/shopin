@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import type { ComponentProps, ReactNode } from 'react'
 import { notFound } from 'next/navigation'
 import { NextIntlClientProvider } from 'next-intl'
 import { getMessages } from 'next-intl/server'
@@ -12,6 +12,8 @@ import { QueryProvider } from '../../query-provider'
 import { SiteNoticeMount } from './site-notice-mount'
 import { ConsentProvider } from '@/features/cookie-consent/consent-provider'
 import { TrackingTagsMount } from './tracking-tags-mount'
+import { ClientSlotsProvider } from '@/features/slots/client-slots'
+import { CartExtra, SiteNotice, TrackingTags } from '@/lib/slots'
 import { CookieConsent } from '@/features/cookie-consent/cookie-consent'
 import { listLocales, urlPrefixToRfc } from '@config/constants'
 import { imageHosts } from '@/lib/image-source'
@@ -84,15 +86,35 @@ export default async function LocaleLayout({
           >
             <StoreConfigProvider storeConfig={storeConfig}>
               <AddToCartModalProvider>
-                <ConsentProvider>
-                  <div className='container-type-inline-size flex min-h-screen flex-col'>
-                    {children}
-                  </div>
-                  <Toaster position='bottom-right' />
-                  <SiteNoticeMount />
-                  <CookieConsent />
-                  <TrackingTagsMount />
-                </ConsentProvider>
+                <ClientSlotsProvider
+                  siteNotice={SiteNotice ? <SiteNotice /> : undefined}
+                  trackingTags={
+                    TrackingTags ? (
+                      <TrackingTags
+                        ready={false}
+                        analytics={false}
+                        marketing={false}
+                      />
+                    ) : undefined
+                  }
+                  cartExtra={
+                    CartExtra ? (
+                      <CartExtra
+                        {...({} as ComponentProps<typeof CartExtra>)}
+                      />
+                    ) : undefined
+                  }
+                >
+                  <ConsentProvider>
+                    <div className='container-type-inline-size flex min-h-screen flex-col'>
+                      {children}
+                    </div>
+                    <Toaster position='bottom-right' />
+                    <SiteNoticeMount />
+                    <CookieConsent />
+                    <TrackingTagsMount />
+                  </ConsentProvider>
+                </ClientSlotsProvider>
               </AddToCartModalProvider>
             </StoreConfigProvider>
           </NextIntlClientProvider>

@@ -46,5 +46,18 @@ export async function linkCustomer(
     await store.setExternalId(byEmail.id, externalId)
     return byEmail.id
   }
-  return store.create(identity, externalId)
+  try {
+    return await store.create(identity, externalId)
+  } catch (error) {
+    // two first sign-ins of the same identity at once: the other created the customer meanwhile (a duplicate
+    // e-mail answers 409); take that customer when it carries this identity, else the conflict stands
+    if ((error as { getStatus?: () => number }).getStatus?.() !== 409) {
+      throw error
+    }
+    const meanwhile = await store.findByExternalId(externalId)
+    if (meanwhile) {
+      return meanwhile.id
+    }
+    throw error
+  }
 }

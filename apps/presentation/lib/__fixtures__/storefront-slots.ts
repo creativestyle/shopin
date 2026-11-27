@@ -4,9 +4,6 @@
  */
 export const SiteNotice = undefined
 export const PaymentStep = undefined
-export const PaymentNote = undefined
 export const TrackingTags = undefined
 export const CartExtra = undefined
-export const ProductExtra = undefined
 export const Pages = undefined
-export const Messages = undefined

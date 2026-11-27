@@ -236,86 +236,40 @@ describe('HttpErrorFilter', () => {
   })
 })
 
-describe('HttpErrorFilter: a vendor SDK or the network failing', () => {
-  // the shapes the vendors' SDKs throw (not Nest exceptions): each is the platform failing, down or slow
-  const commercetools503 = Object.assign(new Error('Service Unavailable'), {
-    name: 'ServiceUnavailable',
-    statusCode: 503,
-    body: { statusCode: 503, message: 'upstream down' },
-  })
-  const commercetools502ByName = Object.assign(new Error('Bad Gateway'), {
-    name: 'BadGateway',
-  })
-  const fetchRefused = new TypeError('fetch failed', {
-    cause: Object.assign(new Error('connect ECONNREFUSED 10.0.0.1:443'), {
-      code: 'ECONNREFUSED',
-    }),
-  })
-  const algoliaApi502 = Object.assign(new Error('Bad gateway'), {
-    name: 'ApiError',
-    status: 502,
-  })
-  const algoliaUnreachable = Object.assign(
-    new Error('Unreachable hosts - your application id may be incorrect'),
-    { name: 'RetryError', stackTrace: [] }
-  )
-  const contentful503 = Object.assign(
-    new Error(
-      JSON.stringify({ status: 503, statusText: 'Service Unavailable' })
-    ),
-    { name: 'ServiceUnavailable' }
-  )
-  const axios504 = Object.assign(new Error('Request failed'), {
-    name: 'AxiosError',
-    response: { status: 504 },
-  })
-  const timedOut = Object.assign(new Error('connect ETIMEDOUT'), {
-    code: 'ETIMEDOUT',
-  })
-  const aborted = new DOMException('The operation was aborted', 'TimeoutError')
-  const reset = Object.assign(new Error('socket hang up'), {
-    code: 'ECONNRESET',
-  })
-
+describe('HttpErrorFilter: errors that are not Nest exceptions', () => {
+  // a platform's errors are translated where the BFF calls the port (data-source/port-errors.ts); the filter knows
+  // no vendor's error shape, so whatever arrives raw is a bug: 500, its message never sent
   it.each([
-    ['commercetools SDK 503', commercetools503, 503],
-    ['commercetools SDK 502 (by name)', commercetools502ByName, 502],
-    ['fetch: connection refused (cause)', fetchRefused, 503],
-    ['Algolia ApiError 502', algoliaApi502, 502],
-    ['Algolia RetryError (no host answers)', algoliaUnreachable, 503],
-    ['Contentful 503', contentful503, 503],
-    ['axios-shaped 504', axios504, 504],
-    ['ETIMEDOUT', timedOut, 504],
-    ['AbortSignal.timeout()', aborted, 504],
-    ['ECONNRESET', reset, 503],
-  ])(
-    '%s: the generic body of its status, never its message',
-    (_, error, status) => {
-      const { host, getStatus, getJson, request } = createHttpHostMock()
-      new HttpErrorFilter().catch(error, host)
-      expect(getStatus()).toBe(status)
-      expect(getJson()).toEqual({
-        statusCode: status,
-        message: {
-          502: 'Bad gateway',
-          503: 'Service unavailable',
-          504: 'Gateway timeout',
-        }[status],
-      })
-      expect(request.__nestException).toHaveProperty('stack')
-    }
-  )
-
-  it('an SDK error of another status (a 400, a 500 of our own) stays 500', () => {
-    for (const error of [
-      Object.assign(new Error('bad'), { name: 'BadRequest', statusCode: 400 }),
-      Object.assign(new Error('x'), { statusCode: 500 }),
-      new TypeError('cannot read properties of undefined'),
-    ]) {
-      const { host, getStatus } = createHttpHostMock()
-      new HttpErrorFilter().catch(error, host)
-      expect(getStatus()).toBe(500)
-    }
+    [
+      'a commercetools-shaped 503',
+      Object.assign(new Error('upstream down'), {
+        name: 'ServiceUnavailable',
+        statusCode: 503,
+      }),
+    ],
+    [
+      'an Algolia-shaped RetryError',
+      Object.assign(new Error('Unreachable hosts'), { name: 'RetryError' }),
+    ],
+    [
+      'an axios-shaped 504',
+      Object.assign(new Error('Request failed'), { response: { status: 504 } }),
+    ],
+    [
+      'a raw network error',
+      Object.assign(new Error('connect ECONNREFUSED 10.0.0.1:443'), {
+        code: 'ECONNREFUSED',
+      }),
+    ],
+  ])('%s: 500 with the generic body, the stack logged', (_, error) => {
+    const { host, getStatus, getJson, request } = createHttpHostMock()
+    new HttpErrorFilter().catch(error, host)
+    expect(getStatus()).toBe(500)
+    expect(getJson()).toEqual({
+      statusCode: 500,
+      message: 'Internal server error',
+    })
+    expect(request.__nestException).toHaveProperty('stack')
   })
 })
 

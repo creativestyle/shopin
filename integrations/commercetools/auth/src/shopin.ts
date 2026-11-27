@@ -10,9 +10,10 @@ import { commercetoolsClientEnv } from '@integrations/commercetools-core/env'
 export const commercetoolsAuth = () =>
   defineIntegration({
     id: 'commercetools',
-    label: {
-      en: 'commercetools: sign-in with the customer accounts of the commercetools project',
-      de: 'commercetools: Anmeldung mit den Kundenkonten des commercetools-Projekts',
+    label: 'commercetools',
+    description: {
+      en: 'Sign-in with the customer accounts of the commercetools project',
+      de: 'Anmeldung mit den Kundenkonten des commercetools-Projekts',
     },
     requires: {
       auth: {

@@ -11,6 +11,8 @@ const mockProviders: { commerce: string; auth?: string } = {
 }
 jest.mock('../../data-source/providers', () => ({
   keyOf: (id: string) => id,
+  // the platform's own sign-in (the descriptor rule itself is tested in test/category-split)
+  isOwnSignIn: () => mockProviders.auth === mockProviders.commerce,
   currentProviders: () => ({ providers: mockProviders, unavailable: {} }),
 }))
 import { CartService } from './cart.service'

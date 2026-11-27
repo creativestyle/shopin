@@ -26,8 +26,14 @@ const tsc = createRequire(join(ROOT, 'package.json')).resolve(
   'typescript/bin/tsc'
 )
 
-/** Compiles one file that imports the kit's core, as an integration package would, with these extra options. */
-function compile(compilerOptions = {}) {
+const CORE_IMPORT =
+  "import * as core from '@core/integration-kit/core'\nexport const internals = core\n"
+
+/**
+ * Compiles `source` as one file of an integration package (the shared `@core/typescript-config/nestjs.json`, as the
+ * integrations' own tsconfigs extend it), with these extra options.
+ */
+function compile(compilerOptions = {}, source = CORE_IMPORT) {
   const dir = realpathSync(mkdtempSync(join(tmpdir(), 'kit-core-export-')))
   try {
     symlinkSync(join(ROOT, 'node_modules'), join(dir, 'node_modules'), 'dir')
@@ -39,10 +45,7 @@ function compile(compilerOptions = {}) {
         files: ['part.ts'],
       })
     )
-    writeFileSync(
-      join(dir, 'part.ts'),
-      "import * as core from '@core/integration-kit/core'\nexport const internals = core\n"
-    )
+    writeFileSync(join(dir, 'part.ts'), source)
     const r = spawnSync(process.execPath, [tsc, '-p', dir], {
       encoding: 'utf8',
     })
@@ -60,6 +63,66 @@ test('an integration (no shopin-framework condition) does not compile against @c
 
 test('framework code (the shopin-framework condition) compiles against it', () => {
   const { status, output } = compile({ customConditions: ['shopin-framework'] })
+  assert.equal(status, 0, output)
+})
+
+test('an integration builds against the author API alone (no shopin-framework condition)', () => {
+  // a descriptor, a port with a credentials check and an error mapping, and a service reading what the BFF hands a
+  // port: everything an integration writes, from `.` only
+  const { status, output } = compile(
+    {},
+    `import {
+  checkEndpoint,
+  CustomerContext,
+  defineIntegration,
+  port,
+  PortOptions,
+  RequestContext,
+  TokenVault,
+  type Port,
+  type PortError,
+} from '@core/integration-kit'
+
+const env = { token: { env: 'FX_TOKEN' }, region: { env: 'FX_REGION', optional: true } } as const
+type Options = PortOptions.Of<typeof env>
+
+class Pages {
+  constructor(
+    private readonly options: Options,
+    private readonly request: RequestContext,
+    private readonly vault: TokenVault,
+    private readonly customer: CustomerContext
+  ) {}
+  async page(): Promise<string> {
+    const tokens = await this.vault.get()
+    return [this.options.token, this.request.language, tokens?.accessToken, await this.customer.customerId()].join()
+  }
+}
+
+const errors = (error: unknown): PortError | undefined =>
+  (error as { status?: number }).status === 404 ? { status: 404 } : undefined
+
+export const cmsPort = port('cms', {
+  inject: [PortOptions, RequestContext, TokenVault, CustomerContext],
+  useFactory: (o: Options, r: RequestContext, v: TokenVault, c: CustomerContext): Port<'cms'> => {
+    void new Pages(o, r, v, c)
+    return {} as Port<'cms'>
+  },
+  probe: (_port, options) =>
+    checkEndpoint('https://fx.example/health', { headers: { authorization: options.token ?? '' } }, { credentials: 'FX_TOKEN' }),
+  errors,
+})
+
+export const fxCms = () =>
+  defineIntegration({
+    id: 'fx-cms',
+    label: 'Fixture CMS',
+    description: { en: 'Pages from fixtures', de: 'Seiten aus Fixtures' },
+    env: { cms: env },
+    ports: { cms: () => cmsPort },
+  })
+`
+  )
   assert.equal(status, 0, output)
 })
 

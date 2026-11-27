@@ -4,7 +4,7 @@
 /**
  * The variant registry is derived from the shop config: no provider is written
  * in the storefront. These tests build their own config from fixture integrations
- * (lib/variant/__fixtures__/storefront.ts, the data jest.config.ts hands over as SHOPIN_STOREFRONT) and
+ * (lib/variant/__fixtures__/storefront.ts, the data jest.config.ts maps storefront-data.json to) and
  * compare, then derive a second config to show the registry follows whatever the config says.
  */
 import { defineConfig } from '@core/integration-kit'
@@ -26,15 +26,14 @@ type Registry = typeof import('../registry')
 /** The registry built from another config's build-time data, in an isolated module registry. */
 function registryFor(data: unknown): Registry['VARIANT_DIMENSIONS'] {
   let mod: Registry | undefined
-  const before = process.env.SHOPIN_STOREFRONT
-  process.env.SHOPIN_STOREFRONT = JSON.stringify(data)
-  try {
-    jest.isolateModules(() => {
-      mod = require('../registry')
-    })
-  } finally {
-    process.env.SHOPIN_STOREFRONT = before
-  }
+  jest.isolateModules(() => {
+    jest.doMock('@shopin/storefront/storefront-data.json', () => ({
+      __esModule: true,
+      default: data,
+    }))
+    mod = require('../registry')
+  })
+  jest.dontMock('@shopin/storefront/storefront-data.json')
   return mod!.VARIANT_DIMENSIONS
 }
 

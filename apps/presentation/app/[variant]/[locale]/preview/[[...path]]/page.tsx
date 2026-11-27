@@ -10,6 +10,8 @@ import { HttpError } from '@/lib/error-utils'
 import { getHomepageSlugForLocale } from '@/features/content/homepage-slug'
 import { parsePlpSearchParams } from '@/features/productCollection/parse-search-params'
 import { ContentPage } from '@/features/content/content-page'
+import { bffForPage, findShopPage } from '@/lib/shop-pages'
+import { createBffFetchServer } from '@/lib/bff/core/bff-fetch-server'
 import { getContentPage } from '@/features/content/get-content-page'
 import { ProductPage } from '@/features/product/product-page'
 import { ProductCollectionPage } from '@/features/productCollection/product-collection-page'
@@ -94,6 +96,21 @@ export default async function PreviewPage({
     )
   }
 
+  // the shop's own page (slot Pages) wins over a CMS page of the same path, as on the published site: a draft
+  // session funnels every non-app path here, and a shop page has no draft of its own
+  const shopPage = findShopPage(path)
+  if (shopPage) {
+    const { fetch } = await createBffFetchServer()
+    return (
+      <shopPage.Page
+        path={shopPage.path}
+        searchParams={search}
+        locale={locale}
+        bff={bffForPage(fetch)}
+      />
+    )
+  }
+
   // Any other path is a content slug. Unknown slugs resolve to the 404 page rather than a soft
   // "no content" message (app routes like cart/account bypass preview in the proxy).
   // getContentPage is request-cached, so ContentPage's own fetch reuses this result.
@@ -102,7 +119,7 @@ export default async function PreviewPage({
     await getContentPage(slug, true)
   } catch (error) {
     // Only a genuine "no such page" (BFF 404) maps to notFound() — matching the published
-    // catch-all in [...page]/page.tsx. Non-404 errors (transient BFF/Contentful failures,
+    // catch-all in [...page]/page.tsx. Non-404 errors (transient BFF/CMS failures,
     // schema-validation errors) deliberately DON'T 404 here: we fall through to <ContentPage>,
     // whose request-cached re-fetch hits the same rejection and renders its localized inline
     // ErrorDisplay inside the editor chrome. This is an intentional preview-only divergence from

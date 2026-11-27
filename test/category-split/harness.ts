@@ -103,6 +103,37 @@ export async function boot(): Promise<TestingModule> {
   return app;
 }
 
+/**
+ * The booted BFF over HTTP (as main.ts serves it: `/bff` prefix, the error filter, every global guard), on a free
+ * local port: `fetch(path, init)` answers status, body and the cookies it set (`name=value`). Close it with `close()`
+ * (it closes the app too).
+ */
+export async function http(app: TestingModule) {
+  const { HttpErrorFilter } = bff("common/filters/http-exception.filter");
+  const server = app.createNestApplication({ logger: false });
+  server.use(require("cookie-parser")());
+  server.useGlobalFilters(new HttpErrorFilter());
+  server.setGlobalPrefix("bff");
+  await server.listen(0, "127.0.0.1");
+  const base = (await server.getUrl()).replace("[::1]", "127.0.0.1");
+  return {
+    /** The BFF's base URL (`http://127.0.0.1:<port>`; its routes under `/bff`). */
+    base,
+    fetch: async (path: string, init?: RequestInit) => {
+      const res = await fetch(`${base}${path}`, init);
+      const cookies = res.headers
+        .getSetCookie()
+        .map((cookie) => cookie.split(";")[0]);
+      return {
+        status: res.status,
+        body: await res.json().catch(() => null),
+        cookies,
+      };
+    },
+    close: () => server.close(),
+  };
+}
+
 /** The ports this BFF loaded, as `category:id`. */
 export const loaded = (): string[] =>
   bff("data-source/ports.module")

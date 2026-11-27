@@ -1,5 +1,4 @@
 import assert from 'node:assert/strict'
-import { randomUUID } from 'node:crypto'
 import { CartResponseSchema } from '@core/contracts/cart/cart'
 import { CustomerResponseSchema } from '@core/contracts/customer/customer'
 import {
@@ -12,7 +11,7 @@ import { rejectsWith, ADDRESS } from './helpers'
 
 /** Orders: checkout, the order list, and that one customer never sees another's orders. */
 export function orderCases(ctx: CaseContext): void {
-  const { port, data, add } = ctx
+  const { port, data, add, unique } = ctx
   const { product } = data
   const orders = data.orders
   /** Two customers of the platform: given, or created through `customers`. */
@@ -34,10 +33,7 @@ export function orderCases(ctx: CaseContext): void {
         },
         `contract-idp:${n}`
       )
-    return [
-      await make(randomUUID().slice(0, 8)),
-      await make(randomUUID().slice(0, 8)),
-    ]
+    return [await make(unique()), await make(unique())]
   }
   if (data.orders) {
     assert.ok(

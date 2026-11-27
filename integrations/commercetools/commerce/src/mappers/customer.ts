@@ -1,9 +1,10 @@
 import type { CustomerResponse } from '@core/contracts/customer/customer'
 import { MyCustomerApiResponse } from '../schemas/customer'
 
+/** commercetools customers always have a version; the service writes with it (the contract's `version` is optional). */
 export function mapCustomerToResponse(
   customer: MyCustomerApiResponse
-): CustomerResponse {
+): CustomerResponse & { version: number } {
   return {
     id: customer.id,
     email: customer.email,

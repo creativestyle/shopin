@@ -1,8 +1,8 @@
 /**
  * The shop config the storefront tests run against, built from fixture integrations with the integration
  * kit (no integration package, no `@shopin/config`): every storefront test passes whatever
- * config/shop/shopin.config.ts says. jest.config.ts hands `FIXTURE_STOREFRONT` to the tests as
- * SHOPIN_STOREFRONT, exactly as next.config.ts inlines the real one.
+ * config/shop/shopin.config.ts says. jest.config.ts maps `@shopin/storefront/storefront-data.json` to
+ * `FIXTURE_STOREFRONT` (lib/__fixtures__/storefront-data.ts), where the storefront imports the real one.
  *
  * Shape: a router that serves through others (the kit's `delegates`) and declares the storefront's variants:
  * two commerce platforms, three search providers (one only works with its own commerce), two cms, two sign-ins
@@ -84,6 +84,7 @@ export const headless = fixture('headless', ['cms'], {
       hosts: ['images.headless.invalid'],
       resize: { kind: 'query', width: 'w', quality: 'q' },
     },
+    previewOrigins: ['https://editor.headless.invalid'],
   },
 })
 export const localIdp = fixture('local-idp', ['auth'], {

@@ -1,6 +1,6 @@
 # @integrations/mock-cms
 
-Mock CMS: a homepage, about and support pages, a default page for any other slug, and the header and footer. No account needed: the BFF uses it for the `mock-set` data source, and as the CMS fallback for `commercetools-set` when Contentful is not configured.
+Mock CMS: a homepage, about and support pages, a default page for any other slug, and the header and footer. No account needed: name it under `cms` in `config/shop/shopin.config.ts` (`npm run use cms mock`), the default of a new shop.
 
 Every page, the header and the footer are checked against the content contracts in its tests (`npm run test`).
 

@@ -5,7 +5,7 @@ import {
   NotImplementedException,
 } from '@nestjs/common'
 import { Services, Ports } from '../../data-source/ports.module'
-import { currentProviders } from '../../data-source/providers'
+import { currentProviders, isOwnSignIn } from '../../data-source/providers'
 import type { CartResponse } from '@core/contracts/cart/cart'
 import {
   CartVersionConflictError,
@@ -256,9 +256,7 @@ export class CartService extends BaseAuthenticatedService {
    */
   async setupCartAfterLogin(guestCartId?: string): Promise<void> {
     const commerce = this.ports.commerce
-    const { providers } = currentProviders()
-    const native = providers.auth === providers.commerce
-    if (guestCartId && commerce.attachGuestCart && !native) {
+    if (guestCartId && commerce.attachGuestCart && !isOwnSignIn()) {
       let attached: CartResponse | undefined
       try {
         attached = await commerce.attachGuestCart(guestCartId)

@@ -12,6 +12,7 @@ const expect = (actual) => ({
   toContain: (part) =>
     assert.ok(actual.includes(part), `${actual} contains ${part}`),
   toBeDefined: () => assert.notEqual(actual, undefined),
+  toBeUndefined: () => assert.equal(actual, undefined),
   toBeGreaterThan: (n) => assert.ok(actual > n, `${actual} > ${n}`),
   toBeLessThan: (n) => assert.ok(actual < n, `${actual} < ${n}`),
   toBeGreaterThanOrEqual: (n) => assert.ok(actual >= n, `${actual} >= ${n}`),
@@ -91,10 +92,26 @@ describe('mock ProductSearchService', () => {
   const effective = (p) =>
     p.price?.discountedPriceInCents ?? p.price?.regularPriceInCents
 
+  it('a quick search (the search box, suggestions) gives the same matches and total, without facets or a price range, as commercetools does', async () => {
+    const service = await createService()
+    const quick = await service.searchProducts({ query: 'shirt', limit: 60 })
+    const full = await service.searchProducts({
+      query: 'shirt',
+      limit: 60,
+      faceted: true,
+    })
+    expect(quick.facets).toBeUndefined()
+    expect(quick.priceRange).toBeUndefined()
+    expect(quick.total).toBe(full.total)
+    expect(quick.products.map((p) => p.slug)).toEqual(
+      full.products.map((p) => p.slug)
+    )
+  })
+
   it('returns facets and a price range that covers every match', async () => {
     const result = await (
       await createService()
-    ).searchProducts({ query: 'shirt', limit: 60 })
+    ).searchProducts({ query: 'shirt', limit: 60, faceted: true })
     expect(result.facets?.length).toBeGreaterThan(0)
     const { minPriceInCents, maxPriceInCents } = result.priceRange
     expect(minPriceInCents).toBeLessThanOrEqual(maxPriceInCents)
@@ -107,10 +124,15 @@ describe('mock ProductSearchService', () => {
 
   it('keeps only products on sale when asked', async () => {
     const service = await createService()
-    const all = await service.searchProducts({ query: 'shirt', limit: 60 })
+    const all = await service.searchProducts({
+      query: 'shirt',
+      limit: 60,
+      faceted: true,
+    })
     const sale = await service.searchProducts({
       query: 'shirt',
       limit: 60,
+      faceted: true,
       saleOnly: true,
     })
     expect(sale.total).toBeLessThan(all.total)
@@ -121,12 +143,17 @@ describe('mock ProductSearchService', () => {
 
   it('keeps only products within the price bounds, against the unfiltered price range', async () => {
     const service = await createService()
-    const all = await service.searchProducts({ query: 'shirt', limit: 60 })
+    const all = await service.searchProducts({
+      query: 'shirt',
+      limit: 60,
+      faceted: true,
+    })
     const { minPriceInCents, maxPriceInCents } = all.priceRange
     const priceMax = Math.floor((minPriceInCents + maxPriceInCents) / 2)
     const cheap = await service.searchProducts({
       query: 'shirt',
       limit: 60,
+      faceted: true,
       priceMax,
     })
     expect(cheap.total).toBeGreaterThan(0)
@@ -139,6 +166,7 @@ describe('mock ProductSearchService', () => {
     const expensive = await service.searchProducts({
       query: 'shirt',
       limit: 60,
+      faceted: true,
       priceMin: priceMax + 1,
     })
     expect(expensive.total + cheap.total).toBe(all.total)

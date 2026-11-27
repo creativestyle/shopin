@@ -29,6 +29,7 @@
     "check-dependencies": "npm audit --audit-level=critical",
     "test": "turbo run test --filter=./apps/*... --filter=./core/* --filter=./test/*... && node --test scripts/*.test.mjs",
     "e2e": "turbo run e2e",
+    "e2e:demo": "npm run e2e:demo -w @test/e2e",
     "prepare": "husky install || true",
     "integrations:check": "node scripts/integrations-check.mjs",
     "migrate": "npm run migrate -w @integrations/contentful-migration"

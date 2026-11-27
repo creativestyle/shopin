@@ -1,4 +1,8 @@
-import { mapCartToResponse, mapDiscountCodes } from '../src/mappers/cart'
+import {
+  mapCartToResponse,
+  mapDiscountCodes,
+  mapPaymentInfo,
+} from '../src/mappers/cart'
 import type { CartApiResponse } from '../src/schemas/cart'
 
 const money = (centAmount: number) => ({ centAmount, currencyCode: 'EUR' })
@@ -133,5 +137,55 @@ describe('mapCartToResponse discounts', () => {
     } as CartApiResponse
 
     expect(mapCartToResponse(cart, 'en-US').discountAmount).toBeUndefined()
+  })
+})
+
+describe('payment info: one flat summary, never the commercetools payment record', () => {
+  const payment = (transactions?: { type: string; state: string }[]) => ({
+    payments: [
+      {
+        typeId: 'payment' as const,
+        id: 'pay-1',
+        obj: {
+          version: 3,
+          paymentMethodInfo: {
+            method: 'credit-card',
+            paymentInterface: 'adyen',
+            name: { en: 'Card' },
+          },
+          ...(transactions
+            ? {
+                transactions: transactions.map((t, i) => ({
+                  id: `t${i}`,
+                  amount: { centAmount: 1999, currencyCode: 'EUR' },
+                  ...t,
+                })),
+              }
+            : {}),
+          amountPlanned: { centAmount: 1999, currencyCode: 'EUR' },
+        },
+      },
+    ],
+  })
+
+  it.each([
+    [[{ type: 'Charge', state: 'Success' }], 'paid'],
+    [[{ type: 'Authorization', state: 'Success' }], 'authorized'],
+    [[{ type: 'Charge', state: 'Failure' }], 'failed'],
+    [[{ type: 'Charge', state: 'Pending' }], 'pending'],
+    [undefined, 'pending'],
+  ])('transactions %j → %s', (transactions, status) => {
+    expect(mapPaymentInfo(payment(transactions))).toEqual({
+      method: 'credit-card',
+      provider: 'adyen',
+      name: { en: 'Card' },
+      status,
+      amount: { regularPriceInCents: 1999, currency: 'EUR', fractionDigits: 2 },
+    })
+  })
+
+  it('no payment: no summary', () => {
+    expect(mapPaymentInfo({ payments: [] })).toBeUndefined()
+    expect(mapPaymentInfo(undefined)).toBeUndefined()
   })
 })

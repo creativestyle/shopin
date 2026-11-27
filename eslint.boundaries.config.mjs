@@ -19,13 +19,14 @@ import { shopinPlugin } from "@core/eslint-config/boundaries";
 /**
  * The shop's config files, by their path from the repository root: they name the configured integrations by design
  * (`npm run use` and `npm run setup` write them), so each may import exactly the integration entries listed here
- * (`@integrations/<any>/shopin`, the descriptor; `/page`, a storefront slot), never an integration's root or a deeper
+ * (`@integrations/<any>/shopin`, the descriptor; `/page`, a storefront page slot; `/preview`, a CMS's preview request
+ * reader), never an integration's root or a deeper
  * path, never a vendor SDK. The hand-written storefront.mts files import no integration. The apps reach integrations
  * only through the ports and these files.
  */
 const CONFIG = {
   "config/shop/shopin.config.ts": ["shopin"],
-  "config/storefront/wired.mts": ["page"],
+  "config/storefront/wired.mts": ["page", "preview"],
   "demo/shop/config/shopin.config.ts": ["shopin"],
 };
 

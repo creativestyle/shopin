@@ -91,6 +91,24 @@ export function currentProviders(): Serving {
   return found
 }
 
+/**
+ * Whether this request's sign-in is the commerce platform's own (commercetools sign-in over commercetools commerce):
+ * one provider serves auth and commerce (a vendor's parts share one id), and its descriptor requires exactly this
+ * commerce (`requires: { auth: { needs: { commerce } } }`). The one rule for the hand-over between sign-in and
+ * commerce (D-84): only such a sign-in gets the guest's commerce token, has the commerce session it returns kept,
+ * signs in with the customer id as subject, merges the guest cart itself, and has its session end with that commerce
+ * session. A sign-in that may only pair with this commerce but is another provider (the mock identity, Auth0 limited
+ * to one shop) is an identity provider like any other: identity only, linked through the commerce port's `customers`.
+ */
+export function isOwnSignIn(): boolean {
+  const { providers } = currentProviders()
+  if (!providers.auth || providers.auth !== providers.commerce) {
+    return false
+  }
+  const needs = byId.get(providers.auth)?.requires?.auth?.needs.commerce
+  return needs !== undefined && needs === keyOf(providers.commerce)
+}
+
 /** The request headers the storefront variants send (CORS); none without variants. */
 export const variantHeaders = (): string[] =>
   storefrontData(project).variants.dimensions.map((d) => d.header)

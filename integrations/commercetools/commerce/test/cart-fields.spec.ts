@@ -136,6 +136,21 @@ describe('commercetools setCartFields', () => {
     expect(client.carts_[0]!.custom!.fields).toEqual({})
   })
 
+  it('answers 501 naming the type to create when the project has no shop-cart-fields type (not a 400 or 500)', async () => {
+    const { client, port } = setup()
+    client.types_ = client.types_.filter((t) => t.key !== 'shop-cart-fields')
+    client.carts_.push(ctCart('cart-9'))
+    const p = await port('cust-1')
+    await expect(
+      p.setCartFields!('cart-9', { giftMessage: 'Hi' })
+    ).rejects.toMatchObject({
+      status: 501,
+      message: expect.stringMatching(
+        /no Custom Type "shop-cart-fields" for carts: create it/
+      ),
+    })
+  })
+
   it('retries once when the cart changed in between (409)', async () => {
     const { client, port } = setup()
     client.carts_.push(ctCart('cart-4'))

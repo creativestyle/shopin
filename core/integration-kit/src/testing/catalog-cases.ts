@@ -1,5 +1,4 @@
 import assert from 'node:assert/strict'
-import { randomUUID } from 'node:crypto'
 import { ProductResponseSchema } from '@core/contracts/product/product'
 import { MainNavigationResponseSchema } from '@core/contracts/navigation/main-navigation'
 import { StoreConfigResponseSchema } from '@core/contracts/store-config/store-config'
@@ -9,7 +8,7 @@ import { statusOf, rejectsWith } from './helpers'
 
 /** Catalog: platform failures map to 502-504, products, categories, search, navigation. */
 export function catalogCases(ctx: CaseContext): void {
-  const { port, data, add } = ctx
+  const { port, data, add, unique } = ctx
   if (data.product) {
     add(['productService'], {
       name: 'commerce: a platform that is down or answers 5xx is 502, 503 or 504, not 500 (for a port that calls it over fetch)',
@@ -80,7 +79,7 @@ export function catalogCases(ctx: CaseContext): void {
           assert.equal(found.product.slug, product.slug)
           await rejectsWith(
             404,
-            p.productService.getProduct(`no-such-product-${randomUUID()}`)
+            p.productService.getProduct(`no-such-product-${unique()}`)
           )
         }
       },

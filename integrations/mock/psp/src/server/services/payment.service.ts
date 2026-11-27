@@ -2,7 +2,12 @@ import { PAYMENT_STEP_PATH } from '@core/contracts/core/data-source-interfaces'
 import { RequestContext } from '@core/integration-kit'
 import { Injectable } from '@nestjs/common'
 import type { PaymentMethodsResponse } from '@core/contracts/cart/payment-method'
-import { PaymentMethodsResponseSchema } from '@core/contracts/cart/payment-method'
+import {
+  PaymentMethodsResponseSchema,
+  PaymentStatusSchema,
+  type PaymentResult,
+  type PaymentReturnRequest,
+} from '@core/contracts/cart/payment-method'
 
 @Injectable()
 export class PaymentService {
@@ -55,5 +60,23 @@ export class PaymentService {
     const paymentLink = `${baseUrl}${PAYMENT_STEP_PATH}/${encodeURIComponent(cartId)}`
 
     return { paymentLink }
+  }
+
+  /**
+   * The mock provider's answer for a payment its pretend page finished: the page sends the shopper back to the
+   * shop's return route with `result=<status>`, any payment status a provider reports (paid, authorized, pending,
+   * failed, cancelled), so every outcome of the return route can be tried. No money moves: a missing or unknown
+   * result is a failed payment, never a paid one.
+   */
+  async getPaymentResult({
+    paymentId,
+    params,
+  }: PaymentReturnRequest): Promise<PaymentResult> {
+    // the mock's payment id is the cart id its payment link was made for
+    const reported = PaymentStatusSchema.safeParse(params.result)
+    return {
+      status: reported.success ? reported.data : 'failed',
+      cartId: paymentId,
+    }
   }
 }

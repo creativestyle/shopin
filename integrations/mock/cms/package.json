@@ -18,6 +18,13 @@
         "default": "./dist/shopin.js"
       },
       "default": "./dist/shopin.js"
+    },
+    "./preview": {
+      "shopin-shop": {
+        "types": "./dist/types/preview.d.ts",
+        "default": "./dist/preview.js"
+      },
+      "default": "./dist/preview.js"
     }
   },
   "scripts": {

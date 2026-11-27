@@ -176,6 +176,34 @@ test("a vendor's parts (one package per category, one id) are merged into one pr
   )
 })
 
+test("a vendor's parts as one provider keep the descriptor's description next to its name", () => {
+  const commerce = integ('acme', ['commerce'], { label: 'Acme' })
+  const auth = integ('acme', ['auth'], {
+    label: 'Acme sign-in',
+    description: {
+      en: 'Sign-in with Acme accounts',
+      de: 'Anmeldung mit Acme-Konten',
+    },
+  })
+  const [merged] = defineConfig({ commerce, auth }).integrations.filter(
+    (i) => i.id === 'acme'
+  )
+  assert.equal(merged.label, 'Acme')
+  assert.deepEqual(merged.description, {
+    en: 'Sign-in with Acme accounts',
+    de: 'Anmeldung mit Acme-Konten',
+  })
+  const described = integ('acme', ['commerce'], {
+    label: 'Acme',
+    description: 'Catalog and carts',
+  })
+  const [first] = defineConfig({
+    commerce: described,
+    auth,
+  }).integrations.filter((i) => i.id === 'acme')
+  assert.equal(first.description, 'Catalog and carts')
+})
+
 test("rule: different options are refused at any delegate depth (a nested instance would replace the shop's own)", () => {
   const inner = (label) => integ('inner', ['commerce', 'search'], { label })
   const nest = (delegate) =>
@@ -919,4 +947,27 @@ test('storefrontData: image hosts come only from integrations that serve a categ
   })
   assert.deepEqual(data.productImages, [{ hosts: ['used.test'] }])
   assert.deepEqual(data.contentImages, [{ hosts: ['cdn.used.test'] }])
+})
+
+test('storefrontData: preview origins come only from the integration serving cms', () => {
+  const framing = (id, serves) =>
+    integ(id, serves, {
+      storefront: { previewOrigins: [`https://editor.${id}.test`] },
+    })
+  const data = storefrontData({
+    integrations: [
+      framing('shop', ['commerce']),
+      framing('pages', ['cms']),
+      framing('unused', ['cms']),
+    ],
+    providers: { commerce: 'shop', cms: 'pages' },
+  })
+  assert.deepEqual(data.previewOrigins, ['https://editor.pages.test'])
+  assert.deepEqual(
+    storefrontData({
+      integrations: [integ('shop', ['commerce'])],
+      providers: { commerce: 'shop' },
+    }).previewOrigins,
+    []
+  )
 })

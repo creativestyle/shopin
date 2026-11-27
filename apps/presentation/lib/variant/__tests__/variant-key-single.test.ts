@@ -27,19 +27,14 @@ type VariantKey = typeof import('../variant-key')
 
 function load(): VariantKey {
   let mod: VariantKey | undefined
-  const before = process.env.SHOPIN_STOREFRONT
-  process.env.SHOPIN_STOREFRONT = JSON.stringify(SINGLE)
-  try {
-    jest.isolateModules(() => {
-      mod = require('../variant-key')
-    })
-  } finally {
-    if (before === undefined) {
-      delete process.env.SHOPIN_STOREFRONT
-    } else {
-      process.env.SHOPIN_STOREFRONT = before
-    }
-  }
+  jest.isolateModules(() => {
+    jest.doMock('@shopin/storefront/storefront-data.json', () => ({
+      __esModule: true,
+      default: SINGLE,
+    }))
+    mod = require('../variant-key')
+  })
+  jest.dontMock('@shopin/storefront/storefront-data.json')
   return mod!
 }
 

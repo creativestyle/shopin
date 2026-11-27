@@ -8,9 +8,10 @@ import { defineIntegration } from '@core/integration-kit'
 export const mockPsp = () =>
   defineIntegration({
     id: 'mock',
-    label: {
-      en: 'Sample data: generated, works without any account',
-      de: 'Beispieldaten: erzeugt, ohne Konto nutzbar',
+    label: { en: 'Sample data', de: 'Beispieldaten' },
+    description: {
+      en: 'Generated, works without any account',
+      de: 'Erzeugt, ohne Konto nutzbar',
     },
     storefront: {
       // its payment link opens the storefront's payment step (PAYMENT_STEP_PATH): this package's payment page

@@ -3,11 +3,13 @@
 import { useQueryClient } from '@tanstack/react-query'
 import { useRouter } from '@/lib/navigation'
 import { useTranslations } from 'next-intl'
-import { useOrderService } from '@/features/order/use-order-service'
-import { useCart } from '@/features/cart/cart-use-cart'
+import { useCheckoutService } from './use-checkout-service'
 import { cartKeys } from '@/features/cart/cart-keys'
 import { checkoutKeys } from '../checkout-keys'
-import type { OrderResponse } from '@core/contracts/order/order'
+import type {
+  PaymentReturnRequest,
+  PaymentReturnResponse,
+} from '@core/contracts/cart/payment-method'
 import { generateToken, getStoredToken, saveToken } from './use-order-token'
 import { HttpError } from '@/lib/error-utils'
 import { addToast } from '@/components/ui/toast'
@@ -26,54 +28,49 @@ function redirectToComplete(
 
 function handleOrderSuccess(
   router: ReturnType<typeof useRouter>,
-  order: OrderResponse
+  orderId: string
 ): void {
-  const existing = getStoredToken(order.id)
+  const existing = getStoredToken(orderId)
 
   if (existing) {
-    redirectToComplete(router, order.id, existing.token)
+    redirectToComplete(router, orderId, existing.token)
     return
   }
 
   const token = generateToken()
-  saveToken(order.id, token)
-  redirectToComplete(router, order.id, token)
+  saveToken(orderId, token)
+  redirectToComplete(router, orderId, token)
 }
 
-export function useCreateCheckoutOrder() {
+/**
+ * The payment return: the BFF asks the payment integration for the result and creates the order only for a paid
+ * or authorized payment. Paid: the order confirmation. Failed, cancelled or still pending: back to the review step,
+ * where the shopper pays again, with the payment-failed message.
+ */
+export function useCompletePaymentReturn() {
   const router = useRouter()
   const t = useTranslations('checkout')
   const handleError = useMutationErrorHandler()
-  const { orderService } = useOrderService()
-  const { cart } = useCart()
+  const { checkoutService } = useCheckoutService()
   const queryClient = useQueryClient()
 
   const mutation = useBffClientMutation({
-    mutationKey: checkoutKeys.mutations.createOrder(),
+    mutationKey: checkoutKeys.mutations.completePaymentReturn(),
     errorMessage: null, // custom handling in onError
-    mutationFn: async (): Promise<OrderResponse> => {
-      if (!cart?.id) {
-        throw new Error('Cart ID is required to create an order')
-      }
-      return await orderService.createOrder({ cartId: cart.id })
-    },
-    onSuccess: (order) => {
-      queryClient.invalidateQueries({ queryKey: cartKeys.all })
-      queryClient.removeQueries({ queryKey: cartKeys.all })
-      handleOrderSuccess(router, order)
-    },
-    onError: (err) => {
-      if (!cart?.id) {
-        queryClient.invalidateQueries({ queryKey: cartKeys.all })
-        queryClient.removeQueries({ queryKey: cartKeys.all })
-        addToast({
-          type: 'error',
-          children: t('cartMissing'),
-        })
-        router.push('/')
+    mutationFn: (
+      request: PaymentReturnRequest
+    ): Promise<PaymentReturnResponse> =>
+      checkoutService.completePaymentReturn(request),
+    onSuccess: (result) => {
+      if (!result.orderId) {
+        router.push('/checkout/review?paymentFailed=true')
         return
       }
-
+      queryClient.invalidateQueries({ queryKey: cartKeys.all })
+      queryClient.removeQueries({ queryKey: cartKeys.all })
+      handleOrderSuccess(router, result.orderId)
+    },
+    onError: (err) => {
       if (HttpError.isConflictError(err)) {
         queryClient.invalidateQueries({ queryKey: cartKeys.all })
         queryClient.removeQueries({ queryKey: cartKeys.all })
@@ -90,7 +87,7 @@ export function useCreateCheckoutOrder() {
   })
 
   return {
-    createOrder: mutation.mutate,
+    completePaymentReturn: mutation.mutate,
     isPending: mutation.isPending,
     error: mutation.error,
   }

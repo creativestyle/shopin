@@ -1,5 +1,5 @@
 /**
- * Variant fixtures derived from the build-time data (SHOPIN_STOREFRONT, set by jest.config.ts from the
+ * Variant fixtures derived from the build-time data (storefront-data.json, mapped by jest.config.ts to the
  * fixture config in ./storefront.ts), so the tests name no provider and keep working when providers are
  * added, removed or reordered there.
  */

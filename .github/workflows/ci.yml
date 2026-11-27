@@ -24,8 +24,8 @@ jobs:
         uses: actions/setup-node@v4
         with:
           # This automatically reads the "engines" field in package.json
-          node-version-file: 'package.json'
-          cache: 'npm'
+          node-version-file: "package.json"
+          cache: "npm"
 
       - name: Install dependencies
         run: npm ci
@@ -51,3 +51,36 @@ jobs:
 
       - name: Test
         run: npm run test
+
+      # the deployment's /bff/capabilities check (run by the deployment against the started BFF; the category-split
+      # tests also run it against the shop config's BFF)
+      - name: Test the deployment checks
+        run: node --test scripts/checks/*.test.mjs
+
+  integrations-and-demo:
+    # the shop job runs on the shop config, where the vendor integrations are dormant (their SDKs not installed):
+    # this job switches to the demo, which installs every integration, then checks them all and runs the demo's tests
+    name: Integrations and demo (every vendor installed)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: "package.json"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Switch to the demo (installs and builds every integration)
+        run: npm run use demo
+
+      - name: Lint, format check, type-check and test every integration
+        run: npm run integrations:check
+
+      - name: Test the demo packages
+        run: npx turbo run test --filter='./demo/*'

@@ -3,6 +3,7 @@ import { type Provider } from '@nestjs/common'
 import { graphqlClientProviders } from './client/graphql-client.module'
 import * as services from './services'
 import { ContentfulServiceProviderImpl } from './contentful-service-provider'
+import { contentfulErrorMeaning } from './errors'
 
 const SERVICES = Object.values(services).filter(
   (v) => typeof v === 'function'
@@ -23,6 +24,8 @@ export default port('cms', {
   ],
   inject: [CONTENTFUL_SERVICE_PROVIDER],
   useFactory: (p: ContentfulServiceProviderImpl) => p.getServices(),
+  // Contentful's errors as the shopper gets them (its 4xx are the shop's setup: 502)
+  errors: contentfulErrorMeaning,
   // once at boot: the space's environment answers a GraphQL query with the delivery token
   probe: (_cms, options) =>
     checkEndpoint(

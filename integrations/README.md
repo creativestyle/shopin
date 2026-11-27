@@ -1,30 +1,31 @@
 # Integrations
 
-Packages that connect the BFF to a commerce platform, search, CMS, payment or identity provider. One folder per
-category; an integration that serves several categories lives under its main one. What an integration is and how to
-write one: [core/integration-kit](../core/integration-kit/README.md).
+Packages that connect the BFF to a commerce platform, CMS, search, payment or identity provider. The layout is vendor
+first: `integrations/<vendor>/<category>`, one package per part a vendor serves, so a shop can remove one part (say
+commercetools' sign-in) and keep the others. A vendor's shared code lives in `integrations/<vendor>/core`, which
+declares no port; a part imports only its own vendor's core. What an integration is and how to write one:
+[core/integration-kit](../core/integration-kit/README.md).
 
-| Package                                | Folder                              | Serves                                                                 | Env                            |
-| -------------------------------------- | ----------------------------------- | ---------------------------------------------------------------------- | ------------------------------ |
-| `@integrations/commercetools-commerce` | `commerce/commercetools`            | commerce, search, auth                                                 | `COMMERCETOOLS_*`              |
-| `@integrations/mock-commerce`          | `commerce/mock-api`                 | commerce, search, cms, psp                                             | none                           |
-| `@integrations/mock-psp/page`          | `psp/mock-payment-page`             | storefront slot `PaymentStep` (mock data's payment page)               |                                |
-| `@integrations/algolia-search`         | `search/algolia-api`                | search (fed from commerce)                                             | `ALGOLIA_*`                    |
-| `@integrations/algolia-sync`           | `search/commercetools-algolia-sync` | tool of algolia-api: index sync                                        | `COMMERCETOOLS_*`, `ALGOLIA_*` |
-| `@integrations/contentful-cms`         | `cms/contentful-api`                | cms                                                                    | `CONTENTFUL_*`                 |
-| `@integrations/contentful-migration`   | `cms/contentful-migration`          | tool of contentful-api: content model, `npm run migrate`               | `CONTENTFUL_*`                 |
-| `@integrations/mock-auth`              | `auth/mock-identity`                | auth (fixture users; mock commerce only)                               | none                           |
-| `@demo/provider-switch`                | `demo/provider-switch`              | per-request provider choice ([README](demo/provider-switch/README.md)) | none                           |
-| `@demo/data-source-selector`           | `demo/data-source-selector`         | storefront page `/setup` (`Pages`)                                     | none                           |
-| `@demo/demo-disclaimer`                | `demo/demo-disclaimer`              | storefront slot `SiteNotice`                                           | none                           |
-| `@demo/mock-tracking-tags`             | `demo/mock-tracking-tags`           | storefront slot `TrackingTags`                                         | none                           |
-| `@integrations/demo-hydrate`           | `demo/hydrate`                      | demo data snapshots (setup-time tool)                                  | per provider                   |
+| Package                                | Folder                   | Serves                                                                             | Env                                                  |
+| -------------------------------------- | ------------------------ | ---------------------------------------------------------------------------------- | ---------------------------------------------------- |
+| `@integrations/commercetools-core`     | `commercetools/core`     | shared commercetools code (API clients, OAuth, scopes, errors); no port            | (its parts')                                         |
+| `@integrations/commercetools-commerce` | `commercetools/commerce` | commerce (its product search serves search when the shop configures no search)     | `COMMERCETOOLS_*`                                    |
+| `@integrations/commercetools-auth`     | `commercetools/auth`     | auth: commercetools' own sign-in (only with commercetools commerce)                | `COMMERCETOOLS_*`                                    |
+| `@integrations/algolia-search`         | `algolia/search`         | search (an index fed from commercetools)                                           | `ALGOLIA_*`                                          |
+| `@integrations/algolia-sync`           | `algolia/sync`           | tool of algolia-search: index sync                                                 | `ALGOLIA_WRITE_API_KEY`, `COMMERCETOOLS_*`           |
+| `@integrations/contentful-cms`         | `contentful/cms`         | cms                                                                                | `CONTENTFUL_*`                                       |
+| `@integrations/contentful-migration`   | `contentful/migration`   | tool of contentful-cms: content model, `npm run migrate`                           | `CONTENTFUL_MANAGEMENT_ACCESS_TOKEN`, `CONTENTFUL_*` |
+| `@integrations/mock-commerce`          | `mock/commerce`          | commerce: generated sample data (its product search serves search)                 | none                                                 |
+| `@integrations/mock-cms`               | `mock/cms`               | cms: sample pages                                                                  | none                                                 |
+| `@integrations/mock-psp`               | `mock/psp`               | psp: sample payment; `./page` is its pretend payment page (the `PaymentStep` slot) | none                                                 |
+| `@integrations/mock-auth`              | `mock/auth`              | auth: fixture users (only with mock commerce)                                      | none                                                 |
 
 Every folder is an npm workspace. A package's third-party dependencies are optional peers: `npm run setup` installs
 them only for what the shop uses, into the package that uses them: `config/shop` (the BFF's integrations),
 `config/storefront` (UI packages) or `config/tools` (a tool whose every `"shopin": { "toolOf": [...] }` parent is
 configured). `npm run integrations:check` lints, type-checks and tests every installed integration and lists the
-dormant ones. The folder under `integrations/` is the category the package serves; `demo/` holds demo-only packages ([demo/README.md](demo/README.md)); a shop's own kind gets its own folder ([docs/extending.md](../docs/extending.md)).
+dormant ones. Demo-only packages live in `demo/` ([demo/README.md](../demo/README.md)). A shop's own kind of port and
+its other extensions: [docs/extending.md](../docs/extending.md).
 
 ## License
 

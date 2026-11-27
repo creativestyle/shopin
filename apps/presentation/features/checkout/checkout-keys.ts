@@ -10,8 +10,8 @@ export const checkoutKeys = {
       [...checkoutKeys.all, 'mutations', 'setShippingMethod'] as const,
     setPaymentMethod: () =>
       [...checkoutKeys.all, 'mutations', 'setPaymentMethod'] as const,
-    createOrder: () =>
-      [...checkoutKeys.all, 'mutations', 'createOrder'] as const,
+    completePaymentReturn: () =>
+      [...checkoutKeys.all, 'mutations', 'completePaymentReturn'] as const,
     initiatePayment: () =>
       [...checkoutKeys.all, 'mutations', 'initiatePayment'] as const,
   },

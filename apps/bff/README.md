@@ -34,12 +34,9 @@ The BFF sits between the Next.js storefront and e-commerce/CMS back ends. It pro
 - **Sign-in and the cart**: the customer's active cart wins; without one the guest cart is kept, through the
   commerce port's `attachGuestCart` when it has one, and dropped when the platform refuses it.
 - **Errors**: 501–504 reach the storefront as such with a generic message, anything unknown as 500
-  ([errors a port throws](../../core/integration-kit/README.md#errors-a-port-throws)). With an integration that serves through
-  others (`delegates`), a 502–504 also carries `vendor: { category, provider }` (ids), so the storefront can say which platform is down.
+  ([errors a port throws](../../core/integration-kit/README.md#errors-a-port-throws)).
 - `GET /bff/capabilities` reports the provider serving each category and kind, the categories no provider can
   serve, and the optional services the commerce provider offers (`services.wishlist`).
-- `scripts/checks/bff-boot.mjs <dir>` boots a built BFF and checks `/bff/capabilities` against the config (CI runs
-  it on the deployed shape; `--placeholders` fills the integrations' variables when no secrets are at hand).
 - Mutating routes need the CSRF token: `GET /bff/csrf/token`, then send it as `X-CSRF-Token`.
 - Routes are under `/bff`; Swagger is at `/api`.
 

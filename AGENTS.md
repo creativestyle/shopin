@@ -24,45 +24,57 @@ apps/
   typedoc/          # Generated API documentation
 core/
   contracts/        # Shared interfaces, Zod schemas, types (the single source of truth)
+  integration-kit/  # defineIntegration, port, defineConfig (the author API), the commerce contract suite (./testing)
   i18n/             # next-intl translation files and config
   eslint-config/    # Shared ESLint rules
   prettier-config/  # Shared Prettier config
   typescript-config/ # Shared tsconfig bases
   logger-config/    # Pino logger configuration
   draft-token/      # Draft mode utilities
-config/
+config/           # @config/* is SHOPin's own; @shopin/* (shop, storefront, tools) is the shop's, edited by the shop and setup
   constants/        # Shared primitive constants and derived types
+  shop/             # The shop's BFF side: shopin.config.ts names the integration serving each category
+  storefront/       # The shop's storefront side: storefront.mts (slots, pages), storefront-data.json (generated)
+  tools/            # Command-line tools of the configured integrations (Contentful migrations, Algolia sync)
 integrations/       # One package per vendor and category: integrations/<vendor>/<category> (@integrations/<vendor>-<category>)
-  commercetools/core/       # What the commercetools parts share: server client, error helpers (no category)
-  commercetools/commerce/   # Product catalog, cart, checkout, navigation
-  commercetools/auth/       # Customer auth (OAuth 2.0, password grant)
-  algolia/search/           # Product search (Algolia) — wired via the commercetools-algolia-set data source
+  commercetools/core/       # What the commercetools parts share: server client, env, error meaning (no category)
+  commercetools/commerce/   # Catalog, cart, checkout, customers, orders; its product search serves search
+  commercetools/auth/       # Sign-in against the project's customers (pairs with commercetools commerce)
+  algolia/search/           # Product search (Algolia)
+  algolia/sync/             # Pushes commercetools products into an Algolia index (a tool, not a port)
   contentful/cms/           # CMS content (pages, layout) via GraphQL
-  contentful/migration/     # CMS-as-code content model migrations
-  mock/commerce/            # Mock implementations for local dev
-  mock/psp/                 # Demo payment page the mock payment redirects to
-demo/               # Optional demo packages (removable for production)
-  data-source-selector/
-  data-source-header-reader/
-  demo-disclaimer/
-  mock-tracking-tags/
+  contentful/migration/     # CMS-as-code content model migrations (a tool)
+  mock/commerce/            # Commerce from in-code fixtures, no account needed
+  mock/auth/                # Mock identity provider (stand-in for an external IdP)
+  mock/cms/                 # CMS pages, header and footer from fixtures
+  mock/psp/                 # Mock payment provider and the demo payment page it redirects to
+demo/               # The SHOPin demo (npm run use demo; npm run use demo remove deletes it)
+  shop/             # The demo's shop config (as config/shop), behind the provider switch
+  storefront/       # The demo's storefront slots: /setup page, demo notice, tracking tags
+  provider-switch/  # Per-request provider per category (X-<Category>-Provider headers); demo and dev only
+  data-source-selector/ # The /setup page component
+  demo-disclaimer/  # Sandbox notice dialog
+  mock-tracking-tags/ # Sample tags behind cookie consent
+  switch-scenarios/ # Tests of the demo switch in the real BFF
 ```
 
 ## Key commands
 
-| Command                      | What it does                                                           |
-| ---------------------------- | ---------------------------------------------------------------------- |
-| `npm run setup`              | Build core packages, prepare monorepo                                  |
-| `npm run dev`                | Start all dev servers                                                  |
-| `npm run build`              | Production build                                                       |
-| `npm run test`               | Run all tests                                                          |
-| `npm run lint`               | ESLint across all packages                                             |
-| `npm run lint:boundaries`    | Integration import boundaries across the repo (part of `npm run lint`) |
-| `npm run format`             | Prettier across all packages                                           |
-| `npm run format:check`       | Prettier check (non-mutating, CI gate)                                 |
-| `npm run check-types`        | TypeScript type checking                                               |
-| `npm run check-dependencies` | `npm audit --audit-level=critical`                                     |
-| `npm run start:local`        | Run production builds locally (build first)                            |
+| Command                      | What it does                                                                   |
+| ---------------------------- | ------------------------------------------------------------------------------ |
+| `npm run setup`              | Create `.env`, install and build what `config/shop` names                      |
+| `npm run use`                | Switch, add or remove (`off`) an integration in the shop config, then setup    |
+| `npm run config:check`       | Fail when `config/` and the lockfile are out of step with the shop config (CI) |
+| `npm run dev`                | Start all dev servers                                                          |
+| `npm run build`              | Production build                                                               |
+| `npm run test`               | Run all tests                                                                  |
+| `npm run lint`               | ESLint across all packages                                                     |
+| `npm run lint:boundaries`    | Integration import boundaries across the repo (part of `npm run lint`)         |
+| `npm run format`             | Prettier across all packages                                                   |
+| `npm run format:check`       | Prettier check (non-mutating, CI gate)                                         |
+| `npm run check-types`        | TypeScript type checking                                                       |
+| `npm run check-dependencies` | `npm audit --audit-level=critical`                                             |
+| `npm run start:local`        | Run production builds locally (build first)                                    |
 
 Dev server ports: presentation :3000, BFF :4000 (Swagger at /bff/api), Storybook :6006, Typedoc :5000.
 
@@ -75,9 +87,11 @@ Presentation (Next.js) → BFF (NestJS) → Integration adapters → External AP
 ```
 
 - **Presentation** only talks to the BFF, never directly to external APIs.
-- **BFF** uses `DataSourceFactory` to select the right integration per request.
+- **Shop config** `config/shop/shopin.config.ts` names one integration per category (`commerce`, `search`, `cms`, `psp`, `auth`). `npm run setup` installs only what it names; `npm run use <category> <id|off>` changes it.
+- **BFF** loads the configured ports once at start, checks each integration's credentials, and serves a category whose check failed as unavailable (`/bff/capabilities`) instead of failing.
 - **Integrations** implement contract interfaces, fetching in the backend's format and mapping to shared types.
-- **Data sources can be mixed:** e.g. Commercetools for commerce + Algolia for product search + Contentful for CMS + mock for payment (see the `commercetools-algolia-set` data source in `DataSourceFactory`).
+- **Integrations can be mixed:** e.g. commercetools for commerce and sign-in + Algolia for search + Contentful for CMS + mock for payment. Without a search integration, the commerce integration's product search serves search.
+- **Extending** (own contract fields, cart fields, BFF features, kinds of port, pages): `docs/extending.md`.
 
 ## Conventions
 

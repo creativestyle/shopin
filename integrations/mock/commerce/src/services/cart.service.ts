@@ -318,8 +318,9 @@ export class CartService {
           'en-US': 'DHL Standard Delivery',
         },
         price: {
-          centAmount: 0,
-          currencyCode: currency,
+          regularPriceInCents: 0,
+          currency: currency,
+          fractionDigits: 2,
         },
         isDefault: true,
       },
@@ -330,8 +331,9 @@ export class CartService {
           'en-US': 'DHL Express Delivery',
         },
         price: {
-          centAmount: 300,
-          currencyCode: currency,
+          regularPriceInCents: 300,
+          currency: currency,
+          fractionDigits: 2,
         },
         isDefault: false,
       },
@@ -342,8 +344,9 @@ export class CartService {
           'en-US': 'DHL Packstation',
         },
         price: {
-          centAmount: 0,
-          currencyCode: currency,
+          regularPriceInCents: 0,
+          currency: currency,
+          fractionDigits: 2,
         },
         isDefault: false,
       },
@@ -358,8 +361,9 @@ export class CartService {
           'en-US': 'Free to a SHOPIN Store',
         },
         price: {
-          centAmount: 0,
-          currencyCode: currency,
+          regularPriceInCents: 0,
+          currency: currency,
+          fractionDigits: 2,
         },
         isDefault: false,
       },
@@ -419,11 +423,7 @@ export class CartService {
         MOCK_DELIVERY_TIMES[selectedMethod.id],
         this.languageProvider.getCurrentLanguage()
       ),
-      price: {
-        regularPriceInCents: selectedMethod.price.centAmount,
-        currency: selectedMethod.price.currencyCode,
-        fractionDigits: 2,
-      },
+      price: selectedMethod.price,
     }
     const updatedCart: CartResponse = {
       ...cart,

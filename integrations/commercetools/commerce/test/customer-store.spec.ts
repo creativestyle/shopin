@@ -274,3 +274,17 @@ describe('commercetools descriptor', () => {
     expect(typeof port.guestSession!.refresh).toBe('function')
   })
 })
+
+describe('commercetools customer store: two customers for one sign-in', () => {
+  it('two matches are a conflict, never an arbitrary pick', async () => {
+    const ct = new FakeProjectClient()
+    ct.customers_.push(
+      { id: 'ct-a', version: 1, email: 'twin@example.com' },
+      { id: 'ct-b', version: 1, email: 'twin@example.com' }
+    )
+    const port = await commercePort(ct, { ...OPTIONS, linkCustomers: '1' })
+    await expect(
+      port.customers!.findByEmail('twin@example.com')
+    ).rejects.toMatchObject({ status: 409 })
+  })
+})

@@ -6,11 +6,7 @@
  */
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import {
-  HttpException,
-  HttpStatus,
-  NotImplementedException,
-} from '@nestjs/common'
+import { HttpStatus, NotImplementedException } from '@nestjs/common'
 import switchModule from '../dist/index.js'
 
 const { providerSwitch } = switchModule
@@ -37,20 +33,7 @@ const lists = { commerce: [ct, mock], search: [algolia, ct, mock], auth: [idp] }
 /** A fake port per provider: every method answers with the provider id, so forwarding is visible. */
 const commercePort = (id) => ({
   productService: {
-    getProduct: async (slug) => {
-      if (slug === 'down') {
-        throw new HttpException('vendor down', 503)
-      }
-      if (slug === 'unreachable') {
-        // an SDK over fetch: the network error is the cause
-        throw new TypeError('fetch failed', {
-          cause: Object.assign(new Error('connect ECONNREFUSED'), {
-            code: 'ECONNREFUSED',
-          }),
-        })
-      }
-      return `${id}:${slug}`
-    },
+    getProduct: async (slug) => `${id}:${slug}`,
   },
   cartService: {
     owner: id,
@@ -209,22 +192,4 @@ test('the switch serves only the categories it lists, through every listed integ
     sw.delegates.map((d) => d.id),
     ['ct', 'mock', 'algolia', 'idp']
   )
-})
-
-test("a platform that is down (502, 503, 504) is named on the error: category and this request's provider", async () => {
-  const s = install()
-  s.use({ 'x-commerce-provider': 'ct' })
-  const error = await s.ports.commerce.productService
-    .getProduct('down')
-    .catch((e) => e)
-  assert.equal(error.getStatus(), 503)
-  assert.deepEqual(error.vendor, { category: 'commerce', provider: 'ct' })
-  // an SDK's network error (no status) is a platform that is down too
-  const unreachable = await s.ports.commerce.productService
-    .getProduct('unreachable')
-    .catch((e) => e)
-  assert.deepEqual(unreachable.vendor, { category: 'commerce', provider: 'ct' })
-  // the shopper's own mistakes are not a vendor being down
-  s.use({ 'x-commerce-provider': 'mock' })
-  assert.equal(await s.ports.commerce.productService.getProduct('a'), 'mock:a')
 })

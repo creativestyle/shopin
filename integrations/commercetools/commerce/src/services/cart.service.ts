@@ -1,6 +1,6 @@
 import { RequestContext } from '@core/integration-kit'
 import {
-  BadGatewayException,
+  ConflictException,
   Inject,
   Injectable,
   Logger,
@@ -277,11 +277,25 @@ export class CartService {
           true
         )
       } catch (error) {
-        if (!(hasStatusCode(error) && error.statusCode === 409)) {
+        // the project has no Custom Type for the shop's cart fields yet: the shop's setup, named (README)
+        if (
+          !cart.custom &&
+          hasStatusCode(error) &&
+          error.statusCode === 400 &&
+          JSON.stringify((error as { body?: unknown }).body ?? '').includes(
+            CartService.CART_FIELDS_TYPE
+          )
+        ) {
+          throw new NotImplementedException(
+            `cart fields: the project has no Custom Type "${CartService.CART_FIELDS_TYPE}" for carts: create it with the shop's cart fields (commercetools commerce README, "Cart fields")`
+          )
+        }
+        // only a version conflict is worth a retry; any other 409 is the platform's answer
+        if (!isConcurrentModificationError(error)) {
           throw error
         }
         if (attempt > 0) {
-          throw new BadGatewayException('commercetools: the cart kept changing')
+          throw new ConflictException('The cart kept changing, try again')
         }
       }
     }

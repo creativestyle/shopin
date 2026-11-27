@@ -53,6 +53,8 @@ import type {
 } from '@core/contracts/cart/shipping-method'
 import type {
   PaymentMethodsResponse,
+  PaymentResult,
+  PaymentReturnRequest,
   SetPaymentMethodRequest,
 } from '@core/contracts/cart/payment-method'
 import {
@@ -262,14 +264,21 @@ export interface LayoutService {
 }
 
 /**
- * The storefront route that hosts a payment step in the shop itself (`<storefront>/demo/mocked-payment-step/<paymentId>`, shopin's URL), for a
- * payment provider whose payment page is a storefront slot (`PaymentStep`) instead of an external page.
+ * The storefront route of the `PaymentStep` slot (`<storefront>/demo/mocked-payment-step/<cartId>`). The shop hosts
+ * no payment page of its own: a real payment provider links to its own hosted page, and this route only renders
+ * the slot, which the mock payment provider fills with its demo page (`@integrations/mock-psp/page`). Without a
+ * provider that fills the slot, the route answers 404.
  */
 export const PAYMENT_STEP_PATH = '/demo/mocked-payment-step'
 
 export interface PaymentService {
   getPaymentMethods(cartId?: string): Promise<PaymentMethodsResponse>
   getPaymentLink(cartId: string): Promise<{ paymentLink: string }>
+  /**
+   * After the provider sent the shopper back to the shop's return route: the payment's status, asked of the
+   * provider with what it sent back (`params`). Only `paid` or `authorized` lets the BFF create the order.
+   */
+  getPaymentResult(request: PaymentReturnRequest): Promise<PaymentResult>
 }
 
 export interface OrderService {

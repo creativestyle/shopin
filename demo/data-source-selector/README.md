@@ -2,9 +2,11 @@
 
 ⚠️ **DEMO ONLY** — For demonstration only; not for production.
 
-The demo's /setup page (`SetupPage`, the storefront's `Pages` slot under `setup` in `@demo/storefront`): shopin's
-data-source selector over the demo's provider switch. Each data source (`DATA_SOURCES`) names a provider per
-category; choosing one writes the switch's cookie of each category, and the storefront proxy reads them.
+The demo's /setup page (`SetupPage`, the storefront's `Pages` slot under `setup` in `@demo/storefront`): the demo's
+provider switch per category. It lists, per category the switch has (`GET /bff/switch`), the installed integrations by
+the name and description their descriptors declare (`label`, `description`, in the page's language); a provider the
+other categories' choice rules out is disabled with the reason its descriptor gives. Choosing one writes that category's switch cookie,
+and the storefront proxy reads it. No list of providers is written here (`setupRows` in `src/rows.ts`).
 
 ## Removal
 

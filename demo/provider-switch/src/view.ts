@@ -24,7 +24,10 @@ export interface ProviderOption {
   id: string
   /** Set at boot when this provider cannot serve: its variables are missing or its credentials check failed. */
   unavailable?: string
+  /** The integration's name (its descriptor's `label`; the id when it has none). */
   label: Requirement['reason']
+  /** What it does (its descriptor's `description`), when it says. */
+  description?: Requirement['reason']
   requires?: Requirement
   /** Commerce only: the optional services this provider leaves out. */
   omits?: readonly OptionalService[]
@@ -47,27 +50,60 @@ export interface Resolution {
   unavailable: Partial<Record<Category, string>>
 }
 
-/** The categories to switch, in the order given, each with its integrations (the first is the default). */
+/**
+ * In the `search` list: the product search of this request's commerce provider, the search a shop without a search
+ * integration gets. It is no integration, so the switch serves it itself.
+ */
+export const COMMERCE_SEARCH = 'commerce'
+
+const COMMERCE_SEARCH_LABEL = {
+  en: "The commerce platform's own product search",
+  de: 'Die Produktsuche der Commerce-Plattform',
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type Listed = Integration<string, any>
+
+/**
+ * The categories to switch, in the order given, each with its integrations (the first is the default); the search
+ * list may also name `COMMERCE_SEARCH` (`providerSwitch` refuses it in another list).
+ */
 export type Lists = Partial<
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  Record<Category, readonly Integration<string, any>[]>
+  Record<Category, readonly (Listed | typeof COMMERCE_SEARCH)[]>
 >
 
+/** The integrations of a list (`COMMERCE_SEARCH` is none). */
+export const integrationsOf = (list: Lists[keyof Lists]): Listed[] =>
+  (list ?? []).filter((i): i is Listed => i !== COMMERCE_SEARCH)
+
 export function providerView(lists: Lists): ProviderView {
-  return (Object.entries(lists) as [Category, readonly Integration[]][]).map(
-    ([category, list]) => ({
+  return (
+    Object.entries(lists) as [Category, readonly (Listed | string)[]][]
+  ).map(([category, list]) => {
+    const options = list.map(
+      (entry): ProviderOption =>
+        typeof entry === 'string'
+          ? { id: entry, label: COMMERCE_SEARCH_LABEL }
+          : {
+              id: entry.id,
+              label: entry.label ?? entry.id,
+              ...(entry.description ? { description: entry.description } : {}),
+              ...(entry.requires?.[category]
+                ? { requires: entry.requires[category] }
+                : {}),
+              ...(category === 'commerce' && entry.omits?.length
+                ? { omits: entry.omits }
+                : {}),
+            }
+    )
+    return {
       category,
       header: `X-${category[0]!.toUpperCase()}${category.slice(1)}-Provider`,
       cookie: `shopin-${category}`,
-      defaultProvider: list[0]!.id,
-      options: list.map(({ id, label, requires, omits }) => ({
-        id,
-        label: label ?? id,
-        ...(requires?.[category] ? { requires: requires[category] } : {}),
-        ...(category === 'commerce' && omits?.length ? { omits } : {}),
-      })),
-    })
-  )
+      defaultProvider: options[0]!.id,
+      options,
+    }
+  })
 }
 
 /**
@@ -119,8 +155,10 @@ export function resolveProviders(
 
 export interface SwitcherOption {
   id: string
-  /** The integration's label in the page's language: what serves the shop with this provider. */
+  /** The integration's name in the page's language: what serves the shop with this provider. */
   label: string
+  /** What it does, in the page's language ('' when its descriptor has no description). */
+  description: string
   selected: boolean
   /** Set when the current selection of the other categories rules this provider out. */
   disabledReason?: string
@@ -156,6 +194,7 @@ export function switcherOptions(
     options: c.options.map((o) => ({
       id: o.id,
       label: reasonIn(o.label, language),
+      description: o.description ? reasonIn(o.description, language) : '',
       selected: providers[c.category] === o.id,
       ...(fits(o, providers, new Set(view.map((v) => v.category)))
         ? {}

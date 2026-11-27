@@ -68,10 +68,16 @@ export interface Integration<
 > {
   id: Id
   /**
-   * Shown to people (an integration's switcher, `/bff/capabilities`): one text or one per language, the same shape as a
-   * requirement's `reason` (`{ en: 'Sample data: no account needed', de: '…' }`); the id when left out.
+   * The integration's name, shown to people (an integration's switcher, `/bff/capabilities`, "not available"
+   * messages): one text or one per language, the same shape as a requirement's `reason`
+   * (`{ en: 'Sample data', de: 'Beispieldaten' }`); the id when left out. What it does goes into `description`.
    */
   label?: Requirement['reason']
+  /**
+   * What the integration does, in a few words, shown under its name (the `/setup` switcher): the same shape as
+   * `label` (`{ en: 'Generated, works without any account', de: '…' }`); none when left out.
+   */
+  description?: Requirement['reason']
   /** One port per category, loaded lazily (`() => require('./cms').default`): reading the config loads no Nest. */
   ports: { [C in P]: () => PortDefinition<C> }
   /** Per category: the variables that port reads, handed over as `PortOptions`. */
@@ -100,6 +106,12 @@ export interface Integration<
   storefront?: {
     productImages?: ImageSource
     contentImages?: ImageSource
+    /**
+     * A CMS's origins that may show the preview (draft mode) in a frame, e.g. `https://app.contentful.com`. The
+     * storefront allows exactly these (and itself) as `frame-ancestors` on its preview routes; without any, it sets
+     * no frame policy there.
+     */
+    previewOrigins?: readonly string[]
     /**
      * Per category: the storefront slots this integration fills when it serves that category, each with its
      * component as `"<package>#<export>"` (`{ psp: { PaymentStep: "@acme/pay-ui#AcmePaymentStep" } }`). Setup
