@@ -3,20 +3,21 @@
  *
  * The proxy uses hasVariantPrefix(firstSegment) and issues a 308 redirect for any
  * request whose first path segment starts with "~". This prevents internal variant
- * keys from leaking into public URLs (which would pin users to the wrong data source).
+ * keys from leaking into public URLs (which would pin users to the wrong providers).
  *
  * Proxy behavior:
  *   - hasVariantPrefix(segment) → true for ANY segment starting with "~".
  *   - On match: 308 redirect to the path WITHOUT the ~variant prefix (clean URL).
  *   - Cookie is NOT consulted at the guard; the redirect Location is always the clean path.
  *   - After the redirect, the browser follows to the clean URL; the subsequent request IS
- *     processed with the data-source cookie → internal rewrite to ~<variant> is invisible.
+ *     processed with the provider cookies → internal rewrite to ~<variant> is invisible.
  *   - For a "~default/en/path" URL: Location = "/en/path" (no ~, regardless of alt cookie).
  *   - For a "~alt/en/path" URL: Location = "/en/path" (same).
  *   - For "~bogus/en/path": hasVariantPrefix catches it → 308 (same as known variants).
  */
 
 import { test, expect } from '../../fixtures'
+import { setProviderCookie } from '../../helpers'
 
 test.describe('Leaked ~variant URL guard', () => {
   test('~commercetools-set/en/... issues 308 to the clean path (no ~ prefix)', async ({
@@ -49,12 +50,10 @@ test.describe('Leaked ~variant URL guard', () => {
     context,
     request,
   }) => {
-    // Even with an alt data-source cookie, the leaked-URL guard strips the prefix to a clean
+    // Even with an alt provider cookie, the leaked-URL guard strips the prefix to a clean
     // path; it does NOT re-add the alt variant prefix in the Location.  The subsequent follow
     // request will carry the alt cookie and be rewritten internally (invisible to the address bar).
-    await context.addCookies([
-      { name: 'data-source', value: 'commercetools-algolia-set', domain: 'localhost', path: '/' },
-    ])
+    await setProviderCookie(context, 'search', 'algolia')
     const response = await context.request.get('/~commercetools-set/en/about-us', {
       maxRedirects: 0,
     })
@@ -102,7 +101,7 @@ test.describe('Any ~-prefixed segment 308-redirects to the clean path', () => {
     expect(location).not.toMatch(/^\/~/)
   })
 
-  test('~mock-set is an allowed value and also 308-redirects cleanly', async ({ request }) => {
+  test('~mock-set (a former variant value) also 308-redirects cleanly', async ({ request }) => {
     const response = await request.get('/~mock-set/en/about-us', { maxRedirects: 0 })
     expect(response.status()).toBe(308)
     const location = response.headers()['location']

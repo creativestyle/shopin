@@ -6,7 +6,7 @@ import { getLocale } from 'next-intl/server'
 import { logger } from '@/lib/logger'
 import { getDraftModeHeaderValue } from '@/lib/draft-mode'
 import { getRequestVariant } from '@/lib/request-context/variant'
-import { variantHeaders } from '@/lib/variant/variant-key'
+import { variantHeaders, variantCacheTags } from '@/lib/variant/variant-key'
 import {
   BffUnreachableError,
   getNetworkErrorCode,
@@ -48,18 +48,23 @@ export async function createBffFetchServer(opts?: {
   ])
   // Resolve variant context once at construction time. getRequestVariant() reads
   // ALS / React-cache which are both request-scoped and fixed from this point on.
-  // Resolving here (rather than per-fetch) means variantHeaders() errors surface
-  // immediately instead of being swallowed by the per-fetch catch block.
   const requestVariant = getRequestVariant()
-  const resolvedVariantHeaders =
-    requestVariant !== undefined ? variantHeaders(requestVariant) : undefined
 
   return {
     fetch: async (path: string, options?: RequestInit) => {
       try {
         const extraOpts: Partial<BffFetchOptions> = {}
-        if (resolvedVariantHeaders != null) {
-          extraOpts.variantHeaders = resolvedVariantHeaders
+        if (requestVariant !== undefined) {
+          extraOpts.variantHeaders = variantHeaders(requestVariant)
+          // Per-category tags next to the shared bff-data tag, on fetches that are ISR-cached.
+          const next = (options as { next?: { tags?: string[] } } | undefined)
+            ?.next
+          if (next?.tags) {
+            ;(extraOpts as { next?: object }).next = {
+              ...next,
+              tags: [...next.tags, ...variantCacheTags(requestVariant)],
+            }
+          }
         }
         if (opts?.isDraft === true) {
           extraOpts.draftToken = getDraftModeHeaderValue()

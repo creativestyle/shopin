@@ -1,4 +1,10 @@
 import {
+  PaymentReturnRequestSchema,
+  PaymentReturnResponseSchema,
+  type PaymentReturnRequest,
+  type PaymentReturnResponse,
+} from '@core/contracts/cart/payment-method'
+import {
   CartResponseSchema,
   type CartResponse,
   SetBillingAddressRequestSchema,
@@ -102,5 +108,19 @@ export class CheckoutService extends BaseService {
       cartId,
     })
     return data
+  }
+
+  /**
+   * The payment provider sent the shopper back: the BFF asks the payment integration for the result and creates
+   * the order only for a paid or authorized payment of this shopper's cart.
+   */
+  async completePaymentReturn(
+    request: PaymentReturnRequest
+  ): Promise<PaymentReturnResponse> {
+    const data = await this.post<PaymentReturnResponse>(
+      '/payment/return',
+      PaymentReturnRequestSchema.parse(request)
+    )
+    return PaymentReturnResponseSchema.parse(data)
   }
 }

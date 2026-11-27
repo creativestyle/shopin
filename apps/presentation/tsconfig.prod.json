@@ -1,0 +1,21 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "composite": true,
+    "noEmit": true,
+    "rootDir": ".",
+    "tsBuildInfoFile": ".next/cache/tsconfig.prod.tsbuildinfo"
+  },
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx"],
+  "exclude": [
+    "node_modules",
+    ".next",
+    "**/__tests__/**",
+    "**/__fixtures__/**",
+    "**/__mocks__/**",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "jest.config.ts",
+    "jest.setup.ts"
+  ]
+}

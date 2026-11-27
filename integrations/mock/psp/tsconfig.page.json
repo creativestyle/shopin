@@ -1,0 +1,15 @@
+{
+  "extends": "@core/typescript-config/base.json",
+  "compilerOptions": {
+    "outDir": "dist/page",
+    "rootDir": "src/page",
+    "declarationDir": "dist/page/types",
+    "tsBuildInfoFile": "dist/page/tsconfig.tsbuildinfo",
+    "composite": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx"
+  },
+  "include": ["src/page"],
+  "exclude": ["dist", "node_modules"]
+}

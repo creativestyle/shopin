@@ -10,14 +10,14 @@ Mock analytics and marketing tags that show the cookie-consent gate working in t
 
 ## Usage
 
-The presentation app renders it from `apps/presentation/app/[variant]/[locale]/demo-tracking-tags-wrapper.tsx`, which passes the visitor's consent from `useConsentGate`.
+It is the `TrackingTags` slot in `demo/storefront/src/storefront.mts`. The storefront renders the slot from `apps/presentation/app/[variant]/[locale]/tracking-tags-wrapper.tsx`, which passes the visitor's consent from `useConsent` and `useConsentGate`; without the slot it renders nothing.
 
-To add a real tag, see the cookie consent section of [apps/presentation/README.md](../../apps/presentation/README.md).
+To add a real tag, see the cookie consent section of [apps/presentation/README.md](../../../apps/presentation/README.md).
 
 ## Removal
 
-See [demo/README.md](../README.md) for removal steps.
+See [demo/README.md](../README.md).
 
 ## License
 
-OSL-3.0 — see [root LICENSE](../../LICENSE).
+OSL-3.0, see the [root LICENSE](../../../LICENSE).

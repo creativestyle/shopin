@@ -2,8 +2,10 @@ import {
   ConflictException,
   Injectable,
   NotFoundException,
+  NotImplementedException,
 } from '@nestjs/common'
-import { DataSourceFactory } from '../../data-source/data-source.factory'
+import { Services, Ports } from '../../data-source/ports.module'
+import { currentProviders, isOwnSignIn } from '../../data-source/providers'
 import type { CartResponse } from '@core/contracts/cart/cart'
 import {
   CartVersionConflictError,
@@ -32,12 +34,13 @@ import { BaseAuthenticatedService } from '../auth/base-authenticated.service'
 @Injectable()
 export class CartService extends BaseAuthenticatedService {
   constructor(
-    dataSourceFactory: DataSourceFactory,
+    services: Services,
+    ports: Ports,
     private readonly cartIdService: CartIdService,
     tokenProvider: TokenProvider,
     tokenStorageService: TokenStorageService
   ) {
-    super(tokenProvider, tokenStorageService, dataSourceFactory)
+    super(tokenProvider, tokenStorageService, services, ports)
   }
 
   async getCart(options?: GetCartOptions): Promise<CartResponse | null> {
@@ -209,6 +212,25 @@ export class CartService extends BaseAuthenticatedService {
   }
 
   /**
+   * Sets the shop's own cart fields (validated by the controller against `contracts.cart`) on the shopper's cart,
+   * the one of the sealed cart cookie: a request never names the cart. 501 when this request's commerce platform
+   * has no `setCartFields`, 404 when the shopper has no cart.
+   */
+  async setFields(fields: Record<string, unknown>): Promise<CartResponse> {
+    const commerce = this.ports.commerce
+    if (!commerce.setCartFields) {
+      throw new NotImplementedException(
+        `cart fields: commerce provider "${currentProviders().providers.commerce}" does not store them (it has no setCartFields)`
+      )
+    }
+    const cartId = await this.getCartId()
+    if (!cartId) {
+      throw new NotFoundException('no cart')
+    }
+    return commerce.setCartFields(cartId, fields)
+  }
+
+  /**
    * Clear cart ID cookie (used when order already exists)
    */
   async clearCartId(): Promise<void> {
@@ -221,12 +243,42 @@ export class CartService extends BaseAuthenticatedService {
   }
 
   /**
-   * Setup cart after user login.
-   * Gets the active cart for the logged-in user if it exists,
-   * deletes the guest cart cookie if it existed, and sets the logged-in cart ID.
-   * @param guestCartId - Optional guest cart ID to delete after login
+   * Sets up the cart after sign-in. Runs before the guest's commerce token is dropped, so a take-over can still prove
+   * the guest cart is this shopper's.
+   * - Sign-in through another identity provider, on a platform with `attachGuestCart`: the guest cart is taken over
+   *   first. With items, it becomes the customer's cart (the shopper's latest intent; an older active cart stays in
+   *   the account). An empty one leaves the customer's active cart in charge.
+   * - The platform's own sign-in merges the guest cart itself (its own customer sign-in): its active cart wins.
+   * - A platform that cannot list a customer's carts keeps the guest cart id for the customer.
+   * The guest cart cookie goes only once the cart is settled, or when the platform refuses the cart as another
+   * shopper's (403, 404). Any other error is rethrown with the cookie kept (sign-in still succeeds).
+   * @param guestCartId - the guest cart id read before sign-in
    */
   async setupCartAfterLogin(guestCartId?: string): Promise<void> {
+    const commerce = this.ports.commerce
+    if (guestCartId && commerce.attachGuestCart && !isOwnSignIn()) {
+      let attached: CartResponse | undefined
+      try {
+        attached = await commerce.attachGuestCart(guestCartId)
+      } catch (error) {
+        const status = (error as { getStatus?: () => number }).getStatus?.()
+        if (status !== 403 && status !== 404) {
+          throw error
+        }
+      }
+      await this.cartIdService.deleteGuestCartId()
+      if (attached?.lineItems?.length) {
+        await this.cartIdService.setLoggedInCartId(attached.id)
+        return
+      }
+      const active = await this.getCartService().getActiveCart()
+      const cartId = active?.id ?? attached?.id
+      if (cartId) {
+        await this.cartIdService.setLoggedInCartId(cartId)
+      }
+      return
+    }
+
     if (guestCartId) {
       await this.cartIdService.deleteGuestCartId()
     }
@@ -236,6 +288,24 @@ export class CartService extends BaseAuthenticatedService {
 
     if (activeCart) {
       await this.cartIdService.setLoggedInCartId(activeCart.id)
+      return
+    }
+    if (!guestCartId) {
+      return
+    }
+    if (!commerce.attachGuestCart) {
+      // the platform finds the customer's cart itself, or keeps the guest cart for the customer on first use
+      await this.cartIdService.setLoggedInCartId(guestCartId)
+      return
+    }
+    try {
+      const attached = await commerce.attachGuestCart(guestCartId)
+      await this.cartIdService.setLoggedInCartId(attached.id)
+    } catch (error) {
+      const status = (error as { getStatus?: () => number }).getStatus?.()
+      if (status !== 403 && status !== 404) {
+        throw error
+      }
     }
   }
 
@@ -339,6 +409,6 @@ export class CartService extends BaseAuthenticatedService {
    * Gets the cart service from the data source factory
    */
   private getCartService() {
-    return this.dataSourceFactory.getServices().cartService
+    return this.services.cartService
   }
 }

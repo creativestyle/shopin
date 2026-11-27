@@ -4,12 +4,15 @@
   "private": true,
   "scripts": {
     "e2e": "playwright test",
+    "e2e:demo": "node demo-e2e.mjs",
     "e2e:headed": "playwright test --headed",
     "e2e:ui": "playwright test --ui",
     "report": "playwright show-report"
   },
   "devDependencies": {
+    "@core/i18n": "*",
     "@playwright/test": "^1.51.0",
     "@types/node": "^22.0.0"
-  }
+  },
+  "exports": {}
 }

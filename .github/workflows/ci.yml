@@ -11,6 +11,10 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+# read-only token: no job writes to the repository (setup-node's npm cache uses the Actions cache service, not this token)
+permissions:
+  contents: read
+
 jobs:
   lint-format-types-test:
     name: Lint, format check, typecheck & test
@@ -18,17 +22,24 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           # This automatically reads the "engines" field in package.json
-          node-version-file: 'package.json'
-          cache: 'npm'
+          node-version-file: "package.json"
+          cache: "npm"
 
       - name: Install dependencies
         run: npm ci
+
+      # config:check compares the built config with its sources: build the two config packages first
+      - name: Build the shop config
+        run: npx turbo run build --filter=@shopin/config --filter=@shopin/storefront
+
+      - name: Config check
+        run: npm run config:check
 
       - name: Lint
         run: npm run lint
@@ -44,3 +55,36 @@ jobs:
 
       - name: Test
         run: npm run test
+
+      # the deployment's /bff/capabilities check (run by the deployment against the started BFF; the category-split
+      # tests also run it against the shop config's BFF)
+      - name: Test the deployment checks
+        run: node --test scripts/checks/*.test.mjs
+
+  integrations-and-demo:
+    # the shop job runs on the shop config, where the vendor integrations are dormant (their SDKs not installed):
+    # this job switches to the demo, which installs every integration, then checks them all and runs the demo's tests
+    name: Integrations and demo (every vendor installed)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version-file: "package.json"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Switch to the demo (installs and builds every integration)
+        run: npm run use demo
+
+      - name: Lint, format check, type-check and test every integration
+        run: npm run integrations:check
+
+      - name: Test the demo packages
+        run: npx turbo run test --filter='./demo/*'

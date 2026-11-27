@@ -15,7 +15,7 @@ export const ContentPageResponseSchema = PageResponseSchema.extend({
   slugByLocale: z.record(z.string(), z.string()).optional(),
   pageTitle: z.string().optional(),
   pageTitleVisibility: z.enum(['visible', 'srOnly']).optional(),
-  /** Parent page slug for breadcrumb/hierarchy; resolved from Contentful parentPage link. */
+  /** Parent page slug for breadcrumb/hierarchy; resolved from the CMS parent page link. */
   parentPageSlug: z.string().optional(),
   components: z.array(TeaserResponseSchema).default([]),
 })

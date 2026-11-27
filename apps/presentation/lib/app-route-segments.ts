@@ -7,7 +7,6 @@ export const APP_ROUTE_SEGMENTS: ReadonlySet<string> = new Set([
   'forgot-password',
   'reset-password',
   'search',
-  'setup',
   'sign-in',
   'sign-up',
   'wishlist',

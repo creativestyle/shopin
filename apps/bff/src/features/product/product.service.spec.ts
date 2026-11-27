@@ -27,17 +27,13 @@ type Services = {
   productCollectionService: ProductCollectionServicePort
 }
 
-class MockDataSourceFactory {
-  getServices = jest.fn<Services, []>()
-}
-
 describe('ProductService', () => {
   let service: ProductService
-  let factory: MockDataSourceFactory
+  let services: Partial<Services>
 
   beforeEach(() => {
-    factory = new MockDataSourceFactory()
-    service = new ProductService(factory as unknown as never)
+    services = {}
+    service = new ProductService(services as never)
   })
 
   it('getProductPage composes page response from product', async () => {
@@ -46,7 +42,7 @@ describe('ProductService', () => {
       breadcrumb: [{ label: 'Home', path: '/' }],
       seo: { metaTitle: 'Product title' },
     })
-    factory.getServices.mockReturnValue({
+    Object.assign(services, {
       productService: {
         getProduct,
       },

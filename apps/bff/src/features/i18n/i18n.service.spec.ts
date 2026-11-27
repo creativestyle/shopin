@@ -28,6 +28,15 @@ describe('I18nService', () => {
     expect(tr).toStrictEqual(def)
   })
 
+  it('a shop locale SHOPin has no texts for (fr-FR in the fixture locales) gets the English texts, no warning', async () => {
+    const logger = createMockLogger()
+    const service = new I18nService(logger)
+    const fr = await service.getTranslations('fr-FR')
+    expect(fr).toStrictEqual(await service.getTranslations('en-US'))
+    expect(logger.warn).not.toHaveBeenCalled()
+    expect(await service.getAvailableLanguages()).toContain('fr-FR')
+  })
+
   it('returns available languages', async () => {
     const service = new I18nService(createMockLogger())
     const langs = await service.getAvailableLanguages()

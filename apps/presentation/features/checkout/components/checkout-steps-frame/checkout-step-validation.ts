@@ -12,15 +12,14 @@ const stepValidators: Record<CheckoutStepId, StepValidator> = {
   shipping: (cart) => !!cart.shippingAddress,
   deliveryMethod: (cart) =>
     !!cart.shippingAddress && !!cart.shippingInfo?.shippingMethodId,
-  payment: (cart) =>
-    !!(cart.paymentInfo?.payments && cart.paymentInfo.payments.length > 0),
+  payment: (cart) => !!cart.paymentInfo,
   review: (cart) => {
     // Review step is complete only if all previous steps are complete
     return (
       !!cart.billingAddress &&
       !!cart.shippingAddress &&
       !!cart.shippingInfo?.shippingMethodId &&
-      !!(cart.paymentInfo?.payments && cart.paymentInfo.payments.length > 0)
+      !!cart.paymentInfo
     )
   },
   complete: () => true, // Complete step is always accessible (final step)

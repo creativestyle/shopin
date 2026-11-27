@@ -815,23 +815,20 @@
   },
   "dataSourceSelector": {
     "title": "Datenquelle konfigurieren",
-    "intro": "Wählen Sie aus, welche Datenquelle die Anwendung für Produkte, Kategorien und Inhalte verwenden soll.",
+    "intro": "Wählen Sie pro Bereich, welche installierte Integration den Shop bedient. Eine Wahl, die mit den anderen nicht zusammenarbeitet, ist mit Begründung deaktiviert.",
     "select": "Auswählen",
     "selected": "Ausgewählt",
-    "currentSelection": "Aktuelle Auswahl:",
-    "sources": {
-      "mock-set": {
-        "name": "Mock-API",
-        "description": "Mock-Daten für Entwicklung und Tests verwenden"
-      },
-      "commercetools-set": {
-        "name": "commercetools-API",
-        "description": "commercetools-API für Produktdaten verwenden"
-      },
-      "commercetools-algolia-set": {
-        "name": "commercetools-API + Algolia",
-        "description": "commercetools-API mit Algolia-Suche verwenden"
-      }
+    "unavailable": "Derzeit nicht verfügbar:",
+    "reasons": {
+      "notConfigured": "{provider}: nicht konfiguriert",
+      "checkFailed": "{provider}: Prüfung der Zugangsdaten fehlgeschlagen"
+    },
+    "categories": {
+      "commerce": "Commerce",
+      "search": "Suche",
+      "cms": "Inhalte",
+      "auth": "Anmeldung",
+      "psp": "Zahlung"
     }
   }
 }

@@ -52,7 +52,10 @@ import type {
   SetShippingMethodRequest,
 } from '@core/contracts/cart/shipping-method'
 import type {
+  PaymentAmount,
   PaymentMethodsResponse,
+  PaymentResult,
+  PaymentReturnRequest,
   SetPaymentMethodRequest,
 } from '@core/contracts/cart/payment-method'
 import {
@@ -261,15 +264,39 @@ export interface LayoutService {
   getFooter(locale: string, preview?: boolean): Promise<FooterResponse | null>
 }
 
+/**
+ * The storefront route of the `PaymentStep` slot (`<storefront>/demo/mocked-payment-step/<cartId>`). The shop hosts
+ * no payment page of its own: a real payment provider links to its own hosted page, and this route only renders
+ * the slot, which the mock payment provider fills with its demo page (`@integrations/mock-psp/page`). Without a
+ * provider that fills the slot, the route answers 404.
+ */
+export const PAYMENT_STEP_PATH = '/demo/mocked-payment-step'
+
 export interface PaymentService {
   getPaymentMethods(cartId?: string): Promise<PaymentMethodsResponse>
-  getPaymentLink(cartId: string): Promise<{ paymentLink: string }>
+  /** A link to the provider's payment page for `total` (the cart's total when the shopper starts paying). */
+  getPaymentLink(
+    cartId: string,
+    total: PaymentAmount
+  ): Promise<{ paymentLink: string }>
+  /**
+   * After the provider sent the shopper back to the shop's return route: the payment's status, asked of the
+   * provider with what it sent back (`params`), with the amount and currency the provider confirmed. Only `paid` or
+   * `authorized` with an amount equal to the cart's total lets the BFF create the order.
+   */
+  getPaymentResult(request: PaymentReturnRequest): Promise<PaymentResult>
 }
 
 export interface OrderService {
   createOrder(request: CreateOrderRequest): Promise<OrderResponse>
   getOrder(orderId: string): Promise<OrderResponse>
   getOrders(request?: GetOrdersRequest): Promise<OrdersResponse>
+  /**
+   * The order made from `cartId`, under the same ownership rules as `getOrder`: a customer's only for that customer;
+   * undefined when the cart has no order or the order is not the caller's. The payment return asks it before ordering,
+   * so a reload or a Retry after a lost response answers with the order already placed.
+   */
+  findOrderByCart(cartId: string): Promise<OrderResponse | undefined>
 }
 
 export interface WishlistService {
@@ -308,9 +335,10 @@ export interface ForgotPasswordService {
 }
 
 export interface ResetPasswordService {
+  /** `subject`: the identity whose password changed (the BFF revokes its sessions; never sent to the client). */
   resetPassword(
     resetPasswordRequest: ResetPasswordRequest
-  ): Promise<ResetPasswordResponse>
+  ): Promise<ResetPasswordResponse & { subject?: string }>
 }
 
 // All main services record - add new services here and they'll be available to all providers

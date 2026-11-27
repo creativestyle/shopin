@@ -5,8 +5,20 @@
     "rootDir": "./",
     "declaration": true,
     "declarationMap": true,
-    "sourceMap": true
+    "sourceMap": true,
+    "composite": true,
+    "customConditions": ["shopin-framework"],
+    "tsBuildInfoFile": "dist/tsconfig.tsbuildinfo"
   },
   "include": ["*.ts", "*.d.ts", "*.json"],
-  "exclude": ["node_modules", "dist"]
+  "exclude": [
+    "node_modules",
+    "dist",
+    "**/__tests__/**",
+    "**/__fixtures__/**",
+    "**/__mocks__/**",
+    "**/*.spec.ts",
+    "**/*.test.ts",
+    "**/*.test.tsx"
+  ]
 }

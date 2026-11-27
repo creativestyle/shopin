@@ -4,8 +4,8 @@
   "tasks": {
     "setup": {
       "dependsOn": ["^setup"],
-      "outputs": ["$TURBO_ROOT$/generated/**"],
-      "env": ["COMMERCETOOLS_*", "CONTENTFUL_*", "NEXT_*"]
+      "outputs": ["$TURBO_ROOT$/generated/**", "dist/**"],
+      "env": ["NEXT_*"]
     },
     "build": {
       "dependsOn": ["setup", "^build"],
@@ -18,9 +18,8 @@
         "storybook-static/**",
         "docs/**"
       ],
-      "env": ["COMMERCETOOLS_*", "CONTENTFUL_*", "NEXT_*"]
+      "env": ["NEXT_*"]
     },
-
     "lint": {
       "dependsOn": ["^lint"]
     },
@@ -34,21 +33,22 @@
       "dependsOn": ["^build", "^check-types"]
     },
     "test": {
-      "dependsOn": ["^build", "^test"]
+      "dependsOn": ["^build", "^test"],
+      "passThroughEnv": ["TMPDIR"]
     },
     "dev": {
       "dependsOn": ["setup"],
       "cache": false,
       "persistent": true,
       "inputs": ["$TURBO_DEFAULT$", ".env*"],
-      "env": ["COMMERCETOOLS_*", "CONTENTFUL_*", "NEXT_*"]
+      "env": ["NEXT_*"]
     },
     "start:local": {
       "dependsOn": ["build"],
       "cache": false,
       "persistent": true,
       "inputs": ["$TURBO_DEFAULT$", ".env*"],
-      "env": ["COMMERCETOOLS_*", "CONTENTFUL_*", "NEXT_*"]
+      "env": ["NEXT_*"]
     },
     "e2e": {
       "cache": false

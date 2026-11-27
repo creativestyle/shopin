@@ -7,6 +7,12 @@ import { Translations } from '@core/i18n'
 import enUSTranslations from '@core/i18n/en-US.json'
 import deDETranslations from '@core/i18n/de-DE.json'
 
+/** SHOPin's own texts, by locale. A shop locale without them gets the English ones (the shop's texts go over). */
+const SHOPIN_TEXTS: Readonly<Record<string, Translations>> = {
+  'en-US': enUSTranslations,
+  'de-DE': deDETranslations,
+}
+
 @Injectable()
 export class I18nService {
   constructor(private readonly logger: PinoLogger) {
@@ -15,12 +21,6 @@ export class I18nService {
   private readonly defaultLocale = I18N_CONFIG.defaultLocale
   private readonly supportedLocales = I18N_CONFIG.supportedLocales
 
-  // Map of translations from imported JSON files
-  private readonly translations = {
-    'en-US': enUSTranslations,
-    'de-DE': deDETranslations,
-  } as const
-
   async getTranslations(lang: string): Promise<Translations> {
     // Validate language against predefined list for security
     if (!this.supportedLocales.includes(lang as SupportedLocale)) {
@@ -28,18 +28,14 @@ export class I18nService {
         { requested: lang, fallback: this.defaultLocale },
         'Unsupported language requested, using fallback'
       )
-      return this.getDefaultTranslations()
+      return this.textsOf(this.defaultLocale)
     }
-
-    // Return translations directly from imported JSON files
-    return (
-      this.translations[lang as SupportedLocale] ||
-      this.getDefaultTranslations()
-    )
+    return this.textsOf(lang)
   }
 
-  private getDefaultTranslations(): Translations {
-    return this.translations[this.defaultLocale]
+  /** SHOPin's texts in `locale`, or in English for a locale SHOPin has none for (the shop's own Messages supply it). */
+  private textsOf(locale: string): Translations {
+    return SHOPIN_TEXTS[locale] ?? SHOPIN_TEXTS['en-US']!
   }
 
   async getAvailableLanguages(): Promise<string[]> {

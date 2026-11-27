@@ -29,9 +29,9 @@ export function DeliveryMethodPreview() {
           priceInCents={shippingInfo.price.regularPriceInCents}
           currency={shippingInfo.price.currency || cart.currency}
           fractionDigits={shippingInfo.price.fractionDigits}
-          freeAboveInCents={selectedMethod?.freeAbove?.centAmount}
+          freeAboveInCents={selectedMethod?.freeAbove?.regularPriceInCents}
           freeAboveCurrency={
-            selectedMethod?.freeAbove?.currencyCode || cart.currency
+            selectedMethod?.freeAbove?.currency || cart.currency
           }
           variant='preview'
         />

@@ -4,7 +4,13 @@ import { initRouteContext } from '@/lib/request-context/route-context'
 import { ContentPage } from '@/features/content/content-page'
 import { buildContentPageMetadata } from '@/features/content/build-content-page-metadata'
 import { getContentPage } from '@/features/content/get-content-page'
-import { tryGetSiteBaseUrl } from '@/lib/site-url'
+import {
+  buildCanonicalUrl,
+  buildHreflangLanguages,
+  tryGetSiteBaseUrl,
+} from '@/lib/site-url'
+import { bffForPage, findShopPage } from '@/lib/shop-pages'
+import { createBffFetchServer } from '@/lib/bff/core/bff-fetch-server'
 
 /** Paths with a file extension (e.g. .html, .json) are not CMS pages — 404. */
 function hasFileExtension(slug: string): boolean {
@@ -22,13 +28,60 @@ function getCmsSlug(pageSegments: string[] | undefined): string | null {
   return slug
 }
 
+/**
+ * A shop page's metadata over the default every page gets: the canonical URL of its path in this locale and the
+ * hreflang alternates of the same path in every locale (as CMS pages get them), without the search params. The
+ * page's own fields win; its `alternates` are merged field by field, so setting only a canonical keeps the
+ * languages. Without FRONTEND_URL there is no absolute URL to give, so only the page's own metadata.
+ */
+function withShopPageDefaults(
+  own: Metadata,
+  segments: readonly string[],
+  locale: string
+): Metadata {
+  const baseUrl = tryGetSiteBaseUrl()
+  if (!baseUrl) {
+    return own
+  }
+  const path = segments.join('/')
+  return {
+    ...own,
+    alternates: {
+      canonical: buildCanonicalUrl(baseUrl, locale, path),
+      languages: buildHreflangLanguages(baseUrl, path),
+      ...own.alternates,
+    },
+  }
+}
+
 export async function generateMetadata({
   params,
+  searchParams,
 }: {
   params: Promise<{ variant: string; locale: string; page: string[] }>
+  searchParams: Promise<Record<string, string | string[] | undefined>>
 }): Promise<Metadata> {
   const { variant, locale, page } = await params
   initRouteContext({ variant, locale })
+  // the shop's own page wins over a CMS page of the same path (as in the render): its own title and description,
+  // over the canonical URL and hreflang alternates of its path
+  const shopPage = findShopPage(page)
+  if (shopPage) {
+    const { Page } = shopPage
+    let own: Metadata
+    if (Page.generateMetadata) {
+      const { fetch } = await createBffFetchServer()
+      own = (await Page.generateMetadata({
+        path: shopPage.path,
+        searchParams: await searchParams,
+        locale,
+        bff: bffForPage(fetch),
+      })) as Metadata
+    } else {
+      own = (Page.metadata ?? {}) as Metadata
+    }
+    return withShopPageDefaults(own, page, locale)
+  }
   const cmsSlug = getCmsSlug(page)
   if (!cmsSlug) {
     return {}
@@ -51,11 +104,26 @@ export async function generateMetadata({
 
 export default async function Page({
   params,
+  searchParams,
 }: {
   params: Promise<{ variant: string; locale: string; page: string[] }>
+  searchParams: Promise<Record<string, string | string[] | undefined>>
 }) {
   const { variant, locale, page } = await params
   initRouteContext({ variant, locale })
+  // the shop's own page (config/storefront, slot Pages) wins over a CMS page of the same path
+  const shopPage = findShopPage(page)
+  if (shopPage) {
+    const { fetch } = await createBffFetchServer()
+    return (
+      <shopPage.Page
+        path={shopPage.path}
+        searchParams={await searchParams}
+        locale={locale}
+        bff={bffForPage(fetch)}
+      />
+    )
+  }
   const cmsSlug = getCmsSlug(page)
   if (!cmsSlug) {
     notFound()

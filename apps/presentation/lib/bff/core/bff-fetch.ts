@@ -2,7 +2,7 @@
  * Core BFF fetch utility
  *
  * This module provides the core fetch wrapper that handles:
- * - Data source headers
+ * - Provider headers (one per category)
  * - Language headers
  * - Cookie handling
  * - Request formatting
@@ -17,9 +17,9 @@ import { CORRELATION_ID_HEADER, DRAFT_MODE_HEADER } from '@config/constants'
 export type BffFetchOptions = RequestInit & {
   /** Signed draft header token; set only by the server wrapper for the preview route. */
   draftToken?: string
-  /** Resolved variant headers (e.g. X-Data-Source). Set by server-side callers from the URL
-   *  [variant] segment and by the client from the active pathname. When absent the BFF defaults
-   *  to the default data source (commercetools-set). */
+  /** Resolved provider headers (X-<Category>-Provider). Set by server-side callers from the URL
+   *  [variant] segment and by the client from the active pathname. A missing header makes the BFF
+   *  use that category's default provider (the first in shopin.config.ts). */
   variantHeaders?: Record<string, string>
 }
 
@@ -60,7 +60,7 @@ function isSafeOrigin(url: string): boolean {
 
 /**
  * Fetch wrapper for BFF requests
- * Handles data source headers and language headers
+ * Handles provider headers and language headers
  *
  * @param baseUrl - Base URL for the BFF (determined by caller)
  * @param path - API path (e.g., 'navigation/getNavigation')
@@ -90,7 +90,7 @@ export async function bffFetch(
   // Variant headers are always explicit: server renders get them from the [variant] URL
   // segment (via bff-fetch-server → getRequestVariant → variantHeaders); client renders
   // get them from usePathname() via bff-fetch-client. When absent, the BFF falls
-  // back to its own default (commercetools-set) — correct for clean public URLs.
+  // back to each category's default provider — correct for clean public URLs.
   const headersFromVariant = options?.variantHeaders ?? {}
 
   const defaultOptions: BffFetchOptions = {

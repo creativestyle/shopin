@@ -16,16 +16,17 @@ import {
   DRAFT_COOKIE_MAX_AGE_SEC,
 } from '@/lib/draft-mode'
 import { encodePathSegments, relativeRedirect } from '@/lib/relative-redirect'
+import { PreviewRequest } from '@/lib/slots'
 
 const defaultLocalePrefix = getLocale(I18N_CONFIG.defaultLocale).urlPrefix
 const localePrefixes = new Set(listLocales().map((l) => l.urlPrefix))
 
 /**
  * Draft Mode endpoint for headless CMS preview.
- * Secured by NEXT_DRAFT_MODE_SECRET; not a simple ?preview=true query.
- *
- * Usage from CMS: set draft/preview URL to
- * https://<your-site>/api/draft?secret=<NEXT_DRAFT_MODE_SECRET>&slug=<entry-slug>&locale=<locale>
+ * The configured CMS reads its own preview request (the `PreviewRequest` slot its integration fills: which
+ * parameters carry the secret, the slug and the locale); it only reads them. The secret is compared here with
+ * NEXT_DRAFT_MODE_SECRET, so draft mode never depends on an integration checking it.
+ * Without a CMS preview the route answers 404.
  *
  * The CMS typically sends locale as en-US, de-DE, etc. We redirect to app URL prefix (en, de).
  * The redirect is path-only, so the browser stays on whichever domain the CMS called; the
@@ -33,7 +34,7 @@ const localePrefixes = new Set(listLocales().map((l) => l.urlPrefix))
  * Token delivery strategy depends on the FRONTEND_URL protocol (domain is ignored):
  *
  * HTTPS (production): HttpOnly cookie with SameSite=None;Secure. Works in
- * Contentful's cross-site iframe. Token never appears in the URL, access logs, or Referer
+ * the CMS's cross-site iframe. Token never appears in the URL, access logs, or Referer
  * headers. The proxy reads the cookie and injects it into the internal rewrite URL as ?__pt=.
  *
  * HTTP (local dev, e.g. FRONTEND_URL=http://localhost:3000 or unset):
@@ -44,14 +45,15 @@ const localePrefixes = new Set(listLocales().map((l) => l.urlPrefix))
  * alive for subsequent navigations and reloads.
  */
 export function GET(request: NextRequest) {
-  const { searchParams } = request.nextUrl
-  const secret = searchParams.get('secret')
-  const slug = searchParams.get('slug')
-  const localeParam = searchParams.get('locale')
-
-  if (!isDraftSecretValid(secret)) {
+  if (!PreviewRequest) {
+    return new NextResponse('Not found', { status: 404 })
+  }
+  // The CMS only reads the parameters; the secret is compared here, whatever the integration returns.
+  const preview = PreviewRequest(request.nextUrl.searchParams)
+  if (!preview || !isDraftSecretValid(preview.secret)) {
     return new NextResponse('Invalid token', { status: 401 })
   }
+  const { slug, locale: localeParam } = preview
 
   if (!slug || !localeParam) {
     return new NextResponse('Missing slug or locale', { status: 400 })

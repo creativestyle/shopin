@@ -1,6 +1,6 @@
 import { productImageLoader } from '../product-image-loader'
 
-const CT_HOST = 'https://images.eu-central-1.aws.commercetools.com/project'
+const CT_HOST = 'https://images.eu.platform.example/project'
 
 function load(src: string, width: number): string {
   const loader = productImageLoader(src)
@@ -34,9 +34,7 @@ describe('productImageLoader', () => {
 
     it('accepts protocol-relative CT URLs', () => {
       expect(
-        productImageLoader(
-          '//images.eu-central-1.aws.commercetools.com/project/image.jpg'
-        )
+        productImageLoader('//images.eu.platform.example/project/image.jpg')
       ).toBeInstanceOf(Function)
     })
   })

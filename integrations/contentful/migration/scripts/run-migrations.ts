@@ -5,74 +5,19 @@
  */
 import path from 'path'
 import { Command } from 'commander'
-import { getMigrationEntries, type MigrationEntry } from './lib/discovery'
+import { getMigrationEntries } from './lib/discovery'
+import {
+  parseFrom,
+  selectEntriesToRun,
+  type CommandOpts,
+  type CommandSpec,
+} from './lib/select'
 import { requireEnv } from './lib/env'
 import { runMigrations } from './lib/runner'
 
 const baseDir = path.join(__dirname, '..')
 const migrationsDir = path.join(baseDir, 'migrations')
 const packageRoot = path.join(baseDir, '..')
-
-interface CommandOpts {
-  from?: string
-  list?: boolean
-}
-
-interface CommandSpec {
-  name: string
-  description: string
-  fromOption: boolean
-  /** Which migrations to run; 'apply' = all except reset */
-  kind: 'reset' | 'content-types' | 'demo' | 'apply'
-  /** Prompt for confirmation before each migration (default false) */
-  interactive?: boolean
-  /** Run this command when no subcommand is passed */
-  default?: boolean
-}
-
-// --- Option parsing ---
-function parseFrom(opts: CommandOpts): number | null {
-  const fromRaw = opts.from
-  if (fromRaw == null || fromRaw === '') {
-    return null
-  }
-  const fromSortKey = parseInt(fromRaw, 10)
-  if (Number.isNaN(fromSortKey) || fromSortKey < 0) {
-    return null
-  }
-  return fromSortKey
-}
-
-// --- Which entries to run per command ---
-function selectEntriesToRun(
-  spec: CommandSpec,
-  allEntries: MigrationEntry[],
-  fromSortKey: number | null | undefined
-): MigrationEntry[] {
-  const resetEntries = allEntries.filter(
-    (entry) => entry.g === 0 && entry.s === 0
-  )
-  const applyEntries = allEntries.filter(
-    (entry) => !(entry.g === 0 && entry.s === 0)
-  )
-  const contentTypesEntries = allEntries.filter((entry) => entry.g === 1)
-  const demoEntries = allEntries.filter((entry) => entry.g === 2)
-  const entriesFromSortKey = (entries: MigrationEntry[]) =>
-    fromSortKey != null
-      ? entries.filter((entry) => entry.sortKey >= fromSortKey)
-      : entries
-
-  switch (spec.kind) {
-    case 'reset':
-      return resetEntries
-    case 'content-types':
-      return entriesFromSortKey(contentTypesEntries)
-    case 'demo':
-      return entriesFromSortKey(demoEntries)
-    case 'apply':
-      return entriesFromSortKey(applyEntries)
-  }
-}
 
 // --- Command definitions (single source of truth) ---
 const COMMANDS: CommandSpec[] = [

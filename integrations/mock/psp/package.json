@@ -1,32 +1,70 @@
 {
   "name": "@integrations/mock-psp",
-  "version": "1.0.0",
-  "description": "Demo package for mocked payment service provider UI components",
+  "version": "0.0.0",
+  "description": "Mock payment provider: sample payment methods and a demo payment link for the BFF, and the demo payment page the shopper lands on (./page, a storefront slot). No account needed; demo only.",
   "author": "creativestyle GmbH",
   "private": true,
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "shopin-shop": {
+        "types": "./dist/types/server/index.d.ts",
+        "default": "./dist/server/index.js"
+      },
+      "default": "./dist/server/index.js"
+    },
+    "./shopin": {
+      "shopin-shop": {
+        "types": "./dist/types/shopin.d.ts",
+        "default": "./dist/shopin.js"
+      },
+      "default": "./dist/shopin.js"
+    },
+    "./page": {
+      "shopin-shop": {
+        "types": "./dist/page/types/index.d.ts",
+        "default": "./dist/page/index.js"
+      },
+      "default": "./dist/page/index.js"
+    },
+    "./sources.css": "./sources.css"
+  },
   "scripts": {
-    "build": "tsc",
-    "dev": "tsc --watch",
-    "lint": "eslint --fix ./src --max-warnings=0",
-    "format": "prettier --write ./src",
-    "format:check": "prettier --check --ignore-unknown ./src",
-    "check-types": "tsc --noEmit"
+    "build": "tsc --build tsconfig.json tsconfig.page.json",
+    "dev": "tsc --build tsconfig.json tsconfig.page.json --watch",
+    "lint": "eslint --fix ./src ./test --max-warnings=0",
+    "format": "prettier --write ./src ./test",
+    "format:check": "prettier --check --ignore-unknown ./src ./test",
+    "check-types": "tsc --noEmit && tsc --noEmit -p tsconfig.page.json",
+    "setup": "tsc --build tsconfig.json tsconfig.page.json",
+    "test": "tsc --build tsconfig.json tsconfig.page.json && node --test \"test/*.test.mjs\""
   },
   "dependencies": {
-    "react": "19.2.4",
-    "react-dom": "19.2.4",
-    "next": "16.4.6",
-    "next-intl": "^4.9.2"
+    "@core/contracts": "*",
+    "@core/integration-kit": "*"
   },
   "devDependencies": {
-    "@core/typescript-config": "*",
     "@core/eslint-config": "*",
     "@core/prettier-config": "*",
+    "@core/typescript-config": "*",
     "@types/react": "19.2.7",
     "@types/react-dom": "19.2.3",
-    "eslint": "^9.20.1",
     "typescript": "^5.7.3"
+  },
+  "peerDependencies": {
+    "@nestjs/common": "^11.1.14",
+    "next": "16.4.6",
+    "next-intl": "^4.9.2",
+    "react": "19.2.4"
+  },
+  "peerDependenciesMeta": {
+    "next": {
+      "optional": true
+    },
+    "next-intl": {
+      "optional": true
+    },
+    "react": {
+      "optional": true
+    }
   }
 }

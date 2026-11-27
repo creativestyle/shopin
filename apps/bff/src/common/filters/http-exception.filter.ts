@@ -1,5 +1,6 @@
 import {
   ArgumentsHost,
+  BadRequestException,
   Catch,
   ExceptionFilter,
   HttpException,
@@ -13,7 +14,9 @@ import { FrontendInputValidationException } from '../validation/frontend-input-v
 import { FrontendSafeException } from '../errors/frontend-safe.exception'
 
 /** Machine-readable discriminator our own exceptions may attach to any status. */
-type ErrorCode = { code?: string }
+type ErrorCode = {
+  code?: string
+}
 
 type ErrorBody = ErrorCode &
   (
@@ -25,6 +28,10 @@ type ErrorBody = ErrorCode &
     | { statusCode: 409; message: string }
     | { statusCode: 429; message: string }
     | { statusCode: 500; message: string }
+    | { statusCode: 501; message: string }
+    | { statusCode: 502; message: string }
+    | { statusCode: 503; message: string }
+    | { statusCode: 504; message: string }
   )
 
 const STATUS_BODY_MAP: Record<number, ErrorBody> = {
@@ -47,6 +54,15 @@ const STATUS_BODY_MAP: Record<number, ErrorBody> = {
     statusCode: 429,
     message: 'Too many requests',
   },
+  // server-side statuses a caller acts on: a missing feature, and an upstream platform that failed, is down
+  // (retry later) or timed out. The body stays generic; the message is logged, never sent.
+  [HttpStatus.NOT_IMPLEMENTED]: { statusCode: 501, message: 'Not implemented' },
+  [HttpStatus.BAD_GATEWAY]: { statusCode: 502, message: 'Bad gateway' },
+  [HttpStatus.SERVICE_UNAVAILABLE]: {
+    statusCode: 503,
+    message: 'Service unavailable',
+  },
+  [HttpStatus.GATEWAY_TIMEOUT]: { statusCode: 504, message: 'Gateway timeout' },
 }
 
 const DEFAULT_ERROR_BODY: ErrorBody = {
@@ -73,27 +89,11 @@ export class HttpErrorFilter implements ExceptionFilter {
   }
 
   private getStatusFromException(exception: unknown): number {
-    // Check for Resource Owner Password Credentials Grant message first
-    // This happens when anonymous tokens are used to access endpoints that require password grant tokens
-    // This is a 403 Forbidden (authorization issue) not 401 Unauthorized (authentication issue)
-    // because the user has valid credentials but insufficient permissions (wrong grant type)
-    if (exception instanceof Error) {
-      const message = exception.message
-      if (
-        typeof message === 'string' &&
-        message.includes('Resource Owner Password Credentials Grant')
-      ) {
-        return HttpStatus.FORBIDDEN
-      }
-    }
-
-    if (exception instanceof HttpException) {
-      return exception.getStatus()
-    }
-    if (exception instanceof Error && exception.message === 'invalid_token') {
-      return HttpStatus.UNAUTHORIZED
-    }
-    return HttpStatus.INTERNAL_SERVER_ERROR
+    // a platform's errors reach here as Nest exceptions: the BFF translates them where it calls a port
+    // (data-source/port-errors.ts). Anything else is a bug: 500.
+    return exception instanceof HttpException
+      ? exception.getStatus()
+      : HttpStatus.INTERNAL_SERVER_ERROR
   }
 
   private mapExceptionToErrorBody(
@@ -129,6 +129,19 @@ export class HttpErrorFilter implements ExceptionFilter {
       return { statusCode: body.statusCode, message, code } as ErrorBody
     }
 
+    // a route's own 400 (SHOPin's or a shop route's `BadRequestException('q: 2 to 100 characters')`) says what to
+    // fix in its own words; "Validation failed" with issues is the input validation's (above)
+    if (exception instanceof BadRequestException) {
+      const own = exception.getResponse()
+      const message =
+        typeof own === 'string'
+          ? own
+          : (own as { message?: unknown } | null)?.message
+      if (typeof message === 'string' && message) {
+        return { statusCode: 400, message }
+      }
+    }
+
     return body
   }
 
@@ -155,7 +168,7 @@ export class HttpErrorFilter implements ExceptionFilter {
     status: number
   ): void {
     const isError = exception instanceof Error
-    const isClientError = status in STATUS_BODY_MAP
+    const isClientError = status in STATUS_BODY_MAP && status < 500
     request.__nestException = {
       name: isError ? exception.name : 'Error',
       message: isError ? exception.message : 'Unhandled exception',

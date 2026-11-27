@@ -22,13 +22,38 @@ function createShopinVariantSet(faker: Faker) {
 }
 
 /** Seeds faker by slug like the mock ProductService, so cards match the PDP. */
+/** Summaries already made, per faker (one per locale) and slug; a full map starts over (search makes up slugs). */
+const summaries = new WeakMap<
+  Faker,
+  Map<string, { variantId: string; variantCount: number }>
+>()
+const MAX_SUMMARIES = 5000
+
+/**
+ * A product's first variant and its number of variants: the same for a slug every time (seeded by it), so it is made
+ * once per slug. Generating the variant set costs about 30 µs per product, which a 30-product quick search paid on
+ * every request. Callers re-seed faker before they generate anything else.
+ */
 export function getShopinProductVariantSummary(
   faker: Faker,
   slug: string
 ): { variantId: string; variantCount: number } {
+  let known = summaries.get(faker)
+  if (!known) {
+    summaries.set(faker, (known = new Map()))
+  }
+  const cached = known.get(slug)
+  if (cached) {
+    return cached
+  }
   faker.seed(generateSeed(slug))
   const { variants } = createShopinVariantSet(faker)
-  return { variantId: variants[0].id, variantCount: variants.length }
+  const summary = { variantId: variants[0].id, variantCount: variants.length }
+  if (known.size >= MAX_SUMMARIES) {
+    known.clear()
+  }
+  known.set(slug, summary)
+  return summary
 }
 
 export function createShopinProductDetails(

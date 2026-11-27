@@ -1,22 +1,14 @@
 # @integrations/mock-commerce
 
-NestJS module that provides mock implementations of the SHOPin storefront accelerator data-source services. Used for local development, demos, and testing when the data source is `mock-set` (no Commercetools or Contentful required).
+NestJS module that provides mock implementations of the SHOPin storefront accelerator data-source services. Provides `commerce` from in-memory fixtures (catalog, carts, wishlist, customers, orders): no accounts or variables needed. With no search integration configured, its product search serves search; CMS content and payment are the separate `@integrations/mock-cms` and `@integrations/mock-psp` packages.
 
 ## Overview
 
-Implements the same service interfaces as `@integrations/commercetools-commerce` and `@integrations/contentful-cms` with in-memory/faker data. The BFF uses this module when the selected data source is `mock-set`.
-
-## Service Provider
-
-The module includes `MockServiceProvider` that implements the `DataSourceServiceProvider` interface, providing access to all mock services through a unified interface.
+Implements the same commerce port as `@integrations/commercetools-commerce`.
 
 ## Usage
 
-This module is used by the BFF (Backend for Frontend) service. It's imported and configured in `apps/bff/src/data-source/data-source.module.ts` and used by the `DataSourceFactory` to route requests to mock data when the data source is set to `mock-set`.
-
-## Integration
-
-The module is automatically loaded by the BFF's `DataSourceModule` and provides services when the `mock-set` data source is selected (default fallback).
+Import `@integrations/mock-commerce/shopin` in `config/shop/shopin.config.ts` and name it under the categories it should serve, then `npm run setup` (see the [root README](../../../README.md#quick-start)).
 
 ## License
 

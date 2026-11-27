@@ -1,6 +1,6 @@
 @import 'tailwindcss';
-@source '../../../demo/data-source-selector/';
-@source '../../../demo/demo-disclaimer/';
+/* the shop's own components and pages and the UI packages its slots use (written by npm run setup) */
+@import '@shopin/storefront/sources.css';
 @tailwind utilities;
 @import 'tw-animate-css';
 

@@ -1,63 +1,54 @@
-import { Injectable, Inject, NotFoundException, Scope } from '@nestjs/common'
-import { LANGUAGE_TOKEN } from '@core/i18n'
-import type { LanguageProvider } from '@core/contracts/core/request-providers'
+import { RequestContext } from '@core/integration-kit'
+import { Injectable, Optional } from '@nestjs/common'
+import { MapperHooks } from '../mapper-hooks'
 import type {
   WishlistResponse,
   AddToWishlistRequest,
   RemoveFromWishlistRequest,
 } from '@core/contracts/wishlist/wishlist'
-import { UserClientService } from '../client/user-client.service'
+import { CustomerScope } from '../shared/customer-scope.service'
 import { mapShoppingListToWishlist } from '../mappers/wishlist'
-import { isNotFoundError } from '../helpers/is-not-found-error'
+import { StoreChannels } from './store-channels.service'
 
-@Injectable({ scope: Scope.REQUEST })
+@Injectable()
 export class WishlistService {
   private static readonly DEFAULT_WISHLIST_NAME = 'Wishlist'
 
   constructor(
-    private readonly userClientService: UserClientService,
-    @Inject(LANGUAGE_TOKEN) private readonly languageProvider: LanguageProvider
+    private readonly scope: CustomerScope,
+    private readonly languageProvider: RequestContext,
+    private readonly channels: StoreChannels,
+    @Optional() private readonly hooks?: MapperHooks
   ) {}
 
   private async getCurrentLanguage(): Promise<string> {
     return this.languageProvider.getCurrentLanguage()
   }
 
+  /** Client for the catalog lookups of the wishlist mapper. */
   private async getClient() {
-    return this.userClientService.getClient()
+    return this.scope.client()
   }
 
   async getWishlist(
     wishlistId: string,
     page?: number,
     limit?: number
-  ): Promise<WishlistResponse> {
+  ): Promise<WishlistResponse & { version: number }> {
     const currentLanguage = await this.getCurrentLanguage()
     const client = await this.getClient()
 
-    let response
-    try {
-      response = await client
-        .me()
-        .shoppingLists()
-        .withId({ ID: wishlistId })
-        .get({
-          queryArgs: {
-            expand: ['lineItems[*].variant'],
-          },
-        })
-        .execute()
-    } catch (error) {
-      if (isNotFoundError(error)) {
-        throw new NotFoundException(`Wishlist not found: ${wishlistId}`)
-      }
-      throw error
-    }
+    // 404 for a wishlist that is not this shopper's
+    const list = await (
+      await this.scope.api()
+    ).shoppingLists.get(wishlistId, ['lineItems[*].variant'])
 
     const fullWishlist = await mapShoppingListToWishlist(
-      response.body,
+      list,
       currentLanguage,
-      client
+      client,
+      this.hooks?.productCard,
+      this.channels.priceChannel()
     )
 
     if (page !== undefined && limit !== undefined && limit > 0) {
@@ -77,43 +68,37 @@ export class WishlistService {
     const currentLanguage = await this.getCurrentLanguage()
     const client = await this.getClient()
 
-    // Try to find existing wishlist
-    const existingResponse = await client
-      .me()
-      .shoppingLists()
-      .get({
-        queryArgs: {
-          limit: 1,
-          expand: ['lineItems[*].variant'],
-        },
-      })
-      .execute()
+    const api = await this.scope.api()
 
-    if (existingResponse.body.results.length > 0) {
+    // Try to find existing wishlist
+    const existing = await api.shoppingLists.query({
+      limit: 1,
+      expand: ['lineItems[*].variant'],
+    })
+
+    if (existing.results.length > 0) {
       return await mapShoppingListToWishlist(
-        existingResponse.body.results[0],
+        existing.results[0]!,
         currentLanguage,
-        client
+        client,
+        this.hooks?.productCard,
+        this.channels.priceChannel()
       )
     }
 
     // Create new wishlist if none exists
-    const createResponse = await client
-      .me()
-      .shoppingLists()
-      .post({
-        body: {
-          name: {
-            [currentLanguage]: WishlistService.DEFAULT_WISHLIST_NAME,
-          },
-        },
-      })
-      .execute()
+    const created = await api.shoppingLists.create({
+      name: {
+        [currentLanguage]: WishlistService.DEFAULT_WISHLIST_NAME,
+      },
+    })
 
     return await mapShoppingListToWishlist(
-      createResponse.body,
+      created,
       currentLanguage,
-      client
+      client,
+      this.hooks?.productCard,
+      this.channels.priceChannel()
     )
   }
 
@@ -127,34 +112,30 @@ export class WishlistService {
     // Get current version
     const wishlist = await this.getWishlist(wishlistId)
 
-    const response = await client
-      .me()
-      .shoppingLists()
-      .withId({ ID: wishlistId })
-      .post({
-        body: {
-          version: wishlist.version,
-          actions: [
-            {
-              action: 'addLineItem',
-              productId: request.productId!,
-              variantId: request.variantId
-                ? parseInt(request.variantId, 10)
-                : undefined,
-              quantity: 1,
-            },
-          ],
+    const updated = await (
+      await this.scope.api()
+    ).shoppingLists.update(
+      wishlistId,
+      wishlist.version,
+      [
+        {
+          action: 'addLineItem',
+          productId: request.productId!,
+          variantId: request.variantId
+            ? parseInt(request.variantId, 10)
+            : undefined,
+          quantity: 1,
         },
-        queryArgs: {
-          expand: ['lineItems[*].variant'],
-        },
-      })
-      .execute()
+      ],
+      ['lineItems[*].variant']
+    )
 
     return await mapShoppingListToWishlist(
-      response.body,
+      updated,
       currentLanguage,
-      client
+      client,
+      this.hooks?.productCard,
+      this.channels.priceChannel()
     )
   }
 
@@ -168,30 +149,26 @@ export class WishlistService {
     // Get current version
     const wishlist = await this.getWishlist(wishlistId)
 
-    const response = await client
-      .me()
-      .shoppingLists()
-      .withId({ ID: wishlistId })
-      .post({
-        body: {
-          version: wishlist.version,
-          actions: [
-            {
-              action: 'removeLineItem',
-              lineItemId: request.lineItemId,
-            },
-          ],
+    const updated = await (
+      await this.scope.api()
+    ).shoppingLists.update(
+      wishlistId,
+      wishlist.version,
+      [
+        {
+          action: 'removeLineItem',
+          lineItemId: request.lineItemId,
         },
-        queryArgs: {
-          expand: ['lineItems[*].variant'],
-        },
-      })
-      .execute()
+      ],
+      ['lineItems[*].variant']
+    )
 
     return await mapShoppingListToWishlist(
-      response.body,
+      updated,
       currentLanguage,
-      client
+      client,
+      this.hooks?.productCard,
+      this.channels.priceChannel()
     )
   }
 }

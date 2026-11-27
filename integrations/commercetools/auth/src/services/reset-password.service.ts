@@ -24,11 +24,11 @@ export class CommercetoolsResetPasswordService {
    */
   async resetPassword(
     request: ResetPasswordRequest
-  ): Promise<ResetPasswordResponse> {
+  ): Promise<ResetPasswordResponse & { subject?: string }> {
     const serverClient = this.serverClientService.getClient()
 
     try {
-      await serverClient
+      const { body } = await serverClient
         .customers()
         .passwordReset()
         .post({
@@ -39,7 +39,8 @@ export class CommercetoolsResetPasswordService {
         })
         .execute()
 
-      return { success: true }
+      // the customer id is the subject of commercetools' own sign-in: the BFF revokes its sessions
+      return { success: true, subject: body.id }
     } catch (error) {
       if (this.errorMatcher.isExpiredPasswordTokenError(error)) {
         return { success: false, statusCode: 400, message: 'token_expired' }

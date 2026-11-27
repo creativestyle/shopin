@@ -3,8 +3,8 @@ import type {
   AnonymousSessionResponse,
   AnonymousSessionTokenFields,
 } from '@core/contracts/auth/anonymous-session'
-import { createAnonymousSessionScope } from '../scopes'
-import { OAuthTokenService } from './oauth-token.service'
+import { createAnonymousSessionScope } from '@integrations/commercetools-core'
+import { OAuthTokenService } from '@integrations/commercetools-core'
 
 @Injectable()
 export class CommercetoolsAnonymousSessionService {

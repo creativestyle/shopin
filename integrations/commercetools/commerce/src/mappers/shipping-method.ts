@@ -14,6 +14,7 @@ import { getLocalizedString } from '../helpers/get-localized-string'
 const TypedMoneyApiResponseSchema = z.object({
   centAmount: z.number(),
   currencyCode: z.string(),
+  fractionDigits: z.number().optional(),
 })
 
 const ShippingRateApiResponseSchema = z.object({
@@ -39,6 +40,13 @@ export const ShippingMethodApiResponseSchema = z.object({
 export type ShippingMethodApiResponse = z.infer<
   typeof ShippingMethodApiResponseSchema
 >
+
+/** commercetools money as the shared price type (in cents, with its currency). */
+const toBasicPrice = (money: z.infer<typeof TypedMoneyApiResponseSchema>) => ({
+  regularPriceInCents: money.centAmount,
+  currency: money.currencyCode,
+  fractionDigits: money.fractionDigits ?? 2,
+})
 
 /**
  * Maps commercetools shipping method API response to contract format
@@ -82,16 +90,8 @@ function mapShippingMethodToResponse(
     name,
     description,
     deliveryTime,
-    price: {
-      centAmount: price.centAmount,
-      currencyCode: price.currencyCode,
-    },
-    freeAbove: freeAbove
-      ? {
-          centAmount: freeAbove.centAmount,
-          currencyCode: freeAbove.currencyCode,
-        }
-      : undefined,
+    price: toBasicPrice(price),
+    freeAbove: freeAbove ? toBasicPrice(freeAbove) : undefined,
     isDefault: shippingMethod.isDefault ?? false,
   }
 }

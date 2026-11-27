@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common'
 import { CommercetoolsServiceProvider } from './interfaces'
+import { CommercetoolsGuestSessionService } from '@integrations/commercetools-core'
 import {
   ProductService,
   ProductCollectionService,
@@ -12,6 +13,7 @@ import {
   StoreConfigService,
   OrderService,
   WishlistService,
+  CommercetoolsCustomerStore,
 } from './services'
 
 @Injectable()
@@ -27,7 +29,9 @@ export class CommercetoolsServiceProviderImpl implements CommercetoolsServicePro
     private readonly cartPaymentService: CartPaymentService,
     private readonly storeConfigService: StoreConfigService,
     private readonly orderService: OrderService,
-    private readonly wishlistService: WishlistService
+    private readonly wishlistService: WishlistService,
+    readonly customers: CommercetoolsCustomerStore,
+    readonly guestSession: CommercetoolsGuestSessionService
   ) {}
 
   getServices() {

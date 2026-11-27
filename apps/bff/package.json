@@ -1,6 +1,6 @@
 {
   "name": "@apps/bff",
-  "description": "NestJS Backend for Frontend (BFF) exposing a unified e-commerce API over multiple data sources (Commercetools, mock).",
+  "description": "NestJS Backend for Frontend (BFF) exposing a unified e-commerce API over multiple data sources.",
   "author": "creativestyle GmbH",
   "private": true,
   "scripts": {
@@ -10,30 +10,26 @@
     "format": "prettier --write --ignore-unknown .",
     "format:check": "prettier --check --ignore-unknown .",
     "lint": "eslint --fix . --max-warnings=0",
-    "check-types": "tsc --noEmit",
-    "test": "jest",
+    "check-types": "tsc --noEmit && tsc --noEmit -p tsconfig.build.json",
+    "test": "node --experimental-vm-modules ../../node_modules/jest/bin/jest.js",
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand"
   },
   "dependencies": {
     "@config/constants": "*",
+    "@core/contracts": "*",
     "@core/draft-token": "*",
     "@core/i18n": "*",
+    "@core/integration-kit": "*",
     "@core/logger-config": "*",
-    "@demo/data-source-header-reader": "*",
-    "@integrations/commercetools-auth": "*",
-    "@integrations/contentful-cms": "*",
-    "@integrations/commercetools-commerce": "*",
-    "@integrations/mock-commerce": "*",
-    "@integrations/algolia-search": "*",
     "@nestjs/common": "^11.2.7",
     "@nestjs/config": "^4.0.2",
     "@nestjs/core": "^11.2.7",
     "@nestjs/platform-express": "^11.2.7",
     "@nestjs/swagger": "^11.4.8",
     "@nestjs/throttler": "^6.0.0",
-    "algoliasearch": "^5.25.0",
+    "@shopin/config": "*",
     "cookie-parser": "1.4.7",
     "jose": "^6.1.2",
     "nestjs-pino": "4.5.0",
@@ -44,7 +40,6 @@
     "zod": "^4.6.7"
   },
   "devDependencies": {
-    "@core/contracts": "*",
     "@core/eslint-config": "*",
     "@core/prettier-config": "*",
     "@core/typescript-config": "*",
@@ -92,9 +87,14 @@
     ],
     "coverageDirectory": "../coverage",
     "testEnvironment": "node",
-    "transformIgnorePatterns": [
-      "/node_modules/",
-      "/dist/"
-    ]
+    "moduleNameMapper": {
+      "^@shopin/config$": "<rootDir>/../test/shop-config.ts",
+      "^\\./locales\\.json$": "<rootDir>/../test/locales.json"
+    }
+  },
+  "exports": {
+    "./src/*": {
+      "shopin-test": "./src/*.ts"
+    }
   }
 }

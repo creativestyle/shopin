@@ -1,17 +1,19 @@
 import { Injectable } from '@nestjs/common'
 import type { ProductPageResponse } from '@core/contracts/product/product-page'
-import { DataSourceFactory } from '../../data-source/data-source.factory'
+import { Services } from '../../data-source/ports.module'
 
 @Injectable()
 export class ProductService {
-  constructor(private readonly dataSourceFactory: DataSourceFactory) {}
+  constructor(private readonly services: Services) {}
 
   async getProductPage(
     productSlug: string,
     variantId?: string
   ): Promise<ProductPageResponse> {
-    const { productService } = this.dataSourceFactory.getServices()
-    const response = await productService.getProduct(productSlug, variantId)
+    const response = await this.services.productService.getProduct(
+      productSlug,
+      variantId
+    )
 
     return {
       breadcrumb: response.breadcrumb,

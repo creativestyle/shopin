@@ -1,7 +1,12 @@
 import {
   ArgumentsHost,
+  BadGatewayException,
+  BadRequestException,
+  GatewayTimeoutException,
   HttpException,
   NotFoundException,
+  NotImplementedException,
+  ServiceUnavailableException,
   UnauthorizedException,
 } from '@nestjs/common'
 import { HttpErrorFilter } from '../http-exception.filter'
@@ -193,5 +198,111 @@ describe('HttpErrorFilter', () => {
       message: 'boom',
     })
     expect(request.__nestException).toHaveProperty('stack')
+  })
+
+  it.each([
+    [
+      new NotImplementedException('wishlist is not offered'),
+      501,
+      'Not implemented',
+    ],
+    [new BadGatewayException('platform answered 502'), 502, 'Bad gateway'],
+    [
+      new ServiceUnavailableException('platform down'),
+      503,
+      'Service unavailable',
+    ],
+    [new GatewayTimeoutException('platform timed out'), 504, 'Gateway timeout'],
+  ])(
+    'keeps a server-side status a caller acts on (%#): status and a generic message, the stack logged',
+    (exception, status, message) => {
+      const { host, getStatus, getJson, request } = createHttpHostMock()
+      new HttpErrorFilter().catch(exception, host)
+      expect(getStatus()).toBe(status)
+      // the exception's own message (a platform's text) is never sent
+      expect(getJson()).toEqual({ statusCode: status, message })
+      expect(request.__nestException).toHaveProperty('stack')
+    }
+  )
+
+  it('other statuses without a body of their own stay 500', () => {
+    const { host, getStatus, getJson } = createHttpHostMock()
+    new HttpErrorFilter().catch(new HttpException('teapot', 418), host)
+    expect(getStatus()).toBe(500)
+    expect(getJson()).toEqual({
+      statusCode: 500,
+      message: 'Internal server error',
+    })
+  })
+})
+
+describe('HttpErrorFilter: errors that are not Nest exceptions', () => {
+  // a platform's errors are translated where the BFF calls the port (data-source/port-errors.ts); the filter knows
+  // no vendor's error shape, so whatever arrives raw is a bug: 500, its message never sent
+  it.each([
+    [
+      'a platform-shaped 503',
+      Object.assign(new Error('upstream down'), {
+        name: 'ServiceUnavailable',
+        statusCode: 503,
+      }),
+    ],
+    [
+      'a search-service-shaped RetryError',
+      Object.assign(new Error('Unreachable hosts'), { name: 'RetryError' }),
+    ],
+    [
+      'an axios-shaped 504',
+      Object.assign(new Error('Request failed'), { response: { status: 504 } }),
+    ],
+    [
+      'a raw network error',
+      Object.assign(new Error('connect ECONNREFUSED 10.0.0.1:443'), {
+        code: 'ECONNREFUSED',
+      }),
+    ],
+  ])('%s: 500 with the generic body, the stack logged', (_, error) => {
+    const { host, getStatus, getJson, request } = createHttpHostMock()
+    new HttpErrorFilter().catch(error, host)
+    expect(getStatus()).toBe(500)
+    expect(getJson()).toEqual({
+      statusCode: 500,
+      message: 'Internal server error',
+    })
+    expect(request.__nestException).toHaveProperty('stack')
+  })
+})
+
+describe("HttpErrorFilter: a route's own 400", () => {
+  it.each([
+    ['a message string', new BadRequestException('q: 2 to 100 characters')],
+    [
+      'an object with a message',
+      new BadRequestException({ message: 'q: 2 to 100 characters' }),
+    ],
+  ])('keeps its own message (%s)', (_, exception) => {
+    const { host, getStatus, getJson } = createHttpHostMock()
+    new HttpErrorFilter().catch(exception, host)
+    expect(getStatus()).toBe(400)
+    expect(getJson()).toEqual({
+      statusCode: 400,
+      message: 'q: 2 to 100 characters',
+    })
+  })
+
+  it('input validation keeps "Validation failed" with its issues', () => {
+    const { host, getJson } = createHttpHostMock()
+    const issues = new ZodError([
+      { code: 'custom', path: ['q'], message: 'Required' },
+    ]).issues
+    new HttpErrorFilter().catch(
+      new FrontendInputValidationException(issues),
+      host
+    )
+    expect(getJson()).toMatchObject({
+      statusCode: 400,
+      message: 'Validation failed',
+      issues,
+    })
   })
 })

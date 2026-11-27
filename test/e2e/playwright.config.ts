@@ -6,6 +6,10 @@ const appDir = path.resolve(__dirname, '../../apps/presentation')
 const e2eDir = path.resolve(__dirname)
 // ts-node from the root workspace (hoisted by npm workspaces).
 const tsNode = path.resolve(__dirname, '../../node_modules/.bin/ts-node')
+// The demo's specs (provider switching, only on the demo config): a project only with E2E_DEMO=1, which
+// `npm run e2e:demo` (demo-e2e.mjs) sets after checking that `npm run use demo` is on.
+const demoSpecs = path.resolve(__dirname, '../../demo/e2e/specs')
+const withDemo = process.env.E2E_DEMO === '1'
 
 export default defineConfig({
   testDir: './specs',
@@ -57,6 +61,15 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'] },
       testMatch: '**/preview-iframe.spec.ts',
     },
+    ...(withDemo
+      ? [
+          {
+            name: 'demo',
+            testDir: demoSpecs,
+            use: { ...devices['Desktop Chrome'] },
+          },
+        ]
+      : []),
   ],
 
   // Two webServer entries: mock BFF must start before Next.js so translation

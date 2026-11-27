@@ -1,53 +1,31 @@
 # Integrations
 
-Integration packages, one per vendor and category (`integrations/<vendor>/<category>`), used by the [BFF](../apps/bff) (Backend for Frontend) to connect the storefront to e‑commerce and CMS back ends. The BFF selects which integration(s) to use per request via [DataSourceFactory](../apps/bff/src/data-source/data-source.factory.ts) and the configured data source (e.g. `commercetools-set`, `mock-set`).
+Packages that connect the BFF to a commerce platform, CMS, search, payment or identity provider. The layout is vendor
+first: `integrations/<vendor>/<category>`, one package per part a vendor serves, so a shop can remove one part (say
+commercetools' sign-in) and keep the others. A vendor's shared code lives in `integrations/<vendor>/core`, which
+declares no port; a part imports only its own vendor's core. What an integration is and how to write one:
+[core/integration-kit](../core/integration-kit/README.md).
 
-## Overview
+| Package                                | Folder                   | Serves                                                                             | Env                                                  |
+| -------------------------------------- | ------------------------ | ---------------------------------------------------------------------------------- | ---------------------------------------------------- |
+| `@integrations/commercetools-core`     | `commercetools/core`     | shared commercetools code (API clients, OAuth, scopes, errors); no port            | (its parts')                                         |
+| `@integrations/commercetools-commerce` | `commercetools/commerce` | commerce (its product search serves search when the shop configures no search)     | `COMMERCETOOLS_*`                                    |
+| `@integrations/commercetools-auth`     | `commercetools/auth`     | auth: commercetools' own sign-in (only with commercetools commerce)                | `COMMERCETOOLS_*`                                    |
+| `@integrations/algolia-search`         | `algolia/search`         | search (an index fed from commercetools)                                           | `ALGOLIA_*`                                          |
+| `@integrations/algolia-sync`           | `algolia/sync`           | tool of algolia-search: index sync                                                 | `ALGOLIA_WRITE_API_KEY`, `COMMERCETOOLS_*`           |
+| `@integrations/contentful-cms`         | `contentful/cms`         | cms                                                                                | `CONTENTFUL_*`                                       |
+| `@integrations/contentful-migration`   | `contentful/migration`   | tool of contentful-cms: content model, `npm run migrate`                           | `CONTENTFUL_MANAGEMENT_ACCESS_TOKEN`, `CONTENTFUL_*` |
+| `@integrations/mock-commerce`          | `mock/commerce`          | commerce: generated sample data (its product search serves search)                 | none                                                 |
+| `@integrations/mock-cms`               | `mock/cms`               | cms: sample pages                                                                  | none                                                 |
+| `@integrations/mock-psp`               | `mock/psp`               | psp: sample payment; `./page` is its pretend payment page (the `PaymentStep` slot) | none                                                 |
+| `@integrations/mock-auth`              | `mock/auth`              | auth: fixture users (only with mock commerce)                                      | none                                                 |
 
-| Vendor        | Category | Package                                                | Role                                                                                                                                                                                       |
-| ------------- | -------- | ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| commercetools | commerce | [**commercetools/commerce**](./commercetools/commerce) | Product catalog, cart, checkout, navigation, customer, and order services via [Commercetools](https://commercetools.com/)                                                                  |
-| commercetools | auth     | [**commercetools/auth**](./commercetools/auth)         | Customer auth (login, registration, password reset, sessions) via Commercetools                                                                                                            |
-| commercetools | —        | [**commercetools/core**](./commercetools/core)         | What the commercetools parts share: the server-side client and error helpers                                                                                                               |
-| algolia       | search   | [**algolia/search**](./algolia/search)                 | Product search via [Algolia](https://www.algolia.com/)                                                                                                                                     |
-| contentful    | cms      | [**contentful/cms**](./contentful/cms)                 | CMS content: pages and layout (header/footer) via [Contentful](https://www.contentful.com/) GraphQL API                                                                                    |
-| contentful    | —        | [**contentful/migration**](./contentful/migration)     | Content model and demo content for Contentful (migrations / CMS-as-code)                                                                                                                   |
-| mock          | commerce | [**mock/commerce**](./mock/commerce)                   | Mock catalog, cart and navigation, and for now also the mock CMS pages and layout, mock search and the payment service every data source uses (split by category in the next pull request) |
-| mock          | psp      | [**mock/psp**](./mock/psp)                             | The demo payment page the mock payment redirects to                                                                                                                                        |
-
-Each package is named `@integrations/<vendor>-<category>` after its folders (for example `@integrations/commercetools-auth`). The integrations of one category: `ls -d integrations/*/search`.
-
-A vendor that serves several categories keeps one package per category, so one part (say commercetools auth) is removed by deleting its folder and its wiring. Until the shop config arrives (next pull request), the wiring is in the BFF: the module import in `apps/bff/src/data-source/data-source.module.ts`, the provider in `data-source.factory.ts` (another integration has to take its category there), `apps/bff/package.json`, `apps/bff/turbo.json` (build and dev), `apps/bff/nodemon.config.json`, and `BFF_WIRING` in `eslint.boundaries.config.mjs` (lower `ALLOW_ENTRIES` by the entries removed). The mock is the exception for now: `mock/commerce` also serves the mock CMS, search and payment. Code its parts share goes into `integrations/<vendor>/core` (`@integrations/<vendor>-core`), which has no category and imports none of the parts.
-
-## Boundaries
-
-Each integration stands alone in its imports. A file in `integrations/<vendor>/<category>` may not import:
-
-- another integration package (`@integrations/*` other than its own and its vendor's `core`),
-- app, demo or test code (`@apps/*`, `@demo/*`, `@test/*`),
-- a relative path that leaves its own folder.
-
-`npm run lint:boundaries` (part of `npm run lint`) enforces this across the whole repo with the rules in [`core/eslint-config/rules/boundaries.js`](../core/eslint-config/rules/boundaries.js), configured in [`eslint.boundaries.config.mjs`](../eslint.boundaries.config.mjs). The same run checks the other direction: code outside `integrations/` imports no integration package and no vendor SDK, except the files that config's `ALLOW` list names, and no relative import path goes through an `integrations/` folder. `eslint-disable` comments have no effect on these rules. Code two vendors need goes into a `@core` package; code one vendor's parts share goes into its `integrations/<vendor>/core` (commercetools: one server client for `commerce` and `auth`).
-
-One package can't be removed on its own yet: `mock/psp`. The storefront imports it (its `ALLOW` entry), and the mock payment service in `mock/commerce` (`getPaymentLink()`) sends checkout to its `/demo/mocked-payment-step/...` route for every data source. That ends once checkout hands the shopper to the payment integration's own page and the shop hosts no payment page.
-
-## How the BFF uses them
-
-- **Data source `commercetools-set`**: Catalog and navigation from Commercetools; pages/layout from Contentful (or mock if Contentful is disabled). Customer, address, and order from Commercetools; payment from mock.
-- **Data source `mock-set`**: Catalog, content, and navigation from the mock API; customer/order still from Commercetools; payment from mock.
-
-All integration modules are imported in the BFF’s [DataSourceModule](../apps/bff/src/data-source/data-source.module.ts). For routing details and a code example, see the [BFF README – How it works](../apps/bff/README.md#how-it-works).
-
-## Package READMEs
-
-- [@integrations/commercetools-core](./commercetools/core/README.md)
-- [@integrations/commercetools-commerce](./commercetools/commerce/README.md)
-- [@integrations/commercetools-auth](./commercetools/auth/README.md)
-- [@integrations/algolia-search](./algolia/search/README.md)
-- [@integrations/contentful-cms](./contentful/cms/README.md)
-- [@integrations/contentful-migration](./contentful/migration/README.md)
-- [@integrations/mock-commerce](./mock/commerce/README.md)
-- [@integrations/mock-psp](./mock/psp/README.md)
+Every folder is an npm workspace. A package's third-party dependencies are optional peers: `npm run setup` installs
+them only for what the shop uses, into the package that uses them: `config/shop` (the BFF's integrations),
+`config/storefront` (UI packages) or `config/tools` (a tool whose every `"shopin": { "toolOf": [...] }` parent is
+configured). `npm run integrations:check` lints, type-checks and tests every installed integration and lists the
+dormant ones. Demo-only packages live in `demo/` ([demo/README.md](../demo/README.md)). A shop's own kind of port and
+its other extensions: [docs/extending.md](../docs/extending.md).
 
 ## License
 

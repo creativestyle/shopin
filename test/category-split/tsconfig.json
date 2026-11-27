@@ -1,0 +1,14 @@
+{
+  "extends": "../../apps/bff/tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "isolatedModules": true,
+    "customConditions": [
+      "shopin-framework",
+      "shopin-bff",
+      "shopin-shop",
+      "shopin-test"
+    ]
+  },
+  "include": ["*.ts"]
+}

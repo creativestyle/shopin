@@ -1,9 +1,8 @@
-import { Module, Global, Scope } from '@nestjs/common'
+import { RequestContext } from '@core/integration-kit'
+import { Module, Global } from '@nestjs/common'
 import type { Faker } from '@faker-js/faker' with {
   'resolution-mode': 'import',
 }
-import { LANGUAGE_TOKEN } from '@core/i18n'
-import type { LanguageProvider } from '@core/contracts/core/request-providers'
 
 export const MOCK_API = 'MOCK_API'
 
@@ -18,27 +17,16 @@ const loadFakerLocales = () =>
   })))
 
 export class MockApi {
-  private readonly faker: Faker
+  constructor(
+    private readonly context: RequestContext,
+    private readonly locales: FakerLocales
+  ) {}
 
-  constructor(languageProvider: LanguageProvider, locales: FakerLocales) {
-    this.faker = this.getFakerInstance(languageProvider, locales)
-  }
-
-  private getFakerInstance(
-    languageProvider: LanguageProvider,
-    locales: FakerLocales
-  ) {
-    const currentLanguage = languageProvider.getCurrentLanguage()
-    switch (currentLanguage) {
-      case 'de-DE':
-        return locales.fakerDE
-      default:
-        return locales.faker
-    }
-  }
-
+  /** The faker of the current request's language (a singleton; the language is read per call). */
   getFaker(): Faker {
-    return this.faker
+    return this.context.getCurrentLanguage() === 'de-DE'
+      ? this.locales.fakerDE
+      : this.locales.faker
   }
 }
 
@@ -47,9 +35,8 @@ export class MockApi {
   providers: [
     {
       provide: MOCK_API,
-      scope: Scope.REQUEST,
-      inject: [LANGUAGE_TOKEN],
-      useFactory: async (languageProvider: LanguageProvider) =>
+      inject: [RequestContext],
+      useFactory: async (languageProvider: RequestContext) =>
         new MockApi(languageProvider, await loadFakerLocales()),
     },
   ],

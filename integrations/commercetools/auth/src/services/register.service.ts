@@ -1,6 +1,8 @@
 import { Injectable, Inject, ConflictException } from '@nestjs/common'
-import { COMMERCETOOLS_AUTH_CLIENT } from '../client/client.module'
-import type { Client } from '@integrations/commercetools-core'
+import {
+  COMMERCETOOLS_CLIENT,
+  type Client,
+} from '@integrations/commercetools-core'
 import { isDuplicateEmailError } from '@integrations/commercetools-core'
 import type {
   RegisterRequest,
@@ -9,9 +11,7 @@ import type {
 
 @Injectable()
 export class CommercetoolsRegisterService {
-  constructor(
-    @Inject(COMMERCETOOLS_AUTH_CLIENT) private readonly client: Client
-  ) {}
+  constructor(@Inject(COMMERCETOOLS_CLIENT) private readonly client: Client) {}
 
   async register(registerRequest: RegisterRequest): Promise<RegisterResponse> {
     const customerDraft: {

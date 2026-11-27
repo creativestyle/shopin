@@ -5,7 +5,7 @@ import {
   type RefreshTokenRequest,
   type RefreshTokenResponse,
 } from '@core/contracts/auth/refresh-token'
-import { OAuthTokenService } from './oauth-token.service'
+import { OAuthTokenService } from '@integrations/commercetools-core'
 
 @Injectable()
 export class CommercetoolsRefreshTokenService {

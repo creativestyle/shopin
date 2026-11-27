@@ -1,14 +1,19 @@
+import { RequestContext } from '@core/integration-kit'
 import {
-  Injectable,
+  ConflictException,
   Inject,
+  Injectable,
   Logger,
-  NotFoundException,
-  Scope,
+  NotImplementedException,
+  Optional,
 } from '@nestjs/common'
-import { LANGUAGE_TOKEN } from '@core/i18n'
+import type {
+  Cart,
+  CartUpdateAction as SdkCartUpdateAction,
+} from '@commercetools/platform-sdk'
+import { MapperHooks } from '../mapper-hooks'
 import { resolveCurrencyFromLanguage } from '@core/i18n/currency-utils'
 import { resolveCountryFromLanguage } from '@core/i18n/language-tag-utils'
-import type { LanguageProvider } from '@core/contracts/core/request-providers'
 import type {
   CartResponse,
   SetBillingAddressRequest,
@@ -19,19 +24,21 @@ import {
   CartVersionConflictError,
   DiscountCodeError,
 } from '@core/contracts/cart/cart'
-import type {
-  AddDiscountCodeOptions,
-  GetCartOptions as ContractGetCartOptions,
-} from '@core/contracts/core/data-source-interfaces'
+import type { AddDiscountCodeOptions } from '@core/contracts/core/data-source-interfaces'
 import type {
   ShippingMethodsResponse,
   SetShippingMethodRequest,
 } from '@core/contracts/cart/shipping-method'
-import { UserClientService } from '../client/user-client.service'
-import { ServerClientService } from '@integrations/commercetools-core'
+import type { GetCartOptions as ContractGetCartOptions } from '@core/contracts/core/data-source-interfaces'
+import { CustomerScope } from '../shared/customer-scope.service'
+import {
+  COMMERCETOOLS_CLIENT,
+  type Client,
+} from '@integrations/commercetools-core'
 import { mapCartToResponse } from '../mappers/cart'
 import { mapShippingMethodsToResponse } from '../mappers/shipping-method'
 import { buildInClause } from '../helpers/build-in-clause'
+import { hasStatusCode } from '../helpers/has-status-code'
 import {
   findRejectedDiscountCode,
   toDiscountCodeError,
@@ -41,14 +48,12 @@ import {
   CART_LINE_ITEM_MAX_QUANTITY,
 } from '@config/constants'
 import { CartApiResponseSchema, type CartApiResponse } from '../schemas/cart'
-import {
-  isConcurrentModificationError,
-  isNotFoundError,
-} from '../helpers/is-not-found-error'
+import { isConcurrentModificationError } from '../helpers/is-not-found-error'
 import {
   CartUpdateActionSchema,
   type CartUpdateAction,
 } from '../schemas/cart-update-action'
+import { StoreChannels } from './store-channels.service'
 
 interface GetCartOptions extends ContractGetCartOptions {
   expand?: string[]
@@ -63,7 +68,7 @@ function toMaxQuantity(availableQuantity: number): number {
   return Math.min(Math.max(0, availableQuantity), CART_LINE_ITEM_MAX_QUANTITY)
 }
 
-@Injectable({ scope: Scope.REQUEST })
+@Injectable()
 export class CartService {
   private static readonly CART_EXPAND = [
     'lineItems[*].product',
@@ -74,11 +79,15 @@ export class CartService {
     'discountCodes[*].discountCode',
   ] satisfies string[]
   private static readonly INVENTORY_PAGE_LIMIT = 500
+  /** The Custom Type a cart without one gets for the shop's fields (create it in the project with those fields). */
+  static readonly CART_FIELDS_TYPE = 'shop-cart-fields'
 
   constructor(
-    private readonly userClientService: UserClientService,
-    private readonly serverClientService: ServerClientService,
-    @Inject(LANGUAGE_TOKEN) private readonly languageProvider: LanguageProvider
+    private readonly scope: CustomerScope,
+    @Inject(COMMERCETOOLS_CLIENT) private readonly server: Client,
+    private readonly languageProvider: RequestContext,
+    private readonly channels: StoreChannels,
+    @Optional() private readonly hooks?: MapperHooks
   ) {}
 
   private async getCurrentLanguage(): Promise<string> {
@@ -86,7 +95,7 @@ export class CartService {
   }
 
   private async getClient() {
-    return this.userClientService.getClient()
+    return this.scope.client()
   }
 
   private async updateCartWithAction(
@@ -97,25 +106,6 @@ export class CartService {
     return this.updateCartWithActions(cartId, [actionData], withInventory)
   }
 
-  private async getCartVersion(cartId: string): Promise<number> {
-    const client = await this.getClient()
-    try {
-      const response = await client
-        .me()
-        .carts()
-        .withId({ ID: cartId })
-        .get()
-        .execute()
-
-      return CartApiResponseSchema.parse(response.body).version
-    } catch (error) {
-      if (isNotFoundError(error)) {
-        throw new NotFoundException(`Cart not found: ${cartId}`)
-      }
-      throw error
-    }
-  }
-
   private async processCartResponse(
     responseBody: unknown,
     currentLanguage: string,
@@ -123,10 +113,13 @@ export class CartService {
   ): Promise<CartResponse> {
     const validatedCart = CartApiResponseSchema.parse(responseBody)
     const mappedCart = mapCartToResponse(validatedCart, currentLanguage)
-    const cart = withInventory
-      ? await this.enrichWithInventory(validatedCart, mappedCart)
-      : mappedCart
-    return CartResponseSchema.parse(cart)
+    const cart = CartResponseSchema.parse(
+      withInventory
+        ? await this.enrichWithInventory(validatedCart, mappedCart)
+        : mappedCart
+    )
+    // the shop's hook gets the cart as commercetools returned it (custom fields included)
+    return this.hooks?.cart ? this.hooks.cart(responseBody as Cart, cart) : cart
   }
 
   private async enrichWithInventory(
@@ -180,13 +173,13 @@ export class CartService {
     }
   }
 
+  // Inventory entries are project data, not the shopper's: read with the server client
   private async getStockByKey(skus: string[]): Promise<Map<string, number>> {
-    const client = this.serverClientService.getClient()
     const stockByKey = new Map<string, number>()
     let offset = 0
 
     while (true) {
-      const response = await client
+      const response = await this.server
         .inventory()
         .get({
           queryArgs: {
@@ -230,30 +223,22 @@ export class CartService {
     actionsData: unknown[],
     expectedVersion?: number
   ): Promise<unknown> {
-    const client = await this.getClient()
+    const api = await this.scope.api()
 
-    const cartVersion = expectedVersion ?? (await this.getCartVersion(cartId))
+    // the version the caller checked, else the cart's own (reading it checks the cart is this shopper's)
+    const cartVersion =
+      expectedVersion ?? (await api.carts.get(cartId, [])).version
 
     const validatedActions = actionsData.map((actionData) =>
       CartUpdateActionSchema.parse(actionData)
     )
 
-    const response = await client
-      .me()
-      .carts()
-      .withId({ ID: cartId })
-      .post({
-        body: {
-          version: cartVersion,
-          actions: validatedActions,
-        },
-        queryArgs: {
-          expand: CartService.CART_EXPAND,
-        },
-      })
-      .execute()
-
-    return response.body
+    return api.carts.update(
+      cartId,
+      cartVersion,
+      validatedActions as never,
+      CartService.CART_EXPAND
+    )
   }
 
   async updateCartWithActions(
@@ -262,15 +247,95 @@ export class CartService {
     withInventory = false
   ): Promise<CartResponse> {
     const currentLanguage = await this.getCurrentLanguage()
-    const responseBody = await this.updateCartWithActionsRaw(
-      cartId,
-      actionsData
-    )
-    return this.processCartResponse(
-      responseBody,
-      currentLanguage,
-      withInventory
-    )
+    const updated = await this.updateCartWithActionsRaw(cartId, actionsData)
+
+    return this.processCartResponse(updated, currentLanguage, withInventory)
+  }
+
+  /**
+   * The shop's own cart fields as Custom Fields of the cart. A cart without a Custom Type gets `shop-cart-fields`;
+   * a cart that already has a type (the project's own) keeps it, and the fields must be on that type (else 501,
+   * naming the type and the fields). `null` removes a field. One retry when the cart changed in between (409).
+   */
+  async setFields(
+    cartId: string,
+    fields: Record<string, unknown>
+  ): Promise<CartResponse> {
+    const api = await this.scope.api()
+    for (let attempt = 0; ; attempt++) {
+      // the shopper's own cart only (any other id answers 404)
+      const cart = await api.carts.get(cartId, [])
+      const actions = await this.fieldActions(cart, fields)
+      try {
+        const updated = await api.carts.update(
+          cartId,
+          cart.version,
+          actions,
+          CartService.CART_EXPAND
+        )
+        return this.processCartResponse(
+          updated,
+          await this.getCurrentLanguage(),
+          true
+        )
+      } catch (error) {
+        // the project has no Custom Type for the shop's cart fields yet: the shop's setup, named (README)
+        if (
+          !cart.custom &&
+          hasStatusCode(error) &&
+          error.statusCode === 400 &&
+          JSON.stringify((error as { body?: unknown }).body ?? '').includes(
+            CartService.CART_FIELDS_TYPE
+          )
+        ) {
+          throw new NotImplementedException(
+            `cart fields: the project has no Custom Type "${CartService.CART_FIELDS_TYPE}" for carts: create it with the shop's cart fields (commercetools commerce README, "Cart fields")`
+          )
+        }
+        // only a version conflict is worth a retry; any other 409 is the platform's answer
+        if (!isConcurrentModificationError(error)) {
+          throw error
+        }
+        if (attempt > 0) {
+          throw new ConflictException('The cart kept changing, try again')
+        }
+      }
+    }
+  }
+
+  private async fieldActions(
+    cart: Cart,
+    fields: Record<string, unknown>
+  ): Promise<SdkCartUpdateAction[]> {
+    const set = Object.entries(fields)
+    if (!cart.custom) {
+      return [
+        {
+          action: 'setCustomType',
+          type: { typeId: 'type', key: CartService.CART_FIELDS_TYPE },
+          fields: Object.fromEntries(set.filter(([, v]) => v != null)),
+        },
+      ]
+    }
+    const type = (
+      await this.server
+        .types()
+        .withId({ ID: cart.custom.type.id })
+        .get()
+        .execute()
+    ).body
+    const known = new Set(type.fieldDefinitions.map((f) => f.name))
+    const missing = set.map(([name]) => name).filter((n) => !known.has(n))
+    if (missing.length) {
+      throw new NotImplementedException(
+        `cart fields: the cart's Custom Type "${type.key ?? type.id}" has no field ${missing.join(', ')}: add them to that type`
+      )
+    }
+    return set.map(([name, value]) => ({
+      action: 'setCustomField',
+      name,
+      value: value ?? undefined,
+    }))
   }
 
   async getCart(
@@ -281,51 +346,20 @@ export class CartService {
     }: GetCartOptions = {}
   ): Promise<CartResponse> {
     const currentLanguage = await this.getCurrentLanguage()
-    const client = await this.getClient()
-    try {
-      const response = await client
-        .me()
-        .carts()
-        .withId({ ID: cartId })
-        .get({
-          queryArgs: {
-            expand,
-          },
-        })
-        .execute()
+    const cart = await (await this.scope.api()).carts.get(cartId, expand)
 
-      return this.processCartResponse(
-        response.body,
-        currentLanguage,
-        withInventory
-      )
-    } catch (error) {
-      if (isNotFoundError(error)) {
-        throw new NotFoundException(`Cart not found: ${cartId}`)
-      }
-      throw error
-    }
+    return this.processCartResponse(cart, currentLanguage, withInventory)
   }
 
   async createCart(): Promise<CartResponse> {
     const currentLanguage = await this.getCurrentLanguage()
     const currency = resolveCurrencyFromLanguage(currentLanguage)
     const country = resolveCountryFromLanguage(currentLanguage)
-    const client = await this.getClient()
+    const cart = await (
+      await this.scope.api()
+    ).carts.create({ currency, country, inventoryMode: CART_INVENTORY_MODE })
 
-    const response = await client
-      .me()
-      .carts()
-      .post({
-        body: {
-          currency,
-          country,
-          inventoryMode: CART_INVENTORY_MODE,
-        },
-      })
-      .execute()
-
-    return this.processCartResponse(response.body, currentLanguage)
+    return this.processCartResponse(cart, currentLanguage)
   }
 
   async addToCart(
@@ -342,11 +376,16 @@ export class CartService {
       }
     }
 
+    // the line item's price is selected by the store's distribution channel (a cart has no channel of its own)
+    const distributionChannel = this.channels.priceChannel()
     const actionData: CartUpdateAction = {
       action: 'addLineItem',
       productId,
       variantId: parsedVariantId,
       quantity: quantity ?? 1,
+      ...(distributionChannel && {
+        distributionChannel: { typeId: 'channel', id: distributionChannel },
+      }),
     }
 
     return this.updateCartWithAction(cartId, actionData, true)
@@ -434,6 +473,8 @@ export class CartService {
   async getShippingMethods(cartId: string): Promise<ShippingMethodsResponse> {
     const currentLanguage = await this.getCurrentLanguage()
     const currency = resolveCurrencyFromLanguage(currentLanguage)
+    // only for this shopper's cart
+    await (await this.scope.api()).carts.get(cartId, [])
     const client = await this.getClient()
 
     // Query shipping methods matching the cart
@@ -542,27 +583,18 @@ export class CartService {
   async getActiveCart(): Promise<CartResponse | null> {
     const currentLanguage = await this.getCurrentLanguage()
     const currency = resolveCurrencyFromLanguage(currentLanguage)
-    const client = await this.getClient()
-
     try {
-      const response = await client
-        .me()
-        .carts()
-        .get({
-          queryArgs: {
-            limit: 1,
-            sort: 'lastModifiedAt desc',
-            where: `cartState="Active" and totalPrice(currencyCode="${currency}")`,
-            expand: CartService.CART_EXPAND,
-          },
-        })
-        .execute()
+      const response = await (
+        await this.scope.api()
+      ).carts.query({
+        limit: 1,
+        sort: 'lastModifiedAt desc',
+        where: `cartState="Active" and totalPrice(currencyCode="${currency}")`,
+        expand: CartService.CART_EXPAND,
+      })
 
-      if (response.body.results && response.body.results.length > 0) {
-        return this.processCartResponse(
-          response.body.results[0],
-          currentLanguage
-        )
+      if (response.results && response.results.length > 0) {
+        return this.processCartResponse(response.results[0], currentLanguage)
       }
 
       return null

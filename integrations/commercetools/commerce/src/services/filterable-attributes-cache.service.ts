@@ -1,6 +1,5 @@
 import { Injectable, Inject } from '@nestjs/common'
-import type { Client } from '@integrations/commercetools-core'
-import { COMMERCETOOLS_CLIENT } from '../client/client.module'
+import { COMMERCETOOLS_CLIENT, Client } from '@integrations/commercetools-core'
 import {
   mapFilterableAttributes,
   type FilterableAttribute,

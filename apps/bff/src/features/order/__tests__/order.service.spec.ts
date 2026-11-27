@@ -23,14 +23,14 @@ describe('OrderService.createOrder', () => {
       deleteLoggedInCartId: jest.fn(),
     }
     tokenProvider = { getAuthStatus: jest.fn().mockResolvedValue(false) }
-    const dataSourceFactory = {
-      getServices: () => ({ orderService: dataSourceOrderService }),
-    }
+    const services = { orderService: dataSourceOrderService }
+    const session = { setGuestOrder: jest.fn(), guestOrder: jest.fn() }
 
     service = new OrderService(
-      dataSourceFactory as never,
+      services as never,
       cartIdService as never,
-      tokenProvider as never
+      tokenProvider as never,
+      session as never
     )
   })
 

@@ -2,7 +2,7 @@
   "compilerOptions": {
     "target": "ES2022",
     "lib": ["dom", "dom.iterable", "esnext"],
-    "allowJs": true,
+    "allowJs": false,
     "noEmit": true,
     "module": "esnext",
     "moduleResolution": "bundler",
@@ -22,7 +22,8 @@
     "noUnusedParameters": true,
     "incremental": true,
     "esModuleInterop": true,
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "customConditions": ["shopin-framework", "shopin-demo"]
   },
   "include": [
     "next-env.d.ts",

@@ -1,0 +1,17 @@
+{
+  "extends": "@core/typescript-config/base.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "rootDir": "src",
+    "declarationDir": "dist/types",
+    "tsBuildInfoFile": "dist/tsconfig.tsbuildinfo",
+    "composite": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx",
+    "resolveJsonModule": true,
+    "customConditions": ["shopin-shop"]
+  },
+  "include": ["src", "src/*.json"],
+  "exclude": ["dist", "node_modules", "**/*.test.tsx"]
+}

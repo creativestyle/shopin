@@ -6,6 +6,12 @@
  * inside jest.isolateModules() for each test so each test starts with an
  * empty holder, then we mock `cache` to behave like a simple memoiser.
  */
+import {
+  ALT,
+  ALT_RESOLVED,
+  DEFAULT,
+  DEFAULT_RESOLVED,
+} from '@/lib/variant/__fixtures__/variants'
 
 // Silence the React import — we'll mock it per isolated module load.
 
@@ -45,15 +51,15 @@ describe('getRequestVariant / setRequestVariant', () => {
 
   it('returns the value after setRequestVariant is called', () => {
     const { getRequestVariant, setRequestVariant } = loadFreshVariant()
-    const value = { dataSource: 'commercetools-set' }
+    const value = { ...DEFAULT_RESOLVED }
     setRequestVariant(value)
     expect(getRequestVariant()).toBe(value)
   })
 
   it('returns the latest value when setRequestVariant is called twice', () => {
     const { getRequestVariant, setRequestVariant } = loadFreshVariant()
-    setRequestVariant({ dataSource: 'commercetools-set' })
-    const second = { dataSource: 'commercetools-algolia-set' }
+    setRequestVariant({ ...DEFAULT_RESOLVED })
+    const second = { ...ALT_RESOLVED }
     setRequestVariant(second)
     expect(getRequestVariant()).toBe(second)
   })
@@ -85,16 +91,7 @@ describe('runWithRequestVariant / ALS context', () => {
           return () => cached
         },
       }))
-      jest.mock('@/lib/variant/variant-key', () => {
-        const ALLOWED = ['commercetools-set', 'commercetools-algolia-set']
-        return {
-          decodeVariant: (segment: string) => ({
-            dataSource: segment.replace(/^~/, ''),
-          }),
-          isVariantSegment: (segment: string) =>
-            segment.startsWith('~') && ALLOWED.includes(segment.slice(1)),
-        }
-      })
+      // the real variant-key: segments come from the project config (fixtures)
 
       result = require('../variant') as typeof result
     })
@@ -104,7 +101,7 @@ describe('runWithRequestVariant / ALS context', () => {
 
   it('returns the value passed to runWithRequestVariant inside the callback', () => {
     const { getRequestVariant, runWithRequestVariant } = loadModule()
-    const value = { dataSource: 'commercetools-algolia-set' }
+    const value = { ...ALT_RESOLVED }
     let captured: Record<string, string> | undefined
     runWithRequestVariant(value, () => {
       captured = getRequestVariant()
@@ -114,7 +111,7 @@ describe('runWithRequestVariant / ALS context', () => {
 
   it('returns undefined outside the runWithRequestVariant callback', () => {
     const { getRequestVariant, runWithRequestVariant } = loadModule()
-    const value = { dataSource: 'commercetools-algolia-set' }
+    const value = { ...ALT_RESOLVED }
     runWithRequestVariant(value, () => {})
     expect(getRequestVariant()).toBeUndefined()
   })
@@ -122,8 +119,8 @@ describe('runWithRequestVariant / ALS context', () => {
   it('ALS store takes precedence over the React.cache holder when both are set', () => {
     const { getRequestVariant, setRequestVariant, runWithRequestVariant } =
       loadModule()
-    const holderValue = { dataSource: 'commercetools-set' }
-    const alsValue = { dataSource: 'commercetools-algolia-set' }
+    const holderValue = { ...DEFAULT_RESOLVED }
+    const alsValue = { ...ALT_RESOLVED }
     setRequestVariant(holderValue)
     let captured: Record<string, string> | undefined
     runWithRequestVariant(alsValue, () => {
@@ -134,7 +131,7 @@ describe('runWithRequestVariant / ALS context', () => {
 
   it('propagates correctly across awaits inside the run', async () => {
     const { getRequestVariant, runWithRequestVariant } = loadModule()
-    const value = { dataSource: 'commercetools-algolia-set' }
+    const value = { ...ALT_RESOLVED }
     let captured: Record<string, string> | undefined
     await runWithRequestVariant(value, async () => {
       await Promise.resolve()
@@ -146,10 +143,10 @@ describe('runWithRequestVariant / ALS context', () => {
   it('runWithRequestVariantFromSegment decodes the segment and sets ALS context', () => {
     const { getRequestVariant, runWithRequestVariantFromSegment } = loadModule()
     let captured: Record<string, string> | undefined
-    runWithRequestVariantFromSegment('~commercetools-algolia-set', () => {
+    runWithRequestVariantFromSegment(ALT, () => {
       captured = getRequestVariant()
     })
-    expect(captured).toEqual({ dataSource: 'commercetools-algolia-set' })
+    expect(captured).toEqual({ ...ALT_RESOLVED })
   })
 
   it('runWithRequestVariantFromSegment runs fn without variant context for an invalid segment', () => {
@@ -163,7 +160,7 @@ describe('runWithRequestVariant / ALS context', () => {
 
   it('setRequestVariantFromSegment leaves the holder untouched for an invalid segment', () => {
     const { getRequestVariant, setRequestVariantFromSegment } = loadModule()
-    setRequestVariantFromSegment('commercetools-set')
+    setRequestVariantFromSegment(DEFAULT.slice(1))
     expect(getRequestVariant()).toBeUndefined()
   })
 })

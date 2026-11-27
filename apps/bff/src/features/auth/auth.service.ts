@@ -1,10 +1,11 @@
-import { Injectable } from '@nestjs/common'
+import { Injectable, Logger, NotImplementedException } from '@nestjs/common'
+import type { AllAuthServices } from '@core/contracts/core/data-source-interfaces'
+import type { SessionTokens, SignedIn } from '@core/integration-kit'
 import type { LoginRequest, LoginResponse } from '@core/contracts/auth/login'
 import type {
   RegisterRequest,
   RegisterResponse,
 } from '@core/contracts/auth/register'
-import type { LogoutRequest } from '@core/contracts/auth/logout'
 import type {
   ConfirmEmailRequest,
   ConfirmEmailResponse,
@@ -21,51 +22,164 @@ import type {
   ResendVerificationEmailRequest,
   ResendVerificationEmailResponse,
 } from '@core/contracts/auth/resend-verification-email'
-import { DataSourceFactory } from '../../data-source/data-source.factory'
+import { Ports } from '../../data-source/ports.module'
+import {
+  currentProviders,
+  keyOf,
+  isOwnSignIn,
+} from '../../data-source/providers'
 import { TokenStorageService } from '../../common/token-management/token-storage.service'
 import { CartIdService } from '../cart-id/cart-id.service'
 import { WishlistIdService } from '../wishlist-id/wishlist-id.service'
+import {
+  identityKey,
+  revocations,
+  SessionService,
+} from '../../common/session/session.service'
+import { VaultService } from '../../common/vault/vault.service'
+import { linkCustomer } from './customer-link'
+import type { Identity } from '../../common/session/session.service'
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name)
+
   constructor(
-    private readonly dataSourceFactory: DataSourceFactory,
+    private readonly ports: Ports,
     private readonly tokenStorageService: TokenStorageService,
     private readonly cartIdService: CartIdService,
-    private readonly wishlistIdService: WishlistIdService
+    private readonly wishlistIdService: WishlistIdService,
+    private readonly session: SessionService,
+    private readonly vault: VaultService
   ) {}
 
-  async login(loginRequest: LoginRequest): Promise<LoginResponse> {
-    const { loginService } = this.dataSourceFactory.getAuthServices()
-    const loginResult = await loginService.login(loginRequest)
+  /** The auth port: this module is mounted only when an auth provider is configured. */
+  private get auth() {
+    return this.ports.auth!
+  }
 
-    // Store access token and refresh token in HTTP-only cookies
-    if (loginResult.accessToken && loginResult.refreshToken) {
-      await this.tokenStorageService.setTokens(
-        {
-          accessToken: loginResult.accessToken,
-          refreshToken: loginResult.refreshToken,
-          expiresIn: loginResult.expiresIn,
-        },
-        true // User is authenticated (logged in)
+  /** Account flows (register, confirm e-mail, password reset) the identity provider offers. */
+  private flow<K extends keyof AllAuthServices>(name: K): AllAuthServices[K] {
+    const flow = this.auth.accountFlows?.[name]
+    if (!flow) {
+      throw new NotImplementedException(
+        `The identity provider does not offer ${name}`
       )
     }
+    return flow as AllAuthServices[K]
+  }
 
-    return {
-      success: loginResult.success,
-      statusCode: loginResult.statusCode,
+  /**
+   * The neutral sign-in sequence: identity from the auth part → link through the commerce part →
+   * new SHOPin session value (identity + link) → the commerce part's own session, when the identity
+   * provider is that platform's own sign-in. The guest-cart step runs in the controller afterwards.
+   */
+  async login(loginRequest: LoginRequest): Promise<LoginResponse> {
+    const { identity, commerceSession } = await this.auth.signIn(
+      loginRequest,
+      await this.guestSessionForNativeSignIn()
+    )
+    await this.completeSignIn(identity, commerceSession)
+    return { success: true }
+  }
+
+  /**
+   * The guest's commerce session, only when the identity provider is the commerce platform's own sign-in: that
+   * platform takes the guest cart over at sign-in (it merges it). Never handed to another provider.
+   */
+  private async guestSessionForNativeSignIn(): Promise<
+    { commerceAccessToken: string } | undefined
+  > {
+    if (!isOwnSignIn()) {
+      return undefined
+    }
+    if ((await this.tokenStorageService.getAuthStatus()) !== false) {
+      return undefined
+    }
+    const accessToken = await this.tokenStorageService.getAccessToken()
+    return accessToken ? { commerceAccessToken: accessToken } : undefined
+  }
+
+  /** After the identity provider said who signed in (password or redirect sign-in). */
+  private async completeSignIn(
+    signedIn: SignedIn,
+    commerceSession?: SessionTokens
+  ): Promise<void> {
+    const { providers } = currentProviders()
+    // the BFF names the provider: the integration serving auth for this request, never the part's word
+    const identity: Identity = {
+      ...signedIn,
+      provider: keyOf(providers.auth!),
+    }
+    const native = isOwnSignIn()
+    const customerId = await linkCustomer(
+      identity,
+      this.ports.commerce.customers,
+      { native }
+    )
+    await this.session.signIn(identity, customerId!)
+    if (!commerceSession) {
+      return
+    }
+    // a commerce session is taken only from the commerce platform's own sign-in; another identity provider's
+    // would act for commerce customers it does not own
+    if (!native) {
+      this.logger.warn(
+        `sign-in through "${keyOf(providers.auth!)}" returned a commerce session; ignored, because it is not the sign-in of commerce "${keyOf(providers.commerce!)}"`
+      )
+      return
+    }
+    await this.tokenStorageService.setTokens(commerceSession, true, customerId!)
+  }
+
+  /**
+   * Before a sign-in: an expired guest token is renewed through the commerce part (the vault's single-flight
+   * refresh), because the auth routes have no refresh interceptor. A token that cannot be renewed stays as it is.
+   */
+  async renewGuestSession(): Promise<void> {
+    const session = this.ports.commerce.guestSession
+    if (!session) {
+      return
+    }
+    const { providers } = currentProviders()
+    const provider = keyOf(providers.commerce!)
+    const entry = await this.vault.entry('commerce', provider)
+    if (!entry || entry.customer || !entry.expired) {
+      return
+    }
+    await this.vault
+      .refreshOnce('commerce', provider, (rt) => session.refresh(rt))
+      .catch(() => undefined)
+  }
+
+  /**
+   * After sign-in and the guest-cart takeover: a signed-in shopper never keeps the guest's commerce token.
+   * Either the identity provider handed the customer's commerce session (a customer entry, kept), or the
+   * commerce part acts for the linked customer without one (the guest entry is dropped).
+   */
+  async dropGuestSession(): Promise<void> {
+    if ((await this.tokenStorageService.getAuthStatus()) === false) {
+      this.tokenStorageService.clearTokens()
     }
   }
 
+  /**
+   * A platform's own register flow when it offers one (it keeps salutation and birth date), otherwise the
+   * port's `signUp`: an identity provider without account flows (the mock) verifies at once and needs no token.
+   */
   async register(registerRequest: RegisterRequest): Promise<RegisterResponse> {
-    const { registerService } = this.dataSourceFactory.getAuthServices()
-    const registerResult = await registerService.register(registerRequest)
+    if (!this.auth.accountFlows?.registerService) {
+      await this.auth.signUp(registerRequest)
+      return { success: true }
+    }
+    const registerResult =
+      await this.flow('registerService').register(registerRequest)
 
     // TODO: temporary solution to return email token to frontend, it should send email.
     if (registerResult.success) {
-      const { generateEmailTokenService } =
-        this.dataSourceFactory.getAuthServices()
-      const tokenResult = await generateEmailTokenService.generateEmailToken({
+      const tokenResult = await this.flow(
+        'generateEmailTokenService'
+      ).generateEmailToken({
         email: registerRequest.email,
       })
       return { ...registerResult, emailToken: tokenResult.emailToken }
@@ -74,37 +188,42 @@ export class AuthService {
     return registerResult
   }
 
+  /** Clears the session and every vault entry locally first, then asks the auth part to revoke. */
   async logout(): Promise<void> {
-    const { logoutService } = this.dataSourceFactory.getAuthServices()
-    const tokens = await this.tokenStorageService.getTokens()
-    const logoutRequest: LogoutRequest = {
-      accessToken: tokens.accessToken,
-      refreshToken: tokens.refreshToken,
-    }
-    await logoutService.logout(logoutRequest)
-
-    // Clear commercetools access and refresh token cookies
-    this.tokenStorageService.clearTokens()
-
-    // Delete all cart ID cookies
+    const identity = await this.session.identity()
+    // the commerce tokens go to the identity provider only when it issued them (the platform's own
+    // sign-in returned them as commerceSession, so the vault entry is a customer entry); never to another
+    const customerEntry =
+      (await this.tokenStorageService.getAuthStatus()) === true
+    const tokens = customerEntry
+      ? await this.tokenStorageService.getTokens()
+      : undefined
+    this.session.signOut()
+    this.vault.clearAll()
     await this.cartIdService.deleteAllCartIds()
-
-    // Delete all wishlist ID cookies
     await this.wishlistIdService.deleteAllWishlistIds()
+    if (!identity) {
+      return
+    }
+    try {
+      await this.auth.signOut(identity, tokens)
+    } catch {
+      // the auth provider may be down: the shopper is signed out here regardless
+    }
   }
 
   async confirmEmail(
     confirmEmailRequest: ConfirmEmailRequest
   ): Promise<ConfirmEmailResponse> {
-    const { confirmEmailService } = this.dataSourceFactory.getAuthServices()
-    return await confirmEmailService.confirmEmail(confirmEmailRequest)
+    return await this.flow('confirmEmailService').confirmEmail(
+      confirmEmailRequest
+    )
   }
 
   async forgotPassword(
     forgotPasswordRequest: ForgotPasswordRequest
   ): Promise<ForgotPasswordResponse> {
-    const { forgotPasswordService } = this.dataSourceFactory.getAuthServices()
-    const result = await forgotPasswordService.forgotPassword(
+    const result = await this.flow('forgotPasswordService').forgotPassword(
       forgotPasswordRequest
     )
     // Always return success to prevent email enumeration — callers cannot
@@ -116,16 +235,28 @@ export class AuthService {
   async resetPassword(
     resetPasswordRequest: ResetPasswordRequest
   ): Promise<ResetPasswordResponse> {
-    const { resetPasswordService } = this.dataSourceFactory.getAuthServices()
-    return await resetPasswordService.resetPassword(resetPasswordRequest)
+    const { subject, ...result } = await this.flow(
+      'resetPasswordService'
+    ).resetPassword(resetPasswordRequest)
+    // every session of that identity, issued before now, stops working (it may be the attacker's)
+    if (result.success && subject) {
+      revocations.revokeIdentity(
+        identityKey({
+          provider: keyOf(currentProviders().providers.auth!),
+          subject,
+        }),
+        Date.now()
+      )
+    }
+    return result
   }
 
   async resendVerificationEmail(
     request: ResendVerificationEmailRequest
   ): Promise<ResendVerificationEmailResponse> {
-    const { generateEmailTokenService } =
-      this.dataSourceFactory.getAuthServices()
-    const result = await generateEmailTokenService.generateEmailToken({
+    const result = await this.flow(
+      'generateEmailTokenService'
+    ).generateEmailToken({
       email: request.email,
     })
     // Always return success to prevent email enumeration.

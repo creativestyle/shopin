@@ -1,0 +1,15 @@
+{
+  "extends": "@core/typescript-config/nestjs.json",
+  "compilerOptions": {
+    "outDir": "dist/bff",
+    "rootDir": ".",
+    "declarationDir": "dist/types/bff",
+    "tsBuildInfoFile": "dist/bff/tsconfig.tsbuildinfo",
+    "composite": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "customConditions": ["shopin-shop"]
+  },
+  "include": ["config"],
+  "exclude": ["dist", "node_modules"]
+}

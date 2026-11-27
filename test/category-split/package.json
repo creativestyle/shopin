@@ -1,0 +1,28 @@
+{
+  "name": "@test/category-split",
+  "description": "Scenario tests that boot the real BFF AppModule against a shop config built from fixture integrations (swaps, env per port, resolution modes, sign-in linking, the vault). Independent of config/shop.",
+  "private": true,
+  "scripts": {
+    "test": "node --experimental-vm-modules ../../node_modules/jest/bin/jest.js -c jest.config.cjs",
+    "check-types": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@apps/bff": "*",
+    "@config/constants": "*",
+    "@core/contracts": "*",
+    "@core/integration-kit": "*",
+    "@nestjs/common": "^11.2.7",
+    "@nestjs/core": "^11.2.7",
+    "@nestjs/testing": "^11.2.7",
+    "@shopin/config": "*",
+    "zod": "^4.6.7"
+  },
+  "exports": {
+    "./harness": {
+      "shopin-test": "./harness.ts"
+    },
+    "./fixtures": {
+      "shopin-test": "./fixtures.ts"
+    }
+  }
+}

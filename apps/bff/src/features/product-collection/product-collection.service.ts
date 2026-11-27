@@ -3,12 +3,12 @@ import type {
   ProductCollectionPageResponse,
   Filters,
 } from '@core/contracts/product-collection/product-collection-page'
-import { DataSourceFactory } from '../../data-source/data-source.factory'
+import { Services } from '../../data-source/ports.module'
 import { DEFAULT_SORT_OPTION, type SortOption } from '@config/constants'
 
 @Injectable()
 export class ProductCollectionService {
-  constructor(private readonly dataSourceFactory: DataSourceFactory) {}
+  constructor(private readonly services: Services) {}
 
   async getProductCollectionPage(
     productCollectionSlug: string,
@@ -20,7 +20,7 @@ export class ProductCollectionService {
     priceMin?: number,
     priceMax?: number
   ): Promise<ProductCollectionPageResponse> {
-    const { productCollectionService } = this.dataSourceFactory.getServices()
+    const { productCollectionService } = this.services
     const response = await productCollectionService.getProductCollection(
       productCollectionSlug,
       page,

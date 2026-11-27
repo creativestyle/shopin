@@ -1,60 +1,55 @@
 {
   "name": "@integrations/mock-commerce",
-  "description": "NestJS module providing mock implementations of catalog, cart, content, auth, and navigation for development and demos",
+  "version": "0.0.0",
+  "description": "Mock commerce: generated catalog, carts, wishlist, customers and orders for development and demos, no account needed.",
   "author": "creativestyle GmbH",
   "private": true,
   "exports": {
-    ".": "./dist/index.js"
+    ".": {
+      "shopin-shop": {
+        "types": "./dist/types/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "default": "./dist/index.js"
+    },
+    "./shopin": {
+      "shopin-shop": {
+        "types": "./dist/types/shopin.d.ts",
+        "default": "./dist/shopin.js"
+      },
+      "default": "./dist/shopin.js"
+    }
   },
   "scripts": {
-    "build": "tsc --build tsconfig.build.json",
-    "dev": "tsc --build tsconfig.build.json --watch",
-    "lint": "eslint --fix ./src --max-warnings=0",
-    "format": "prettier --write ./src",
-    "format:check": "prettier --check --ignore-unknown ./src",
+    "build": "tsc --build",
+    "dev": "tsc --build --watch",
+    "lint": "eslint --fix ./src ./test --max-warnings=0",
+    "format": "prettier --write ./src ./test",
+    "format:check": "prettier --check --ignore-unknown ./src ./test",
     "check-types": "tsc --noEmit",
-    "test": "jest"
+    "setup": "tsc --build",
+    "test": "tsc --build && node --test \"test/*.test.mjs\""
   },
   "dependencies": {
     "@config/constants": "*",
     "@core/contracts": "*",
     "@core/i18n": "*",
-    "@faker-js/faker": "^10.5.0"
+    "@core/integration-kit": "*"
   },
   "devDependencies": {
     "@core/eslint-config": "*",
     "@core/prettier-config": "*",
-    "@core/typescript-config": "*",
-    "@types/jest": "^30.0.0",
-    "jest": "^30.0.5",
-    "ts-jest": "^29.4.9"
+    "@core/typescript-config": "*"
   },
   "peerDependencies": {
+    "@faker-js/faker": "^10.5.0",
     "@nestjs/common": "^11.1.14",
-    "@nestjs/config": "^4.0.2",
     "@nestjs/core": "^11.1.14",
     "nestjs-pino": "^4.5.0"
   },
-  "jest": {
-    "moduleFileExtensions": [
-      "js",
-      "json",
-      "ts"
-    ],
-    "rootDir": "src",
-    "testRegex": ".*\\.spec\\.ts$",
-    "transform": {
-      "^.+\\.ts$": [
-        "ts-jest",
-        {
-          "diagnostics": {
-            "ignoreCodes": [
-              151002
-            ]
-          }
-        }
-      ]
-    },
-    "testEnvironment": "node"
+  "peerDependenciesMeta": {
+    "@faker-js/faker": {
+      "optional": true
+    }
   }
 }

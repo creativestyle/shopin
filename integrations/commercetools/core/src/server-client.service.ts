@@ -1,29 +1,20 @@
-import { Injectable } from '@nestjs/common'
-import { ConfigService } from '@nestjs/config'
+import { Inject, Injectable } from '@nestjs/common'
+import { PortOptions } from '@core/integration-kit'
+import type { CommercetoolsOptions } from './env'
 import { createApiBuilderFromCtpClient } from '@commercetools/platform-sdk'
 import { ClientBuilder } from '@commercetools/ts-client'
-import type { Client } from './client'
+import type { Client } from './client/client.module'
 
 @Injectable()
 export class ServerClientService {
   private readonly clientInstance: Client
 
-  constructor(private readonly configService: ConfigService) {
-    const clientId = this.configService.getOrThrow<string>(
-      'COMMERCETOOLS_CLIENT_ID'
-    )
-    const clientSecret = this.configService.getOrThrow<string>(
-      'COMMERCETOOLS_CLIENT_SECRET'
-    )
-    const projectKey = this.configService.getOrThrow<string>(
-      'COMMERCETOOLS_PROJECT_KEY'
-    )
-    const apiUrl = this.configService.getOrThrow<string>(
-      'COMMERCETOOLS_API_URL'
-    )
-    const authUrl = this.configService.getOrThrow<string>(
-      'COMMERCETOOLS_AUTH_URL'
-    )
+  constructor(@Inject(PortOptions) options: CommercetoolsOptions) {
+    const clientId = options.clientId
+    const clientSecret = options.clientSecret
+    const projectKey = options.projectKey
+    const apiUrl = options.apiUrl
+    const authUrl = options.authUrl
 
     const client = new ClientBuilder()
       .withClientCredentialsFlow({

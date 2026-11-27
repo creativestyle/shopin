@@ -1,0 +1,5 @@
+/* the demo's components and the demo UI packages they use (Tailwind classes), imported by config/storefront/sources.css while the demo is on */
+@source "./src";
+@import '@demo/data-source-selector/sources.css';
+@import '@demo/demo-disclaimer/sources.css';
+@import '@demo/mock-tracking-tags/sources.css';

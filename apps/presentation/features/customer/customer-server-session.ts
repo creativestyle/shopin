@@ -1,8 +1,5 @@
 import { cookies } from 'next/headers'
-import {
-  ACCESS_TOKEN_COOKIE_NAME,
-  REFRESH_TOKEN_COOKIE_NAME,
-} from '@config/constants'
+import { SESSION_COOKIE_NAME } from '@config/constants'
 import { createBffFetchWithCookies } from '@/lib/bff/core/bff-fetch-server-with-cookies'
 import { logger } from '@/lib/logger'
 import { CustomerService } from './lib/customer-bff-service'
@@ -16,9 +13,10 @@ export async function getServerSession(): Promise<ServerSession> {
   const hasCookie = (name: string) =>
     requestCookies.some((cookie) => cookie.name === name)
 
-  if (!hasCookie(ACCESS_TOKEN_COOKIE_NAME)) {
-    // Refresh-only session: the BFF would refresh via a Set-Cookie the browser never gets
-    return hasCookie(REFRESH_TOKEN_COOKIE_NAME) ? 'unknown' : 'signed-out'
+  // No SHOPin session: a guest. A session the BFF renews during this call cannot reach the browser, which is
+  // harmless: the next browser request renews it again.
+  if (!hasCookie(SESSION_COOKIE_NAME)) {
+    return 'signed-out'
   }
 
   try {

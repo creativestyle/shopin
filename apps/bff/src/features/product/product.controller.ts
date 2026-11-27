@@ -8,12 +8,14 @@ import {
 } from '@nestjs/swagger'
 import {
   ProductPageResponse,
-  ProductPageResponseSchema,
   ProductSlugSchema,
   VariantIdSchema,
 } from '@core/contracts/product/product-page'
 import { ZodParam, ZodQuery } from '../../common/validation'
+import { Reads } from '@core/integration-kit'
+import { Contracts } from '../../data-source/contracts'
 
+@Reads('commerce')
 @Controller('product')
 @ApiTags('product')
 export class ProductController {
@@ -36,7 +38,7 @@ export class ProductController {
     @ZodParam(ProductSlugSchema, 'productSlug') productSlug: string,
     @ZodQuery(VariantIdSchema, 'variantId') variantId?: string
   ): Promise<ProductPageResponse> {
-    return ProductPageResponseSchema.strip().parse(
+    return Contracts.productPage.parse(
       await this.productService.getProductPage(productSlug, variantId)
     )
   }

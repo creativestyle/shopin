@@ -1,0 +1,14 @@
+/*
+ * The shop's look, without editing SHOPin's components: loaded after SHOPin's styles, so a custom property set here
+ * wins. SHOPin's components take colour, font, corner radius and spacing from these properties (Tailwind theme
+ * variables: `bg-primary` reads --color-primary, `rounded-lg` --radius-lg, `p-4` --spacing). A change of structure
+ * (another header, a reordered checkout step) is a slot, not a style.
+ *
+ * Example:
+ *   :root {
+ *     --color-primary: #00594f;
+ *     --color-secondary: #007a6c;
+ *     --font-base: "Source Sans 3", system-ui, sans-serif;
+ *     --radius-lg: 0.25rem;
+ *   }
+ */

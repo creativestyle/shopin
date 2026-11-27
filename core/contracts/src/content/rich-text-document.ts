@@ -1,7 +1,7 @@
 /**
  * CMS-agnostic rich text document type.
  *
- * Structure is compatible with Contentful's rich text JSON; other CMSes (e.g. Strapi)
+ * Structure is compatible with common CMS rich text JSON; other CMSes (e.g. Strapi)
  * can map their format to this shape in their respective integrations.
  *
  * ## Document structure

@@ -1,35 +1,61 @@
-import { Injectable, Inject, Scope, forwardRef } from '@nestjs/common'
+import { RequestContext } from '@core/integration-kit'
+import { Injectable, Inject, forwardRef } from '@nestjs/common'
 import type { CartResponse } from '@core/contracts/cart/cart'
 import type { SetPaymentMethodRequest } from '@core/contracts/cart/payment-method'
 import { SetPaymentMethodRequestSchema } from '@core/contracts/cart/payment-method'
-import { LANGUAGE_TOKEN } from '@core/i18n'
-import type { LanguageProvider } from '@core/contracts/core/request-providers'
-import { UserClientService } from '../client/user-client.service'
+import { CustomerScope } from '../shared/customer-scope.service'
 import type { CartUpdateAction } from '../schemas/cart-update-action'
 import { CartService } from './cart.service'
 
-@Injectable({ scope: Scope.REQUEST })
+/** A commercetools payment as this service checks it. */
+interface RawPayment {
+  id: string
+  version?: number
+  method?: string
+  transactions: { type: string; state: string }[]
+  amountPlanned?: { centAmount: number; currencyCode: string }
+}
+
+@Injectable()
 export class CartPaymentService {
   constructor(
-    private readonly userClientService: UserClientService,
+    private readonly scope: CustomerScope,
     @Inject(forwardRef(() => CartService))
     private readonly cartService: CartService,
-    @Inject(LANGUAGE_TOKEN)
-    private readonly languageProvider: LanguageProvider
+    private readonly languageProvider: RequestContext
   ) {}
 
-  private async getClient() {
-    return this.userClientService.getClient()
+  /**
+   * The cart's payment as commercetools keeps it (id, version, method, transactions, planned amount): read from the
+   * platform cart with its payments expanded, the shopper's own cart only. SHOPin's cart contract carries only the
+   * payment's flat summary, not these platform fields.
+   */
+  private async currentPayment(
+    cartId: string
+  ): Promise<RawPayment | undefined> {
+    const cart = await (
+      await this.scope.api()
+    ).carts.get(cartId, ['paymentInfo.payments[*]'])
+    const ref = cart.paymentInfo?.payments?.[0]
+    if (!ref) {
+      return undefined
+    }
+    const obj = ref.obj
+    return {
+      id: ref.id,
+      ...(obj?.version !== undefined ? { version: obj.version } : {}),
+      ...(obj?.paymentMethodInfo?.method
+        ? { method: obj.paymentMethodInfo.method }
+        : {}),
+      transactions: obj?.transactions ?? [],
+      ...(obj?.amountPlanned ? { amountPlanned: obj.amountPlanned } : {}),
+    }
   }
 
   /**
-   * Checks if payment has transactions (from CartResponse)
+   * Checks if payment has transactions
    */
-  private hasTransactions(
-    payment: NonNullable<
-      NonNullable<CartResponse['paymentInfo']>['payments']
-    >[number]
-  ): boolean {
+  private hasTransactions(payment: RawPayment): boolean {
     return (
       Array.isArray(payment.transactions) && payment.transactions.length > 0
     )
@@ -40,11 +66,7 @@ export class CartPaymentService {
    * Success transactions indicate the payment has been successfully processed and cannot be changed
    * Failed payments can be retried or changed
    */
-  private hasSuccessTransactions(
-    payment: NonNullable<
-      NonNullable<CartResponse['paymentInfo']>['payments']
-    >[number]
-  ): boolean {
+  private hasSuccessTransactions(payment: RawPayment): boolean {
     if (!this.hasTransactions(payment)) {
       return false
     }
@@ -57,31 +79,23 @@ export class CartPaymentService {
    * Updates payment amount to match cart total
    */
   private async updatePaymentAmount(
+    cartId: string,
     paymentId: string,
     paymentVersion: number,
     cartTotal: number,
     currencyCode: string
   ): Promise<void> {
-    const client = await this.getClient()
-    await client
-      .me()
-      .payments()
-      .withId({ ID: paymentId })
-      .post({
-        body: {
-          version: paymentVersion,
-          actions: [
-            {
-              action: 'changeAmountPlanned',
-              amount: {
-                centAmount: cartTotal,
-                currencyCode,
-              },
-            },
-          ],
+    await (
+      await this.scope.api()
+    ).payments.update(cartId, paymentId, paymentVersion, [
+      {
+        action: 'changeAmountPlanned',
+        amount: {
+          centAmount: cartTotal,
+          currencyCode,
         },
-      })
-      .execute()
+      },
+    ])
   }
 
   /**
@@ -95,7 +109,6 @@ export class CartPaymentService {
     paymentMethodName: string,
     localizedName?: Record<string, string>
   ): Promise<string> {
-    const client = await this.getClient()
     const currentLanguage = this.languageProvider.getCurrentLanguage()
 
     // Use localized name if provided, otherwise use paymentMethodName for current language
@@ -103,25 +116,17 @@ export class CartPaymentService {
       ? { ...localizedName }
       : { [currentLanguage]: paymentMethodName }
 
-    const response = await client
-      .me()
-      .payments()
-      .post({
-        body: {
-          amountPlanned: {
-            centAmount: amountCentAmount,
-            currencyCode,
-          },
-          paymentMethodInfo: {
-            method: paymentMethodId,
-            paymentInterface,
-            name,
-          },
-        },
-      })
-      .execute()
-
-    return response.body.id
+    return (await this.scope.api()).payments.create({
+      amountPlanned: {
+        centAmount: amountCentAmount,
+        currencyCode,
+      },
+      paymentMethodInfo: {
+        method: paymentMethodId,
+        paymentInterface,
+        name,
+      },
+    })
   }
 
   async setPaymentMethod(
@@ -132,16 +137,15 @@ export class CartPaymentService {
 
     // Get the cart to retrieve the total amount, currency, and existing payments
     const cart = await this.cartService.getCart(cartId, {
-      expand: ['paymentInfo.payments[*]'],
       withInventory: false,
     })
 
     // System only handles one payment per cart
-    const existingPayment = cart.paymentInfo?.payments?.[0]
+    const existingPayment = await this.currentPayment(cartId)
 
     // If there's an existing payment with Success transactions, check if it matches the requested method
     if (existingPayment && this.hasSuccessTransactions(existingPayment)) {
-      const existingMethod = existingPayment.paymentMethodInfo?.method
+      const existingMethod = existingPayment.method
 
       if (existingMethod === validatedRequest.paymentMethodId) {
         // Payment method is already set and has Success transactions - return the already-fetched cart
@@ -158,8 +162,7 @@ export class CartPaymentService {
     // reuse it instead of creating a duplicate
     if (
       existingPayment &&
-      existingPayment.paymentMethodInfo?.method ===
-        validatedRequest.paymentMethodId &&
+      existingPayment.method === validatedRequest.paymentMethodId &&
       !this.hasSuccessTransactions(existingPayment)
     ) {
       // Payment with same method already exists and is reusable - return the cart
@@ -188,7 +191,7 @@ export class CartPaymentService {
       cartTotal,
       currencyCode,
       validatedRequest.paymentMethodId,
-      validatedRequest.paymentInterface,
+      validatedRequest.provider,
       validatedRequest.paymentMethodName,
       validatedRequest.localizedDescription
     )
@@ -215,7 +218,6 @@ export class CartPaymentService {
   async verifyAndUpdatePaymentAmounts(cartId: string): Promise<void> {
     // Get cart with expanded payments to verify amounts
     const cart = await this.cartService.getCart(cartId, {
-      expand: ['paymentInfo.payments[*]'],
       withInventory: false,
     })
 
@@ -226,7 +228,7 @@ export class CartPaymentService {
     // Validate and update payment amount if cart total changed
     // This handles cases where discount codes or other changes modified the cart total
     // after payment was set
-    const payment = cart.paymentInfo?.payments?.[0]
+    const payment = await this.currentPayment(cartId)
 
     if (payment) {
       // Skip if payment doesn't have version (not expanded)
@@ -250,6 +252,7 @@ export class CartPaymentService {
         // This includes payments with no transactions, Pending, Initial, or Failure states
         try {
           await this.updatePaymentAmount(
+            cartId,
             payment.id,
             payment.version,
             cartTotal,

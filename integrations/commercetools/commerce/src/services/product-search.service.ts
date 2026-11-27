@@ -1,13 +1,9 @@
-import { Injectable, Inject, Scope } from '@nestjs/common'
+import { RequestContext } from '@core/integration-kit'
+import { Injectable, Inject, Optional } from '@nestjs/common'
+import { MapperHooks } from '../mapper-hooks'
 import type { _SearchQuery } from '@commercetools/platform-sdk'
-import type { Client } from '@integrations/commercetools-core'
-import { COMMERCETOOLS_CLIENT } from '../client/client.module'
-import {
-  LANGUAGE_TOKEN,
-  LanguageTagUtils,
-  resolveCurrencyFromLanguage,
-} from '@core/i18n'
-import type { LanguageProvider } from '@core/contracts/core/request-providers'
+import { COMMERCETOOLS_CLIENT, Client } from '@integrations/commercetools-core'
+import { LanguageTagUtils, resolveCurrencyFromLanguage } from '@core/i18n'
 import type { ProductSearchResponse } from '@core/contracts/product-search/product-search'
 import type { ProductSearchParams } from '@core/contracts/core/data-source-interfaces'
 import {
@@ -19,19 +15,23 @@ import {
   buildPostFilters,
   buildFacets,
   buildSortExpressions,
+  priceScope,
   buildAttributeFilters,
 } from '../helpers/product-collection-filters'
 import { executeFacetedSearch } from '../helpers/faceted-search'
 import { mapProjectionsToCards } from '../mappers/search-results'
 import { fetchProjectionsByIds } from '../helpers/fetch-projections'
 import { FilterableAttributesCacheService } from './filterable-attributes-cache.service'
+import { StoreChannels } from './store-channels.service'
 
-@Injectable({ scope: Scope.REQUEST })
+@Injectable()
 export class ProductSearchService {
   constructor(
     @Inject(COMMERCETOOLS_CLIENT) private readonly client: Client,
-    @Inject(LANGUAGE_TOKEN) private readonly languageProvider: LanguageProvider,
-    private readonly filterableAttributesCache: FilterableAttributesCacheService
+    private readonly languageProvider: RequestContext,
+    private readonly filterableAttributesCache: FilterableAttributesCacheService,
+    private readonly channels: StoreChannels,
+    @Optional() private readonly hooks?: MapperHooks
   ) {}
 
   private buildQueryParts(
@@ -99,16 +99,20 @@ export class ProductSearchService {
       currentLanguage,
       filterableAttributes
     )
+    const priceChannel = this.channels.priceChannel()
     const postFilters = buildPostFilters(
       filters,
       currentLanguage,
       filterableAttributes,
       currency,
       priceMin,
-      priceMax
+      priceMax,
+      priceChannel
     )
-    const sortExpressions = buildSortExpressions(sort, currentLanguage)
-    const facets = buildFacets(currentLanguage, filterableAttributes)
+    // with the store's channel, the price filter, facet and sort use the prices the cards show
+    const scope = priceScope(currency, priceChannel)
+    const sortExpressions = buildSortExpressions(sort, currentLanguage, scope)
+    const facets = buildFacets(currentLanguage, filterableAttributes, scope)
 
     const hasActiveFilters =
       attributeFilters.length > 0 ||
@@ -138,9 +142,11 @@ export class ProductSearchService {
       language: currentLanguage,
       currency,
       country,
+      priceChannel,
       limit,
       offset,
       filterableAttributes,
+      productCard: this.hooks?.productCard,
     })
 
     return {
@@ -181,11 +187,17 @@ export class ProductSearchService {
           ids,
           language,
           currency,
-          country
+          country,
+          this.channels.priceChannel()
         )
       : []
 
-    const products = mapProjectionsToCards(ids, projections, language)
+    const products = mapProjectionsToCards(
+      ids,
+      projections,
+      language,
+      this.hooks?.productCard
+    )
 
     return {
       products,

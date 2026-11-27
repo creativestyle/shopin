@@ -24,6 +24,21 @@ npm run e2e:ui        # Playwright interactive UI
 npm run report        # open last HTML report
 ```
 
+## Demo suite
+
+The specs that switch providers (`demo/e2e/specs`: variant headers, per-variant ISR, locale switch on an alt
+catalog, malformed provider cookies) only make sense with the demo's provider switch, so they run on the demo config:
+
+```bash
+npm run use demo            # repository root: the demo config, then setup
+npm run build:e2e           # apps/presentation (stop a running start:e2e first: it is reused)
+npm run e2e:demo            # test/e2e or the root: the shop's specs and the demo's (project "demo")
+npm run use demo off        # back to the shop config, then npm run build:e2e again
+```
+
+`npm run e2e:demo` refuses to start, with these steps, while the demo is off. Extra arguments go to Playwright
+(`npm run e2e:demo -- --project=demo`).
+
 ## Why serial, not parallel
 
 Specs run with `workers: 1`. The mock BFF (which records all outgoing BFF calls for assertion) has a single shared request log. Parallel workers would race on log resets and produce false results.

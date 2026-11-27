@@ -1,6 +1,7 @@
 import type {
   SearchSorting,
   SearchSortOrder,
+  _SearchQuery,
 } from '@commercetools/platform-sdk'
 import type { Filters } from '@core/contracts/product-collection/product-collection-page'
 import { SORT_OPTIONS, type SortOption } from '@config/constants'
@@ -70,13 +71,50 @@ export function buildAttributeFilters(
   return attributeFilters
 }
 
+/**
+ * A price of the store's channel, or a price with no channel at all. commercetools price selection falls back to a
+ * price without a channel when a variant has none for the requested channel (Product price selection, fallback steps 3,
+ * 4, 7 and 8: "with no Channel … defined for the price"; docs.commercetools.com/api/pricing-and-discounts-overview), so
+ * a card shows such a price with `priceChannel` set; the range, facet and sort must count it too.
+ */
+function storeChannelOrNone(priceChannel: string): _SearchQuery {
+  return {
+    or: [
+      { exact: { field: 'variants.prices.channel', value: priceChannel } },
+      { not: [{ exists: { field: 'variants.prices.channel' } }] },
+    ],
+  }
+}
+
+/**
+ * The price scope of the store's distribution channel (StoreChannels): its channel (or no channel,
+ * `storeChannelOrNone`) and the currency, as conditions on the same price (commercetools Product Search: "filter by
+ * the price scopes that apply and combine them with an AND expression"; `variants.prices.channel` takes the Channel
+ * id). Undefined without a channel: the price range, facet and sort are then the ones sent before channels were read.
+ */
+export function priceScope(
+  currency: string,
+  priceChannel: string | undefined
+): _SearchQuery | undefined {
+  if (!priceChannel) {
+    return undefined
+  }
+  return {
+    and: [
+      storeChannelOrNone(priceChannel),
+      { exact: { field: 'variants.prices.currencyCode', value: currency } },
+    ],
+  }
+}
+
 export function buildPostFilters(
   filters: Filters | undefined,
   language: string,
   filterableAttributes: FilterableAttribute[],
   currency?: string,
   priceMin?: number,
-  priceMax?: number
+  priceMax?: number,
+  priceChannel?: string
 ): object[] {
   const postFilters: object[] = []
 
@@ -91,6 +129,10 @@ export function buildPostFilters(
       priceConditions.push({
         exact: { field: 'variants.prices.currencyCode', value: currency },
       })
+    }
+    // the store's channel (or none, the fallback): the range applies to the price the cards show
+    if (priceChannel) {
+      priceConditions.push(storeChannelOrNone(priceChannel))
     }
     priceConditions.push({
       range: {
@@ -109,9 +151,11 @@ export function buildPostFilters(
   return postFilters
 }
 
+/** `scope`: the store's price scope (`priceScope`); the price facet then counts only those prices. */
 export function buildFacets(
   language: string,
-  filterableAttributes: FilterableAttribute[]
+  filterableAttributes: FilterableAttribute[],
+  scope?: _SearchQuery
 ): object[] {
   const facets = filterableAttributes.map((attr) => {
     const isEnum = attr.fieldType === 'enum' || attr.fieldType === 'lenum'
@@ -145,24 +189,39 @@ export function buildFacets(
       field: 'variants.prices.centAmount',
       level: 'variants' as const,
       fieldType: 'number' as unknown as 'text',
+      ...(scope && { filter: scope }),
     },
   })
 
   return facets
 }
 
+/** `scope`: the store's price scope (`priceScope`); a price sort then orders by those prices (the sort's `filter`). */
 export function buildSortExpressions(
   sort: SortOption,
-  language: string
+  language: string,
+  scope?: _SearchQuery
 ): SearchSorting[] {
   const asc: SearchSortOrder = 'asc'
   const desc: SearchSortOrder = 'desc'
 
   switch (sort) {
     case SORT_OPTIONS.PRICE_ASC:
-      return [{ field: 'variants.prices.centAmount', order: asc }]
+      return [
+        {
+          field: 'variants.prices.centAmount',
+          order: asc,
+          ...(scope && { filter: scope }),
+        },
+      ]
     case SORT_OPTIONS.PRICE_DESC:
-      return [{ field: 'variants.prices.centAmount', order: desc }]
+      return [
+        {
+          field: 'variants.prices.centAmount',
+          order: desc,
+          ...(scope && { filter: scope }),
+        },
+      ]
     case SORT_OPTIONS.NAME_ASC:
       return [{ field: 'name', language, order: asc }]
     case SORT_OPTIONS.NAME_DESC:

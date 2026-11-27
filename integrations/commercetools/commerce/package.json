@@ -1,60 +1,65 @@
 {
   "name": "@integrations/commercetools-commerce",
-  "description": "NestJS module for Commercetools e-commerce API: catalog, cart, orders, customers, and service provider interface",
+  "version": "0.0.0",
+  "description": "commercetools commerce (catalog, carts, customers, orders; its product search serves search through the BFF when no search integration is configured). Shares the client with the auth part through @integrations/commercetools-core.",
   "author": "creativestyle GmbH",
   "private": true,
   "exports": {
-    ".": "./dist/index.js"
+    ".": {
+      "shopin-shop": {
+        "types": "./dist/types/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "default": "./dist/index.js"
+    },
+    "./shopin": {
+      "shopin-shop": {
+        "types": "./dist/types/shopin.d.ts",
+        "default": "./dist/shopin.js"
+      },
+      "default": "./dist/shopin.js"
+    }
   },
   "scripts": {
-    "build": "tsc --build tsconfig.build.json",
-    "dev": "tsc --build tsconfig.build.json --watch",
+    "build": "tsc --build",
+    "dev": "tsc --build --watch",
     "lint": "eslint --fix ./src --max-warnings=0",
     "format": "prettier --write ./src",
     "format:check": "prettier --check --ignore-unknown ./src",
     "check-types": "tsc --noEmit",
-    "test": "jest"
+    "test": "tsc --build && node --test \"test/*.test.mjs\"",
+    "setup": "tsc --build",
+    "record:contract": "tsc --build && node --env-file=../../../.env test/record-contract.mjs"
   },
   "dependencies": {
-    "@commercetools/platform-sdk": "^8.13.0",
     "@config/constants": "*",
     "@core/contracts": "*",
     "@core/i18n": "*",
-    "@integrations/commercetools-core": "*",
-    "zod": "^4.6.7"
+    "@core/integration-kit": "*",
+    "@integrations/commercetools-core": "*"
   },
   "devDependencies": {
     "@core/eslint-config": "*",
     "@core/prettier-config": "*",
     "@core/typescript-config": "*",
-    "@types/jest": "^30.0.0",
-    "jest": "^30.0.5",
-    "ts-jest": "^29.4.9"
+    "@nestjs/testing": "^11.2.7"
   },
   "peerDependencies": {
+    "@commercetools/platform-sdk": "^8.13.0",
+    "@commercetools/ts-client": "^4.1.0",
     "@nestjs/common": "^11.1.3",
-    "@nestjs/config": "^4.0.2"
+    "nestjs-pino": "^4.5.0",
+    "zod": "^4.6.7"
   },
-  "jest": {
-    "moduleFileExtensions": [
-      "js",
-      "json",
-      "ts"
-    ],
-    "rootDir": "src",
-    "testRegex": ".*\\.spec\\.ts$",
-    "transform": {
-      "^.+\\.ts$": [
-        "ts-jest",
-        {
-          "diagnostics": {
-            "ignoreCodes": [
-              151002
-            ]
-          }
-        }
-      ]
+  "peerDependenciesMeta": {
+    "@commercetools/platform-sdk": {
+      "optional": true
     },
-    "testEnvironment": "node"
+    "@commercetools/ts-client": {
+      "optional": true
+    },
+    "zod": {
+      "optional": true
+    }
   }
 }

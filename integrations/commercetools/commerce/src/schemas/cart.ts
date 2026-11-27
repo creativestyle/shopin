@@ -8,6 +8,7 @@ import { ShippingMethodCustomApiResponseSchema } from './shipping-method-custom'
 const TypedMoneyApiResponseSchema = z.object({
   centAmount: z.number(),
   currencyCode: z.string(),
+  fractionDigits: z.number().optional(),
 })
 
 export const CartLineItemVariantApiResponseSchema =

@@ -1,12 +1,8 @@
-import { Injectable, Inject, NotFoundException, Scope } from '@nestjs/common'
-import type { Client } from '@integrations/commercetools-core'
-import { COMMERCETOOLS_CLIENT } from '../client/client.module'
-import {
-  LANGUAGE_TOKEN,
-  LanguageTagUtils,
-  resolveCurrencyFromLanguage,
-} from '@core/i18n'
-import type { LanguageProvider } from '@core/contracts/core/request-providers'
+import { RequestContext } from '@core/integration-kit'
+import { Injectable, Inject, NotFoundException, Optional } from '@nestjs/common'
+import { MapperHooks } from '../mapper-hooks'
+import { COMMERCETOOLS_CLIENT, Client } from '@integrations/commercetools-core'
+import { LanguageTagUtils, resolveCurrencyFromLanguage } from '@core/i18n'
 import type { ProductCollectionResponse } from '@core/contracts/product-collection/product-collection'
 import type { Filters } from '@core/contracts/product-collection/product-collection-page'
 import {
@@ -22,6 +18,7 @@ import {
   buildPostFilters,
   buildFacets,
   buildSortExpressions,
+  priceScope,
   buildAttributeFilters,
 } from '../helpers/product-collection-filters'
 import { executeFacetedSearch } from '../helpers/faceted-search'
@@ -29,13 +26,16 @@ import { mapCategoryTree } from '../mappers/product-collection'
 import { buildCategoryBreadcrumb } from '../mappers/category-breadcrumb'
 import { mapMetaSeo } from '../mappers/seo'
 import { FilterableAttributesCacheService } from './filterable-attributes-cache.service'
+import { StoreChannels } from './store-channels.service'
 
-@Injectable({ scope: Scope.REQUEST })
+@Injectable()
 export class ProductCollectionService {
   constructor(
     @Inject(COMMERCETOOLS_CLIENT) private readonly client: Client,
-    @Inject(LANGUAGE_TOKEN) private readonly languageProvider: LanguageProvider,
-    private readonly filterableAttributesCache: FilterableAttributesCacheService
+    private readonly languageProvider: RequestContext,
+    private readonly filterableAttributesCache: FilterableAttributesCacheService,
+    private readonly channels: StoreChannels,
+    @Optional() private readonly hooks?: MapperHooks
   ) {}
 
   private async resolveCategory(
@@ -127,16 +127,20 @@ export class ProductCollectionService {
       currentLanguage,
       filterableAttributes
     )
+    const priceChannel = this.channels.priceChannel()
     const postFilters = buildPostFilters(
       filters,
       currentLanguage,
       filterableAttributes,
       currency,
       priceMin,
-      priceMax
+      priceMax,
+      priceChannel
     )
-    const sortExpressions = buildSortExpressions(sort, currentLanguage)
-    const facets = buildFacets(currentLanguage, filterableAttributes)
+    // with the store's channel, the price filter, facet and sort use the prices the cards show
+    const scope = priceScope(currency, priceChannel)
+    const sortExpressions = buildSortExpressions(sort, currentLanguage, scope)
+    const facets = buildFacets(currentLanguage, filterableAttributes, scope)
 
     const baseQuery =
       queryFilters.length === 1 ? queryFilters[0] : { and: queryFilters }
@@ -168,9 +172,11 @@ export class ProductCollectionService {
       language: currentLanguage,
       currency,
       country,
+      priceChannel,
       limit,
       offset,
       filterableAttributes,
+      productCard: this.hooks?.productCard,
     })
 
     const breadcrumb = buildCategoryBreadcrumb(

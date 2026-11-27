@@ -1,8 +1,9 @@
 /**
- * Authentication cookie name constants
+ * Cookie names the BFF sets: the SHOPin session (identity and customer links) and one encrypted token vault per
+ * integration part (`vault.<category>.<provider>`). The storefront forwards them on its server-side BFF calls.
  */
-export const ACCESS_TOKEN_COOKIE_NAME = 'access_token'
-export const REFRESH_TOKEN_COOKIE_NAME = 'refresh_token'
+export const SESSION_COOKIE_NAME = 'shopin-session'
+export const VAULT_COOKIE_PREFIX = 'vault.'
 export const CSRF_TOKEN_COOKIE_NAME = 'csrf_token'
 
 /**

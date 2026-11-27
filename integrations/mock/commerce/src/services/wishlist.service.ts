@@ -1,9 +1,8 @@
+import { RequestContext } from '@core/integration-kit'
 import { Injectable, Inject, NotFoundException } from '@nestjs/common'
 import { PinoLogger } from 'nestjs-pino'
 import { MOCK_API, MockApi } from '../client/client.module'
-import { LANGUAGE_TOKEN } from '@core/i18n'
 import { resolveCurrencyFromLanguage } from '@core/i18n/currency-utils'
-import type { LanguageProvider } from '@core/contracts/core/request-providers'
 import type {
   WishlistResponse,
   AddToWishlistRequest,
@@ -17,15 +16,18 @@ import {
   withShopinVariantSummary,
 } from '../generators'
 
+/** The mock is a platform with versions: its wishlists always carry one (the contract's `version` is optional). */
+type MockWishlist = WishlistResponse & { version: number }
+
 // Simple in-memory store for mock wishlists
 // Wishlist IDs can be stored in localStorage on the client side
-export const wishlistStore = new Map<string, WishlistResponse>()
+export const wishlistStore = new Map<string, MockWishlist>()
 
 @Injectable()
 export class WishlistService {
   constructor(
     @Inject(MOCK_API) private readonly mockApi: MockApi,
-    @Inject(LANGUAGE_TOKEN) private readonly languageProvider: LanguageProvider,
+    private readonly languageProvider: RequestContext,
     private readonly logger: PinoLogger
   ) {
     this.logger.setContext(WishlistService.name)
@@ -35,7 +37,7 @@ export class WishlistService {
     wishlistId: string,
     page?: number,
     limit?: number
-  ): Promise<WishlistResponse> {
+  ): Promise<MockWishlist> {
     const wishlist = wishlistStore.get(wishlistId)
     if (!wishlist) {
       this.logger.warn({ wishlistId }, 'Wishlist not found')
@@ -57,7 +59,7 @@ export class WishlistService {
 
   async getOrCreateWishlist(): Promise<WishlistResponse> {
     const wishlistId = `mock-wishlist-${randomUUID()}`
-    const wishlist: WishlistResponse = {
+    const wishlist: MockWishlist = {
       id: wishlistId,
       version: 1,
       items: [],
@@ -99,7 +101,7 @@ export class WishlistService {
       product: productWithCurrency,
     }
 
-    const updatedWishlist: WishlistResponse = {
+    const updatedWishlist: MockWishlist = {
       ...wishlist,
       version: wishlist.version + 1,
       items: [...wishlist.items, newItem],
@@ -129,7 +131,7 @@ export class WishlistService {
 
     const updatedItems = wishlist.items.filter((item) => item.id !== lineItemId)
 
-    const updatedWishlist: WishlistResponse = {
+    const updatedWishlist: MockWishlist = {
       ...wishlist,
       version: wishlist.version + 1,
       items: updatedItems,

@@ -6,6 +6,10 @@ export const AddLineItemActionSchema = z.object({
   productId: z.string(),
   variantId: z.number().int().positive().optional(),
   quantity: z.number().int().positive(),
+  // CartAddLineItemAction.distributionChannel: selects the line item's price (the store's channel)
+  distributionChannel: z
+    .object({ typeId: z.literal('channel'), id: z.string() })
+    .optional(),
 })
 
 export const ChangeLineItemQuantityActionSchema = z.object({

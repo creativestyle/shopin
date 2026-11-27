@@ -8,20 +8,19 @@ import { REQUEST } from '@nestjs/core'
 import type { Request } from 'express'
 import { randomBytes, timingSafeEqual } from 'crypto'
 import {
-  CSRF_TOKEN_COOKIE_NAME,
   CSRF_TOKEN_HEADER_NAME,
   CSRF_TOKEN_SIZE_BYTES,
   CSRF_TOKEN_MAX_AGE_MS,
 } from '@config/constants'
 import { CsrfTokenEncryptionService } from './csrf-token-encryption.service'
-import { CookieService } from '../../common/storage/cookie.service'
+import { SessionService } from '../../common/session/session.service'
 
 @Injectable({
   scope: Scope.REQUEST,
 })
 export class CsrfTokenService {
   constructor(
-    private readonly cookieService: CookieService,
+    private readonly session: SessionService,
     private readonly csrfTokenEncryptionService: CsrfTokenEncryptionService,
     @Inject(REQUEST) private readonly request: Request
   ) {}
@@ -50,10 +49,7 @@ export class CsrfTokenService {
    */
   setTokenCookie(token: string): void {
     try {
-      const options = this.cookieService.createCookieOptions(
-        CSRF_TOKEN_MAX_AGE_MS
-      )
-      this.cookieService.setCookie(CSRF_TOKEN_COOKIE_NAME, token, options)
+      this.session.setCsrfToken(token)
     } catch {
       throw new InternalServerErrorException(
         'Unable to set CSRF token cookie: response object or cookie function unavailable'
@@ -66,7 +62,7 @@ export class CsrfTokenService {
    * @returns The CSRF token from cookie, or undefined if not present
    */
   getTokenFromCookie(): string | undefined {
-    return this.cookieService.getCookie(CSRF_TOKEN_COOKIE_NAME)
+    return this.session.getCsrfToken()
   }
 
   /**
@@ -142,6 +138,6 @@ export class CsrfTokenService {
    * Clears the CSRF token cookie
    */
   clearTokenCookie(): void {
-    this.cookieService.clearCookie(CSRF_TOKEN_COOKIE_NAME)
+    this.session.clearCsrfToken()
   }
 }

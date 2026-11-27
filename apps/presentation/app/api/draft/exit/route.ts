@@ -55,7 +55,7 @@ export function GET(request: NextRequest) {
 
   const query = forwarded.toString()
   const response = relativeRedirect(query ? `${target}?${query}` : target)
-  // Mirror the set attributes so the clear also applies inside Contentful's cross-site iframe.
+  // Mirror the set attributes so the clear also applies inside the CMS's cross-site iframe.
   const isHttps = isSiteHttps()
   response.cookies.set({
     name: PREVIEW_TOKEN_COOKIE,

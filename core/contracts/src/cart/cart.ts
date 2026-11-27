@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import { CART_LINE_ITEM_MAX_QUANTITY } from '@config/constants'
 import { BasicPriceResponseSchema } from '../core/basic-price'
+import { PaymentStatusSchema } from './payment-method'
 import {
   AddressBaseSchema,
   AddressRequestSchema,
@@ -54,44 +55,20 @@ export const ShippingInfoResponseSchema = z
   })
   .optional()
 
+/**
+ * What the cart or order says about its payment: one flat summary every payment integration maps to (the method,
+ * the integration handling it, its status, the amount), never a platform's payment record.
+ */
 export const PaymentInfoResponseSchema = z
   .object({
-    // Payments array - flat structure with all payment data at top level
-    payments: z
-      .array(
-        z.object({
-          typeId: z.literal('payment'),
-          id: z.string(),
-          version: z.number().optional(),
-          paymentMethodInfo: z
-            .object({
-              method: z.string().optional(),
-              paymentInterface: z.string().optional(),
-              name: z.record(z.string(), z.string()).optional(),
-            })
-            .optional(),
-          transactions: z
-            .array(
-              z.object({
-                id: z.string(),
-                type: z.string(),
-                amount: z.object({
-                  centAmount: z.number(),
-                  currencyCode: z.string(),
-                }),
-                state: z.string(),
-              })
-            )
-            .optional(),
-          amountPlanned: z
-            .object({
-              centAmount: z.number(),
-              currencyCode: z.string(),
-            })
-            .optional(),
-        })
-      )
-      .optional(),
+    /** The method the shopper chose, e.g. 'invoice', 'credit-card'. */
+    method: z.string(),
+    /** The payment integration handling it (its payment interface). */
+    provider: z.string(),
+    /** The method's name per locale, as the payment integration names it. */
+    name: z.record(z.string(), z.string()).optional(),
+    status: PaymentStatusSchema,
+    amount: BasicPriceResponseSchema.optional(),
   })
   .optional()
 
@@ -109,7 +86,8 @@ export type DiscountCodeResponse = z.infer<typeof DiscountCodeResponseSchema>
 
 export const CartResponseSchema = z.object({
   id: z.string(),
-  version: z.number(),
+  /** The platform's version for concurrent writes, when it has one. */
+  version: z.number().optional(),
   lineItems: z.array(LineItemResponseSchema),
   subtotal: BasicPriceResponseSchema,
   tax: BasicPriceResponseSchema.optional(),

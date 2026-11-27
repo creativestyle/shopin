@@ -59,7 +59,7 @@ export class LanguageTagUtils {
 
   /**
    * Convert language tag to underscore key (e.g., "en-US" -> "en_US").
-   * Useful for Algolia field name conventions.
+   * Useful for search index field name conventions.
    */
   static toUnderscoreKey(tag: string): string {
     return tag.replace('-', '_')

@@ -2,7 +2,6 @@ import { redirect } from '@/lib/navigation'
 import { getLocale } from 'next-intl/server'
 import { cookies } from 'next/headers'
 import {
-  ACCESS_TOKEN_COOKIE_NAME,
   CART_ID_COOKIE_PREFIX_GUEST,
   CART_ID_COOKIE_PREFIX_LOGGED,
 } from '@config/constants'
@@ -24,17 +23,18 @@ import {
 
 export type { CheckoutStepId } from './components/checkout-steps-frame/checkout-steps-config'
 
-/** Read-only guard: without these cookies the BFF would refresh tokens via Set-Cookie the browser never gets. */
+/**
+ * Read-only guard: the server resolves the cart only when the browser has a cart id. Every provider has one (the
+ * mock keeps no token at all); without the tokens it needs, the BFF answers no cart and the client guard takes over.
+ * A refresh during this call cannot reach the browser, which is harmless for a provider that does not rotate refresh
+ * tokens (the next browser request refreshes again).
+ */
 function canResolveCartOnServer(requestCookies: RequestCookie[]): boolean {
-  const hasCartId = requestCookies.some(
+  return requestCookies.some(
     ({ name }) =>
       name.startsWith(CART_ID_COOKIE_PREFIX_GUEST) ||
       name.startsWith(CART_ID_COOKIE_PREFIX_LOGGED)
   )
-  const hasAccessToken = requestCookies.some(
-    ({ name }) => name === ACCESS_TOKEN_COOKIE_NAME
-  )
-  return hasCartId && hasAccessToken
 }
 
 /** Returns the cart, or null when the server cannot resolve it and the client guard decides. */

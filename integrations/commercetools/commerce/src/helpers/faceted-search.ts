@@ -1,3 +1,4 @@
+import type { CommercetoolsMappers } from '../mapper-hooks'
 import type {
   SearchSorting,
   _SearchQuery,
@@ -27,9 +28,13 @@ export interface FacetedSearchParams {
   language: string
   currency: string
   country: string
+  /** The store's distribution channel (StoreChannels), when it has one. */
+  priceChannel?: string
   limit: number
   offset: number
   filterableAttributes: FilterableAttribute[]
+  /** The shop's card hook (`commercetools({ mappers: { productCard } })`). */
+  productCard?: CommercetoolsMappers['productCard']
 }
 
 export interface FacetedSearchResult {
@@ -53,9 +58,11 @@ export async function executeFacetedSearch(
     language,
     currency,
     country,
+    priceChannel,
     limit,
     offset,
     filterableAttributes,
+    productCard,
   } = params
 
   const mainSearchPromise = client
@@ -105,11 +112,18 @@ export async function executeFacetedSearch(
   const ids = results.map((r) => r.id)
 
   const projections = ids.length
-    ? await fetchProjectionsByIds(client, ids, language, currency, country)
+    ? await fetchProjectionsByIds(
+        client,
+        ids,
+        language,
+        currency,
+        country,
+        priceChannel
+      )
     : []
 
   return {
-    products: mapProjectionsToCards(ids, projections, language),
+    products: mapProjectionsToCards(ids, projections, language, productCard),
     facets: mapFacetsFromResponse(facetResults, filterableAttributes, language),
     priceRange: extractPriceRange(facetResults),
     total,

@@ -68,7 +68,10 @@ import type {
   AuthAction,
   AuthFailureReason,
 } from '../../common/auth-logging/auth-logging.types'
+import { ServesWhileUnavailable } from '../../data-source/serving.guard'
+import { Reads } from '@core/integration-kit'
 
+@Reads('commerce', 'auth')
 @Controller('auth')
 @ApiTags('auth')
 @SecureRateLimit()
@@ -114,12 +117,11 @@ export class AuthController {
           : statusCode >= 500
             ? 'error'
             : 'unknown',
-      () =>
-        this.handleAuthWithCartSetup(
-          req,
-          'login',
-          () => this.authService.login(loginRequest),
-          LoginResponseSchema
+      async () =>
+        LoginResponseSchema.strip().parse(
+          await this.handleAuthWithCartSetup(req, 'login', () =>
+            this.authService.login(loginRequest)
+          )
         )
     )
   }
@@ -155,12 +157,11 @@ export class AuthController {
           : statusCode >= 500
             ? 'error'
             : 'unknown',
-      () =>
-        this.handleAuthWithCartSetup(
-          req,
-          'register',
-          () => this.authService.register(registerRequest),
-          RegisterResponseSchema
+      async () =>
+        RegisterResponseSchema.strip().parse(
+          await this.handleAuthWithCartSetup(req, 'register', () =>
+            this.authService.register(registerRequest)
+          )
         )
     )
   }
@@ -225,12 +226,22 @@ export class AuthController {
   private async handleAuthWithCartSetup<T extends { success: boolean }>(
     req: Request,
     action: AuthAction,
-    authOperation: () => Promise<T>,
-    responseSchema: { strip: () => { parse: (data: T) => T } }
+    authOperation: () => Promise<T>
   ): Promise<T> {
-    // Get guest cart ID and wishlist ID before authentication (while we still have anonymous session)
-    const guestCartId = await this.cartIdService.getGuestCartId()
-    const guestWishlistId = await this.wishlistIdService.getGuestWishlistId()
+    // a sign-in takes the guest's cart and wishlist over; a registration signs no one in, so the guest keeps them
+    const signsIn = action === 'login'
+    // Guest cart and wishlist ids before authentication (while the anonymous session is there). The auth routes
+    // have no refresh interceptor: an expired guest token is renewed first, so the take-over can still prove the
+    // guest cart is this shopper's
+    if (signsIn) {
+      await this.authService.renewGuestSession()
+    }
+    const guestCartId = signsIn
+      ? await this.cartIdService.getGuestCartId()
+      : undefined
+    const guestWishlistId = signsIn
+      ? await this.wishlistIdService.getGuestWishlistId()
+      : undefined
 
     // Fetch guest wishlist data before authentication (while we still have anonymous session)
     const guestWishlistItems = guestWishlistId
@@ -239,8 +250,8 @@ export class AuthController {
 
     const result = await authOperation()
 
-    // Setup cart and wishlist after successful authentication (handles guest cleanup and customer setup)
-    if (result.success) {
+    // Setup cart and wishlist after a successful sign-in (handles guest cleanup and customer setup)
+    if (result.success && signsIn) {
       try {
         await Promise.all([
           this.cartService.setupCartAfterLogin(guestCartId),
@@ -249,6 +260,9 @@ export class AuthController {
             guestWishlistItems
           ),
         ])
+        // the guest token served the take-over above; a signed-in shopper does not keep it. Only after it
+        // succeeded: a take-over that failed keeps the guest token, so the cart is not lost
+        await this.authService.dropGuestSession()
       } catch (err) {
         this.authLogger.log({
           action,
@@ -264,10 +278,12 @@ export class AuthController {
       }
     }
 
-    return responseSchema.strip().parse(result)
+    return result
   }
 
   @Post('logout')
+  // sign-out clears SHOPin's session first and ignores the provider: it works while sign-in or commerce is down
+  @ServesWhileUnavailable()
   @UseCsrfGuard()
   @UseInterceptors(CsrfTokenCleanupInterceptor)
   @HttpCode(HttpStatus.OK)

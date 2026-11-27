@@ -1,0 +1,63 @@
+{
+  "labels": {
+    "mock": {
+      "en": "Sample data",
+      "de": "Beispieldaten"
+    },
+    "mock-identity": {
+      "en": "Sample sign-in",
+      "de": "Beispiel-Anmeldung"
+    }
+  },
+  "productImages": [
+    {
+      "hosts": ["placehold.co", "storage.googleapis.com"]
+    }
+  ],
+  "contentImages": [
+    {
+      "hosts": ["placehold.co", "storage.googleapis.com"]
+    },
+    {
+      "hosts": ["d187yychpee5t0.cloudfront.net"],
+      "resize": {
+        "kind": "query",
+        "width": "w",
+        "quality": "q",
+        "fixed": {
+          "fm": "webp"
+        }
+      }
+    }
+  ],
+  "previewOrigins": [],
+  "slots": {
+    "PaymentStep": {
+      "from": "@integrations/mock-psp/page",
+      "name": "PaymentDemo",
+      "by": "mock (psp)"
+    },
+    "PreviewRequest": {
+      "from": "@integrations/mock-cms/preview",
+      "name": "previewRequest",
+      "by": "mock (cms)"
+    }
+  },
+  "variants": {
+    "dimensions": [],
+    "combinations": {
+      "": {
+        "providers": {
+          "commerce": "mock",
+          "cms": "mock",
+          "psp": "mock",
+          "auth": "mock-identity"
+        },
+        "unavailable": {},
+        "services": {
+          "wishlist": true
+        }
+      }
+    }
+  }
+}

@@ -50,13 +50,11 @@ const COMPLETE_CART: CartResponse = {
     shippingMethodName: 'Standard',
     price: PRICE,
   },
-  paymentInfo: { payments: [{ typeId: 'payment', id: 'payment-1' }] },
+  paymentInfo: { method: 'invoice', provider: 'mock', status: 'pending' },
 }
 
-const SESSION_COOKIES = [
-  { name: 'cart-guest-en', value: 'c1' },
-  { name: 'access_token', value: 't1' },
-]
+// a guest on the mock shop has only a sealed cart id (the BFF keeps no token for the mock)
+const SESSION_COOKIES = [{ name: 'cart-guest.mock-USD', value: 'c1' }]
 
 const baseFetch = jest.fn()
 
@@ -127,10 +125,10 @@ describe('ensureCheckoutStep', () => {
 
   it('forwards only BFF cookies, unchanged, plus the correlation id', async () => {
     setCookies([
-      { name: 'cart-guest-en', value: 'c1' },
-      { name: 'access_token', value: 't1' },
-      { name: 'refresh_token', value: 'r1' },
-      { name: 'wishlist-logged-en', value: 'w1' },
+      { name: 'cart-guest.platform-USD', value: 'c1' },
+      { name: 'vault.commerce.platform', value: 't1' },
+      { name: 'shopin-session', value: 's1' },
+      { name: 'wishlist-logged.mock-USD', value: 'w1' },
       { name: 'preview_token', value: 'secret-preview' },
       { name: 'correlationId', value: 'cookie-corr' },
       { name: '_ga', value: 'GA1.1' },
@@ -141,7 +139,7 @@ describe('ensureCheckoutStep', () => {
 
     const headers = new Headers(baseFetch.mock.calls[0][1].headers)
     expect(headers.get('Cookie')).toBe(
-      'cart-guest-en=c1; access_token=t1; refresh_token=r1; wishlist-logged-en=w1'
+      'cart-guest.platform-USD=c1; vault.commerce.platform=t1; shopin-session=s1; wishlist-logged.mock-USD=w1'
     )
     expect(headers.get('x-correlation-id')).toBe('corr-1')
   })
@@ -182,8 +180,14 @@ describe('ensureCheckoutStep', () => {
   })
 
   it.each([
-    ['no cart id cookie', [{ name: 'access_token', value: 't1' }]],
-    ['no access token cookie', [{ name: 'cart-guest-en', value: 'c1' }]],
+    [
+      'no cart id cookie (a signed-in shopper without a cart)',
+      [
+        { name: 'vault.commerce.platform', value: 't1' },
+        { name: 'shopin-session', value: 's1' },
+      ],
+    ],
+    ['no cookies at all', []],
   ])(
     'skips the server check and defers to the client guard with %s',
     async (_, list) => {

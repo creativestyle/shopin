@@ -20,18 +20,24 @@ import {
   PaymentMethodsResponseSchema,
   SetPaymentMethodRequestSchema,
   InitiatePaymentRequestSchema,
+  PaymentReturnRequestSchema,
+  PaymentReturnResponseSchema,
+  type PaymentReturnRequest,
+  type PaymentReturnResponse,
 } from '@core/contracts/cart/payment-method'
 import type {
   PaymentMethodsResponse,
   SetPaymentMethodRequest,
   InitiatePaymentRequest,
 } from '@core/contracts/cart/payment-method'
-import { CartResponseSchema } from '@core/contracts/cart/cart'
 import type { CartResponse } from '@core/contracts/cart/cart'
 import { ZodBody } from '../../common/validation'
 import { CartTokenRefreshInterceptor } from '../cart/cart-token-refresh.interceptor'
 import { UseCsrfGuard } from '../csrf/csrf.decorator'
+import { Reads } from '@core/integration-kit'
+import { Contracts } from '../../data-source/contracts'
 
+@Reads('commerce', 'psp')
 @Controller('payment')
 @ApiTags('payment')
 @UseInterceptors(CartTokenRefreshInterceptor)
@@ -69,7 +75,7 @@ export class PaymentController {
     @ZodBody(SetPaymentMethodRequestSchema) request: SetPaymentMethodRequest
   ): Promise<CartResponse> {
     const cart = await this.paymentService.setPaymentMethod(request)
-    return CartResponseSchema.strip().parse(cart)
+    return Contracts.cart.parse(cart)
   }
 
   @Post('initiate')
@@ -89,5 +95,26 @@ export class PaymentController {
     @ZodBody(InitiatePaymentRequestSchema) request: InitiatePaymentRequest
   ): Promise<{ paymentLink: string }> {
     return await this.paymentService.initiatePayment(request.cartId)
+  }
+
+  /**
+   * The shop's one payment return route: the storefront passes what the provider sent back. The order is created
+   * only for a paid or authorized payment of this shopper's own cart.
+   */
+  @Post('return')
+  @SecureRateLimit()
+  @UseCsrfGuard()
+  @HttpCode(HttpStatus.OK)
+  @ApiOkResponse({
+    description:
+      'The payment status, and the order when the payment went through',
+  })
+  @ApiBadRequestResponse({ description: 'Invalid request data' })
+  async completePaymentReturn(
+    @ZodBody(PaymentReturnRequestSchema) request: PaymentReturnRequest
+  ): Promise<PaymentReturnResponse> {
+    return PaymentReturnResponseSchema.parse(
+      await this.paymentService.completePaymentReturn(request)
+    )
   }
 }

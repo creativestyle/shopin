@@ -6,29 +6,66 @@
   "private": true,
   "type": "module",
   "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
     "lint": "eslint --fix ./src --max-warnings=0",
     "format": "prettier --write ./src",
     "format:check": "prettier --check --ignore-unknown ./src",
-    "check-types": "tsc --noEmit"
+    "check-types": "tsc --noEmit",
+    "setup": "tsc"
   },
-  "dependencies": {
+  "devDependencies": {
+    "@core/eslint-config": "*",
+    "@core/prettier-config": "*",
+    "@core/typescript-config": "*",
+    "@testing-library/dom": "^10.4.0",
+    "@testing-library/react": "^16.3.0",
+    "@types/jest": "^30.0.0",
+    "@types/react": "19.2.7",
+    "@types/react-dom": "19.2.3",
+    "eslint": "^9.20.1",
+    "jest": "^30.0.5",
+    "jest-environment-jsdom": "^30.0.5",
+    "ts-jest": "^29.4.9",
+    "typescript": "^5.7.3"
+  },
+  "peerDependencies": {
     "@radix-ui/react-checkbox": "1.3.3",
     "@radix-ui/react-dialog": "1.1.15",
     "next-intl": "^4.9.2",
     "react": "19.2.4",
     "react-dom": "19.2.4"
   },
-  "devDependencies": {
-    "@core/typescript-config": "*",
-    "@core/eslint-config": "*",
-    "@core/prettier-config": "*",
-    "@types/react": "19.2.7",
-    "@types/react-dom": "19.2.3",
-    "eslint": "^9.20.1",
-    "typescript": "^5.7.3"
+  "peerDependenciesMeta": {
+    "@radix-ui/react-checkbox": {
+      "optional": true
+    },
+    "@radix-ui/react-dialog": {
+      "optional": true
+    },
+    "next-intl": {
+      "optional": true
+    },
+    "react": {
+      "optional": true
+    },
+    "react-dom": {
+      "optional": true
+    }
+  },
+  "exports": {
+    ".": {
+      "shopin-shop": {
+        "types": "./dist/types/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "shopin-demo": {
+        "types": "./dist/types/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "default": "./dist/index.js"
+    },
+    "./sources.css": "./sources.css"
   }
 }

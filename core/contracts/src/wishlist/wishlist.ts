@@ -10,7 +10,8 @@ export type WishlistItemResponse = z.infer<typeof WishlistItemResponseSchema>
 
 export const WishlistResponseSchema = z.object({
   id: z.string(),
-  version: z.number(),
+  /** The platform's version, when it has one. */
+  version: z.number().optional(),
   items: z.array(WishlistItemResponseSchema),
   itemCount: z.number(),
 })

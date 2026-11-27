@@ -3,8 +3,21 @@
   "compilerOptions": {
     "outDir": "dist",
     "emitDecoratorMetadata": true,
-    "experimentalDecorators": true
+    "experimentalDecorators": true,
+    "composite": true,
+    "rootDir": "src",
+    "declarationDir": "dist/types",
+    "tsBuildInfoFile": "dist/tsconfig.tsbuildinfo"
   },
-  "include": ["src"],
-  "exclude": ["dist", "node_modules"]
+  "include": ["src", "src/**/*.json"],
+  "exclude": [
+    "dist",
+    "node_modules",
+    "**/__tests__/**",
+    "**/__fixtures__/**",
+    "**/__mocks__/**",
+    "**/*.spec.ts",
+    "**/*.test.ts",
+    "**/*.test.tsx"
+  ]
 }

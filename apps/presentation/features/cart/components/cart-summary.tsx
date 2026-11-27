@@ -9,6 +9,7 @@ import { Divider } from '@/components/ui/divider'
 import { useTranslations, useLocale } from 'next-intl'
 import type { ReactNode } from 'react'
 import { cn } from '@/lib/utils'
+import { ShopCartExtra } from './cart-extra'
 
 interface CartSummaryProps {
   cart: CartResponse | OrderResponse
@@ -79,6 +80,11 @@ export function CartSummary({
           fractionDigits={cart.grandTotal.fractionDigits ?? 2}
         />
       </div>
+      {/* the shop's own cart fields (slot CartExtra) on the cart and at checkout: an order is not a cart, and the
+          add-to-cart sheet (modal) is a quick confirmation, not a form */}
+      {!('orderNumber' in cart) && variant !== 'modal' && (
+        <ShopCartExtra cart={cart} />
+      )}
       {actions && (
         <>
           <Divider />

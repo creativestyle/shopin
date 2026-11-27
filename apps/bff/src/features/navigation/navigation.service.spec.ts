@@ -1,7 +1,7 @@
 import { NavigationService } from './navigation.service'
 import type { MainNavigationResponse } from '@core/contracts/navigation/main-navigation'
 
-// Minimal shape for DataSourceFactory used by service
+// The services object the feature service receives (typed DI token `Services`)
 type NavigationPort = { getNavigation: () => Promise<MainNavigationResponse> }
 
 type Services = {
@@ -9,17 +9,14 @@ type Services = {
   productService: unknown
   productCollectionService: unknown
 }
-class MockDataSourceFactory {
-  getServices = jest.fn<Services, []>()
-}
 
 describe('NavigationService', () => {
   let service: NavigationService
-  let dataSourceFactory: MockDataSourceFactory
+  let services: Partial<Services>
 
   beforeEach(() => {
-    dataSourceFactory = new MockDataSourceFactory()
-    service = new NavigationService(dataSourceFactory as unknown as never)
+    services = {}
+    service = new NavigationService(services as never)
   })
 
   describe('getNavigation', () => {
@@ -32,7 +29,7 @@ describe('NavigationService', () => {
       }
 
       const getNavigation = jest.fn().mockResolvedValue(mockNavigationData)
-      dataSourceFactory.getServices.mockReturnValue({
+      Object.assign(services, {
         navigationService: { getNavigation },
         productService: {},
         productCollectionService: {},
@@ -47,7 +44,7 @@ describe('NavigationService', () => {
     it('propagates errors from underlying service', async () => {
       const errorMessage = 'API Error'
       const getNavigation = jest.fn().mockRejectedValue(new Error(errorMessage))
-      dataSourceFactory.getServices.mockReturnValue({
+      Object.assign(services, {
         navigationService: { getNavigation },
         productService: {},
         productCollectionService: {},

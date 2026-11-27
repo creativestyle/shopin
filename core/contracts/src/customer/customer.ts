@@ -9,7 +9,8 @@ export const CustomerResponseSchema = z.object({
   lastName: z.string().optional(),
   salutation: z.enum([...SALUTATION_OPTIONS, '']).optional(),
   dateOfBirth: z.string().optional(),
-  version: z.number(),
+  /** The platform's version, when it has one. */
+  version: z.number().optional(),
   isEmailVerified: z.boolean().optional(),
 })
 

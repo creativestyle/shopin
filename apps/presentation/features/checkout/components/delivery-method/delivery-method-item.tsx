@@ -40,10 +40,10 @@ export function DeliveryMethodItem({
             <DeliveryMethodLabel
               name={description}
               deliveryTime={method.deliveryTime}
-              priceInCents={method.price.centAmount}
-              currency={method.price.currencyCode}
-              freeAboveInCents={method.freeAbove?.centAmount}
-              freeAboveCurrency={method.freeAbove?.currencyCode}
+              priceInCents={method.price.regularPriceInCents}
+              currency={method.price.currency}
+              freeAboveInCents={method.freeAbove?.regularPriceInCents}
+              freeAboveCurrency={method.freeAbove?.currency}
             />
           </span>
         </label>

@@ -13,13 +13,13 @@ import { SHIPPING_METHOD_DELIVERY_TIME_FIELD } from '../schemas/shipping-method-
 import { createBasicPrice } from '../helpers/create-basic-price'
 
 /**
- * Derives a composite display status from Commercetools orderState + shipmentState.
+ * Maps commercetools' orderState + shipmentState onto the neutral OrderState.
  *
- * Commercetools splits order lifecycle into separate fields:
+ * commercetools splits the order lifecycle into separate fields:
  *  - orderState:    Open | Confirmed | Complete | Cancelled
  *  - shipmentState: Shipped | Delivered | Ready | Pending | Delayed | Partial | Backorder
  *
- * We combine them into a single OrderState for display purposes.
+ * They are combined into one OrderState for display; the exact states stay in `orderStateDetail`.
  */
 function deriveOrderState(
   orderState: string | undefined,
@@ -72,6 +72,15 @@ export function mapOrderToResponse(
     orderNumber,
     createdAt: order.createdAt,
     orderState: deriveOrderState(order.orderState, order.shipmentState),
+    // commercetools' own states, behind SHOPin's status (support and display)
+    orderStateDetail:
+      [
+        order.orderState && `order ${order.orderState}`,
+        order.shipmentState && `shipment ${order.shipmentState}`,
+        order.paymentState && `payment ${order.paymentState}`,
+      ]
+        .filter(Boolean)
+        .join(', ') || undefined,
     email,
   }
 }

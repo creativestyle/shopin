@@ -1,0 +1,23 @@
+{
+  "extends": "@core/typescript-config/nestjs.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "rootDir": "src",
+    "resolveJsonModule": true,
+    "composite": true,
+    "declarationDir": "dist/types",
+    "customConditions": ["shopin-framework"],
+    "tsBuildInfoFile": "dist/tsconfig.tsbuildinfo"
+  },
+  "include": ["src", "src/**/*.json"],
+  "exclude": [
+    "dist",
+    "node_modules",
+    "**/__tests__/**",
+    "**/__fixtures__/**",
+    "**/__mocks__/**",
+    "**/*.spec.ts",
+    "**/*.test.ts",
+    "**/*.test.tsx"
+  ]
+}

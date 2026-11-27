@@ -31,7 +31,7 @@ function findVariable(scope, name) {
 
 /**
  * Returns true when the variable named `name` is directly initialized from a string literal
- * (e.g. `const variant = 'commercetools-set'`). Destructuring patterns and non-literal
+ * (e.g. `const variant = 'platform-set'`). Destructuring patterns and non-literal
  * initializers return false.
  *
  * Note: multi-hop aliases (`const x = 'y'; const variant = x`) are not detected — they are

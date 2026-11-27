@@ -7,6 +7,8 @@ import {
   SITE_TITLE,
 } from '@/features/seo/site-metadata'
 import './globals.css'
+// the shop's look (config/storefront/theme.css): after SHOPin's, so its custom properties win
+import '@shopin/storefront/theme.css'
 
 export default function RootLayout({
   children,

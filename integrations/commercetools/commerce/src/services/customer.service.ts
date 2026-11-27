@@ -1,12 +1,15 @@
-import { Injectable, Scope } from '@nestjs/common'
+import { Inject, Injectable } from '@nestjs/common'
 import type {
   ChangeCustomerEmailRequest,
   ChangeCustomerPasswordRequest,
   CustomerResponse,
   UpdateCustomerRequest,
 } from '@core/contracts/customer/customer'
-import { UserClientService } from '../client/user-client.service'
-import { ServerClientService } from '@integrations/commercetools-core'
+import { CustomerScope } from '../shared/customer-scope.service'
+import {
+  COMMERCETOOLS_CLIENT,
+  type Client,
+} from '@integrations/commercetools-core'
 import { MyCustomerApiResponseSchema } from '../schemas/customer'
 import { mapUpdateCustomerRequestToActions } from '../helpers/customer-update-actions'
 import { mapCustomerToResponse } from '../mappers/customer'
@@ -18,25 +21,23 @@ import { InvalidCurrentPasswordException } from '../exceptions/invalid-current-p
 import { EmailInUseException } from '../exceptions/email-in-use.exception'
 import { EmailUnchangedException } from '../exceptions/email-unchanged.exception'
 
-@Injectable({ scope: Scope.REQUEST })
+@Injectable()
 export class CommercetoolsCustomerService {
   constructor(
-    private readonly userClientService: UserClientService,
-    private readonly serverClientService: ServerClientService
+    private readonly scope: CustomerScope,
+    @Inject(COMMERCETOOLS_CLIENT) private readonly server: Client
   ) {}
 
-  async getCurrentCustomer(): Promise<CustomerResponse> {
-    const client = await this.userClientService.getClient()
-    const response = await client.me().get().execute()
-    const customer = MyCustomerApiResponseSchema.parse(response.body)
-
+  async getCurrentCustomer(): Promise<CustomerResponse & { version: number }> {
+    const customer = MyCustomerApiResponseSchema.parse(
+      await (await this.scope.api()).customer.get()
+    )
     return mapCustomerToResponse(customer)
   }
 
   async updateCustomer(
     updateCustomerRequest: UpdateCustomerRequest
   ): Promise<CustomerResponse> {
-    const client = await this.userClientService.getClient()
     const currentCustomer = await this.getCurrentCustomer()
     const actions = mapUpdateCustomerRequestToActions(updateCustomerRequest)
 
@@ -44,19 +45,10 @@ export class CommercetoolsCustomerService {
       return currentCustomer
     }
 
-    const response = await client
-      .me()
-      .post({
-        body: {
-          actions,
-          version: currentCustomer.version,
-        },
-      })
-      .execute()
-
-    const updatedCustomer = MyCustomerApiResponseSchema.parse(response.body)
-
-    return mapCustomerToResponse(updatedCustomer)
+    const updated = await (
+      await this.scope.api()
+    ).customer.update(currentCustomer.version, actions)
+    return mapCustomerToResponse(MyCustomerApiResponseSchema.parse(updated))
   }
 
   /**
@@ -103,20 +95,11 @@ export class CommercetoolsCustomerService {
     email: string,
     version: number
   ): Promise<CustomerResponse> {
-    const client = await this.userClientService.getClient()
-    const response = await client
-      .me()
-      .post({
-        body: {
-          actions: [{ action: 'changeEmail', email }],
-          version,
-        },
-      })
-      .execute()
+    const updated = await (
+      await this.scope.api()
+    ).customer.update(version, [{ action: 'changeEmail', email }])
 
-    return mapCustomerToResponse(
-      MyCustomerApiResponseSchema.parse(response.body)
-    )
+    return mapCustomerToResponse(MyCustomerApiResponseSchema.parse(updated))
   }
 
   async changeCustomerPassword(
@@ -143,29 +126,19 @@ export class CommercetoolsCustomerService {
   private async postPasswordChange(
     changeCustomerPasswordRequest: ChangeCustomerPasswordRequest
   ): Promise<void> {
-    const client = await this.userClientService.getClient()
     const currentCustomer = await this.getCurrentCustomer()
-
-    await client
-      .me()
-      .password()
-      .post({
-        body: {
-          currentPassword: changeCustomerPasswordRequest.currentPassword,
-          newPassword: changeCustomerPasswordRequest.newPassword,
-          version: currentCustomer.version,
-        },
-      })
-      .execute()
+    await (
+      await this.scope.api()
+    ).customer.changePassword(
+      currentCustomer.version,
+      changeCustomerPasswordRequest.currentPassword,
+      changeCustomerPasswordRequest.newPassword
+    )
   }
 
   private async verifyPassword(email: string, password: string): Promise<void> {
     try {
-      await this.serverClientService
-        .getClient()
-        .login()
-        .post({ body: { email, password } })
-        .execute()
+      await this.server.login().post({ body: { email, password } }).execute()
     } catch (error: unknown) {
       if (isInvalidCredentialsError(error)) {
         throw new InvalidCurrentPasswordException()

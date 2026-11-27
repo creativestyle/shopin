@@ -3,7 +3,6 @@ import { ApiTags, ApiOkResponse, ApiQuery } from '@nestjs/swagger'
 import { ProductSearchService } from './product-search.service'
 import {
   ProductSearchQuerySchema,
-  ProductSearchResponseSchema,
   type ProductSearchResponse,
 } from '@core/contracts/product-search/product-search'
 import {
@@ -17,7 +16,11 @@ import {
 } from '@core/contracts/product-collection/product-collection-page'
 import { ZodQuery } from '../../common/validation'
 import type { Filters } from '@core/contracts/product-collection/product-collection-page'
+import { Reads } from '@core/integration-kit'
+import { Contracts } from '../../data-source/contracts'
 
+// search is optional: without a search integration the commerce port's product search serves it (PortsModule)
+@Reads('commerce')
 @Controller('productSearch')
 @ApiTags('productSearch')
 export class ProductSearchController {
@@ -43,7 +46,7 @@ export class ProductSearchController {
     @ZodQuery(SortSchema, 'sort') sort: string,
     @ZodQuery(SaleOnlySchema, 'saleOnly') saleOnly: boolean
   ): Promise<ProductSearchResponse> {
-    return ProductSearchResponseSchema.strip().parse(
+    return Contracts.productSearch.parse(
       await this.productSearchService.searchProducts({
         query,
         limit,

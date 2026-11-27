@@ -1,7 +1,9 @@
 import type {
+  ProductProjection,
   ShoppingList,
   ShoppingListLineItem,
 } from '@commercetools/platform-sdk'
+import type { CommercetoolsMappers } from '../mapper-hooks'
 import type { WishlistResponse } from '@core/contracts/wishlist/wishlist'
 import { WishlistResponseSchema } from '@core/contracts/wishlist/wishlist'
 import { resolveCurrencyFromLanguage } from '@core/i18n/currency-utils'
@@ -18,13 +20,17 @@ type ValidLineItem = Omit<ShoppingListLineItem, 'productId' | 'variant'> & {
 
 /**
  * Maps a Commercetools ShoppingList to WishlistResponse
- * Fetches product projections to get slugs and prices for the current language
+ * Fetches product projections to get slugs and prices for the current language; the shop's card hook
+ * (`commercetools({ mappers: { productCard } })`) gets each item's projection and its mapped card. `priceChannel`: the
+ * store's distribution channel, when it has one.
  */
 export async function mapShoppingListToWishlist(
   shoppingList: ShoppingList,
   currentLanguage: string,
-  client: ByProjectKeyRequestBuilder
-): Promise<WishlistResponse> {
+  client: ByProjectKeyRequestBuilder,
+  productCard?: CommercetoolsMappers['productCard'],
+  priceChannel?: string
+): Promise<WishlistResponse & { version: number }> {
   // Drop items whose product was deleted/unpublished (no variant). Items without a price in
   // the store currency stay on the list and show no price.
   const lineItems = (shoppingList.lineItems ?? []).filter(
@@ -35,15 +41,23 @@ export async function mapShoppingListToWishlist(
   // product projections with Price Selection: the wishlist then shows the same price
   // as the product page, the one commercetools picked for this store.
   const productIds = [...new Set(lineItems.map((item) => item.productId))]
-  const projections = await fetchProjectionsByIds(
+  const fetched = await fetchProjectionsByIds(
     client,
     productIds,
     currentLanguage,
     resolveCurrencyFromLanguage(currentLanguage),
-    resolveCountryFromLanguage(currentLanguage)
+    resolveCountryFromLanguage(currentLanguage),
+    priceChannel
   )
   const projectionById = new Map<string, ProductProjectionApiResponse>(
-    projections.map((product) => [product.id, product])
+    fetched.map((product) => [product.id, product])
+  )
+  // the shop's card hook reads the projection as commercetools returned it (parsed by the projection schema)
+  const projections = new Map<string, ProductProjection>(
+    fetched.map((product) => [
+      product.id,
+      product as unknown as ProductProjection,
+    ])
   )
 
   const items = lineItems.map((lineItem) => {
@@ -79,10 +93,25 @@ export async function mapShoppingListToWishlist(
     }
   })
 
-  return WishlistResponseSchema.parse({
-    id: shoppingList.id,
+  // commercetools lists always have a version; the service writes with it (the contract's `version` is optional)
+  const wishlist = {
+    ...WishlistResponseSchema.parse({
+      id: shoppingList.id,
+      items,
+      itemCount: items.length,
+    }),
     version: shoppingList.version,
-    items,
-    itemCount: items.length,
-  })
+  }
+  if (!productCard) {
+    return wishlist
+  }
+  return {
+    ...wishlist,
+    items: wishlist.items.map((item) => {
+      const projection = projections.get(item.product.id)
+      return projection
+        ? { ...item, product: productCard(projection, item.product) }
+        : item
+    }),
+  }
 }

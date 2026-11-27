@@ -19,17 +19,12 @@ export class CartPaymentService {
     // In the mock API, we simulate a Payment resource with the payment method ID stored in method
     const updatedCart: CartResponse = {
       ...cart,
+      // the mock's payment: the chosen method, pending until the mock payment page reports a result
       paymentInfo: {
-        payments: [
-          {
-            typeId: 'payment',
-            id: `mock-payment-${cartId}-${Date.now()}`,
-            paymentMethodInfo: {
-              method: validatedRequest.paymentMethodId,
-              paymentInterface: validatedRequest.paymentInterface,
-            },
-          },
-        ],
+        method: validatedRequest.paymentMethodId,
+        provider: validatedRequest.provider,
+        status: 'pending',
+        amount: cart.grandTotal,
       },
     }
 
@@ -43,7 +38,7 @@ export class CartPaymentService {
     const cart = await this.cartService.getCart(cartId)
 
     // Verify that payment exists and cart has items
-    if (!cart.paymentInfo?.payments || cart.paymentInfo.payments.length === 0) {
+    if (!cart.paymentInfo) {
       throw new Error('No payment method set for cart')
     }
 

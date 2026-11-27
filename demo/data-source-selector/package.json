@@ -1,32 +1,62 @@
 {
   "name": "@demo/data-source-selector",
   "version": "1.0.0",
-  "description": "Demo UI components to switch data source (mock vs Commercetools): DataSourceSelector dropdown and DataSourceIndicator",
+  "description": "Demo /setup page: shopin's data-source selector over the demo's provider switch",
   "author": "creativestyle GmbH",
   "private": true,
   "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
-    "lint": "eslint --fix ./src --max-warnings=0",
-    "format": "prettier --write ./src",
-    "format:check": "prettier --check --ignore-unknown ./src",
-    "check-types": "tsc --noEmit"
+    "lint": "eslint --fix ./src ./test --max-warnings=0",
+    "format": "prettier --write ./src ./test",
+    "format:check": "prettier --check --ignore-unknown ./src ./test",
+    "check-types": "tsc --noEmit",
+    "test": "tsc && node --test test/*.test.mjs",
+    "setup": "tsc"
   },
   "dependencies": {
-    "@core/contracts": "*",
-    "@config/constants": "*",
-    "react": "19.2.4",
-    "react-dom": "19.2.4"
+    "@core/integration-kit": "*",
+    "@demo/provider-switch": "*"
   },
   "devDependencies": {
-    "@core/typescript-config": "*",
     "@core/eslint-config": "*",
+    "@core/i18n": "*",
     "@core/prettier-config": "*",
+    "@core/typescript-config": "*",
     "@types/react": "19.2.7",
     "@types/react-dom": "19.2.3",
     "eslint": "^9.20.1",
     "typescript": "^5.7.3"
+  },
+  "peerDependencies": {
+    "next-intl": "^4.9.2",
+    "react": "19.2.4",
+    "react-dom": "19.2.4"
+  },
+  "peerDependenciesMeta": {
+    "next-intl": {
+      "optional": true
+    },
+    "react": {
+      "optional": true
+    },
+    "react-dom": {
+      "optional": true
+    }
+  },
+  "exports": {
+    ".": {
+      "shopin-shop": {
+        "types": "./dist/types/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "shopin-demo": {
+        "types": "./dist/types/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "default": "./dist/index.js"
+    },
+    "./sources.css": "./sources.css"
   }
 }

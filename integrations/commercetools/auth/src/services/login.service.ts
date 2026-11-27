@@ -1,46 +1,45 @@
+import { PortOptions } from '@core/integration-kit'
 import {
   Injectable,
   UnauthorizedException,
   ForbiddenException,
   Inject,
-  Optional,
 } from '@nestjs/common'
-import { ConfigService } from '@nestjs/config'
-import { ACCESS_TOKEN_TOKEN } from '@config/constants'
 import type {
   LoginRequest,
   LoginResponse,
   TokenFields,
 } from '@core/contracts/auth/login'
-import { createCustomerScope } from '../scopes'
+import { createCustomerScope } from '@integrations/commercetools-core'
 import { CommercetoolsErrorMatcher } from '../utils/commercetools-error-matcher'
-import { OAuthTokenService } from './oauth-token.service'
-import type { TokenProvider } from '@core/contracts/core/request-providers'
-import {
-  createTokenClient,
-  ServerClientService,
-} from '@integrations/commercetools-core'
+import { OAuthTokenService } from '@integrations/commercetools-core'
+import { ServerClientService } from '@integrations/commercetools-core'
+import { UserClientService } from '@integrations/commercetools-core'
+import type { CommercetoolsOptions } from '@integrations/commercetools-core'
+import { quoted } from '@integrations/commercetools-core'
 
 @Injectable()
 export class CommercetoolsLoginService {
   constructor(
     private readonly oauthTokenService: OAuthTokenService,
     private readonly errorMatcher: CommercetoolsErrorMatcher,
-    private readonly configService: ConfigService,
+    @Inject(PortOptions) private readonly options: CommercetoolsOptions,
     private readonly serverClientService: ServerClientService,
-    @Optional()
-    @Inject(ACCESS_TOKEN_TOKEN)
-    private readonly accessTokenProvider?: TokenProvider
+    private readonly userClientService: UserClientService
   ) {}
 
+  /** @param guestAccessToken - the shopper's anonymous token: its cart is merged into the customer's (as before the migration) */
   async login(
-    loginRequest: LoginRequest
+    loginRequest: LoginRequest,
+    guestAccessToken?: string
   ): Promise<LoginResponse & TokenFields> {
     try {
       await this.checkEmailVerification(loginRequest.email)
 
       const projectKey = this.oauthTokenService.getProjectKey()
-      await this.mergeAnonymousCart(loginRequest, projectKey)
+      if (guestAccessToken) {
+        await this.mergeGuestCart(loginRequest, guestAccessToken)
+      }
 
       const tokenData = await this.requestOAuthTokens(loginRequest, projectKey)
 
@@ -69,7 +68,7 @@ export class CommercetoolsLoginService {
         .customers()
         .get({
           queryArgs: {
-            where: `email="${email}"`,
+            where: `lowercaseEmail=${quoted(email.toLowerCase())}`,
             limit: 1,
           },
         })
@@ -98,38 +97,19 @@ export class CommercetoolsLoginService {
   }
 
   /**
-   * Merges anonymous cart with customer cart if anonymous session exists.
+   * commercetools' sign-in with the guest's anonymous token: the anonymous cart becomes the customer's (merged into
+   * the customer's active cart when there is one). Wrong credentials fail here, before any token is issued.
    */
-  private async mergeAnonymousCart(
+  private async mergeGuestCart(
     loginRequest: LoginRequest,
-    projectKey: string
+    guestAccessToken: string
   ): Promise<void> {
-    const anonymousSessionToken = this.accessTokenProvider
-      ? await this.accessTokenProvider.getAccessToken()
-      : undefined
-
-    if (!anonymousSessionToken) {
-      return
-    }
-
-    const apiUrl = this.configService.getOrThrow<string>(
-      'COMMERCETOOLS_API_URL'
-    )
-
-    const apiClient = createTokenClient({
-      accessToken: anonymousSessionToken,
-      apiUrl,
-      projectKey,
-    })
-
-    await apiClient
+    await this.userClientService
+      .forToken(guestAccessToken)
       .me()
       .login()
       .post({
-        body: {
-          email: loginRequest.email,
-          password: loginRequest.password,
-        },
+        body: { email: loginRequest.email, password: loginRequest.password },
       })
       .execute()
   }

@@ -40,6 +40,7 @@ import { getContentPage } from '@/features/content/get-content-page'
 import { isHomepageSlug } from '@/features/content/homepage-slug'
 import { cookies } from 'next/headers'
 import { isPreviewTokenValid } from '@/lib/draft-mode'
+import { ALT, ALT_RESOLVED } from '@/lib/variant/__fixtures__/variants'
 
 function mocks() {
   const config = jest.requireMock('@config/constants') as {
@@ -87,7 +88,7 @@ describe('resolveLocalizedPath', () => {
 
   it('sets variant context via ALS so getRequestVariant() reads it inside the loader when variantSegment is provided', async () => {
     const m = mocks()
-    const decodedVariant = { dataSource: 'commercetools-algolia-set' }
+    const decodedVariant = { ...ALT_RESOLVED }
     m.decodeVariant.mockReturnValue(decodedVariant)
 
     let capturedVariant: Record<string, string> | undefined
@@ -99,10 +100,10 @@ describe('resolveLocalizedPath', () => {
     await resolveLocalizedPath({
       path: '/en/p/product-slug',
       targetUrlPrefix: 'de',
-      variantSegment: '~commercetools-algolia-set',
+      variantSegment: ALT,
     })
 
-    expect(m.decodeVariant).toHaveBeenCalledWith('~commercetools-algolia-set')
+    expect(m.decodeVariant).toHaveBeenCalledWith(ALT)
     expect(capturedVariant).toEqual(decodedVariant)
   })
 

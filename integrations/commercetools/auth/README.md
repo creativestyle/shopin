@@ -4,7 +4,7 @@ NestJS module that handles customer authentication and registration via [Commerc
 
 ## Overview
 
-This module implements the auth service interfaces consumed by the BFF. It uses the Commercetools Auth API through the shared server client of `@integrations/commercetools-core` (one client and token with the commerce package) and does not depend on the commerce package; the BFF uses it when the data source is `commercetools-set`.
+This module implements the auth service interfaces consumed by the BFF. It uses the Commercetools Auth API through the shared server client of `@integrations/commercetools-core` (one client and token with the commerce package) and does not depend on the commerce package; the BFF uses it when `config/shop/shopin.config.ts` names it under `auth`. It pairs with `@integrations/commercetools-commerce`: sign-in uses the customers of the same project.
 
 ## Dependencies
 
@@ -14,72 +14,22 @@ This module depends on:
 - `@commercetools/platform-sdk` - Request types
 - `@core/contracts` - For request/response schemas and types
 
-## Service Provider
-
-The module includes `CommercetoolsAuthServiceProvider` that provides access to all Commercetools auth services through a unified interface.
-
 ## Usage
 
-This module is used by the BFF (Backend for Frontend) service. It's imported and configured in `apps/bff/src/data-source/data-source.module.ts` and used by the `DataSourceFactory` to route auth requests to Commercetools.
+Import `commercetoolsAuth` from `@integrations/commercetools-auth/shopin` in `config/shop/shopin.config.ts` under `auth`,
+next to `commercetools` under `commerce`, then `npm run setup`; or run `npm run use commerce commercetools auth commercetools`
+(see the [root README](../../../README.md#quick-start)). The package exports only this descriptor: the BFF loads its
+`auth` port at start and calls it through the port, never through the package's classes.
 
-### Using the Service Provider
+At start the port checks that the API client has the scopes sign-in needs (`manage_customers` besides the shopper
+scopes); without them, `auth` is reported unavailable on `/bff/capabilities` and the rest of the shop runs.
 
-```typescript
-import type { CommercetoolsAuthServiceProvider } from '@integrations/commercetools-auth'
+## What the port does
 
-@Injectable()
-export class YourService {
-  constructor(
-    @Inject('COMMERCETOOLS_AUTH_SERVICE_PROVIDER')
-    private readonly authServiceProvider: CommercetoolsAuthServiceProvider
-  ) {}
+- `signIn`, `signUp`, `signOut`, `refresh`: the identity of the `auth` port, against the project's customers.
+- `accountFlows`: the account flows commercetools runs itself (password reset, email confirmation, anonymous session).
 
-  async login(loginRequest: LoginRequest) {
-    const { loginService } = this.authServiceProvider.getAuthServices()
-    return loginService.login(loginRequest)
-  }
-}
-```
-
-### Using Individual Services
-
-You can also inject individual services directly:
-
-```typescript
-import {
-  CommercetoolsLoginService,
-  CommercetoolsRegisterService,
-} from '@integrations/commercetools-auth'
-
-@Injectable()
-export class YourService {
-  constructor(
-    private readonly loginService: CommercetoolsLoginService,
-    private readonly registerService: CommercetoolsRegisterService
-  ) {}
-}
-```
-
-## Services
-
-### CommercetoolsLoginService
-
-- `login(loginRequest: LoginRequest): Promise<LoginResponse>` - Authenticates a user
-
-### CommercetoolsRegisterService
-
-- `register(registerRequest: RegisterRequest): Promise<RegisterResponse>` - Registers a new user
-
-## Error Handling
-
-The services throw appropriate NestJS exceptions:
-
-- `UnauthorizedException` - When login credentials are invalid (thrown by `CommercetoolsLoginService`)
-- `ConflictException` - When attempting to register with an existing email (thrown by `CommercetoolsRegisterService`)
-
-## Integration
-
-The module is automatically loaded by the BFF's `DataSourceModule` and provides auth services when the `commercetools-set` data source is selected. The `DataSourceFactory.getAuthServices()` method returns the appropriate auth services based on the configured data source.
+Errors reach the BFF as Nest exceptions: a wrong email or password is `401`, an email already in use is `409`.
 
 ## License
 
