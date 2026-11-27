@@ -34,8 +34,7 @@
  *
  * --check: the packages, the lockfile and the category folders agree with the two files; the built config is what
  * the sources compile to; storefront-data.json is what the built config gives; the storefront slots fit the config
- * (every required slot provided). It warns (no failure) per locale that lacks texts
- * for SHOPin's message keys (they show in English). It needs a build (setup, or any build of the apps).
+ * (every required slot provided). It needs a build (setup, or any build of the apps).
  */
 import {
   readFileSync,
@@ -48,7 +47,7 @@ import {
   realpathSync,
   renameSync,
 } from "node:fs";
-import { join, dirname, resolve, basename } from "node:path";
+import { join, dirname, basename } from "node:path";
 import { tmpdir } from "node:os";
 import { spawnSync } from "node:child_process";
 import { randomBytes } from "node:crypto";
@@ -58,6 +57,18 @@ import { parseEnv } from "node:util";
 import { foldersOf, partsOf, folderProblem } from "./checks/categories.mjs";
 
 const read = (p) => readFileSync(p, "utf8");
+/** A file's text, null when it does not exist. */
+const readIf = (p) => (existsSync(p) ? read(p) : null);
+/** Writes a file; .env (local keys, secrets) is created readable by its owner only. */
+const write = (p, content) =>
+  writeFileSync(
+    p,
+    content,
+    basename(p) === ".env" ? { mode: 0o600 } : undefined,
+  );
+/** Writes a file whose text is not `content` already; true when it wrote. */
+const update = (p, content) =>
+  readIf(p) !== content && (write(p, content), true);
 const json = (p) => JSON.parse(read(p));
 const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
 const text = (value) => JSON.stringify(value, null, 2) + "\n";
@@ -149,16 +160,6 @@ export function localesText(root = ".") {
   return problems.length ? { problems } : { text: text(table) };
 }
 
-/** The leaf keys of a message file that have a text (`cart.title`). */
-const textKeys = (messages, prefix = "") =>
-  Object.entries(messages ?? {}).flatMap(([k, v]) =>
-    v && typeof v === "object"
-      ? textKeys(v, `${prefix}${k}.`)
-      : typeof v === "string" && v.trim()
-        ? [`${prefix}${k}`]
-        : [],
-  );
-
 // value imports only (`import type` brings no integration in)
 const importsOf = (source) =>
   [
@@ -236,11 +237,10 @@ export function integrationPackages(root = ".") {
   if (existsSync(join(root, "demo")))
     for (const d of readdirSync(join(root, "demo"), { withFileTypes: true })) {
       const dir = join("demo", d.name);
-      if (d.isDirectory() && existsSync(join(root, dir, "package.json")))
-        packages.set(json(join(root, dir, "package.json")).name, {
-          dir,
-          manifest: json(join(root, dir, "package.json")),
-        });
+      if (d.isDirectory() && existsSync(join(root, dir, "package.json"))) {
+        const manifest = json(join(root, dir, "package.json"));
+        packages.set(manifest.name, { dir, manifest });
+      }
     }
   return { packages, problems };
 }
@@ -262,6 +262,29 @@ function workspaceDirs(root = ".") {
     return dirs.filter((d) => existsSync(join(root, d, "package.json")));
   });
 }
+
+/** The workspaces by package name: name → folder. */
+const workspaces = (root = ".") =>
+  new Map(
+    workspaceDirs(root).map((d) => [
+      json(join(root, d, "package.json")).name,
+      d,
+    ]),
+  );
+
+/** Every dependency a workspace's package.json names, as [folder, field, name]. */
+const workspaceDependencies = (root = ".") =>
+  workspaceDirs(root).flatMap((dir) => {
+    const pj = json(join(root, dir, "package.json"));
+    return [
+      "dependencies",
+      "devDependencies",
+      "peerDependencies",
+      "optionalDependencies",
+    ].flatMap((field) =>
+      Object.keys(pj[field] ?? {}).map((name) => [dir, field, name]),
+    );
+  });
 
 /** The app each config package belongs to: a library the shop's files import takes the app's version. */
 const APP_OF = {
@@ -408,12 +431,6 @@ export function conflictedPackages(root = ".") {
     );
 }
 
-/**
- * A workspace (outside the config packages, whose dependencies setup writes) that still depends on an integration
- * folder that is gone: npm cannot install it (it is no package on the registry), so setup and config:check name the
- * workspace and the dependency instead of asking for a setup that cannot pass. An integration is an `@integrations/*`
- * name, or a name the lockfile links into integrations/.
- */
 /** The integration packages the last install linked: package-lock.json's workspace links into integrations/. */
 function linkedIntegrations(root = ".") {
   try {
@@ -430,32 +447,30 @@ function linkedIntegrations(root = ".") {
   }
 }
 
+/**
+ * A workspace (outside the config packages, whose dependencies setup writes) that still depends on an integration
+ * folder that is gone: npm cannot install it (it is no package on the registry), so setup and config:check name the
+ * workspace and the dependency instead of asking for a setup that cannot pass. An integration is an `@integrations/*`
+ * name, or a name the lockfile links into integrations/.
+ */
 export function orphanedDependencies(root = ".") {
   const { packages } = integrationPackages(root);
   const linked = linkedIntegrations(root);
   const integration = (name) =>
     name.startsWith("@integrations/") || linked.includes(name);
-  const problems = [];
-  for (const dir of workspaceDirs(root)) {
-    if (PACKAGES.includes(dir)) continue;
-    const pj = json(join(root, dir, "package.json"));
-    for (const field of [
-      "dependencies",
-      "devDependencies",
-      "peerDependencies",
-      "optionalDependencies",
-    ])
-      for (const name of Object.keys(pj[field] ?? {}))
-        if (integration(name) && !packages.has(name))
-          problems.push(
-            `${dir}/package.json depends on ${name} (${field}), which integrations/ no longer has: remove it there (with the code that uses it) or bring the folder back${
-              dir.startsWith("demo/")
-                ? ", or remove the demo (npm run use demo remove)"
-                : ""
-            }; npm run setup cannot install it`,
-          );
-  }
-  return problems;
+  return workspaceDependencies(root)
+    .filter(
+      ([dir, , name]) =>
+        !PACKAGES.includes(dir) && integration(name) && !packages.has(name),
+    )
+    .map(
+      ([dir, field, name]) =>
+        `${dir}/package.json depends on ${name} (${field}), which integrations/ no longer has: remove it there (with the code that uses it) or bring the folder back${
+          dir.startsWith("demo/")
+            ? ", or remove the demo (npm run use demo remove)"
+            : ""
+        }; npm run setup cannot install it`,
+    );
 }
 
 /** The config packages' package.json files (path → text): their dependencies follow the two files. */
@@ -501,10 +516,11 @@ export const sourcesText = (names) =>
   ].join("\n") + "\n";
 
 /** The lockfile's workspace entries agree with the workspaces' package.json files (what `npm ci` requires). */
-function lockProblems(lockText, label) {
+function lockProblems() {
+  const label = "package-lock.json";
   let lock;
   try {
-    lock = JSON.parse(lockText).packages ?? {};
+    lock = json(label).packages ?? {};
   } catch {
     return [
       `${label} is not valid JSON (merge conflict markers?): npm install resolves them`,
@@ -581,9 +597,14 @@ function builtProblems() {
   return problems;
 }
 
-/** `shopin.config:` errors as plain lines naming the file (`defineConfig` lists one `- …` per problem). */
-const configLines = (message, file) => {
-  const lines = message.split("\n");
+/**
+ * A `shopin.config:` error as plain lines naming the file (`defineConfig` lists one `- …` per problem); undefined
+ * for any other error.
+ */
+const configProblems = (error) => {
+  const lines = String(error?.message ?? error).split("\n");
+  if (!lines[0].startsWith("shopin.config")) return undefined;
+  const file = `config/shop/${ENTRY["config/shop"]}`;
   return lines.length > 1
     ? lines.slice(1).map((l) => `${file}: ${l.replace(/^\s*-\s*/, "")}`)
     : [lines[0]];
@@ -599,11 +620,9 @@ export function builtConfig(root = process.cwd()) {
   try {
     return { kit: require(kit), config: require(shop).config };
   } catch (error) {
-    const message = String(error?.message ?? error);
-    if (!message.startsWith("shopin.config")) throw error;
-    return {
-      problems: configLines(message, `config/shop/${ENTRY["config/shop"]}`),
-    };
+    const problems = configProblems(error);
+    if (!problems) throw error;
+    return { problems };
   }
 }
 
@@ -626,12 +645,7 @@ function sourceLoader(root) {
     return { skipped: "TypeScript is not installed yet" };
   }
   const Module = req("node:module");
-  const byName = new Map(
-    workspaceDirs(root).map((d) => [
-      json(join(root, d, "package.json")).name,
-      join(root, d),
-    ]),
-  );
+  const byName = workspaces(root);
   const target = (pj, sub) => {
     const exports =
       typeof pj.exports === "string" ? { ".": pj.exports } : (pj.exports ?? {});
@@ -649,7 +663,10 @@ function sourceLoader(root) {
     const dir = byName.get(name);
     const t =
       dir &&
-      target(json(join(dir, "package.json")), `.${request.slice(name.length)}`);
+      target(
+        json(join(root, dir, "package.json")),
+        `.${request.slice(name.length)}`,
+      );
     if (t) {
       const source = t.replace(/\.js$/, ".ts").replace(/\.mjs$/, ".mts");
       // dist/x.js → src/x.ts or x.ts; dist/<program>/x.js (a package with several programs) → x.ts
@@ -658,7 +675,7 @@ function sourceLoader(root) {
         source.replace(/^\.\/dist\//, "./"),
         source.replace(/^\.\/dist\/[^/]+\//, "./"),
       ]
-        .map((f) => join(dir, f))
+        .map((f) => join(root, dir, f))
         .find((f) => existsSync(f));
       if (found) return found;
     }
@@ -694,12 +711,10 @@ function readConfig(root, file = ENTRY["config/shop"]) {
   try {
     config = req(join(root, "config/shop", file)).config;
   } catch (error) {
-    const message = String(error?.message ?? error);
-    if (message.startsWith("shopin.config"))
-      return {
-        problems: configLines(message, `config/shop/${ENTRY["config/shop"]}`),
-      };
-    return { skipped: message.split("\n")[0] };
+    const problems = configProblems(error);
+    return problems
+      ? { problems }
+      : { skipped: String(error?.message ?? error).split("\n")[0] };
   }
   // the BFF's own list (requiredEnv, what loadPorts checks), conditional variables and their reasons included
   const { requiredEnv, storefrontData } = req("@core/integration-kit/core");
@@ -722,22 +737,28 @@ function readConfig(root, file = ENTRY["config/shop"]) {
   };
 }
 
-/** The shop config read from its sources (`readConfig` in a child process, so its require hooks stay there). */
-export function configFromSource(root = ".", file) {
+/**
+ * This script with `args` in a child process in `root` (so the require hooks of `sourceLoader` stay there): the JSON
+ * it prints, else `fallback` of the first line it printed.
+ */
+function child(root, args, fallback) {
   const r = spawnSync(
     process.execPath,
-    [fileURLToPath(import.meta.url), "--read-config", ...(file ? [file] : [])],
-    {
-      cwd: root,
-      encoding: "utf8",
-    },
+    [fileURLToPath(import.meta.url), ...args],
+    { cwd: root, encoding: "utf8" },
   );
   try {
     return JSON.parse(r.stdout);
   } catch {
-    return { skipped: (r.stderr || r.stdout).trim().split("\n")[0] };
+    return fallback((r.stderr || r.stdout).trim().split("\n")[0]);
   }
 }
+
+/** The shop config read from its sources (`readConfig`, in a child process). */
+export const configFromSource = (root = ".", file) =>
+  child(root, ["--read-config", ...(file ? [file] : [])], (line) => ({
+    skipped: line,
+  }));
 
 /**
  * Child process (`setup.mjs --read-integrations`): every integration's descriptor from its sources, its factory
@@ -771,33 +792,19 @@ function readIntegrations(root) {
   return found;
 }
 
-/** The integrations as `readIntegrations` reads them, in a child process (its require hooks stay there). */
-export function integrationsFromSource(root = ".") {
-  const r = spawnSync(
-    process.execPath,
-    [fileURLToPath(import.meta.url), "--read-integrations"],
-    {
-      cwd: root,
-      encoding: "utf8",
-    },
-  );
-  try {
-    return JSON.parse(r.stdout);
-  } catch {
-    return [];
-  }
-}
+/** The integrations as `readIntegrations` reads them, in a child process. */
+export const integrationsFromSource = (root = ".") =>
+  child(root, ["--read-integrations"], () => []);
+
+/** An integration package's descriptor (`src/shopin.ts`), "" when it has none. */
+const descriptorOf = (dir, root = ".") =>
+  readIf(join(root, dir, "src/shopin.ts")) ?? "";
 
 /** integrations/<vendor>/<category>/README.md of the integration with this id (its descriptor names the id). */
 function readmeOf(id, root = ".") {
-  for (const { dir } of integrationPackages(root).packages.values()) {
-    const descriptor = join(root, dir, "src/shopin.ts");
-    if (
-      existsSync(descriptor) &&
-      new RegExp(`\\bid:\\s*['"]${id}['"]`).test(read(descriptor))
-    )
+  for (const { dir } of integrationPackages(root).packages.values())
+    if (new RegExp(`\\bid:\\s*['"]${id}['"]`).test(descriptorOf(dir, root)))
       return join(dir, "README.md");
-  }
   return "integrations/README.md";
 }
 
@@ -1013,7 +1020,7 @@ export function envInit(root = ".") {
       KEYS.test(line) ? line + randomBytes(32).toString("base64") : line,
     )
     .join("\n");
-  writeFileSync(join(root, ".env"), env, { mode: 0o600 });
+  write(join(root, ".env"), env);
   console.log("setup: created .env with random local keys (from .env.example)");
 }
 
@@ -1040,6 +1047,7 @@ const run = (cmd, args) => {
       r.status ?? 1,
     );
 };
+const NPM_FLAGS = ["--no-audit", "--no-fund"];
 const fail = (problems) => {
   throw new Stop(problems);
 };
@@ -1051,12 +1059,9 @@ function check() {
   problems.push(...p1);
   // a tool whose integration is gone and a root script that runs a missing workspace: npm run setup removes them,
   // so config:check fails on them (a shop that deleted an integration by hand ran no setup)
-  const names = new Set(
-    workspaceDirs().map((d) => json(join(d, "package.json")).name),
-  );
   problems.push(
     ...orphanedTools(packages),
-    ...deadScripts(".", names).map(
+    ...deadScripts().map(
       ([script, w]) =>
         `the root script "${script}" runs ${w}, which is not a workspace: npm run setup removes it`,
     ),
@@ -1078,19 +1083,15 @@ function check() {
       );
   const locales = localesText();
   if (locales.problems) problems.push(...locales.problems);
-  else if (!existsSync(LOCALES_COPY) || read(LOCALES_COPY) !== locales.text)
+  else if (readIf(LOCALES_COPY) !== locales.text)
     problems.push(`${LOCALES_COPY} differs from ${LOCALES}: run npm run setup`);
   for (const [f, content] of Object.entries(files))
-    if ((existsSync(f) ? read(f) : "") !== content)
+    if (readIf(f) !== content)
       problems.push(
         `${f} differs from what the shop's files need: run npm run setup`,
       );
   if (existsSync("package-lock.json"))
-    problems.push(
-      ...lockProblems(read("package-lock.json"), "package-lock.json").map(
-        (p) => `${p}: run npm run setup`,
-      ),
-    );
+    problems.push(...lockProblems().map((p) => `${p}: run npm run setup`));
   else problems.push("no package-lock.json: run npm run setup");
   const built = builtProblems();
   problems.push(...built);
@@ -1102,7 +1103,7 @@ function check() {
       problems.push(
         `${STOREFRONT_DATA} is out of date with the shop config: run npm run setup`,
       );
-    if (data.wired && (!existsSync(WIRED) || read(WIRED) !== data.wired))
+    if (data.wired && readIf(WIRED) !== data.wired)
       problems.push(
         `${WIRED} is out of date with the shop config: run npm run setup`,
       );
@@ -1118,46 +1119,39 @@ function configAndEnv() {
   const config = configFromSource();
   if (config.problems) fail(config.problems);
   if (config.skipped) return false;
-  const original = existsSync(".env") ? read(".env") : "";
+  const original = readIf(".env") ?? "";
   // a misspelled name (CONTENTFUL_SAPCE) is renamed where it stands, not listed a second time
   const { text: before, renamed } = renameNearMisses(original, config);
   for (const [from, to, id] of renamed)
     console.log(`setup: .env: renamed ${from} to ${to} (what ${id} reads)`);
   // a tool the config installs (config/tools) lists the variables it reads (its package.json "shopin".env)
   const { packages } = integrationPackages();
-  const tools = [...(packageFiles(packages).used["config/tools"] ?? [])];
-  const toolEnv = Object.fromEntries(
-    tools.flatMap((name) => {
-      const env = packages.get(name)?.manifest.shopin?.env;
-      return Array.isArray(env) && env.length ? [[name, env]] : [];
-    }),
-  );
-  const readme = (id) =>
-    packages.has(id) ? join(packages.get(id).dir, "README.md") : readmeOf(id);
   // a tool's variables are optional for the shop (the BFF never reads them): listed, commented out, with the tool
-  const toolOptional = Object.fromEntries(
-    Object.entries(toolEnv).map(([name, env]) => [
-      name,
-      Object.fromEntries(
+  const toolOptional = {};
+  for (const name of packageFiles(packages).used["config/tools"] ?? []) {
+    const env = packages.get(name)?.manifest.shopin?.env;
+    if (Array.isArray(env) && env.length)
+      toolOptional[name] = Object.fromEntries(
         env.map((n) => [
           n,
           `optional: only the tool ${name} reads it (its README)`,
         ]),
-      ),
-    ]),
-  );
+      );
+  }
+  const readme = (id) =>
+    packages.has(id) ? join(packages.get(id).dir, "README.md") : readmeOf(id);
   const after = envFor(
     before,
     {
       ...config,
-      ids: [...config.ids, ...Object.keys(toolEnv)],
+      ids: [...config.ids, ...Object.keys(toolOptional)],
       optional: { ...config.optional, ...toolOptional },
     },
     { present: Object.keys(process.env), readme },
   );
   stillEmpty = emptyRequired(after, config, Object.keys(process.env));
   if (after !== original) {
-    writeFileSync(".env", after, { mode: 0o600 });
+    write(".env", after);
     if (!quiet)
       console.log(
         `setup: .env lists the variables of the configured integrations${stillEmpty.length ? `; fill in: ${stillEmpty.join(", ")}` : ""}`,
@@ -1165,12 +1159,10 @@ function configAndEnv() {
   }
   for (const w of envNearMisses(after, config))
     console.warn(`config: warning: ${w}`);
-  if (config.wired && (!existsSync(WIRED) || read(WIRED) !== config.wired))
-    writeFileSync(WIRED, config.wired);
+  if (config.wired) update(WIRED, config.wired);
   return true;
 }
 
-/** Writes the config packages' dependencies and installs when they or the lockfile changed. Returns what is used. */
 /** A tool whose integration is gone (deleted from integrations/): name it, so it goes too. */
 export function orphanedTools(packages) {
   return [...packages].flatMap(([name, { dir, manifest }]) =>
@@ -1184,7 +1176,8 @@ export function orphanedTools(packages) {
 }
 
 /** A root script that runs a workspace that is not there (`npm run migrate -w @integrations/x`): [name, workspace]. */
-function deadScripts(root, names) {
+function deadScripts(root = ".") {
+  const names = workspaces(root);
   const scripts = json(join(root, "package.json")).scripts ?? {};
   return Object.entries(scripts).flatMap(([script, command]) =>
     [...command.matchAll(/(?:-w|--workspace)[= ](\S+)|--filter=([^.\s]+)/g)]
@@ -1222,10 +1215,7 @@ export function removeOrphans(root = ".") {
       `deleted ${dir} (${name}): a tool of ${gone.join(", ")}, which integrations/ no longer has`,
     );
   }
-  const names = new Set(
-    workspaceDirs(root).map((d) => json(join(root, d, "package.json")).name),
-  );
-  const dead = deadScripts(root, names);
+  const dead = deadScripts(root);
   if (dead.length) {
     const pj = json(join(root, "package.json"));
     for (const [script, w] of dead) {
@@ -1239,6 +1229,9 @@ export function removeOrphans(root = ".") {
   return removed;
 }
 
+/** Every package the config packages use (`used`: config package → its set). */
+const allUsed = (used) => Object.values(used).flatMap((set) => [...set]);
+
 /** The workspace packages setup's config packages use, with the config packages themselves. */
 const usedNames = (used) => [
   ...PACKAGES.map((dir) =>
@@ -1246,7 +1239,7 @@ const usedNames = (used) => [
       ? json(join(dir, "package.json")).name
       : undefined,
   ).filter(Boolean),
-  ...Object.values(used).flatMap((set) => [...set]),
+  ...allUsed(used),
 ];
 
 /**
@@ -1267,7 +1260,7 @@ export function unresolvedModules(root, packages, used) {
     for (const name of Object.keys(pj.dependencies ?? {}))
       if (!has(dir, name)) missing.set(name, pj.name);
   }
-  for (const name of Object.values(used).flatMap((set) => [...set])) {
+  for (const name of allUsed(used)) {
     const pkg = packages.get(name);
     if (!pkg) continue;
     for (const dep of Object.keys(pkg.manifest.dependencies ?? {}))
@@ -1318,28 +1311,25 @@ export function normaliseLock(root = ".") {
   return true;
 }
 
+/** Writes the config packages' dependencies and installs when they or the lockfile changed. Returns what is used. */
 function install(packages) {
   const { files, used, problems } = packageFiles(packages);
   if (problems.length) fail(problems);
   let changed = false;
   for (const [f, content] of Object.entries(files))
-    if ((existsSync(f) ? read(f) : "") !== content) {
-      writeFileSync(f, content);
-      changed ||= f.endsWith("package.json");
-    }
-  const flags = ["--no-audit", "--no-fund"];
+    if (update(f, content)) changed ||= f.endsWith("package.json");
   // a configured package whose node_modules link is gone is installed again, not left to a TS2307 in the build
   if (
     changed ||
     !existsSync("package-lock.json") ||
-    lockProblems(read("package-lock.json"), "lock").length ||
+    lockProblems().length ||
     (existsSync("node_modules") &&
       (unlinked(".", usedNames(used)).length ||
         unresolvedModules(".", packages, used).length))
   ) {
-    run("npm", ["install", ...flags]);
+    run("npm", ["install", ...NPM_FLAGS]);
     normaliseLock();
-  } else if (!existsSync("node_modules")) run("npm", ["ci", ...flags]); // a fresh clone: exactly the lockfile
+  } else if (!existsSync("node_modules")) run("npm", ["ci", ...NPM_FLAGS]); // a fresh clone: exactly the lockfile
   return used;
 }
 
@@ -1349,8 +1339,8 @@ function setup() {
   if (conflicts.length) fail(conflicts);
   const locales = localesText();
   if (locales.problems) fail(locales.problems);
-  if (integrationPackages().problems.length)
-    fail(integrationPackages().problems);
+  const folders = integrationPackages().problems;
+  if (folders.length) fail(folders);
   const orphaned = orphanedDependencies();
   if (orphaned.length) fail(orphaned);
   // a deleted integration's tools and the root scripts that ran them go in this same run
@@ -1359,8 +1349,7 @@ function setup() {
   // the config's own mistakes (a wrong pairing included) stop setup here, before a package file or the lockfile
   // changes; it also wires the slots the integrations fill (wired.mts), whose packages the storefront then installs
   const checked = configAndEnv();
-  if (!existsSync(LOCALES_COPY) || read(LOCALES_COPY) !== locales.text)
-    writeFileSync(LOCALES_COPY, locales.text);
+  update(LOCALES_COPY, locales.text);
   let used = install(packages);
   // a fresh clone: TypeScript is installed only now, so the config is read here
   if (!checked) {
@@ -1384,7 +1373,7 @@ function setup() {
     writeFileSync(STOREFRONT_DATA, data.text);
   // the summary last, where the reader looks (not while a failed `npm run use` is put back)
   if (quiet) return;
-  const all = new Set(Object.values(used).flatMap((s) => [...s]));
+  const all = new Set(allUsed(used));
   console.log(
     `config: ${demoOn() ? "the SHOPin demo (npm run use demo off: your own files)" : Object.values(ENTRY).join(", ")}`,
   );
@@ -1438,20 +1427,15 @@ export function removeDemo(root = ".") {
     return [
       "the SHOPin demo is on: npm run use demo off first, then npm run use demo remove",
     ];
-  const users = [];
-  for (const dir of workspaceDirs(root)) {
-    if (dir === "demo" || dir.startsWith("demo/")) continue;
-    const pj = json(join(root, dir, "package.json"));
-    for (const field of [
-      "dependencies",
-      "devDependencies",
-      "peerDependencies",
-      "optionalDependencies",
-    ])
-      for (const name of Object.keys(pj[field] ?? {}))
-        if (name.startsWith("@demo/"))
-          users.push(`${dir}/package.json depends on ${name} (${field})`);
-  }
+  const users = workspaceDependencies(root)
+    .filter(
+      ([dir, , name]) =>
+        dir !== "demo" && !dir.startsWith("demo/") && name.startsWith("@demo/"),
+    )
+    .map(
+      ([dir, field, name]) =>
+        `${dir}/package.json depends on ${name} (${field})`,
+    );
   if (users.length)
     return [
       ...users,
@@ -1498,20 +1482,12 @@ export function useDemo(on, root = ".") {
 }
 
 /** The id an integration's descriptor declares (`id: 'algolia'`): the key `npm run use` takes. */
-const idOf = (dir, root = ".") => {
-  const descriptor = join(root, dir, "src/shopin.ts");
-  return existsSync(descriptor)
-    ? read(descriptor).match(/^\s*id:\s*['"]([\w-]+)['"]/m)?.[1]
-    : undefined;
-};
+const idOf = (dir, root = ".") =>
+  descriptorOf(dir, root).match(/^\s*id:\s*['"]([\w-]+)['"]/m)?.[1];
 
 /** The factory an integration's descriptor exports: its first exported arrow function (`export const algolia = (`). */
-const factoryOf = (dir, root = ".") => {
-  const descriptor = join(root, dir, "src/shopin.ts");
-  return existsSync(descriptor)
-    ? read(descriptor).match(/^export const (\w+)\s*=\s*\(/m)?.[1]
-    : undefined;
-};
+const factoryOf = (dir, root = ".") =>
+  descriptorOf(dir, root).match(/^export const (\w+)\s*=\s*\(/m)?.[1];
 
 /** Edit distance of two keys (a misspelled key's closest one). */
 function distance(a, b) {
@@ -1531,6 +1507,19 @@ function distance(a, b) {
   }
   return row[b.length];
 }
+
+/** Of `keys`, the closest to `word` (each key compared as `fold` gives it), when it is a likely misspelling. */
+const closest = (word, keys, fold = (k) => k) =>
+  keys
+    .map((k) => [k, distance(word, fold(k))])
+    .filter(([k, d]) => d <= Math.max(2, Math.floor(k.length / 3)))
+    .sort((a, b) => a[1] - b[1])[0]?.[0];
+
+/** The kit's categories in their order (commerce, search, cms, psp, auth). */
+const kitCategories = (root = ".") => {
+  const kit = join(root, "core/integration-kit/src/categories.json");
+  return existsSync(kit) ? json(kit) : [];
+};
 
 /** The name `use` gives one instance several categories share (`const sharedCommercetools = commercetools();`). */
 const sharedName = (factory) =>
@@ -1594,10 +1583,7 @@ export function useIntegration(
       : packages
           .map(([, { dir }]) => idOf(dir, root) ?? factoryOf(dir, root))
           .filter(Boolean);
-    const close = keys
-      .map((k) => [k, distance(name.toLowerCase(), k.toLowerCase())])
-      .filter(([k, d]) => d <= Math.max(2, Math.floor(k.length / 3)))
-      .sort((a, b) => a[1] - b[1])[0]?.[0];
+    const close = closest(name.toLowerCase(), keys, (k) => k.toLowerCase());
     const what = known
       ? `"${name}" does not serve ${category}`
       : `no integration "${name}"${serving.length ? ` for ${category}` : ""}`;
@@ -1608,25 +1594,30 @@ export function useIntegration(
     };
   }
   let source = given ?? read(entryPath("config/shop", root));
+  const entries = configEntries(source);
+  if (!entries) return { problems: [noConfigObject] };
   const bound = (f) =>
     source.match(new RegExp(`^const (\\w+)\\s*=\\s*${f}\\(`, "m"))?.[1];
-  const line = new RegExp(`^(\\s*${category}:\\s*)[^\\n]*?,?$`, "m");
   const call = `${factory}()`;
-  source = line.test(source)
-    ? source.replace(line, `$1${call},`)
-    : addCategoryLine(source, category, call, root);
+  const entry = entries.find((e) => e.key === category);
+  source = entry
+    ? splice(source, entry.value, entry.end, call)
+    : addCategoryLine(source, entries, category, call, root);
   // one instance for every category the integration serves: the file's own binding, or for two bare `factory()` a
-  // shared one
-  const bare = new RegExp(`^(\\s*\\w+:\\s*)${factory}\\(\\),?$`, "gm");
+  // shared one (entries of the config only, never a key inside an integration's options)
+  const bare = () =>
+    configEntries(source).filter((e) => source.slice(e.value, e.end) === call);
   let shared = bound(factory);
-  if (!shared && (source.match(bare) ?? []).length > 1) {
+  if (!shared && bare().length > 1) {
     shared = sharedName(factory);
     source = source.replace(
       /^export const config\b/m,
       `const ${shared} = ${factory}();\n$&`,
     );
   }
-  if (shared) source = source.replace(bare, `$1${shared},`);
+  if (shared)
+    for (const e of bare().reverse())
+      source = splice(source, e.value, e.end, shared);
   const importLine = `import { ${factory} } from "${candidates[0][0]}/shopin";\n`;
   if (!source.includes(importLine)) {
     // in the order of the module names (as the shop file keeps them), so a switch and back leaves the file as it was
@@ -1650,24 +1641,130 @@ export function useIntegration(
  * A new category's line in the kit's category order (commerce, search, cms, psp, auth): after the last line of a
  * category before it, else first; so `use <category> off` and back leaves the file as it was.
  */
-function addCategoryLine(source, category, call, root) {
-  const kit = join(root, "core/integration-kit/src/categories.json");
-  const order = existsSync(kit) ? json(kit) : [];
-  // only one-line entries (`cms: mockCms(),`): never inside a factory call written over several lines
+function addCategoryLine(source, entries, category, call, root) {
+  const order = kitCategories(root);
   const earlier = order.includes(category)
     ? order.slice(0, order.indexOf(category))
     : [];
-  const lines = earlier.length
-    ? [
-        ...source.matchAll(
-          new RegExp(`^[ \\t]*(${earlier.join("|")}):[^\\n]*,[ \\t]*\\n`, "gm"),
-        ),
-      ]
-    : [];
-  const at = lines.length
-    ? lines.at(-1).index + lines.at(-1)[0].length
-    : source.search(/defineConfig\(\{\n/) + "defineConfig({\n".length;
+  // only after a one-line entry of an earlier category (`cms: mockCms(),`), else first
+  const after = entries
+    .filter((e) => earlier.includes(e.key))
+    .map((e) => [e, entrySpan(source, e)])
+    .filter(
+      ([e, [, to]]) =>
+        !source.slice(e.start, e.end).includes("\n") && source[to - 1] === "\n",
+    )
+    .at(-1);
+  const at = after
+    ? after[1][1]
+    : entries.open + (source[entries.open] === "\n" ? 1 : 0);
   return source.slice(0, at) + `  ${category}: ${call},\n` + source.slice(at);
+}
+
+/** Refusal when shopin.config.ts passes no object literal to defineConfig: `use` cannot tell where a category is. */
+const noConfigObject = `config/shop/${ENTRY["config/shop"]} passes no object to defineConfig({ … }): name the categories there (e.g. commerce: mock()), then npm run use again`;
+
+const splice = (source, from, to, text) =>
+  source.slice(0, from) + text + source.slice(to);
+
+/** Index after the string, template or comment that starts at `i`; `i` itself when none starts there. */
+function skipText(source, i) {
+  const c = source[i];
+  if (c === "/" && source[i + 1] === "/") {
+    const end = source.indexOf("\n", i);
+    return end < 0 ? source.length : end;
+  }
+  if (c === "/" && source[i + 1] === "*") {
+    const end = source.indexOf("*/", i + 2);
+    return end < 0 ? source.length : end + 2;
+  }
+  if (c !== '"' && c !== "'" && c !== "`") return i;
+  let j = i + 1;
+  while (j < source.length && source[j] !== c)
+    if (source[j] === "\\") j += 2;
+    else if (c === "`" && source[j] === "$" && source[j + 1] === "{")
+      j = closer(source, j + 1) + 1;
+    else j++;
+  return j + 1;
+}
+
+/** Index of the bracket that closes the (, { or [ at `i`, past strings, templates and comments. */
+function closer(source, i) {
+  for (let j = i + 1; j < source.length; ) {
+    const k = skipText(source, j);
+    if (k !== j) j = k;
+    else if ("({[".includes(source[j])) j = closer(source, j) + 1;
+    else if (")}]".includes(source[j])) return j;
+    else j++;
+  }
+  return source.length;
+}
+
+/**
+ * The properties of the object shopin.config.ts passes to `defineConfig({ … })`, each as a whole however many lines
+ * it spans (nested calls, objects, strings and comments skipped): `key`, `start` (the key), `value`, `end` (after
+ * the value), `comma` (its index, or -1). `.open`: the index after the object's `{`. Undefined when there is no
+ * such call.
+ */
+function configEntries(source) {
+  let open = -1;
+  for (let i = 0; i < source.length && open < 0; ) {
+    const k = skipText(source, i);
+    if (k !== i) i = k;
+    else {
+      const m =
+        !/[\w$.]/.test(source[i - 1] ?? "") &&
+        /^defineConfig\s*\(\s*\{/.exec(source.slice(i, i + 64));
+      if (m) open = i + m[0].length;
+      else i++;
+    }
+  }
+  if (open < 0) return undefined;
+  const close = closer(source, open - 1);
+  const entries = Object.assign([], { open });
+  const add = (from, to) => {
+    // past the whitespace and comments before the key
+    let start = from;
+    while (start < to) {
+      const k = /\s/.test(source[start]) ? start + 1 : skipText(source, start);
+      if (k === start) break;
+      start = k;
+    }
+    let end = to;
+    while (end > start && /\s/.test(source[end - 1])) end--;
+    const key = /^(?:([A-Za-z_$][\w$]*)|"([^"]*)"|'([^']*)')\s*:\s*/.exec(
+      source.slice(start, end),
+    );
+    if (key)
+      entries.push({
+        key: key[1] ?? key[2] ?? key[3],
+        start,
+        value: start + key[0].length,
+        end,
+        comma: source[to] === "," ? to : -1,
+      });
+  };
+  for (let j = open, from = open; j <= close; ) {
+    const k = skipText(source, j);
+    if (k !== j) j = k;
+    else if (j === close || source[j] === ",") {
+      add(from, j);
+      from = ++j;
+    } else if ("({[".includes(source[j])) j = closer(source, j) + 1;
+    else j++;
+  }
+  return entries;
+}
+
+/** What removing an entry takes out: its whole line(s) when it stands alone on them, else the entry and its comma. */
+function entrySpan(source, entry) {
+  let from = entry.start;
+  while (from > 0 && " \t".includes(source[from - 1])) from--;
+  let to = entry.comma >= 0 ? entry.comma + 1 : entry.end;
+  while (to < source.length && " \t".includes(source[to])) to++;
+  return (from === 0 || source[from - 1] === "\n") && source[to] === "\n"
+    ? [from, to + 1]
+    : [entry.start, to];
 }
 
 /** A shared instance `use` wrote that no category uses any more goes, then an integration import nothing uses. */
@@ -1692,10 +1789,7 @@ function unknownCategory(category, integrations) {
   if (!integrations.length) return undefined;
   const served = [...new Set(integrations.flatMap((i) => i.categories))].sort();
   if (served.includes(category)) return undefined;
-  const close = served
-    .map((c) => [c, distance(category.toLowerCase(), c)])
-    .filter(([c, d]) => d <= Math.max(2, Math.floor(c.length / 3)))
-    .sort((a, b) => a[1] - b[1])[0]?.[0];
+  const close = closest(category.toLowerCase(), served);
   return `unknown category "${category}": no installed integration serves it (they serve: ${served.join(", ") || "nothing"})${close ? `; did you mean "${close}"?` : ""}`;
 }
 
@@ -1712,11 +1806,14 @@ function useOff(category, root, given) {
       ],
     };
   const source = given ?? read(entryPath("config/shop", root));
+  const entries = configEntries(source);
+  if (!entries) return { problems: [noConfigObject] };
+  const entry = entries.find((e) => e.key === category);
   return {
     problems: [],
     line: `no ${category}`,
     source: dropUnused(
-      source.replace(new RegExp(`^[ \\t]*${category}:[^\\n]*\\n`, "m"), ""),
+      entry ? splice(source, ...entrySpan(source, entry), "") : source,
     ),
   };
 }
@@ -1753,10 +1850,9 @@ export function useCommand(args, root = ".") {
     }
   };
   // `Cms Contentful` is `cms contentful`: categories and keys as the config and the descriptors spell them
-  const kit = join(root, "core/integration-kit/src/categories.json");
   const categories = [
     ...new Set([
-      ...(existsSync(kit) ? json(kit) : []),
+      ...kitCategories(root),
       ...integrations.flatMap((i) => i.categories),
     ]),
   ];
@@ -1874,7 +1970,6 @@ export function useCommand(args, root = ".") {
   return [...first.problems, "shopin.config.ts is unchanged"];
 }
 
-/** `npm run use demo [off]`, or `npm run use <category> <integration> [<category> <integration> …]`, then setup. */
 /** Every file `npm run use` and the setup after it may write: kept before, put back when anything fails. */
 const USE_WRITES = () => [
   ...Object.keys(ENTRY).map((dir) => entryPath(dir)),
@@ -1895,9 +1990,7 @@ const USE_WRITES = () => [
  * runs again for the config the shop had; then it says what failed.
  */
 function use(args) {
-  const kept = new Map(
-    USE_WRITES().map((f) => [f, existsSync(f) ? read(f) : null]),
-  );
+  const kept = new Map(USE_WRITES().map((f) => [f, readIf(f)]));
   // only this run's demo/ is ours to delete or put back (a copy an interrupted run left aside is not touched)
   const removing =
     args[0] === "demo" && args[1] === "remove" && !existsSync(DEMO_ASIDE);
@@ -1916,12 +2009,12 @@ function use(args) {
     if (removing && existsSync(DEMO_ASIDE) && !existsSync("demo"))
       renameSync(DEMO_ASIDE, "demo");
     const changed = [...kept]
-      .filter(([f, before]) => (existsSync(f) ? read(f) : null) !== before)
+      .filter(([f, before]) => readIf(f) !== before)
       .map(([f]) => f);
     for (const f of changed) {
       const before = kept.get(f);
       if (before === null) rmSync(f, { force: true });
-      else writeFileSync(f, before, f === ".env" ? { mode: 0o600 } : undefined);
+      else write(f, before);
     }
     const problems =
       error instanceof Stop ? error.problems : [String(error?.stack ?? error)];
@@ -1937,7 +2030,7 @@ function use(args) {
             (f) => f.endsWith("package.json") || f === "package-lock.json",
           )
         )
-          run("npm", ["install", "--no-audit", "--no-fund"]);
+          run("npm", ["install", ...NPM_FLAGS]);
         setup();
       } catch (again) {
         problems.push(
@@ -1948,7 +2041,7 @@ function use(args) {
         // byte for byte: the reinstall may have rewritten the lockfile's flags, the setup again the root scripts
         for (const f of ["package-lock.json", "package.json"]) {
           const before = kept.get(f);
-          if (before !== null) writeFileSync(f, before);
+          if (before !== null) write(f, before);
         }
       }
     }
@@ -1956,6 +2049,10 @@ function use(args) {
   }
 }
 
+/**
+ * `npm run use demo [off|remove]`, or `npm run use <category> <integration> [<category> <integration> …]`: the
+ * change, before setup; true when the config already is so (nothing written).
+ */
 export function change(args, root = ".") {
   if (args[0] === "demo") {
     // only `demo`, `demo off` and `demo remove`: a misspelled word never turns the demo on

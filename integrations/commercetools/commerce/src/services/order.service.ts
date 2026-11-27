@@ -22,6 +22,7 @@ import {
   OrdersListApiResponseSchema,
 } from '../schemas/order'
 import { isNotFoundError, isConflictError } from '../helpers/is-not-found-error'
+import { quoted } from '@integrations/commercetools-core'
 
 @Injectable()
 export class OrderService {
@@ -104,6 +105,25 @@ export class OrderService {
       }
       throw error
     }
+  }
+
+  /**
+   * The order made from `cartId` (Order.cart, a CartReference), queried with the predicate `cart(id="<cartId>")`
+   * through the same shopper API as `getOrder`: `me()` with the shopper's token, or the project API limited to the
+   * linked customer (`customerId="…"`). Another shopper's order is never in the result.
+   */
+  async findOrderByCart(cartId: string): Promise<OrderResponse | undefined> {
+    const found = await (
+      await this.scope.api()
+    ).orders.query({
+      where: `cart(id=${quoted(cartId)})`,
+      expand: OrderService.ORDER_EXPAND,
+      limit: 1,
+    })
+    const order = found.results[0]
+    return order === undefined
+      ? undefined
+      : this.processOrderResponse(order, this.getCurrentLanguage())
   }
 
   async getOrders(request?: GetOrdersRequest): Promise<OrdersResponse> {

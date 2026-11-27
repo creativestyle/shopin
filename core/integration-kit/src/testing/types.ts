@@ -113,7 +113,9 @@ export const COMMERCE: Record<
       'setDefaultBillingAddress',
     ],
   },
-  orderService: { methods: ['createOrder', 'getOrder', 'getOrders'] },
+  orderService: {
+    methods: ['createOrder', 'getOrder', 'getOrders', 'findOrderByCart'],
+  },
 }
 
 /** The HTTP status an error stands for (Nest's `getStatus()`, or a `status`/`statusCode` field). */

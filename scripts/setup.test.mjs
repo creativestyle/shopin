@@ -1737,6 +1737,130 @@ test("npm run use: a switch and back leaves shopin.config.ts byte for byte as it
     assert.equal(useIntegration("auth", "fxB", dir, away, []).source, shopFile);
   }));
 
+/** A fixture repository with integrations fx-a (commerce), fx-b and fx-c (auth) and the kit's category order. */
+const entryFixture = (dir, shopFile) => {
+  for (const [folder, name, factory] of [
+    ["fx-a/commerce", "@integrations/fx-a", "fxA"],
+    ["fx-b/auth", "@integrations/fx-b", "fxB"],
+    ["fx-c/auth", "@integrations/fx-c", "fxC"],
+  ]) {
+    put(dir, `integrations/${folder}/package.json`, { name });
+    put(
+      dir,
+      `integrations/${folder}/src/shopin.ts`,
+      `export const ${factory} = () => defineIntegration({})\n`,
+    );
+  }
+  put(dir, "core/integration-kit/src/categories.json", [
+    "commerce",
+    "search",
+    "cms",
+    "psp",
+    "auth",
+  ]);
+  put(dir, "config/shop/shopin.config.ts", shopFile);
+};
+/** The syntax errors TypeScript finds in a config source (none: it parses). */
+const syntaxErrors = (source) =>
+  createRequire(join(ROOT, "package.json"))("typescript")
+    .transpileModule(source, { reportDiagnostics: true })
+    .diagnostics.map((d) => d.messageText);
+// an entry over several lines, as the docs recommend for options: nested braces, and a brace inside a string
+const MULTI_LINE_SHOP = [
+  'import { defineConfig } from "@core/integration-kit";',
+  'import { fxA } from "@integrations/fx-a/shopin";',
+  'import { fxB } from "@integrations/fx-b/shopin";',
+  "",
+  "export const config = defineConfig({",
+  "  commerce: fxA(),",
+  "  auth: fxB({",
+  '    domain: "login.test/}{",',
+  "    scopes: { read: [\"a\", 'b'] }, // a } in a comment",
+  "  }),",
+  "  features: [],",
+  "});",
+  "",
+].join("\n");
+const MULTI_LINE_AUTH = MULTI_LINE_SHOP.split("\n").slice(6, 10).join("\n");
+
+test("npm run use on an entry written over several lines: the whole entry is replaced or removed, the rest byte for byte", () =>
+  temp("use-multi", (dir) => {
+    entryFixture(dir, MULTI_LINE_SHOP);
+    const away = useIntegration("auth", "fxC", dir, undefined, []).source;
+    assert.deepEqual(syntaxErrors(away), []);
+    assert.equal(
+      away,
+      MULTI_LINE_SHOP.replace(MULTI_LINE_AUTH, "  auth: fxC(),").replace(
+        'import { fxB } from "@integrations/fx-b/shopin";\n',
+        'import { fxC } from "@integrations/fx-c/shopin";\n',
+      ),
+    );
+    const off = useIntegration("auth", "off", dir, undefined, []).source;
+    assert.deepEqual(syntaxErrors(off), []);
+    assert.equal(
+      off,
+      MULTI_LINE_SHOP.replace(`${MULTI_LINE_AUTH}\n`, "").replace(
+        'import { fxB } from "@integrations/fx-b/shopin";\n',
+        "",
+      ),
+    );
+  }));
+
+test("npm run use: a switch and back, or off and back, of an entry over several lines changes only that entry", () =>
+  temp("use-multi-back", (dir) => {
+    entryFixture(dir, MULTI_LINE_SHOP);
+    // the options go with the integration; the entry comes back as `use` writes it, every other byte as it was
+    const expected = MULTI_LINE_SHOP.replace(MULTI_LINE_AUTH, "  auth: fxB(),");
+    const away = useIntegration("auth", "fxC", dir, undefined, []).source;
+    assert.equal(useIntegration("auth", "fxB", dir, away, []).source, expected);
+    const off = useIntegration("auth", "off", dir, undefined, []).source;
+    assert.equal(useIntegration("auth", "fxB", dir, off, []).source, expected);
+  }));
+
+test("npm run use changes only the entries of defineConfig({ … }), never a key inside an integration's options", () =>
+  temp("use-scope", (dir) => {
+    const shopFile = [
+      'import { defineConfig } from "@core/integration-kit";',
+      'import { fxA } from "@integrations/fx-a/shopin";',
+      'import { fxB } from "@integrations/fx-b/shopin";',
+      'import { fxSwitch } from "@shopin/fx-switch";',
+      "",
+      "const switched = fxSwitch({",
+      "  commerce: [fxA()],",
+      "  auth: fxB(),",
+      "});",
+      "",
+      "export const config = defineConfig({",
+      "  commerce: fxA(),",
+      "  auth: switched,",
+      "});",
+      "",
+    ].join("\n");
+    entryFixture(dir, shopFile);
+    // only the config's commerce; one fxB() in the config: no shared instance, the switch's fxB() untouched
+    const commerce = useIntegration("commerce", "fxB", dir, undefined, []);
+    assert.equal(
+      commerce.source,
+      shopFile.replace(
+        "  commerce: fxA(),\n  auth: switched",
+        "  commerce: fxB(),\n  auth: switched",
+      ),
+    );
+    // the new auth entry goes after the config's commerce, not after the switch's
+    const off = useIntegration("auth", "off", dir, undefined, []).source;
+    assert.equal(off, shopFile.replace("  auth: switched,\n});", "});"));
+    const back = useIntegration("auth", "fxC", dir, off, []).source;
+    assert.equal(
+      back,
+      shopFile
+        .replace("  auth: switched,\n});", "  auth: fxC(),\n});")
+        .replace(
+          'fx-b/shopin";\n',
+          'fx-b/shopin";\nimport { fxC } from "@integrations/fx-c/shopin";\n',
+        ),
+    );
+  }));
+
 test("a deleted SDK of a configured integration is named (with whose it is), not left to the BFF", () =>
   temp("unresolved", (dir) => {
     put(dir, "config/shop/package.json", {

@@ -348,6 +348,18 @@ export class MockOrderService extends ForCustomer {
     return order
   }
 
+  /**
+   * The order made from `cartId`, read as `getOrder` reads: a customer's among that customer's orders, a guest's among
+   * the guest orders (the BFF asks for a guest only with that guest's own cart or order cookie).
+   */
+  async findOrderByCart(cartId: string): Promise<OrderResponse | undefined> {
+    const orderId = orderedCarts.get(cartId)
+    const owner = (await this.optionalCustomerId()) ?? 'guest'
+    return orderId === undefined
+      ? undefined
+      : (orderStore.get(owner) ?? []).find((o) => o.id === orderId)
+  }
+
   async getOrders(request?: GetOrdersRequest): Promise<OrdersResponse> {
     const all = orderStore.get(await this.customerId()) ?? []
     const offset = request?.offset ?? 0

@@ -27,8 +27,7 @@ function setup(ownCart: string | null = 'cart-1') {
       paymentService: { getPaymentLink },
     } as never,
     { getCart } as never,
-    { ownCartId: async () => ownCart ?? undefined } as never,
-    {} as never
+    { ownCartId: async () => ownCart ?? undefined } as never
   )
   return { service, verifyAndUpdatePaymentAmounts, getPaymentLink }
 }

@@ -37,6 +37,7 @@ const RUN_HERE = [
   'every service and method',
   'customers are found',
   "a customer's order is readable",
+  'the order made from a cart is found by that cart',
   "a customer's cart is that customer's",
   'setCartFields',
 ]
@@ -102,8 +103,8 @@ describe('commercetools commerce port: the commerce contract (fake API client)',
     orders: true,
   }).filter((c) => RUN_HERE.some((name) => c.name.includes(name)))
 
-  it('runs the five cases the fake supports', () => {
-    assert.equal(cases.length, 5)
+  it('runs the six cases the fake supports', () => {
+    assert.equal(cases.length, 6)
   })
   for (const c of cases) {
     it(`${c.name}`, c.run)

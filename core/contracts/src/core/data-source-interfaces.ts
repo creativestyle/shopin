@@ -291,6 +291,12 @@ export interface OrderService {
   createOrder(request: CreateOrderRequest): Promise<OrderResponse>
   getOrder(orderId: string): Promise<OrderResponse>
   getOrders(request?: GetOrdersRequest): Promise<OrdersResponse>
+  /**
+   * The order made from `cartId`, under the same ownership rules as `getOrder`: a customer's only for that customer;
+   * undefined when the cart has no order or the order is not the caller's. The payment return asks it before ordering,
+   * so a reload or a Retry after a lost response answers with the order already placed.
+   */
+  findOrderByCart(cartId: string): Promise<OrderResponse | undefined>
 }
 
 export interface WishlistService {

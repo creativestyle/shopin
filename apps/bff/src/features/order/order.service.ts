@@ -35,20 +35,7 @@ export class OrderService {
     try {
       // Create order using the data source order service
       const order = await orderService.createOrder(request)
-
-      // Clear the cart ID cookie after successful order creation
-      // The cart has been converted to an order and becomes immutable
-      // We don't need to clear cart items - the cart no longer exists as a cart
-      // We only need to remove the cart ID from cookies so the system knows there's no active cart
-      const isLoggedIn = (await this.tokenProvider.getAuthStatus()) === true
-      if (isLoggedIn) {
-        await this.cartIdService.deleteLoggedInCartId()
-      } else {
-        await this.cartIdService.deleteGuestCartId()
-        // the guest may read this order (its confirmation page), and no other
-        await this.session.setGuestOrder(order.id)
-      }
-
+      await this.cartBecameOrder(order.id)
       return order
     } catch (error) {
       // If order already exists (conflict), clear the cart ID before re-throwing
@@ -63,6 +50,45 @@ export class OrderService {
       }
       throw error
     }
+  }
+
+  /**
+   * The cart has been converted to an order and becomes immutable: its id cookie is cleared, so the system knows there
+   * is no active cart, and a guest may read this order (its confirmation page), and no other.
+   */
+  private async cartBecameOrder(orderId: string): Promise<void> {
+    const isLoggedIn = (await this.tokenProvider.getAuthStatus()) === true
+    if (isLoggedIn) {
+      await this.cartIdService.deleteLoggedInCartId()
+    } else {
+      await this.cartIdService.deleteGuestCartId()
+      await this.session.setGuestOrder(orderId)
+    }
+  }
+
+  /**
+   * The order already made from `cartId` that this shopper may read; undefined otherwise. Commerce is the record, not a
+   * cookie of the answer that placed it (that answer may never have arrived). A customer's: the commerce port finds
+   * only that customer's orders. A guest's, by the guest rule of `getOrder`: only for the cart this browser still holds
+   * (a Retry after a lost answer) or the order this browser placed (a reload after the answer arrived); a guest with
+   * neither does not ask the port. Found through a cart cookie that still names the ordered cart, what `createOrder`
+   * did in the lost answer is done again (the cart cookie cleared, a guest's order readable).
+   */
+  async placedOrderOf(cartId: string): Promise<OrderResponse | undefined> {
+    const isLoggedIn = (await this.tokenProvider.getAuthStatus()) === true
+    const holdsCart = (await this.getOwnCartId()) === cartId
+    const guestOrder = isLoggedIn ? undefined : await this.session.guestOrder()
+    if (!isLoggedIn && !holdsCart && guestOrder === undefined) {
+      return undefined
+    }
+    const order = await this.services.orderService.findOrderByCart(cartId)
+    if (!order || (!isLoggedIn && !holdsCart && order.id !== guestOrder)) {
+      return undefined
+    }
+    if (holdsCart) {
+      await this.cartBecameOrder(order.id)
+    }
+    return order
   }
 
   /** The shopper's own cart id (the sealed cookie), the cart a payment must have been started for. */

@@ -245,6 +245,66 @@ describe('payment info: one flat summary, never the commercetools payment record
       ],
       'paid',
     ],
+    // a partial capture, then the rest of the authorization released (split shipment): charged money is kept
+    [
+      [
+        { type: 'Authorization', state: 'Success' },
+        {
+          type: 'Charge',
+          state: 'Success',
+          amount: { centAmount: 1200, currencyCode: 'EUR' },
+        },
+        {
+          type: 'CancelAuthorization',
+          state: 'Success',
+          amount: { centAmount: 799, currencyCode: 'EUR' },
+        },
+      ],
+      'paid',
+    ],
+    [
+      [
+        { type: 'Authorization', state: 'Success' },
+        {
+          type: 'Charge',
+          state: 'Success',
+          amount: { centAmount: 1200, currencyCode: 'EUR' },
+        },
+        {
+          type: 'Refund',
+          state: 'Success',
+          amount: { centAmount: 200, currencyCode: 'EUR' },
+        },
+        {
+          type: 'CancelAuthorization',
+          state: 'Success',
+          amount: { centAmount: 799, currencyCode: 'EUR' },
+        },
+      ],
+      'paid',
+    ],
+    // everything charged was given back before the rest was released: nothing is paid
+    [
+      [
+        { type: 'Authorization', state: 'Success' },
+        {
+          type: 'Charge',
+          state: 'Success',
+          amount: { centAmount: 1200, currencyCode: 'EUR' },
+        },
+        {
+          type: 'Refund',
+          state: 'Success',
+          amount: { centAmount: 1200, currencyCode: 'EUR' },
+        },
+        {
+          type: 'CancelAuthorization',
+          state: 'Success',
+          amount: { centAmount: 799, currencyCode: 'EUR' },
+        },
+      ],
+      'cancelled',
+    ],
   ]) {
     it(format('transactions %j → %s', transactions, status), () => {
       assert.deepEqual(mapPaymentInfo(payment(transactions)), {

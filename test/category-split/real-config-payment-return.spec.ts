@@ -4,7 +4,8 @@
  * order only for a paid or authorized result of the shopper's own cart, paid at the cart's total. Every other result
  * (failed, cancelled, pending), a paid result for another shopper's cart and a payment for a cart that changed after
  * the payment started order nothing: the cart stays the shopper's active cart. A reload of the return page after the
- * order answers with the same order, and only in the session that placed it. (#345 criterion 33.)
+ * order answers with the same order, and only in the session that placed it; so does a Retry after the answer that
+ * placed it was lost (commerce holds the order, no cookie of that answer is needed). (#345 criterion 33.)
  * The payment integration decides the result; the request only carries what the provider sent back.
  */
 import { CORE_ENV, exactEnv, boot, http } from "./harness";
@@ -15,7 +16,13 @@ type Server = Awaited<ReturnType<typeof http>>;
 function shopper(server: Server) {
   const jar = new Map<string, string>();
   let csrf = "";
-  const send = async (method: string, path: string, body?: unknown) => {
+  /** `lost`: the response never reaches the browser (a dropped connection): its cookies are not kept. */
+  const send = async (
+    method: string,
+    path: string,
+    body?: unknown,
+    { lost = false } = {},
+  ) => {
     const res = await server.fetch(path, {
       method,
       headers: {
@@ -26,7 +33,7 @@ function shopper(server: Server) {
       },
       ...(body === undefined ? {} : { body: JSON.stringify(body) }),
     });
-    for (const cookie of res.cookies) {
+    for (const cookie of lost ? [] : res.cookies) {
       if (!cookie) continue;
       const at = cookie.indexOf("=");
       const value = cookie.slice(at + 1);
@@ -80,11 +87,14 @@ function shopper(server: Server) {
       paymentId: string,
       result: string,
       paid: Record<string, string> = {},
+      lost = false,
     ) =>
-      send("POST", "/bff/payment/return", {
-        paymentId,
-        params: { result, ...paid },
-      }),
+      send(
+        "POST",
+        "/bff/payment/return",
+        { paymentId, params: { result, ...paid } },
+        { lost },
+      ),
   };
 }
 
@@ -208,4 +218,25 @@ describe("config/shop: the payment return route", () => {
       expect(replay.body).toEqual({ status: "failed" });
     },
   );
+
+  it("the answer that placed the order is lost: Retry gets that order (no second order, no 'failed'), and the shopper can read it", async () => {
+    const alice = shopper(server);
+    const cart = await alice.start();
+    const total = await alice.initiate(cart);
+    const lost = await alice.paymentReturn(cart, "paid", total, true);
+    expect(lost.body).toEqual({ status: "paid", orderId: expect.any(String) });
+    // the browser still holds the cart cookie the lost answer cleared, and nothing of the order
+    const retry = await alice.paymentReturn(cart, "paid", total);
+    expect(retry.status).toBe(200);
+    expect(retry.body).toEqual({ status: "paid", orderId: lost.body.orderId });
+    expect(await alice.cartId()).toBeUndefined();
+    const order = await alice.send("GET", `/bff/order/${lost.body.orderId}`);
+    expect(order.status).toBe(200);
+    // another browser replaying the same return gets nothing of it
+    const bob = shopper(server);
+    await bob.start();
+    expect((await bob.paymentReturn(cart, "paid", total)).body).toEqual({
+      status: "failed",
+    });
+  });
 });

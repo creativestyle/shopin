@@ -67,6 +67,46 @@ export function orderCases(ctx: CaseContext): void {
       },
     })
     add(['orderService', 'cartService', 'productService'], {
+      name: 'commerce: the order made from a cart is found by that cart for its customer only (findOrderByCart: not another customer, not a guest)',
+      async run() {
+        const [owner, stranger] = await customerPair()
+        const mine = await port({ customerId: owner })
+        const { product: item } = await mine.productService.getProduct(
+          product!.slug
+        )
+        const cart = await mine.cartService.createCart()
+        await mine.cartService.addToCart(
+          cart.id,
+          item.id,
+          product!.variantId,
+          1
+        )
+        assert.equal(
+          await mine.orderService.findOrderByCart(cart.id),
+          undefined,
+          'a cart without an order has no order'
+        )
+        const order = await mine.orderService.createOrder({ cartId: cart.id })
+        assert.equal(
+          (await mine.orderService.findOrderByCart(cart.id))?.id,
+          order.id,
+          "the customer's order is not found by its cart"
+        )
+        const theirs = await port({ customerId: stranger })
+        assert.equal(
+          await theirs.orderService.findOrderByCart(cart.id),
+          undefined,
+          "another customer finds the customer's order"
+        )
+        const guest = await port()
+        assert.equal(
+          await guest.orderService.findOrderByCart(cart.id),
+          undefined,
+          "a guest finds the customer's order"
+        )
+      },
+    })
+    add(['orderService', 'cartService', 'productService'], {
       name: 'commerce: ordering the same cart twice is refused as a conflict (409), not as a missing cart',
       async run() {
         const [owner] = await customerPair()

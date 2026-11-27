@@ -117,6 +117,8 @@ export interface FixtureOrder {
   id: string;
   orderNumber: string;
   customerId?: string;
+  /** The cart the order was made from (findOrderByCart). */
+  cartId: string;
   createdAt: string;
   orderState: string;
   grandTotal: {
@@ -292,6 +294,7 @@ export function inMemoryCommerce(
               id: `${o.id}-order-${seq}`,
               orderNumber: `${o.orderPrefix ?? o.id.toUpperCase()}-${String(seq).padStart(5, "0")}`,
               ...(customerId ? { customerId } : {}),
+              cartId,
               createdAt: new Date().toISOString(),
               orderState: "Open",
               grandTotal: total(c),
@@ -312,6 +315,13 @@ export function inMemoryCommerce(
             if (!order)
               throw new NotFoundException(`Order not found: ${orderId}`);
             return order;
+          },
+          // the same rule as getOrder: a customer's order for that customer, guest orders kept together
+          findOrderByCart: async (cartId: string) => {
+            const customerId = await actor(`findOrderByCart ${cartId}`);
+            return state.orders.find(
+              (x) => x.cartId === cartId && x.customerId === customerId,
+            );
           },
           getOrders: async () => {
             const customerId = await actor("getOrders");

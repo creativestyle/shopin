@@ -50,7 +50,7 @@ const METHODS = {
     'setDefaultShippingAddress',
     'setDefaultBillingAddress',
   ],
-  orderService: ['createOrder', 'getOrder', 'getOrders'],
+  orderService: ['createOrder', 'getOrder', 'getOrders', 'findOrderByCart'],
 }
 const stub = () =>
   Object.fromEntries(
@@ -292,7 +292,7 @@ function accountPort(owned, customerId, store) {
     if (store.ordered.has(cartId)) {
       throw Object.assign(new Error('ordered'), { status: 409 })
     }
-    const o = { id: `o${store.orders.size + 1}`, owner: customerId }
+    const o = { id: `o${store.orders.size + 1}`, owner: customerId, cartId }
     store.orders.set(o.id, o)
     store.ordered.add(cartId)
     return orderView(o)
@@ -303,6 +303,10 @@ function accountPort(owned, customerId, store) {
       throw notFound()
     }
     return orderView(o)
+  }
+  port.orderService.findOrderByCart = async (cartId) => {
+    const o = [...store.orders.values()].find((x) => x.cartId === cartId)
+    return o && mine(o) ? orderView(o) : undefined
   }
   port.orderService.getOrders = async () => {
     const list = [...store.orders.values()].filter(mine).map((o) => {
@@ -388,6 +392,7 @@ const accountCase = (owned, part) => {
 for (const part of [
   "a customer's order is readable by that customer only",
   "the order list holds the customer's own orders only",
+  'the order made from a cart is found by that cart',
   "a customer's addresses",
   'at sign-in a guest cart is attached',
 ]) {

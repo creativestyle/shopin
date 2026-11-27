@@ -255,10 +255,11 @@ type PaymentStatus = NonNullable<CartResponse['paymentInfo']>['status']
 
 /**
  * A payment's status from its transactions (commercetools keeps them in the order they were added), led by the
- * latest successful one: a cancelled authorization is `cancelled`; a refund or chargeback that returns everything
- * charged is `cancelled` too (the contract has no refunded status: nothing is paid any more); otherwise a successful
- * charge is `paid` (a partial refund leaves it paid), a successful authorization `authorized`, a failure `failed`,
- * anything else `pending`.
+ * latest successful one: a cancelled authorization is `cancelled` unless money charged before it is still kept (a
+ * partial capture whose remaining authorization was released, as for split shipments, is `paid`); a refund or
+ * chargeback that returns everything charged is `cancelled` too (the contract has no refunded status: nothing is paid
+ * any more); otherwise a successful charge is `paid` (a partial refund leaves it paid), a successful authorization
+ * `authorized`, a failure `failed`, anything else `pending`.
  */
 function paymentStatus(transactions: PaymentTransaction[]): PaymentStatus {
   const successful = transactions.filter((t) => t.state === 'Success')
@@ -267,14 +268,18 @@ function paymentStatus(transactions: PaymentTransaction[]): PaymentStatus {
     successful
       .filter((t) => types.includes(t.type))
       .reduce((total, t) => total + t.amount.centAmount, 0)
-  if (latest === 'CancelAuthorization') {
+  const charged = sum(['Charge'])
+  // what was charged and not given back (successful charges minus refunds and chargebacks)
+  const kept = charged - sum(['Refund', 'Chargeback'])
+  if (latest === 'CancelAuthorization' && kept <= 0) {
     return 'cancelled'
   }
-  if (latest === 'Refund' || latest === 'Chargeback') {
-    const charged = sum(['Charge'])
-    if (charged > 0 && sum(['Refund', 'Chargeback']) >= charged) {
-      return 'cancelled'
-    }
+  if (
+    (latest === 'Refund' || latest === 'Chargeback') &&
+    charged > 0 &&
+    kept <= 0
+  ) {
+    return 'cancelled'
   }
   const succeeded = (type: string) => successful.some((t) => t.type === type)
   return succeeded('Charge')

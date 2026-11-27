@@ -369,6 +369,11 @@ describe('commercetools commerce port with sign-in by another identity provider'
       cartId: 'ct-cart-1',
     })
     assert.equal((await commerce.orderService.getOrder(order.id)).id, order.id)
+    // a reload or Retry of the payment return finds the order by the cart it was made from
+    assert.equal(
+      (await commerce.orderService.findOrderByCart('ct-cart-1'))?.id,
+      order.id
+    )
     const list = await commerce.wishlistService.getOrCreateWishlist()
     await commerce.wishlistService.addToWishlist(list.id, {
       productId: 'ct-product-1',
@@ -393,6 +398,8 @@ describe('commercetools commerce port with sign-in by another identity provider'
       'GET carts/ct-cart-1',
       'POST orders from carts/ct-cart-1',
       `GET orders/${order.id}`,
+      // the order by its cart: a query limited to this customer (Order.cart is a CartReference)
+      'GET orders where customerId="ct-customer-1" and cart(id="ct-cart-1")',
     ])
     assert.equal(server.orders_[0].customerId, 'ct-customer-1')
     assert.deepEqual(server.listCalls, [
@@ -411,7 +418,12 @@ describe('commercetools commerce port with sign-in by another identity provider'
   it('without a commercetools token: another customer’s cart, order and wishlist answer 404 through the port', async () => {
     const { commerce, server, meCalls } = await port(false)
     server.carts_.push({ id: 'ct-cart-x', version: 1, customerId: 'ct-x' })
-    server.orders_.push({ id: 'ct-order-x', version: 1, customerId: 'ct-x' })
+    server.orders_.push({
+      id: 'ct-order-x',
+      version: 1,
+      customerId: 'ct-x',
+      cart: { typeId: 'cart', id: 'ct-cart-x' },
+    })
     server.lists_.push({
       id: 'ct-list-x',
       version: 1,
@@ -432,6 +444,11 @@ describe('commercetools commerce port with sign-in by another identity provider'
     await assert.rejects(commerce.orderService.getOrder('ct-order-x'), {
       status: 404,
     })
+    // the order made from the other customer's cart is not found by that cart either
+    assert.equal(
+      await commerce.orderService.findOrderByCart('ct-cart-x'),
+      undefined
+    )
     await assert.rejects(commerce.wishlistService.getWishlist('ct-list-x'), {
       status: 404,
     })
@@ -455,6 +472,7 @@ describe('commercetools commerce port with sign-in by another identity provider'
       'customer-token GET me/carts/ct-cart-1',
       'customer-token POST me/orders from carts/ct-cart-1',
       `customer-token GET me/orders/${order.id}`,
+      'customer-token GET me/orders where cart(id="ct-cart-1")',
       'customer-token GET me/shopping-lists',
       'customer-token POST me/shopping-lists',
       `customer-token GET me/shopping-lists/${list.id}`,

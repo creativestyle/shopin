@@ -71,6 +71,21 @@ const notFound = () =>
     body: { statusCode: 404 },
   })
 
+/** Does an order match every predicate: `customerId="…"` or `cart(id="…")`; any other predicate matches nothing. */
+function fakeWhere(order, where) {
+  return where.every((w) => {
+    const customer = w.match(/^customerId="(.*)"$/)?.[1]
+    if (customer !== undefined) {
+      return order.customerId === customer
+    }
+    const cart = w.match(/^cart\(id="(.*)"\)$/)?.[1]
+    if (cart !== undefined) {
+      return order.cart?.id === cart
+    }
+    return false
+  })
+}
+
 /** The project API (server client): customers, carts with line items, orders and product projections. */
 export class FakeProjectClient {
   /** @type {FakeCustomer[]} */
@@ -355,9 +370,22 @@ export class FakeProjectClient {
     }
   }
 
-  /** Orders: created from a cart (it then is ordered, not active), read by id. */
+  /**
+   * Orders: created from a cart (it then is ordered, not active; the order keeps the cart reference), read by id, and
+   * queried by the predicates `customerId="…"` and `cart(id="…")` (all of them must hold).
+   */
   orders() {
     return {
+      get: ({ queryArgs }) => ({
+        execute: async () => {
+          const where = [queryArgs.where ?? []].flat()
+          this.cartCalls.push(`GET orders where ${where.join(' and ')}`)
+          const results = this.orders_.filter((o) => fakeWhere(o, where))
+          return {
+            body: { results, limit: 1, offset: 0, count: results.length },
+          }
+        },
+      }),
       post: ({ body }) => ({
         execute: async () => {
           this.cartCalls.push(`POST orders from carts/${body.cart.id}`)
@@ -368,6 +396,7 @@ export class FakeProjectClient {
           this.carts_.splice(this.carts_.indexOf(cart), 1)
           const order = {
             ...cart,
+            cart: { typeId: 'cart', id: cart.id },
             id: `ct-order-${++this.#n}`,
             version: 1,
             orderNumber: String(this.orders_.length + 1).padStart(5, '0'),
@@ -547,6 +576,18 @@ export class FakeMeClient {
               .execute()
             orders.add(made.body.id)
             return made
+          },
+        }),
+        get: ({ queryArgs }) => ({
+          execute: async () => {
+            const where = [queryArgs.where ?? []].flat()
+            log(`GET me/orders where ${where.join(' and ')}`)
+            const results = (data?.orders_ ?? []).filter(
+              (o) => orders.has(o.id) && fakeWhere(o, where)
+            )
+            return {
+              body: { results, limit: 1, offset: 0, count: results.length },
+            }
           },
         }),
         withId: ({ ID }) => ({

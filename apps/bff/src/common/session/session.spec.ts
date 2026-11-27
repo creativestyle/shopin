@@ -379,56 +379,6 @@ describe('cart and wishlist id cookies are sealed by the core', () => {
   }
 })
 
-describe("the payment return's order is remembered for this session only", () => {
-  const PAID = 'shopin-paid-order.shop'
-  const own = { ...identity, subject: 'u-paid-order' }
-  const paid = { cartId: 'cart-1', orderId: 'order-1', status: 'paid' as const }
-
-  it("a guest's reload reads it back for that cart only; the browser holds it encrypted", async () => {
-    const jar: Jar = {}
-    await request(jar).session.setPaidOrder(paid)
-    expect(jar[PAID]).not.toContain('order-1')
-    expect(await request(jar).session.paidOrder('cart-1')).toEqual(paid)
-    expect(await request(jar).session.paidOrder('cart-2')).toBeUndefined()
-  })
-
-  it("another session's record (a copied cookie) is never returned, and is dropped", async () => {
-    const alice: Jar = {}
-    await request(alice).session.signIn(own, 'c-1')
-    await request(alice).session.setPaidOrder(paid)
-    expect(await request(alice).session.paidOrder('cart-1')).toEqual(paid)
-
-    // another customer's session
-    const bob: Jar = {}
-    await request(bob).session.signIn(
-      { ...own, subject: 'u-paid-order-2', email: 'bo@example.com' },
-      'c-2'
-    )
-    bob[PAID] = alice[PAID]!
-    expect(await request(bob).session.paidOrder('cart-1')).toBeUndefined()
-    expect(PAID in bob).toBe(false)
-
-    // the same customer in another session (another device, a new sign-in)
-    const aliceElsewhere: Jar = {}
-    await request(aliceElsewhere).session.signIn(own, 'c-1')
-    aliceElsewhere[PAID] = alice[PAID]!
-    expect(
-      await request(aliceElsewhere).session.paidOrder('cart-1')
-    ).toBeUndefined()
-
-    // a guest browser
-    const guest: Jar = { [PAID]: alice[PAID]! }
-    expect(await request(guest).session.paidOrder('cart-1')).toBeUndefined()
-  })
-
-  it('expires with the guest order (GUEST_ORDER_MS)', async () => {
-    const jar: Jar = {}
-    await request(jar).session.setPaidOrder(paid)
-    jest.advanceTimersByTime(61 * 60 * 1000)
-    expect(await request(jar).session.paidOrder('cart-1')).toBeUndefined()
-  })
-})
-
 describe('a failing revocation store never undoes what the shopper asked for', () => {
   afterEach(() => jest.restoreAllMocks())
   // an identity of its own: earlier cases revoke the shared one at clock times far ahead

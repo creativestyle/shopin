@@ -73,3 +73,22 @@ test("the order keeps the cart's addresses and a guest's e-mail (the confirmatio
   assert.equal(read.billingAddress?.city, 'Berlin')
   assert.equal(read.shippingAddress?.streetName, 'Main St')
 })
+
+test('a guest finds the order made from its cart (findOrderByCart); a cart without an order has none', async () => {
+  const orders = new MockOrderService()
+  guestCart('mock-cart-guest-find')
+  assert.equal(await orders.findOrderByCart('mock-cart-guest-find'), undefined)
+  const placed = await orders.createOrder({ cartId: 'mock-cart-guest-find' })
+  assert.equal(
+    (await orders.findOrderByCart('mock-cart-guest-find'))?.id,
+    placed.id
+  )
+  // a customer does not find a guest order by its cart
+  const customer = new MockOrderService({
+    customerId: async () => 'mock-customer-find',
+  })
+  assert.equal(
+    await customer.findOrderByCart('mock-cart-guest-find'),
+    undefined
+  )
+})

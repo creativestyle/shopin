@@ -82,9 +82,16 @@ const pages = {
   },
 }
 
+// the store's channel, or a price without a channel (commercetools price selection falls back to it)
+const CHANNEL = {
+  or: [
+    { exact: { field: 'variants.prices.channel', value: 'channel-us' } },
+    { not: [{ exists: { field: 'variants.prices.channel' } }] },
+  ],
+}
 const SCOPE = {
   and: [
-    { exact: { field: 'variants.prices.channel', value: 'channel-us' } },
+    CHANNEL,
     { exact: { field: 'variants.prices.currencyCode', value: 'USD' } },
   ],
 }
@@ -112,17 +119,11 @@ describe('commercetools search and category pages: price filter, facet and sort 
       ['price-asc', 'asc'],
       ['price-desc', 'desc'],
     ]) {
-      it(`${page}, ${sort}: with a channel, the range, the price facet and the sort carry the channel and currency`, async () => {
+      it(`${page}, ${sort}: with a channel, the range, the price facet and the sort carry the channel (or no channel) and currency`, async () => {
         const [main, counts] = await run('channel-us', sort)
 
         assert.deepEqual(main.postFilter, {
-          and: [
-            RANGE.and[0],
-            {
-              exact: { field: 'variants.prices.channel', value: 'channel-us' },
-            },
-            RANGE.and[1],
-          ],
+          and: [RANGE.and[0], CHANNEL, RANGE.and[1]],
         })
         assert.deepEqual(main.facets, [
           { distinct: { ...PRICE_FACET.distinct, filter: SCOPE } },
@@ -162,4 +163,59 @@ describe('commercetools search and category pages: price filter, facet and sort 
       assert.deepEqual(main.sort, [{ field: 'createdAt', order: 'desc' }])
     }
   })
+})
+
+/**
+ * Does one price meet a Product Search condition on `variants.prices.*` (exact, exists, range, and, or, not)? The
+ * conditions of one `and` hold for the same price, as commercetools applies price scopes.
+ */
+function holds(query, price) {
+  const field = (q) => price[q.field.replace('variants.prices.', '')]
+  if (query.and) {
+    return query.and.every((q) => holds(q, price))
+  }
+  if (query.or) {
+    return query.or.some((q) => holds(q, price))
+  }
+  if (query.not) {
+    return !query.not.some((q) => holds(q, price))
+  }
+  if (query.exact) {
+    return field(query.exact) === query.exact.value
+  }
+  if (query.exists) {
+    return field(query.exists) !== undefined
+  }
+  if (query.range) {
+    const v = field(query.range)
+    return (
+      (query.range.gte === undefined || v >= query.range.gte) &&
+      (query.range.lte === undefined || v <= query.range.lte)
+    )
+  }
+  throw new Error(`no such condition: ${JSON.stringify(query)}`)
+}
+
+describe('a product priced without a channel stays in the results of a store with a channel', () => {
+  const priced = (channel) => ({
+    currencyCode: 'USD',
+    centAmount: 2000,
+    ...(channel ? { channel } : {}),
+  })
+  for (const [page, run] of Object.entries(pages)) {
+    it(`${page}: the range, the price facet and the price sort take a price of the store's channel or of none, not of another channel`, async () => {
+      const [main] = await run('channel-us', 'price-asc')
+      const facet = main.facets.find((f) => f.distinct.name === 'price-facet')
+      for (const query of [
+        main.postFilter,
+        facet.distinct.filter,
+        main.sort[0].filter,
+      ]) {
+        assert.equal(holds(query, priced('channel-us')), true)
+        // the price commercetools selects when the variant has none for the store's channel
+        assert.equal(holds(query, priced(undefined)), true)
+        assert.equal(holds(query, priced('channel-eu')), false)
+      }
+    })
+  }
 })
